@@ -2,7 +2,7 @@ name: OLED Dashboard
 version: "1.0.0"
 slug: oled_dashboard
 description: OLED-optimized home dashboard with clock, NWS weather, and Immich photo slideshow
-url: https://github.com/your-repo/oled-dashboard
+url: https://github.com/thefreymaster/ha-oled-frame
 arch:
   - aarch64
   - amd64

@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Box, VStack, Text, HStack, ButtonGroup, Button } from "@chakra-ui/react";
+import { Box, Text, HStack, VStack } from "@chakra-ui/react";
 import { MdSkipNext } from "react-icons/md";
-import { ViewButton } from "../components/ViewButton";
 import { useSocket } from "../hooks/useSocket";
 import { socket } from "../lib/socket";
 
 const VIEWS = [
   { path: "/clock", label: "Clock & Weather" },
+  { path: "/home", label: "Home Overview" },
   { path: "/photos", label: "Photo Slideshow" },
   { path: "/blank", label: "Blank Screen" },
 ];
@@ -20,8 +20,7 @@ export function Mobile() {
   const [activeView, setActiveView] = useState<string | null>(null);
 
   function changeView(path: string) {
-    const view = path.replace("/", "");
-    socket.emit("change", view);
+    socket.emit("change", path.replace("/", ""));
     setActiveView(path);
   }
 
@@ -30,73 +29,79 @@ export function Mobile() {
       width="100vw"
       minHeight="100vh"
       bg="black"
+      px="8vw"
+      py="12vw"
       display="flex"
       flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      px={6}
-      py={12}
     >
-      <VStack gap={8} width="100%" maxWidth="380px">
-        <VStack gap={1}>
-          <Text fontSize="xl" color="gray.300" letterSpacing="0.1em">
-            CONTROL
+      {/* Header */}
+      <HStack justify="space-between" align="baseline" mb="8vw">
+        <Text fontSize="5vw" color="gray.400" fontWeight="300" letterSpacing="0.02em">
+          Control
+        </Text>
+        <HStack gap="1.5vw" align="center">
+          <Box
+            width="5px"
+            height="5px"
+            borderRadius="full"
+            bg={connected ? "green.700" : "gray.800"}
+          />
+          <Text fontSize="3vw" color="gray.700">
+            {connected ? "connected" : "disconnected"}
           </Text>
-          <HStack gap={2} align="center">
-            <Box
-              width="6px"
-              height="6px"
-              borderRadius="full"
-              bg={connected ? "green.600" : "red.800"}
-            />
-            <Text fontSize="xs" color="gray.700">
-              {connected ? "connected" : "disconnected"}
-            </Text>
-          </HStack>
-        </VStack>
+        </HStack>
+      </HStack>
 
-        <VStack gap={3} width="100%">
-          {VIEWS.map((v) =>
-            v.path === "/photos" ? (
-              <ButtonGroup key={v.path} attached width="100%">
-                <Button
-                  flex={1}
-                  size="lg"
-                  variant={activeView === v.path ? "solid" : "outline"}
-                  bg={activeView === v.path ? "gray.700" : "transparent"}
-                  borderColor="gray.600"
-                  color={activeView === v.path ? "white" : "gray.300"}
-                  _hover={{ bg: "gray.700", color: "white" }}
-                  letterSpacing="0.05em"
-                  height="60px"
-                  fontSize="lg"
-                  onClick={() => changeView(v.path)}
+      {/* View rows */}
+      <VStack gap={0} align="stretch" width="100%">
+        {VIEWS.map((v, i) => {
+          const isActive = activeView === v.path;
+          const isPhotos = v.path === "/photos";
+
+          return (
+            <Box key={v.path}>
+              {i > 0 && <Box height="1px" bg="gray.900" />}
+              <HStack
+                justify="space-between"
+                align="center"
+                py="4.5vw"
+                cursor="pointer"
+                onClick={() => changeView(v.path)}
+                _active={{ opacity: 0.5 }}
+              >
+                <Text
+                  fontSize="4.5vw"
+                  fontWeight={isActive ? "400" : "300"}
+                  color={isActive ? "white" : "gray.500"}
+                  letterSpacing="0.01em"
                 >
                   {v.label}
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  borderColor="gray.600"
-                  color="gray.300"
-                  _hover={{ bg: "gray.700", color: "white" }}
-                  height="60px"
-                  px={5}
-                  onClick={nextPhoto}
-                >
-                  <MdSkipNext size={24} />
-                </Button>
-              </ButtonGroup>
-            ) : (
-              <ViewButton
-                key={v.path}
-                label={v.label}
-                active={activeView === v.path}
-                onClick={() => changeView(v.path)}
-              />
-            ),
-          )}
-        </VStack>
+                </Text>
+                <HStack gap="3vw" align="center">
+                  {isActive && (
+                    <Box width="5px" height="5px" borderRadius="full" bg="white" />
+                  )}
+                  {isPhotos && (
+                    <Box
+                      as="button"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        nextPhoto();
+                      }}
+                      color="gray.700"
+                      _hover={{ color: "gray.400" }}
+                      display="flex"
+                      alignItems="center"
+                      p="1vw"
+                    >
+                      <MdSkipNext size={20} />
+                    </Box>
+                  )}
+                </HStack>
+              </HStack>
+            </Box>
+          );
+        })}
       </VStack>
     </Box>
   );

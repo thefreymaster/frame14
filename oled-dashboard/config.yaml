@@ -1,5 +1,5 @@
 name: OLED Dashboard
-version: "1.2.0"
+version: "1.2.1"
 slug: oled_dashboard
 description: OLED-optimized home dashboard with clock, NWS weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame

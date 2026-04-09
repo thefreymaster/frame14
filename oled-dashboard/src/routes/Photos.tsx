@@ -127,21 +127,48 @@ export function Photos() {
     setCurrentIndex(0);
   }, [activeAlbumId]);
 
+  // Advance to a random photo
+  function advancePhoto() {
+    if (!album || album.assets.length === 0) return;
+    setCurrentIndex((prev) => {
+      let next = prev;
+      while (next === prev && album.assets.length > 1) {
+        next = Math.floor(Math.random() * album.assets.length);
+      }
+      return next;
+    });
+  }
+
   // Jump to a random photo on next_photo socket event
   useEffect(() => {
-    function onNextPhoto() {
-      if (!album || album.assets.length === 0) return;
-      setCurrentIndex((prev) => {
-        let next = prev;
-        while (next === prev && album.assets.length > 1) {
-          next = Math.floor(Math.random() * album.assets.length);
-        }
-        return next;
-      });
-    }
-    socket.on("next_photo", onNextPhoto);
+    socket.on("next_photo", advancePhoto);
     return () => {
-      socket.off("next_photo", onNextPhoto);
+      socket.off("next_photo", advancePhoto);
+    };
+  }, [album]);
+
+  // Right arrow key advances photo in landscape mode
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "ArrowRight") {
+        advancePhoto();
+      }
+    }
+    const mql = window.matchMedia("(orientation: landscape)");
+    if (mql.matches) {
+      window.addEventListener("keydown", onKeyDown);
+    }
+    function onOrientationChange(e: MediaQueryListEvent) {
+      if (e.matches) {
+        window.addEventListener("keydown", onKeyDown);
+      } else {
+        window.removeEventListener("keydown", onKeyDown);
+      }
+    }
+    mql.addEventListener("change", onOrientationChange);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      mql.removeEventListener("change", onOrientationChange);
     };
   }, [album]);
 

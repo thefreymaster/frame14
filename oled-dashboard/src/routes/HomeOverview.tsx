@@ -7,7 +7,6 @@ import type {
   HomeInternet,
   HomePrinter,
   HomeWeather,
-  HomePerson,
   HomeCalendarEvent,
 } from "../hooks/useHomeData";
 
@@ -433,29 +432,29 @@ function PrinterSection({ printer }: { printer: HomePrinter }) {
 
 // ── People ────────────────────────────────────────────────────────────────────
 
-function PeopleSection({ people }: { people: HomePerson[] }) {
-  return (
-    <HStack width="100%" gap="6vw" justify="center">
-      {people.map((person) => {
-        const isHome = person.state === "home" || person.state === "Home";
-        return (
-          <HStack key={person.name} align="baseline" gap="1.5vw">
-            <Text fontSize="4vw" color="gray.600" fontWeight="400">
-              {person.name}
-            </Text>
-            <Text
-              fontSize="3.8vw"
-              color={isHome ? "green.600" : "gray.700"}
-              fontWeight="300"
-            >
-              {isHome ? "home" : "away"}
-            </Text>
-          </HStack>
-        );
-      })}
-    </HStack>
-  );
-}
+// function PeopleSection({ people }: { people: HomePerson[] }) {
+//   return (
+//     <HStack width="100%" gap="6vw" justify="center">
+//       {people.map((person) => {
+//         const isHome = person.state === "home" || person.state === "Home";
+//         return (
+//           <HStack key={person.name} align="baseline" gap="1.5vw">
+//             <Text fontSize="4vw" color="gray.600" fontWeight="400">
+//               {person.name}
+//             </Text>
+//             <Text
+//               fontSize="3.8vw"
+//               color={isHome ? "green.600" : "gray.700"}
+//               fontWeight="300"
+//             >
+//               {isHome ? "home" : "away"}
+//             </Text>
+//           </HStack>
+//         );
+//       })}
+//     </HStack>
+//   );
+// }
 
 // ── Calendar ─────────────────────────────────────────────────────────────────
 

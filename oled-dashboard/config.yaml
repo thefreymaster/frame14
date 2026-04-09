@@ -11,7 +11,9 @@ arch:
 startup: application
 boot: auto
 init: false
+ingress: true
 host_network: true
+panel_icon: mdi:wrench
 options:
   ha_url: "http://supervisor/core"
   ha_token: ""

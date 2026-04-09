@@ -33,12 +33,13 @@ export function startMotionWatcher(io) {
 
   function broadcast(view) {
     console.log(`[ha-motion] → change_view: ${view}`);
+    io.currentView = view;
     io.emit("change_view", view);
   }
 
   function onMotionOn() {
     clearTimers();
-    broadcast("clock");
+    broadcast("home");
     timers.push(setTimeout(() => broadcast("photos"), 5 * 60 * 1000));
     timers.push(setTimeout(() => broadcast("blank"), 10 * 60 * 1000));
   }
@@ -73,7 +74,7 @@ export function startMotionWatcher(io) {
             id: msgId++,
             type: "subscribe_events",
             event_type: "state_changed",
-          })
+          }),
         );
         return;
       }
@@ -90,7 +91,7 @@ export function startMotionWatcher(io) {
 
         const state = data.new_state?.state;
         if (state === "on") onMotionOn();
-        else if (state === "off") onMotionOff();
+        // else if (state === "off") onMotionOff();
       }
     });
 
@@ -99,7 +100,9 @@ export function startMotionWatcher(io) {
     });
 
     ws.on("close", () => {
-      console.warn(`[ha-motion] disconnected, reconnecting in ${RECONNECT_DELAY_MS / 1000}s`);
+      console.warn(
+        `[ha-motion] disconnected, reconnecting in ${RECONNECT_DELAY_MS / 1000}s`,
+      );
       clearTimers();
       setTimeout(connect, RECONNECT_DELAY_MS);
     });

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Text, HStack, VStack } from "@chakra-ui/react";
 import { MdSkipNext } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
 import { socket } from "../lib/socket";
 
 const VIEWS = [
-  { path: "/clock", label: "Clock & Weather" },
-  { path: "/home", label: "Home Overview" },
+  { path: "/home", label: "Overview" },
+  { path: "/clock", label: "Analog Clock" },
+  { path: "/digital", label: "Digital Clock" },
   { path: "/photos", label: "Photo Slideshow" },
   { path: "/blank", label: "Blank Screen" },
 ];
@@ -15,9 +16,24 @@ function nextPhoto() {
   socket.emit("next_photo");
 }
 
-export function Mobile() {
+export function Control() {
   const { connected } = useSocket();
   const [activeView, setActiveView] = useState<string | null>(null);
+
+  useEffect(() => {
+    function onCurrentView(view: string) {
+      setActiveView(`/${view}`);
+    }
+    function onChangeView(view: string) {
+      setActiveView(`/${view}`);
+    }
+    socket.on("current_view", onCurrentView);
+    socket.on("change_view", onChangeView);
+    return () => {
+      socket.off("current_view", onCurrentView);
+      socket.off("change_view", onChangeView);
+    };
+  }, []);
 
   function changeView(path: string) {
     socket.emit("change", path.replace("/", ""));
@@ -28,7 +44,7 @@ export function Mobile() {
     <Box
       width="100vw"
       minHeight="100vh"
-      bg="black"
+      bg="#000"
       px="8vw"
       py="12vw"
       display="flex"
@@ -36,7 +52,12 @@ export function Mobile() {
     >
       {/* Header */}
       <HStack justify="space-between" align="baseline" mb="8vw">
-        <Text fontSize="5vw" color="gray.400" fontWeight="300" letterSpacing="0.02em">
+        <Text
+          fontSize="5vw"
+          color="gray.400"
+          fontWeight="300"
+          letterSpacing="0.02em"
+        >
           Control
         </Text>
         <HStack gap="1.5vw" align="center">
@@ -79,7 +100,12 @@ export function Mobile() {
                 </Text>
                 <HStack gap="3vw" align="center">
                   {isActive && (
-                    <Box width="5px" height="5px" borderRadius="full" bg="white" />
+                    <Box
+                      width="5px"
+                      height="5px"
+                      borderRadius="full"
+                      bg="white"
+                    />
                   )}
                   {isPhotos && (
                     <Box

@@ -150,7 +150,7 @@ export function Photos() {
       <Box
         width="100vw"
         height="100vh"
-        bg="black"
+        bg="#000"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -165,7 +165,7 @@ export function Photos() {
       <Box
         width="100vw"
         height="100vh"
-        bg="black"
+        bg="#000"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -181,7 +181,7 @@ export function Photos() {
     <Box
       width="100vw"
       height="100vh"
-      bg="black"
+      bg="#000"
       position="relative"
       overflow="hidden"
     >

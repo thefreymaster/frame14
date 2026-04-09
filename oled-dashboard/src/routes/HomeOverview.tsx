@@ -66,13 +66,8 @@ const HVAC_COLOR: Record<string, string> = {
   unknown: "gray.800",
 };
 
-function fmtW(n: number) {
-  if (isNaN(n)) return "--";
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}kW` : `${Math.round(n)}W`;
-}
-
 function fmtKwh(n: number) {
-  return isNaN(n) ? "--" : n.toFixed(1);
+  return isNaN(n) ? "--" : n.toFixed(0);
 }
 
 function fmtMins(minutes: number) {
@@ -297,12 +292,7 @@ function ClimateSection({ climate }: { climate: HomeClimate[] }) {
 // ── Energy ────────────────────────────────────────────────────────────────────
 
 function EnergySection({ energy }: { energy: HomeEnergy }) {
-  const {
-    currentProduction,
-    currentConsumption,
-    productionToday,
-    consumptionToday,
-  } = energy;
+  const { productionToday, consumptionToday } = energy;
   const pct =
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
   const pctColor =
@@ -311,46 +301,21 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
   return (
     <Box width="100%">
       <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.14em" mb="1.5vw">
-        ENERGY
+        ENERGY kWh
       </Text>
       <HStack width="100%" justify="space-between" align="flex-start">
-        {/* Live */}
-        <VStack align="flex-start" gap="0.4vw">
-          <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.1em">
-            NOW
-          </Text>
-          <HStack align="baseline" gap="1.5vw">
-            <Text fontSize="3.5vw" lineHeight="1">
-              ☀️
-            </Text>
-            <Text
-              fontSize="5.5vw"
-              color="yellow.500"
-              fontWeight="300"
-              lineHeight="1"
-            >
-              {fmtW(currentProduction)}
-            </Text>
-            <Text fontSize="3.5vw" lineHeight="1">
-              ⚡
-            </Text>
-            <Text
-              fontSize="5.5vw"
-              color="gray.400"
-              fontWeight="300"
-              lineHeight="1"
-            >
-              {fmtW(currentConsumption)}
-            </Text>
-          </HStack>
-        </VStack>
-
         {/* Today totals */}
-        <VStack align="flex-end" gap="0.4vw">
+        <VStack align="flex-end" gap="0.4vw" width="100%">
           <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.1em">
             TODAY
           </Text>
-          <HStack align="baseline" gap="1.5vw">
+          <HStack
+            align="baseline"
+            gap="1.5vw"
+            display="flex"
+            alignItems="center"
+            width="100%"
+          >
             <Text fontSize="3.5vw" lineHeight="1">
               ☀️
             </Text>
@@ -360,7 +325,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
               fontWeight="300"
               lineHeight="1"
             >
-              {fmtKwh(productionToday)}
+              {fmtKwh(productionToday)} kWh
             </Text>
             <Text fontSize="3.5vw" lineHeight="1">
               ⚡
@@ -371,13 +336,11 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
               fontWeight="300"
               lineHeight="1"
             >
-              {fmtKwh(consumptionToday)}
+              {fmtKwh(consumptionToday)} kWh
             </Text>
-            <Text fontSize="3vw" color="gray.600">
-              kWh
-            </Text>
-            <Text fontSize="3.5vw" color={pctColor} fontWeight="400">
-              ({Math.round(pct)}%)
+            <Spacer />
+            <Text fontSize="5.5vw" color={pctColor} fontWeight="400">
+              {Math.round(pct)}%
             </Text>
           </HStack>
         </VStack>

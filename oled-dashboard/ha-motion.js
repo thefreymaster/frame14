@@ -2,20 +2,60 @@
  * ha-motion.js
  *
  * Connects to the Home Assistant WebSocket API and watches
- * binary_sensor.kitchen_motion_sensor_motion. When motion is detected:
- *   0 min  → broadcast change_view: clock
- *   5 min  → broadcast change_view: photos
- *   10 min → broadcast change_view: blank
+ * binary_sensor.kitchen_motion_sensor_motion.
  *
- * When motion clears at any point, timers are cancelled and
- * change_view: blank is broadcast immediately.
+ * Motion detected → restore last used route from input_select.oledos_route
+ * 5 min no motion → broadcast change_view: blank
  */
 
 import WebSocket from "ws";
 import { HA_URL, HA_TOKEN } from "./config.js";
 
 const MOTION_ENTITY = "binary_sensor.kitchen_motion_sensor_motion";
+const ROUTE_ENTITY = "input_select.oledos_route";
+const BLANK_TIMEOUT_MS = 5 * 60 * 1000;
 const RECONNECT_DELAY_MS = 5_000;
+
+/**
+ * Fetch the current value of input_select.oledos_route from HA REST API.
+ */
+async function getLastRoute() {
+  const res = await fetch(`${HA_URL}/api/states/${ROUTE_ENTITY}`, {
+    headers: { Authorization: `Bearer ${HA_TOKEN}` },
+  });
+  if (!res.ok) {
+    console.error(`[ha-motion] failed to get ${ROUTE_ENTITY}: ${res.status}`);
+    return "home";
+  }
+  const data = await res.json();
+  return data.state || "home";
+}
+
+/**
+ * Set input_select.oledos_route in HA. Called when the view changes
+ * from /control or the REST API (but not for /blank).
+ */
+export async function setLastRoute(route) {
+  if (!HA_TOKEN) return;
+  try {
+    const res = await fetch(`${HA_URL}/api/services/input_select/select_option`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${HA_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        entity_id: ROUTE_ENTITY,
+        option: route,
+      }),
+    });
+    if (!res.ok) {
+      console.error(`[ha-motion] failed to set ${ROUTE_ENTITY}: ${res.status}`);
+    }
+  } catch (err) {
+    console.error(`[ha-motion] error setting ${ROUTE_ENTITY}:`, err.message);
+  }
+}
 
 export function startMotionWatcher(io) {
   if (!HA_TOKEN) {
@@ -24,11 +64,13 @@ export function startMotionWatcher(io) {
   }
 
   let msgId = 1;
-  let timers = [];
+  let blankTimer = null;
 
-  function clearTimers() {
-    timers.forEach(clearTimeout);
-    timers = [];
+  function clearBlankTimer() {
+    if (blankTimer) {
+      clearTimeout(blankTimer);
+      blankTimer = null;
+    }
   }
 
   function broadcast(view) {
@@ -37,16 +79,17 @@ export function startMotionWatcher(io) {
     io.emit("change_view", view);
   }
 
-  function onMotionOn() {
-    clearTimers();
-    broadcast("home");
-    timers.push(setTimeout(() => broadcast("photos"), 5 * 60 * 1000));
-    timers.push(setTimeout(() => broadcast("blank"), 10 * 60 * 1000));
+  function startBlankTimer() {
+    clearBlankTimer();
+    blankTimer = setTimeout(() => broadcast("blank"), BLANK_TIMEOUT_MS);
   }
 
-  function onMotionOff() {
-    clearTimers();
-    broadcast("blank");
+  async function onMotionOn() {
+    clearBlankTimer();
+    const lastRoute = await getLastRoute();
+    console.log(`[ha-motion] motion detected, restoring route: ${lastRoute}`);
+    broadcast(lastRoute);
+    startBlankTimer();
   }
 
   function connect() {
@@ -91,7 +134,6 @@ export function startMotionWatcher(io) {
 
         const state = data.new_state?.state;
         if (state === "on") onMotionOn();
-        // else if (state === "off") onMotionOff();
       }
     });
 
@@ -103,7 +145,7 @@ export function startMotionWatcher(io) {
       console.warn(
         `[ha-motion] disconnected, reconnecting in ${RECONNECT_DELAY_MS / 1000}s`,
       );
-      clearTimers();
+      clearBlankTimer();
       setTimeout(connect, RECONNECT_DELAY_MS);
     });
   }

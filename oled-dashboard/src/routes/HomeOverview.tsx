@@ -77,6 +77,22 @@ function fmtMins(minutes: number) {
   return `${m}m`;
 }
 
+// ── Orientation hook ─────────────────────────────────────────────────────────
+
+function useIsLandscape() {
+  const [landscape, setLandscape] = useState(
+    () => window.innerWidth > window.innerHeight,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia("(orientation: landscape)");
+    const handler = (e: MediaQueryListEvent) => setLandscape(e.matches);
+    mql.addEventListener("change", handler);
+    setLandscape(mql.matches);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+  return landscape;
+}
+
 // ── Divider ───────────────────────────────────────────────────────────────────
 
 function Divider() {
@@ -103,9 +119,9 @@ function Header({ internet }: { internet: HomeInternet }) {
   return (
     <Box width="100%">
       {/* Date line */}
-      <HStack align="baseline" gap="2vw" mb="0.8vw">
+      <HStack align="baseline" gap="2vmin" mb="0.8vmin">
         <Text
-          fontSize="3.8vw"
+          fontSize="3.8vmin"
           color="gray.600"
           fontWeight="400"
           letterSpacing="0.02em"
@@ -114,7 +130,7 @@ function Header({ internet }: { internet: HomeInternet }) {
         </Text>
         <Spacer />
         {!internet.connected && (
-          <Text fontSize="3vw" color="red.500" fontWeight="400">
+          <Text fontSize="3vmin" color="red.500" fontWeight="400">
             Offline
           </Text>
         )}
@@ -122,7 +138,7 @@ function Header({ internet }: { internet: HomeInternet }) {
 
       {/* Time */}
       <Text
-        fontSize="18vw"
+        fontSize="18vmin"
         fontWeight="300"
         letterSpacing="-0.03em"
         color="white"
@@ -131,10 +147,10 @@ function Header({ internet }: { internet: HomeInternet }) {
         {hours}:{minutes}
         <Text
           as="span"
-          fontSize="8vw"
+          fontSize="8vmin"
           fontWeight="300"
           color="gray.500"
-          ml="1.5vw"
+          ml="1.5vmin"
         >
           {ampm}
         </Text>
@@ -179,10 +195,10 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
   const emoji = CONDITION_EMOJI[weather.state] ?? "🌡️";
 
   return (
-    <HStack width="100%" gap="4vw" align="center">
+    <HStack width="100%" gap="4vmin" align="center">
       {/* Icon */}
       <Text
-        fontSize="14vw"
+        fontSize="14vmin"
         lineHeight="1"
         flexShrink={0}
         role="img"
@@ -195,7 +211,7 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
         {/* Temperature */}
         {weather.temperature != null && (
           <Text
-            fontSize="14vw"
+            fontSize="14vmin"
             fontWeight="300"
             letterSpacing="-0.03em"
             color="gray.300"
@@ -207,29 +223,29 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
         )}
 
         {/* Condition label */}
-        <Text fontSize="6vw" color="gray.200" fontWeight="300" flexShrink={0}>
+        <Text fontSize="6vmin" color="gray.200" fontWeight="300" flexShrink={0}>
           {label}
         </Text>
       </VStack>
 
       {/* Stats pushed to the right */}
-      <VStack flex="1" gap="4vw" justify="flex-end" align="center">
+      <VStack flex="1" gap="4vmin" justify="flex-end" align="center">
         {weather.humidity != null && (
-          <VStack align="center" gap="0.3vw">
-            <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.1em">
+          <VStack align="center" gap="0.3vmin">
+            <Text fontSize="2.6vmin" color="gray.700" letterSpacing="0.1em">
               HUMIDITY
             </Text>
-            <Text fontSize="4vw" color="gray.400" fontWeight="300">
+            <Text fontSize="4vmin" color="gray.400" fontWeight="300">
               {weather.humidity}%
             </Text>
           </VStack>
         )}
         {weather.windSpeed != null && (
-          <VStack align="center" gap="0.3vw">
-            <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.1em">
+          <VStack align="center" gap="0.3vmin">
+            <Text fontSize="2.6vmin" color="gray.700" letterSpacing="0.1em">
               WIND
             </Text>
-            <Text fontSize="4vw" color="gray.400" fontWeight="300">
+            <Text fontSize="4vmin" color="gray.400" fontWeight="300">
               {Math.round(weather.windSpeed)}
               {weather.windDirection != null
                 ? ` ${degToCompass(weather.windDirection)}`
@@ -250,19 +266,19 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
 
   return (
     <HStack justify="space-between" align="baseline" width="100%">
-      <Text fontSize="3.8vw" color="gray.500" fontWeight="400" minW="22vw">
+      <Text fontSize="3.8vmin" color="gray.500" fontWeight="400" minW="22vmin">
         {unit.name}
       </Text>
-      <Text fontSize="3.4vw" color={modeColor} minW="10vw">
+      <Text fontSize="3.4vmin" color={modeColor} minW="10vmin">
         {unit.state}
       </Text>
       {!isOff && unit.currentTemp != null ? (
-        <HStack align="baseline" gap="1vw" flex="1" justify="flex-end">
-          <Text fontSize="5vw" color="white" fontWeight="300" lineHeight="1">
+        <HStack align="baseline" gap="1vmin" flex="1" justify="flex-end">
+          <Text fontSize="5vmin" color="white" fontWeight="300" lineHeight="1">
             {unit.currentTemp}°
           </Text>
           {unit.targetTemp != null && (
-            <Text fontSize="3.4vw" color="gray.700">
+            <Text fontSize="3.4vmin" color="gray.700">
               → {unit.targetTemp}°
             </Text>
           )}
@@ -277,10 +293,15 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
 function ClimateSection({ climate }: { climate: HomeClimate[] }) {
   return (
     <Box width="100%">
-      <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.14em" mb="1.5vw">
+      <Text
+        fontSize="2.6vmin"
+        color="gray.700"
+        letterSpacing="0.14em"
+        mb="1.5vmin"
+      >
         CLIMATE
       </Text>
-      <VStack gap="1.2vw" align="stretch" width="100%">
+      <VStack gap="1.2vmin" align="stretch" width="100%">
         {climate.map((unit) => (
           <ClimateRow key={unit.name} unit={unit} />
         ))}
@@ -300,38 +321,43 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
 
   return (
     <Box width="100%">
-      <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.14em" mb="1.5vw">
+      <Text
+        fontSize="2.6vmin"
+        color="gray.700"
+        letterSpacing="0.14em"
+        mb="1.5vmin"
+      >
         ENERGY kWh
       </Text>
       <HStack width="100%" justify="space-between" align="flex-start">
         {/* Today totals */}
-        <VStack align="flex-end" gap="0.4vw" width="100%">
-          <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.1em">
+        <VStack align="flex-end" gap="0.4vmin" width="100%">
+          <Text fontSize="2.6vmin" color="gray.700" letterSpacing="0.1em">
             TODAY
           </Text>
           <HStack
             align="baseline"
-            gap="1.5vw"
+            gap="1.5vmin"
             display="flex"
             alignItems="center"
             width="100%"
           >
-            <Text fontSize="3.5vw" lineHeight="1">
+            <Text fontSize="3.5vmin" lineHeight="1">
               ☀️
             </Text>
             <Text
-              fontSize="5.5vw"
+              fontSize="5.5vmin"
               color="yellow.600"
               fontWeight="300"
               lineHeight="1"
             >
               {fmtKwh(productionToday)} kWh
             </Text>
-            <Text fontSize="3.5vw" lineHeight="1">
+            <Text fontSize="3.5vmin" lineHeight="1">
               ⚡
             </Text>
             <Text
-              fontSize="5.5vw"
+              fontSize="5.5vmin"
               color="gray.400"
               fontWeight="300"
               lineHeight="1"
@@ -339,7 +365,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
               {fmtKwh(consumptionToday)} kWh
             </Text>
             <Spacer />
-            <Text fontSize="5.5vw" color={pctColor} fontWeight="400">
+            <Text fontSize="5.5vmin" color={pctColor} fontWeight="400">
               {Math.round(pct)}%
             </Text>
           </HStack>
@@ -360,31 +386,36 @@ function PrinterSection({ printer }: { printer: HomePrinter }) {
 
   return (
     <Box width="100%">
-      <Text fontSize="2.6vw" color="gray.700" letterSpacing="0.14em" mb="1.5vw">
+      <Text
+        fontSize="2.6vmin"
+        color="gray.700"
+        letterSpacing="0.14em"
+        mb="1.5vmin"
+      >
         3D PRINTER
       </Text>
       <HStack width="100%" justify="space-between" align="baseline">
         <Text
-          fontSize="3.8vw"
+          fontSize="3.8vmin"
           color="gray.500"
           fontWeight="300"
           overflow="hidden"
           whiteSpace="nowrap"
           textOverflow="ellipsis"
-          maxW="45vw"
+          maxW="45vmin"
         >
           {printer.taskName ?? "—"}
         </Text>
-        <HStack align="baseline" gap="4vw">
+        <HStack align="baseline" gap="4vmin">
           <Text
-            fontSize="5.5vw"
+            fontSize="5.5vmin"
             color="green.500"
             fontWeight="300"
             lineHeight="1"
           >
             {Math.round(printer.progress)}%
           </Text>
-          <Text fontSize="4vw" color="gray.500" fontWeight="300">
+          <Text fontSize="4vmin" color="gray.500" fontWeight="300">
             {fmtMins(printer.remainingTime)}
           </Text>
         </HStack>
@@ -397,16 +428,16 @@ function PrinterSection({ printer }: { printer: HomePrinter }) {
 
 // function PeopleSection({ people }: { people: HomePerson[] }) {
 //   return (
-//     <HStack width="100%" gap="6vw" justify="center">
+//     <HStack width="100%" gap="6vmin" justify="center">
 //       {people.map((person) => {
 //         const isHome = person.state === "home" || person.state === "Home";
 //         return (
-//           <HStack key={person.name} align="baseline" gap="1.5vw">
-//             <Text fontSize="4vw" color="gray.600" fontWeight="400">
+//           <HStack key={person.name} align="baseline" gap="1.5vmin">
+//             <Text fontSize="4vmin" color="gray.600" fontWeight="400">
 //               {person.name}
 //             </Text>
 //             <Text
-//               fontSize="3.8vw"
+//               fontSize="3.8vmin"
 //               color={isHome ? "green.600" : "gray.700"}
 //               fontWeight="300"
 //             >
@@ -438,23 +469,23 @@ function EventList({
   max?: number;
 }) {
   return (
-    <VStack gap="1vw" align="stretch" width="100%">
+    <VStack gap="1vmin" align="stretch" width="100%">
       {events.slice(0, max).map((event, i) => (
         <HStack key={i} justify="space-between" align="baseline" width="100%">
           <Text
-            fontSize="3.8vw"
+            fontSize="3.8vmin"
             color="gray.400"
             fontWeight="300"
             overflow="hidden"
             whiteSpace="nowrap"
             textOverflow="ellipsis"
             flex="1"
-            mr="3vw"
+            mr="3vmin"
           >
             {event.summary}
           </Text>
           <Text
-            fontSize="3.2vw"
+            fontSize="3.2vmin"
             color="gray.600"
             fontWeight="300"
             flexShrink={0}
@@ -481,10 +512,10 @@ function CalendarSection({
       {today.length > 0 && (
         <>
           <Text
-            fontSize="2.6vw"
+            fontSize="2.6vmin"
             color="gray.700"
             letterSpacing="0.14em"
-            mb="1.5vw"
+            mb="1.5vmin"
           >
             TODAY
           </Text>
@@ -492,12 +523,12 @@ function CalendarSection({
         </>
       )}
       {tomorrow.length > 0 && (
-        <Box mt={today.length > 0 ? "2.5vw" : "0"}>
+        <Box mt={today.length > 0 ? "2.5vmin" : "0"}>
           <Text
-            fontSize="2.6vw"
+            fontSize="2.6vmin"
             color="gray.700"
             letterSpacing="0.14em"
-            mb="1.5vw"
+            mb="1.5vmin"
           >
             TOMORROW
           </Text>
@@ -512,18 +543,19 @@ function CalendarSection({
 
 export function HomeOverview() {
   const { data, isError, isPending } = useHomeData();
+  const isLandscape = useIsLandscape();
 
   if (isPending) {
     return (
       <Box
-        width="100vw"
+        width="100%"
         height="100vh"
         bg="#000"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Text fontSize="3vw" color="gray.800" letterSpacing="0.12em">
+        <Text fontSize="3vmin" color="gray.800" letterSpacing="0.12em">
           loading
         </Text>
       </Box>
@@ -533,14 +565,14 @@ export function HomeOverview() {
   if (isError || !data) {
     return (
       <Box
-        width="100vw"
+        width="100%"
         height="100vh"
         bg="#000"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Text fontSize="3vw" color="gray.800">
+        <Text fontSize="3vmin" color="gray.800">
           unavailable
         </Text>
       </Box>
@@ -552,51 +584,97 @@ export function HomeOverview() {
     data.printer.status === "printing" ||
     data.printer.status === "pause";
 
+  const hasCalendar =
+    data.calendar?.today?.length > 0 || data.calendar?.tomorrow?.length > 0;
+
   return (
     <Box
-      width="100vw"
+      width="100%"
       height="100vh"
       bg="#000"
       overflow="hidden"
-      px="6vw"
-      py="4vh"
       display="flex"
-      flexDirection="column"
-      justifyContent="space-between"
+      flexDirection={isLandscape ? "row" : "column"}
+      alignItems={isLandscape ? "flex-start" : "center"}
+      justifyContent="flex-start"
+      px={isLandscape ? "3vmin" : "6vmin"}
+      py="4vh"
+      gap={isLandscape ? "4vmin" : "2vmin"}
     >
-      <Header internet={data.internet} />
-
-      <Divider />
-
-      {data.weather && <WeatherSection weather={data.weather} />}
-
-      <Divider />
-
-      {(data.calendar?.today?.length > 0 ||
-        data.calendar?.tomorrow?.length > 0) && (
+      {isLandscape ? (
         <>
-          <CalendarSection
-            today={data.calendar.today}
-            tomorrow={data.calendar.tomorrow}
-          />
+          {/* Left column — time & weather */}
+          <Box
+            flex="1"
+            display="flex"
+            flexDirection="column"
+            justifyContent="flex-start"
+            gap="3vmin"
+          >
+            <Header internet={data.internet} />
+            {data.weather && (
+              <>
+                <Divider />
+                <WeatherSection weather={data.weather} />
+              </>
+            )}
+          </Box>
+
+          {/* Right column — details */}
+          <Box
+            flex="1"
+            display="flex"
+            flexDirection="column"
+            justifyContent="flex-start"
+            gap="2vmin"
+            overflowY="auto"
+          >
+            {hasCalendar && (
+              <>
+                <CalendarSection
+                  today={data.calendar.today}
+                  tomorrow={data.calendar.tomorrow}
+                />
+                <Divider />
+              </>
+            )}
+            <ClimateSection climate={data.climate} />
+            <Divider />
+            <EnergySection energy={data.energy} />
+            {printerActive && (
+              <>
+                <Divider />
+                <PrinterSection printer={data.printer} />
+              </>
+            )}
+          </Box>
+        </>
+      ) : (
+        <>
+          <Header internet={data.internet} />
           <Divider />
+          {data.weather && <WeatherSection weather={data.weather} />}
+          <Divider />
+          {hasCalendar && (
+            <>
+              <CalendarSection
+                today={data.calendar.today}
+                tomorrow={data.calendar.tomorrow}
+              />
+              <Divider />
+            </>
+          )}
+          <ClimateSection climate={data.climate} />
+          <Divider />
+          <EnergySection energy={data.energy} />
+          {printerActive && (
+            <>
+              <Divider />
+              <PrinterSection printer={data.printer} />
+            </>
+          )}
         </>
       )}
-
-      <ClimateSection climate={data.climate} />
-
-      <Divider />
-
-      <EnergySection energy={data.energy} />
-
-      {printerActive && (
-        <>
-          <Divider />
-          <PrinterSection printer={data.printer} />
-        </>
-      )}
-
-      {/* <PeopleSection people={data.people} /> */}
     </Box>
   );
 }

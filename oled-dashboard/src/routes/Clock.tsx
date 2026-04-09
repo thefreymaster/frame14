@@ -92,7 +92,7 @@ function AnalogClock() {
       alignItems="center"
       justifyContent="center"
     >
-      <Box width="80vw" maxWidth="80vh">
+      <Box width="80vmin">
         <svg viewBox="0 0 200 200" width="100%" height="100%">
           {MARKERS}
 
@@ -158,7 +158,7 @@ function AnalogClock() {
 export function Clock() {
   return (
     <Box
-      width="100vw"
+      width="100%"
       height="100vh"
       bg="#000"
       overflow="hidden"

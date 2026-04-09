@@ -31,28 +31,28 @@ export function ClockDisplay() {
   return (
     <Box textAlign="center" width="100%">
       <Text
-        fontSize="21vw"
+        fontSize="21vmin"
         fontWeight="200"
         letterSpacing="-0.02em"
         color="white"
         lineHeight="1"
       >
         {hours}:{minutes}
-        <Text as="span" fontSize="8vw" fontWeight="300" color="gray.500" ml="2vw">
+        <Text as="span" fontSize="8vmin" fontWeight="300" color="gray.500" ml="2vmin">
           {ampm}
         </Text>
       </Text>
 
       <Text
-        fontSize="5.5vw"
+        fontSize="5.5vmin"
         color="gray.400"
-        mt="3vw"
+        mt="3vmin"
         letterSpacing="0.08em"
       >
         {day}
       </Text>
       <Text
-        fontSize="4.5vw"
+        fontSize="4.5vmin"
         color="gray.600"
         letterSpacing="0.06em"
       >

@@ -41,31 +41,31 @@ export function WeatherForecast({ forecast }: Props) {
   const periods = forecast.slice(0, 5);
 
   return (
-    <Box width="100%" px="2vw">
+    <Box width="100%" px="2vmin">
       <HStack gap={0} justify="space-between" align="stretch">
         {periods.map((period, i) => (
           <VStack
             key={i}
-            gap="1vw"
+            gap="1vmin"
             align="center"
             flex={1}
             opacity={i === 0 ? 1 : 0.65}
-            py="2vw"
+            py="2vmin"
           >
             <Text
               
-              fontSize="2.8vw"
+              fontSize="2.8vmin"
               color="gray.500"
               letterSpacing="0.05em"
             >
               {formatHour(period.datetime)}
             </Text>
-            <Text fontSize="7vw" lineHeight="1" role="img" aria-label={period.condition}>
+            <Text fontSize="7vmin" lineHeight="1" role="img" aria-label={period.condition}>
               {conditionEmoji(period.condition)}
             </Text>
             <Text
               
-              fontSize="4.5vw"
+              fontSize="4.5vmin"
               color="gray.200"
               fontWeight="300"
             >
@@ -73,11 +73,11 @@ export function WeatherForecast({ forecast }: Props) {
             </Text>
             {period.precipitationProbability != null &&
               period.precipitationProbability > 0 ? (
-              <Text  fontSize="2.8vw" color="blue.400">
+              <Text  fontSize="2.8vmin" color="blue.400">
                 {period.precipitationProbability}%
               </Text>
             ) : (
-              <Box height="2.8vw" />
+              <Box height="2.8vmin" />
             )}
           </VStack>
         ))}

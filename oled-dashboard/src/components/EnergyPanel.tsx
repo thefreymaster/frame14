@@ -14,33 +14,33 @@ export function EnergyPanel({ energy, isError }: Props) {
 
   if (isError) {
     return (
-      <Text fontSize="3vw" color="gray.800" letterSpacing="0.08em">
+      <Text fontSize="3vmin" color="gray.800" letterSpacing="0.08em">
         energy unavailable
       </Text>
     );
   }
 
   return (
-    <HStack gap="8vw" justify="center" width="100%">
+    <HStack gap="8vmin" justify="center" width="100%">
       <Box textAlign="center">
-        <Text fontSize="3vw" color="gray.600" letterSpacing="0.08em">
+        <Text fontSize="3vmin" color="gray.600" letterSpacing="0.08em">
           SOLAR TODAY
         </Text>
-        <Text fontSize="6vw" color="yellow.400" fontWeight="200" lineHeight="1.2">
+        <Text fontSize="6vmin" color="yellow.400" fontWeight="200" lineHeight="1.2">
           {fmt(energy?.production)}
-          <Text as="span" fontSize="3vw" color="gray.500" ml="1vw">
+          <Text as="span" fontSize="3vmin" color="gray.500" ml="1vmin">
             {unit(energy?.productionUnit)}
           </Text>
         </Text>
       </Box>
 
       <Box textAlign="center">
-        <Text fontSize="3vw" color="gray.600" letterSpacing="0.08em">
+        <Text fontSize="3vmin" color="gray.600" letterSpacing="0.08em">
           USAGE TODAY
         </Text>
-        <Text fontSize="6vw" color="gray.300" fontWeight="200" lineHeight="1.2">
+        <Text fontSize="6vmin" color="gray.300" fontWeight="200" lineHeight="1.2">
           {fmt(energy?.consumption)}
-          <Text as="span" fontSize="3vw" color="gray.500" ml="1vw">
+          <Text as="span" fontSize="3vmin" color="gray.500" ml="1vmin">
             {unit(energy?.consumptionUnit)}
           </Text>
         </Text>

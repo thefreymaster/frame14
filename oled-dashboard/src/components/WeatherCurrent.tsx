@@ -45,46 +45,46 @@ interface Props {
 
 export function WeatherCurrent({ weather }: Props) {
   return (
-    <VStack gap="2vw" align="center" width="100%">
+    <VStack gap="2vmin" align="center" width="100%">
       {/* Emoji + temperature on the same row */}
-      <HStack gap="4vw" align="center" justify="center">
-        <Text fontSize="16vw" lineHeight="1" role="img" aria-label={weather.state}>
+      <HStack gap="4vmin" align="center" justify="center">
+        <Text fontSize="16vmin" lineHeight="1" role="img" aria-label={weather.state}>
           {conditionEmoji(weather.state)}
         </Text>
-        <Text fontSize="16vw" color="white" fontWeight="200" lineHeight="1">
+        <Text fontSize="16vmin" color="white" fontWeight="200" lineHeight="1">
           {weather.temperature}°
         </Text>
       </HStack>
 
       {/* Condition label */}
-      <Text fontSize="5vw" color="gray.400" letterSpacing="0.08em">
+      <Text fontSize="5vmin" color="gray.400" letterSpacing="0.08em">
         {formatCondition(weather.state)}
       </Text>
 
       {/* Detail row */}
-      <HStack gap="6vw" justify="center">
+      <HStack gap="6vmin" justify="center">
         <Box textAlign="center">
-          <Text fontSize="3vw" color="gray.600">
+          <Text fontSize="3vmin" color="gray.600">
             HUMIDITY
           </Text>
-          <Text fontSize="4vw" color="gray.400">
+          <Text fontSize="4vmin" color="gray.400">
             {weather.humidity}%
           </Text>
         </Box>
         <Box textAlign="center">
-          <Text fontSize="3vw" color="gray.600">
+          <Text fontSize="3vmin" color="gray.600">
             WIND
           </Text>
-          <Text fontSize="4vw" color="gray.400">
+          <Text fontSize="4vmin" color="gray.400">
             {formatWindSpeed(weather.windSpeed)}
           </Text>
         </Box>
         {weather.visibility != null && (
           <Box textAlign="center">
-            <Text fontSize="3vw" color="gray.600">
+            <Text fontSize="3vmin" color="gray.600">
               VISIBILITY
             </Text>
-            <Text fontSize="4vw" color="gray.400">
+            <Text fontSize="4vmin" color="gray.400">
               {weather.visibility} mi
             </Text>
           </Box>

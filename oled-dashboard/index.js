@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { Server } from "socket.io";
 
 import { PORT } from "./config.js";
-import { startMotionWatcher } from "./ha-motion.js";
+import { startMotionWatcher, setLastRoute } from "./ha-motion.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
@@ -42,6 +42,7 @@ io.on("connection", (socket) => {
     console.log({ io: "change", view });
     io.currentView = view;
     socket.broadcast.emit("change_view", view);
+    if (view !== "blank") setLastRoute(view);
   });
 
   socket.on("next_photo", () => {

@@ -44,7 +44,7 @@ export function DigitalClock() {
 
   return (
     <Box
-      width="100vw"
+      width="100%"
       height="100vh"
       bg="#000"
       overflow="hidden"
@@ -54,7 +54,7 @@ export function DigitalClock() {
       justifyContent="center"
     >
       <Text
-        fontSize="24vw"
+        fontSize="24vmin"
         fontWeight="200"
         letterSpacing="-0.03em"
         color="white"
@@ -63,21 +63,21 @@ export function DigitalClock() {
         {hours}:{minutes}
         <Text
           as="span"
-          fontSize="8vw"
+          fontSize="8vmin"
           fontWeight="300"
           color="gray.500"
-          ml="2vw"
+          ml="2vmin"
         >
           {ampm}
         </Text>
       </Text>
 
       <Text
-        fontSize="4vw"
+        fontSize="4vmin"
         color="gray.600"
         fontWeight="300"
         letterSpacing="0.04em"
-        mt="3vw"
+        mt="3vmin"
       >
         {DAYS[now.getDay()]}, {MONTHS[now.getMonth()]} {now.getDate()}
       </Text>

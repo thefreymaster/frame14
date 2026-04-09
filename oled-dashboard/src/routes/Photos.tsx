@@ -42,9 +42,9 @@ function PhotoOverlay({ assetId }: OverlayProps) {
     <PixelShift>
       <Box
         position="absolute"
-        top="5vw"
-        left="5vw"
-        right="5vw"
+        top="5vmin"
+        left="5vmin"
+        right="5vmin"
         textAlign="left"
         pointerEvents="none"
       >
@@ -55,7 +55,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           width="100%"
         >
           <Text
-            fontSize="14vw"
+            fontSize="14vmin"
             fontWeight="300"
             letterSpacing="-0.03em"
             color={color}
@@ -65,10 +65,10 @@ function PhotoOverlay({ assetId }: OverlayProps) {
             {hours}:{minutes}
             <Text
               as="span"
-              fontSize="5.5vw"
+              fontSize="5.5vmin"
               fontWeight="300"
               color={color}
-              ml="1.5vw"
+              ml="1.5vmin"
               style={{ transition: "color 1s ease" }}
             >
               {ampm}
@@ -76,7 +76,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           </Text>
           {weather && (
             <Text
-              fontSize="14vw"
+              fontSize="14vmin"
               fontWeight="300"
               letterSpacing="-0.03em"
               color={color}
@@ -127,28 +127,55 @@ export function Photos() {
     setCurrentIndex(0);
   }, [activeAlbumId]);
 
+  // Advance to a random photo
+  function advancePhoto() {
+    if (!album || album.assets.length === 0) return;
+    setCurrentIndex((prev) => {
+      let next = prev;
+      while (next === prev && album.assets.length > 1) {
+        next = Math.floor(Math.random() * album.assets.length);
+      }
+      return next;
+    });
+  }
+
   // Jump to a random photo on next_photo socket event
   useEffect(() => {
-    function onNextPhoto() {
-      if (!album || album.assets.length === 0) return;
-      setCurrentIndex((prev) => {
-        let next = prev;
-        while (next === prev && album.assets.length > 1) {
-          next = Math.floor(Math.random() * album.assets.length);
-        }
-        return next;
-      });
-    }
-    socket.on("next_photo", onNextPhoto);
+    socket.on("next_photo", advancePhoto);
     return () => {
-      socket.off("next_photo", onNextPhoto);
+      socket.off("next_photo", advancePhoto);
+    };
+  }, [album]);
+
+  // Right arrow key advances photo in landscape mode
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "ArrowRight") {
+        advancePhoto();
+      }
+    }
+    const mql = window.matchMedia("(orientation: landscape)");
+    if (mql.matches) {
+      window.addEventListener("keydown", onKeyDown);
+    }
+    function onOrientationChange(e: MediaQueryListEvent) {
+      if (e.matches) {
+        window.addEventListener("keydown", onKeyDown);
+      } else {
+        window.removeEventListener("keydown", onKeyDown);
+      }
+    }
+    mql.addEventListener("change", onOrientationChange);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      mql.removeEventListener("change", onOrientationChange);
     };
   }, [album]);
 
   if (!pinnedAlbumId && albumsPending) {
     return (
       <Box
-        width="100vw"
+        width="100%"
         height="100vh"
         bg="#000"
         display="flex"
@@ -163,7 +190,7 @@ export function Photos() {
   if (!pinnedAlbumId && (albumsError || !albums || albums.length === 0)) {
     return (
       <Box
-        width="100vw"
+        width="100%"
         height="100vh"
         bg="#000"
         display="flex"
@@ -179,7 +206,7 @@ export function Photos() {
 
   return (
     <Box
-      width="100vw"
+      width="100%"
       height="100vh"
       bg="#000"
       position="relative"

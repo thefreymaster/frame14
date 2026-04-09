@@ -45,29 +45,29 @@ export function Control() {
       width="100vw"
       minHeight="100vh"
       bg="#000"
-      px="8vw"
-      py="12vw"
+      px="8vmin"
+      py="12vmin"
       display="flex"
       flexDirection="column"
     >
       {/* Header */}
-      <HStack justify="space-between" align="baseline" mb="8vw">
+      <HStack justify="space-between" align="baseline" mb="8vmin">
         <Text
-          fontSize="5vw"
+          fontSize="5vmin"
           color="gray.400"
           fontWeight="300"
           letterSpacing="0.02em"
         >
           Control
         </Text>
-        <HStack gap="1.5vw" align="center">
+        <HStack gap="1.5vmin" align="center">
           <Box
             width="5px"
             height="5px"
             borderRadius="full"
             bg={connected ? "green.700" : "gray.800"}
           />
-          <Text fontSize="3vw" color="gray.700">
+          <Text fontSize="3vmin" color="gray.700">
             {connected ? "connected" : "disconnected"}
           </Text>
         </HStack>
@@ -85,20 +85,20 @@ export function Control() {
               <HStack
                 justify="space-between"
                 align="center"
-                py="4.5vw"
+                py="4.5vmin"
                 cursor="pointer"
                 onClick={() => changeView(v.path)}
                 _active={{ opacity: 0.5 }}
               >
                 <Text
-                  fontSize="4.5vw"
+                  fontSize="4.5vmin"
                   fontWeight={isActive ? "400" : "300"}
                   color={isActive ? "white" : "gray.500"}
                   letterSpacing="0.01em"
                 >
                   {v.label}
                 </Text>
-                <HStack gap="3vw" align="center">
+                <HStack gap="3vmin" align="center">
                   {isActive && (
                     <Box
                       width="5px"
@@ -118,7 +118,7 @@ export function Control() {
                       _hover={{ color: "gray.400" }}
                       display="flex"
                       alignItems="center"
-                      p="1vw"
+                      p="1vmin"
                     >
                       <MdSkipNext size={20} />
                     </Box>

@@ -3,10 +3,11 @@
   "short_name": "Dashboard",
   "description": "OLED display dashboard with clock, weather, and photo slideshow",
   "start_url": "/",
-  "display": "fullscreen",
+  "scope": "/",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
-  "theme_color": "#863bff",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "/icon-192.png",

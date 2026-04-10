@@ -57,7 +57,7 @@ export function DigitalClock() {
         fontSize="24vmin"
         fontWeight="200"
         letterSpacing="-0.03em"
-        color="white"
+        color="gray.400"
         lineHeight="1"
       >
         {hours}:{minutes}

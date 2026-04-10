@@ -160,7 +160,7 @@ function Header({ internet }: { internet: HomeInternet }) {
         fontSize="18vmin"
         fontWeight="300"
         letterSpacing="-0.03em"
-        color="white"
+        color="gray.400"
         lineHeight="0.9"
       >
         {hours}:{minutes}
@@ -219,7 +219,7 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
   return (
     <HStack width="100%" gap="4vmin" align="center">
       {/* Icon */}
-      <Box fontSize="14vmin" lineHeight="1" flexShrink={0} color="gray.300">
+      <Box fontSize="14vmin" lineHeight="1" flexShrink={0} color="gray.500">
         <Icon size="1em" />
       </Box>
 
@@ -230,7 +230,7 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
             fontSize="14vmin"
             fontWeight="300"
             letterSpacing="-0.03em"
-            color="gray.300"
+            color="gray.500"
             lineHeight="1"
             flexShrink={0}
           >
@@ -239,7 +239,7 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
         )}
 
         {/* Condition label */}
-        <Text fontSize="6vmin" color="gray.200" fontWeight="300" flexShrink={0}>
+        <Text fontSize="6vmin" color="gray.500" fontWeight="300" flexShrink={0}>
           {label}
         </Text>
       </VStack>
@@ -290,7 +290,12 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
       </Text>
       {!isOff && unit.currentTemp != null ? (
         <HStack align="baseline" gap="1vmin" flex="1" justify="flex-end">
-          <Text fontSize="5vmin" color="white" fontWeight="300" lineHeight="1">
+          <Text
+            fontSize="5vmin"
+            color="gray.400"
+            fontWeight="300"
+            lineHeight="1"
+          >
             {unit.currentTemp}°
           </Text>
           {unit.targetTemp != null && (
@@ -333,7 +338,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
   const pct =
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
   const pctColor =
-    pct >= 100 ? "green.500" : pct >= 50 ? "yellow.500" : "gray.600";
+    pct >= 100 ? "green.700" : pct >= 50 ? "yellow.700" : "gray.700";
 
   return (
     <Box width="100%">

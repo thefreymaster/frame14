@@ -48,16 +48,16 @@ export function WeatherCurrent({ weather }: Props) {
     <VStack gap="2vmin" align="center" width="100%">
       {/* Emoji + temperature on the same row */}
       <HStack gap="4vmin" align="center" justify="center">
-        <Text fontSize="16vmin" lineHeight="1" role="img" aria-label={weather.state}>
+        <Text fontSize="16vmin" lineHeight="1" role="img" aria-label={weather.state} opacity={0.35}>
           {conditionEmoji(weather.state)}
         </Text>
-        <Text fontSize="16vmin" color="white" fontWeight="200" lineHeight="1">
+        <Text fontSize="16vmin" color="gray.500" fontWeight="200" lineHeight="1">
           {weather.temperature}°
         </Text>
       </HStack>
 
       {/* Condition label */}
-      <Text fontSize="5vmin" color="gray.400" letterSpacing="0.08em">
+      <Text fontSize="5vmin" color="gray.500" letterSpacing="0.08em">
         {formatCondition(weather.state)}
       </Text>
 
@@ -67,7 +67,7 @@ export function WeatherCurrent({ weather }: Props) {
           <Text fontSize="3vmin" color="gray.600">
             HUMIDITY
           </Text>
-          <Text fontSize="4vmin" color="gray.400">
+          <Text fontSize="4vmin" color="gray.500">
             {weather.humidity}%
           </Text>
         </Box>
@@ -75,7 +75,7 @@ export function WeatherCurrent({ weather }: Props) {
           <Text fontSize="3vmin" color="gray.600">
             WIND
           </Text>
-          <Text fontSize="4vmin" color="gray.400">
+          <Text fontSize="4vmin" color="gray.500">
             {formatWindSpeed(weather.windSpeed)}
           </Text>
         </Box>
@@ -84,7 +84,7 @@ export function WeatherCurrent({ weather }: Props) {
             <Text fontSize="3vmin" color="gray.600">
               VISIBILITY
             </Text>
-            <Text fontSize="4vmin" color="gray.400">
+            <Text fontSize="4vmin" color="gray.500">
               {weather.visibility} mi
             </Text>
           </Box>

@@ -60,20 +60,20 @@ export function WeatherForecast({ forecast }: Props) {
             >
               {formatHour(period.datetime)}
             </Text>
-            <Text fontSize="7vmin" lineHeight="1" role="img" aria-label={period.condition}>
+            <Text fontSize="7vmin" lineHeight="1" role="img" aria-label={period.condition} opacity={0.35}>
               {conditionEmoji(period.condition)}
             </Text>
             <Text
               
               fontSize="4.5vmin"
-              color="gray.200"
+              color="gray.600"
               fontWeight="300"
             >
               {period.temperature}°
             </Text>
             {period.precipitationProbability != null &&
               period.precipitationProbability > 0 ? (
-              <Text  fontSize="2.8vmin" color="blue.400">
+              <Text  fontSize="2.8vmin" color="blue.700">
                 {period.precipitationProbability}%
               </Text>
             ) : (

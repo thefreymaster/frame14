@@ -3,6 +3,7 @@ import { Box, Text, HStack, VStack } from "@chakra-ui/react";
 import { MdSkipNext } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
 import { socket } from "../lib/socket";
+import { setDeviceMode } from "../lib/deviceMode";
 
 const VIEWS = [
   { path: "/home", label: "Overview" },
@@ -129,6 +130,23 @@ export function Control() {
           );
         })}
       </VStack>
+
+      {/* Switch to frame mode */}
+      <Box mt="auto" pt="8vmin">
+        <Box height="1px" bg="gray.900" mb="4.5vmin" />
+        <Text
+          fontSize="3.5vmin"
+          color="gray.700"
+          cursor="pointer"
+          _active={{ opacity: 0.5 }}
+          onClick={() => {
+            setDeviceMode("frame");
+            window.location.href = "/home";
+          }}
+        >
+          Use as display frame
+        </Text>
+      </Box>
     </Box>
   );
 }

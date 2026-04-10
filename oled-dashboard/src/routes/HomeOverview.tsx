@@ -1,5 +1,24 @@
 import { useEffect, useState } from "react";
 import { Box, Text, HStack, VStack, Spacer } from "@chakra-ui/react";
+import {
+  WiMoonAltWaningCrescent4,
+  WiCloudy,
+  WiNa,
+  WiFog,
+  WiHail,
+  WiLightning,
+  WiThunderstorm,
+  WiDayCloudy,
+  WiRain,
+  WiShowers,
+  WiSnow,
+  WiRainMix,
+  WiDaySunny,
+  WiStrongWind,
+} from "react-icons/wi";
+import { PiSolarRoof } from "react-icons/pi";
+
+import { IoFlash } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
 import type {
   HomeClimate,
@@ -161,22 +180,25 @@ function Header({ internet }: { internet: HomeInternet }) {
 
 // ── Weather condition icons ───────────────────────────────────────────────────
 
-const CONDITION_EMOJI: Record<string, string> = {
-  "clear-night": "🌙",
-  cloudy: "☁️",
-  exceptional: "⚠️",
-  fog: "🌫️",
-  hail: "🌨️",
-  lightning: "⚡",
-  "lightning-rainy": "⛈️",
-  partlycloudy: "⛅",
-  pouring: "🌧️",
-  rainy: "🌧️",
-  snowy: "❄️",
-  "snowy-rainy": "🌨️",
-  sunny: "☀️",
-  windy: "💨",
-  "windy-variant": "💨",
+const CONDITION_ICON: Record<
+  string,
+  React.ComponentType<{ size?: string | number; color?: string }>
+> = {
+  "clear-night": WiMoonAltWaningCrescent4,
+  cloudy: WiCloudy,
+  exceptional: WiNa,
+  fog: WiFog,
+  hail: WiHail,
+  lightning: WiLightning,
+  "lightning-rainy": WiThunderstorm,
+  partlycloudy: WiDayCloudy,
+  pouring: WiRain,
+  rainy: WiShowers,
+  snowy: WiSnow,
+  "snowy-rainy": WiRainMix,
+  sunny: WiDaySunny,
+  windy: WiStrongWind,
+  "windy-variant": WiStrongWind,
 };
 
 // ── Wind direction helpers ────────────────────────────────────────────────────
@@ -192,20 +214,14 @@ function degToCompass(deg: number) {
 
 function WeatherSection({ weather }: { weather: HomeWeather }) {
   const label = CONDITION_LABEL[weather.state] ?? weather.state;
-  const emoji = CONDITION_EMOJI[weather.state] ?? "🌡️";
+  const Icon = CONDITION_ICON[weather.state] ?? WiDaySunny;
 
   return (
     <HStack width="100%" gap="4vmin" align="center">
       {/* Icon */}
-      <Text
-        fontSize="14vmin"
-        lineHeight="1"
-        flexShrink={0}
-        role="img"
-        aria-label={weather.state}
-      >
-        {emoji}
-      </Text>
+      <Box fontSize="14vmin" lineHeight="1" flexShrink={0} color="gray.300">
+        <Icon size="1em" />
+      </Box>
 
       <VStack display="flex" alignItems="flex-start" lineHeight={1}>
         {/* Temperature */}
@@ -342,9 +358,9 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
             alignItems="center"
             width="100%"
           >
-            <Text fontSize="3.5vmin" lineHeight="1">
-              ☀️
-            </Text>
+            <Box fontSize="3.5vmin" lineHeight="1" color="yellow.600">
+              <PiSolarRoof size="1.4em" />
+            </Box>
             <Text
               fontSize="5.5vmin"
               color="yellow.600"
@@ -353,9 +369,9 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
             >
               {fmtKwh(productionToday)} kWh
             </Text>
-            <Text fontSize="3.5vmin" lineHeight="1">
-              ⚡
-            </Text>
+            <Box fontSize="3.5vmin" lineHeight="1" color="gray.400">
+              <IoFlash size="1em" />
+            </Box>
             <Text
               fontSize="5.5vmin"
               color="gray.400"

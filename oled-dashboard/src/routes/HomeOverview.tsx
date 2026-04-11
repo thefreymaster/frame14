@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Box, Text, HStack, VStack, Spacer } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  HStack,
+  VStack,
+  Grid,
+  GridItem,
+  Spacer,
+} from "@chakra-ui/react";
 import {
   WiMoonAltWaningCrescent4,
   WiCloudy,
@@ -17,6 +25,7 @@ import {
   WiStrongWind,
 } from "react-icons/wi";
 import { PiSolarRoof } from "react-icons/pi";
+import { LuMoveDown, LuMoveUp } from "react-icons/lu";
 
 import { IoFlash } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
@@ -89,6 +98,11 @@ function fmtKwh(n: number) {
   return isNaN(n) ? "--" : n.toFixed(0);
 }
 
+function fmtKw(watts: number) {
+  if (isNaN(watts)) return "--";
+  return (watts / 1000).toFixed(0);
+}
+
 function fmtMins(minutes: number) {
   const h = Math.floor(minutes / 60);
   const m = Math.round(minutes % 60);
@@ -115,7 +129,9 @@ function useIsLandscape() {
 // ── Divider ───────────────────────────────────────────────────────────────────
 
 function Divider() {
-  return <Box width="100%" height="1px" bg="var(--theme-divider)" flexShrink={0} />;
+  return (
+    <Box width="100%" height="1px" bg="var(--theme-divider)" flexShrink={0} />
+  );
 }
 
 // ── Header: date + time + temp ────────────────────────────────────────────────
@@ -219,7 +235,12 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
   return (
     <HStack width="100%" gap="4vmin" align="center">
       {/* Icon */}
-      <Box fontSize="14vmin" lineHeight="1" flexShrink={0} color="var(--theme-fg-dim)">
+      <Box
+        fontSize="14vmin"
+        lineHeight="1"
+        flexShrink={0}
+        color="var(--theme-fg-dim)"
+      >
         <Icon size="1em" />
       </Box>
 
@@ -239,7 +260,12 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
         )}
 
         {/* Condition label */}
-        <Text fontSize="6vmin" color="var(--theme-fg-dim)" fontWeight="300" flexShrink={0}>
+        <Text
+          fontSize="6vmin"
+          color="var(--theme-fg-dim)"
+          fontWeight="300"
+          flexShrink={0}
+        >
           {label}
         </Text>
       </VStack>
@@ -248,7 +274,11 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
       <VStack flex="1" gap="4vmin" justify="flex-end" align="center">
         {weather.humidity != null && (
           <VStack align="center" gap="0.3vmin">
-            <Text fontSize="2.6vmin" color="var(--theme-fg-faint)" letterSpacing="0.1em">
+            <Text
+              fontSize="2.6vmin"
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.1em"
+            >
               HUMIDITY
             </Text>
             <Text fontSize="4vmin" color="var(--theme-fg)" fontWeight="300">
@@ -258,7 +288,11 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
         )}
         {weather.windSpeed != null && (
           <VStack align="center" gap="0.3vmin">
-            <Text fontSize="2.6vmin" color="var(--theme-fg-faint)" letterSpacing="0.1em">
+            <Text
+              fontSize="2.6vmin"
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.1em"
+            >
               WIND
             </Text>
             <Text fontSize="4vmin" color="var(--theme-fg)" fontWeight="300">
@@ -282,7 +316,12 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
 
   return (
     <HStack justify="space-between" align="baseline" width="100%">
-      <Text fontSize="3.8vmin" color="var(--theme-fg-dim)" fontWeight="400" minW="22vmin">
+      <Text
+        fontSize="3.8vmin"
+        color="var(--theme-fg-dim)"
+        fontWeight="400"
+        minW="22vmin"
+      >
         {unit.name}
       </Text>
       <Text fontSize="3.4vmin" color={modeColor} minW="10vmin">
@@ -334,11 +373,28 @@ function ClimateSection({ climate }: { climate: HomeClimate[] }) {
 // ── Energy ────────────────────────────────────────────────────────────────────
 
 function EnergySection({ energy }: { energy: HomeEnergy }) {
-  const { productionToday, consumptionToday } = energy;
+  const {
+    productionToday,
+    consumptionToday,
+    currentProduction,
+    currentConsumption,
+  } = energy;
   const pct =
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
   const pctColor =
-    pct >= 100 ? "green.700" : pct >= 50 ? "yellow.700" : "var(--theme-fg-faint)";
+    pct >= 100
+      ? "green.700"
+      : pct >= 50
+        ? "yellow.700"
+        : "var(--theme-fg-faint)";
+  const nowPct =
+    currentConsumption > 0 ? (currentProduction / currentConsumption) * 100 : 0;
+  const nowPctColor =
+    nowPct >= 100
+      ? "green.700"
+      : nowPct >= 50
+        ? "yellow.700"
+        : "var(--theme-fg-faint)";
 
   return (
     <Box width="100%">
@@ -348,50 +404,115 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
         letterSpacing="0.14em"
         mb="1.5vmin"
       >
-        ENERGY kWh
+        ENERGY
       </Text>
-      <HStack width="100%" justify="space-between" align="flex-start">
+      <VStack width="100%" align="stretch" gap="0.4vmin">
         {/* Today totals */}
-        <VStack align="flex-end" gap="0.4vmin" width="100%">
-          <Text fontSize="2.6vmin" color="var(--theme-fg-faint)" letterSpacing="0.1em">
+        <VStack align="flex-start" gap="0.4vmin" width="100%">
+          <Text
+            fontSize="2.6vmin"
+            color="var(--theme-fg-faint)"
+            letterSpacing="0.1em"
+          >
             TODAY
           </Text>
-          <HStack
-            align="baseline"
+          <Grid
+            templateColumns="repeat(12, 1fr)"
             gap="1.5vmin"
-            display="flex"
             alignItems="center"
             width="100%"
           >
-            <Box fontSize="3.5vmin" lineHeight="1" color="yellow.600">
-              <PiSolarRoof size="1.4em" />
-            </Box>
-            <Text
-              fontSize="5.5vmin"
-              color="yellow.600"
-              fontWeight="300"
-              lineHeight="1"
-            >
-              {fmtKwh(productionToday)} kWh
-            </Text>
-            <Box fontSize="3.5vmin" lineHeight="1" color="var(--theme-fg)">
-              <IoFlash size="1em" />
-            </Box>
-            <Text
-              fontSize="5.5vmin"
-              color="var(--theme-fg)"
-              fontWeight="300"
-              lineHeight="1"
-            >
-              {fmtKwh(consumptionToday)} kWh
-            </Text>
-            <Spacer />
-            <Text fontSize="5.5vmin" color={pctColor} fontWeight="400">
-              {Math.round(pct)}%
-            </Text>
-          </HStack>
+            <GridItem colSpan={4}>
+              <HStack gap="1.5vmin" align="center">
+                <Box fontSize="3.5vmin" lineHeight="1" color="yellow.600">
+                  <PiSolarRoof size="1.4em" />
+                </Box>
+                <Text
+                  fontSize="5.5vmin"
+                  color="yellow.600"
+                  fontWeight="300"
+                  lineHeight="1"
+                >
+                  {fmtKwh(productionToday)} kWh
+                </Text>
+              </HStack>
+            </GridItem>
+            <GridItem colSpan={4}>
+              <HStack gap="1.5vmin" align="center">
+                <Box fontSize="3.5vmin" lineHeight="1" color="var(--theme-fg)">
+                  <IoFlash size="1em" />
+                </Box>
+                <Text
+                  fontSize="5.5vmin"
+                  color="var(--theme-fg)"
+                  fontWeight="300"
+                  lineHeight="1"
+                >
+                  {fmtKwh(consumptionToday)} kWh
+                </Text>
+              </HStack>
+            </GridItem>
+            <GridItem colSpan={4} justifySelf="flex-end">
+              <Text fontSize="5.5vmin" color={pctColor} fontWeight="400">
+                {Math.round(pct)}%
+              </Text>
+            </GridItem>
+          </Grid>
         </VStack>
-      </HStack>
+
+        {/* Real-time power */}
+        <VStack align="flex-start" gap="0.4vmin" width="100%">
+          <Text
+            fontSize="2.6vmin"
+            color="var(--theme-fg-faint)"
+            letterSpacing="0.1em"
+          >
+            NOW
+          </Text>
+          <Grid
+            templateColumns="repeat(12, 1fr)"
+            gap="1.5vmin"
+            alignItems="center"
+            width="100%"
+          >
+            <GridItem colSpan={4}>
+              <HStack gap="1.5vmin" align="center">
+                <Box fontSize="3.5vmin" lineHeight="1" color="yellow.600">
+                  <LuMoveDown size="1em" />
+                </Box>
+                <Text
+                  fontSize="5.5vmin"
+                  color="yellow.600"
+                  fontWeight="300"
+                  lineHeight="1"
+                >
+                  {fmtKw(currentProduction)} kW
+                </Text>
+              </HStack>
+            </GridItem>
+            <GridItem colSpan={4}>
+              <HStack gap="1.5vmin" align="center">
+                <Box fontSize="3.5vmin" lineHeight="1" color="var(--theme-fg)">
+                  <LuMoveUp size="1em" />
+                </Box>
+                <Text
+                  fontSize="5.5vmin"
+                  color="var(--theme-fg)"
+                  fontWeight="300"
+                  lineHeight="1"
+                >
+                  {fmtKw(currentConsumption)} kW
+                </Text>
+              </HStack>
+            </GridItem>
+            <GridItem colSpan={4} justifySelf="flex-end">
+              <Text fontSize="5.5vmin" color={nowPctColor} fontWeight="400">
+                {Math.round(nowPct)}%
+              </Text>
+            </GridItem>
+          </Grid>
+        </VStack>
+      </VStack>
     </Box>
   );
 }
@@ -576,7 +697,11 @@ export function HomeOverview() {
         alignItems="center"
         justifyContent="center"
       >
-        <Text fontSize="3vmin" color="var(--theme-fg-faint)" letterSpacing="0.12em">
+        <Text
+          fontSize="3vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.12em"
+        >
           loading
         </Text>
       </Box>

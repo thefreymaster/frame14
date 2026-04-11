@@ -5,6 +5,8 @@ const router = Router();
 
 const PRODUCTION_ENTITY = "sensor.envoy_482518016321_energy_production_today";
 const CONSUMPTION_ENTITY = "sensor.envoy_482518016321_energy_consumption_today";
+const CURRENT_PRODUCTION_ENTITY = "sensor.envoy_482518016321_current_power_production";
+const CURRENT_CONSUMPTION_ENTITY = "sensor.envoy_482518016321_current_power_consumption";
 
 async function fetchState(entity) {
   const response = await fetch(`${HA_URL}/api/states/${entity}`, {
@@ -24,9 +26,11 @@ router.get("/", async (_req, res) => {
   }
 
   try {
-    const [production, consumption] = await Promise.all([
+    const [production, consumption, currentProduction, currentConsumption] = await Promise.all([
       fetchState(PRODUCTION_ENTITY),
       fetchState(CONSUMPTION_ENTITY),
+      fetchState(CURRENT_PRODUCTION_ENTITY),
+      fetchState(CURRENT_CONSUMPTION_ENTITY),
     ]);
 
     res.json({
@@ -34,6 +38,10 @@ router.get("/", async (_req, res) => {
       productionUnit: production.attributes?.unit_of_measurement ?? "kWh",
       consumption: parseFloat(consumption.state),
       consumptionUnit: consumption.attributes?.unit_of_measurement ?? "kWh",
+      currentProduction: parseFloat(currentProduction.state),
+      currentProductionUnit: currentProduction.attributes?.unit_of_measurement ?? "W",
+      currentConsumption: parseFloat(currentConsumption.state),
+      currentConsumptionUnit: currentConsumption.attributes?.unit_of_measurement ?? "W",
     });
   } catch (err) {
     console.error("Energy fetch error:", err);

@@ -5,6 +5,10 @@ export interface EnergyData {
   productionUnit: string;
   consumption: number;
   consumptionUnit: string;
+  currentProduction: number;
+  currentProductionUnit: string;
+  currentConsumption: number;
+  currentConsumptionUnit: string;
 }
 
 async function fetchEnergy(): Promise<EnergyData> {

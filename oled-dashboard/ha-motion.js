@@ -13,6 +13,7 @@ import { HA_URL, HA_TOKEN } from "./config.js";
 
 const MOTION_ENTITY = "binary_sensor.kitchen_motion_sensor_motion";
 const ROUTE_ENTITY = "input_select.oledos_route";
+const ALBUM_ENTITY = "input_select.oled_album";
 const BLANK_TIMEOUT_MS = 5 * 60 * 1000;
 const RECONNECT_DELAY_MS = 5_000;
 
@@ -133,10 +134,23 @@ export function startMotionWatcher(io) {
 
       if (msg.type === "event") {
         const data = msg.event?.data;
-        if (data?.entity_id !== MOTION_ENTITY) return;
+        if (!data) return;
 
-        const state = data.new_state?.state;
-        if (state === "on") onMotionOn();
+        if (data.entity_id === MOTION_ENTITY) {
+          const state = data.new_state?.state;
+          if (state === "on") onMotionOn();
+          return;
+        }
+
+        if (data.entity_id === ALBUM_ENTITY) {
+          const prev = data.old_state?.state;
+          const next = data.new_state?.state;
+          if (prev !== next) {
+            console.log(`[ha-motion] album changed: ${prev} → ${next}`);
+            io.emit("photos_refresh");
+          }
+          return;
+        }
       }
     });
 

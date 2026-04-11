@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Box, VStack, Text, HStack, Button, Spinner } from "@chakra-ui/react";
+import { Box, Text, Spinner } from "@chakra-ui/react";
 import { PhotoSlide } from "../components/PhotoSlide";
 import { PixelShift } from "../components/PixelShift";
-import { useImmichAlbums } from "../hooks/useImmichAlbums";
 import { useAlbumPhotos } from "../hooks/useAlbumPhotos";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import { useWeather } from "../hooks/useWeather";
 import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
+import { useQueryClient } from "@tanstack/react-query";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -95,23 +95,26 @@ function PhotoOverlay({ assetId }: OverlayProps) {
 const SLIDE_INTERVAL_MS = 30_000;
 
 export function Photos() {
-  const { data: config } = usePhotosConfig();
-  const pinnedAlbumId = config?.defaultAlbumId ?? null;
-
-  // Only fetch albums list when no album is pinned
-  const {
-    data: albums,
-    isPending: albumsPending,
-    isError: albumsError,
-  } = useImmichAlbums();
-  const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { data: config, isPending: configPending } = usePhotosConfig();
+  const activeAlbumId = config?.defaultAlbumId ?? null;
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Pinned album takes priority, then user selection, then first album
-  const activeAlbumId =
-    pinnedAlbumId ?? selectedAlbumId ?? albums?.[0]?.id ?? null;
   const { data: album, isPending: photosPending } =
     useAlbumPhotos(activeAlbumId);
+
+  // HA fires /api/photos/refresh when input_select.oled_album changes;
+  // server broadcasts photos_refresh so all frames reload their album.
+  useEffect(() => {
+    function onRefresh() {
+      queryClient.invalidateQueries({ queryKey: ["photos", "config"] });
+      queryClient.invalidateQueries({ queryKey: ["immich", "album"] });
+    }
+    socket.on("photos_refresh", onRefresh);
+    return () => {
+      socket.off("photos_refresh", onRefresh);
+    };
+  }, [queryClient]);
 
   // Auto-advance slideshow
   useEffect(() => {
@@ -172,7 +175,7 @@ export function Photos() {
     };
   }, [album]);
 
-  if (!pinnedAlbumId && albumsPending) {
+  if (configPending) {
     return (
       <Box
         width="100%"
@@ -187,7 +190,7 @@ export function Photos() {
     );
   }
 
-  if (!pinnedAlbumId && (albumsError || !albums || albums.length === 0)) {
+  if (!activeAlbumId) {
     return (
       <Box
         width="100%"
@@ -198,7 +201,7 @@ export function Photos() {
         justifyContent="center"
       >
         <Text color="gray.700" fontSize="sm">
-          no albums available
+          no album configured
         </Text>
       </Box>
     );
@@ -233,38 +236,6 @@ export function Photos() {
       ))}
 
       <PhotoOverlay assetId={album?.assets[currentIndex]?.id ?? null} />
-
-      {/* Album picker — only shown when no album is pinned via config */}
-      {!pinnedAlbumId && albums && albums.length > 0 && (
-        <Box
-          position="absolute"
-          bottom={0}
-          left={0}
-          right={0}
-          bg="blackAlpha.800"
-          p={3}
-        >
-          <VStack gap={2} align="stretch">
-            <Text fontSize="xs" color="gray.600" textAlign="center">
-              {album ? `${currentIndex + 1} / ${album.assets.length}` : ""}
-            </Text>
-            <HStack gap={2} overflowX="auto" justify="center">
-              {albums.map((a) => (
-                <Button
-                  key={a.id}
-                  size="xs"
-                  variant={a.id === activeAlbumId ? "solid" : "outline"}
-                  colorScheme="gray"
-                  onClick={() => setSelectedAlbumId(a.id)}
-                  flexShrink={0}
-                >
-                  {a.albumName}
-                </Button>
-              ))}
-            </HStack>
-          </VStack>
-        </Box>
-      )}
     </Box>
   );
 }

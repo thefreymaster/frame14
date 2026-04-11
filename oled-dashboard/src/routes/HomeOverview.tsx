@@ -100,7 +100,7 @@ function fmtKwh(n: number) {
 
 function fmtKw(watts: number) {
   if (isNaN(watts)) return "--";
-  return (watts / 1000).toFixed(0);
+  return watts.toFixed(0);
 }
 
 function fmtMins(minutes: number) {
@@ -387,14 +387,6 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
       : pct >= 50
         ? "yellow.700"
         : "var(--theme-fg-faint)";
-  const nowPct =
-    currentConsumption > 0 ? (currentProduction / currentConsumption) * 100 : 0;
-  const nowPctColor =
-    nowPct >= 100
-      ? "green.700"
-      : nowPct >= 50
-        ? "yellow.700"
-        : "var(--theme-fg-faint)";
 
   return (
     <Box width="100%">
@@ -504,11 +496,6 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
                   {fmtKw(currentConsumption)} kW
                 </Text>
               </HStack>
-            </GridItem>
-            <GridItem colSpan={4} justifySelf="flex-end">
-              <Text fontSize="5.5vmin" color={nowPctColor} fontWeight="400">
-                {Math.round(nowPct)}%
-              </Text>
             </GridItem>
           </Grid>
         </VStack>

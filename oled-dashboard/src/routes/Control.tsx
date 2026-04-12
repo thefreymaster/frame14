@@ -235,18 +235,17 @@ export function Control() {
         >
           Album
         </Text>
-        <Box
-          as="select"
-          width="100%"
-          py="min(3.5vmin, 16px)"
-          px="min(3vmin, 14px)"
-          borderRadius="8px"
-          bg="transparent"
-          border="1px solid"
-          borderColor="var(--theme-divider)"
-          color="var(--theme-fg)"
-          fontSize="min(3.6vmin, 16px)"
-          fontWeight="300"
+        <select
+          style={{
+            width: "100%",
+            padding: "min(3.5vmin, 16px) min(3vmin, 14px)",
+            borderRadius: "8px",
+            background: "transparent",
+            border: "1px solid var(--theme-divider)",
+            color: "var(--theme-fg)",
+            fontSize: "min(3.6vmin, 16px)",
+            fontWeight: 300,
+          }}
           value={photosConfig?.defaultAlbumId ?? ""}
           onChange={handleAlbumChange}
         >
@@ -256,7 +255,7 @@ export function Control() {
               {id}
             </option>
           ))}
-        </Box>
+        </select>
       </Box>
       </Box>
     </Box>

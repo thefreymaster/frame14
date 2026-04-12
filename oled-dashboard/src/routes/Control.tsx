@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Box, Text, HStack, VStack } from "@chakra-ui/react";
 import { MdSkipNext } from "react-icons/md";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "../hooks/useSocket";
 import { socket } from "../lib/socket";
 import { setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
+import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import type { ThemeModePreference } from "../lib/themeMode";
 
 const VIEWS = [
@@ -28,7 +30,20 @@ function nextPhoto() {
 export function Control() {
   const { connected } = useSocket();
   const { preference, effectiveMode, setPreference } = useThemeMode();
+  const { data: photosConfig } = usePhotosConfig();
+  const queryClient = useQueryClient();
   const [activeView, setActiveView] = useState<string | null>(null);
+
+  async function handleAlbumChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const option = e.target.value;
+    if (!option) return;
+    await fetch("/api/photos/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ option }),
+    });
+    queryClient.invalidateQueries({ queryKey: ["photos", "config"] });
+  }
 
   useEffect(() => {
     function onCurrentView(view: string) {
@@ -207,6 +222,41 @@ export function Control() {
             );
           })}
         </HStack>
+      </Box>
+
+      {/* Album */}
+      <Box mt="min(10vmin, 48px)">
+        <Text
+          fontSize="min(3.2vmin, 14px)"
+          color="var(--theme-fg-muted)"
+          letterSpacing="0.12em"
+          textTransform="uppercase"
+          mb="min(3vmin, 14px)"
+        >
+          Album
+        </Text>
+        <Box
+          as="select"
+          width="100%"
+          py="min(3.5vmin, 16px)"
+          px="min(3vmin, 14px)"
+          borderRadius="8px"
+          bg="transparent"
+          border="1px solid"
+          borderColor="var(--theme-divider)"
+          color="var(--theme-fg)"
+          fontSize="min(3.6vmin, 16px)"
+          fontWeight="300"
+          value={photosConfig?.defaultAlbumId ?? ""}
+          onChange={handleAlbumChange}
+        >
+          {!photosConfig?.defaultAlbumId && <option value="">—</option>}
+          {photosConfig?.options.map((id) => (
+            <option key={id} value={id} style={{ background: "#000" }}>
+              {id}
+            </option>
+          ))}
+        </Box>
       </Box>
       </Box>
     </Box>

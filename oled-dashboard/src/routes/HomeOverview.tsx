@@ -317,7 +317,7 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
   return (
     <HStack justify="space-between" align="baseline" width="100%">
       <Text
-        fontSize="3.8vmin"
+        fontSize="3.4vmin"
         color="var(--theme-fg-dim)"
         fontWeight="400"
         minW="22vmin"
@@ -327,17 +327,17 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
       <Text fontSize="3.4vmin" color={modeColor} minW="10vmin">
         {unit.state}
       </Text>
-      {!isOff && unit.currentTemp != null ? (
+      {unit.currentTemp != null ? (
         <HStack align="baseline" gap="1vmin" flex="1" justify="flex-end">
           <Text
-            fontSize="5vmin"
+            fontSize="3.4vmin"
             color="var(--theme-fg)"
             fontWeight="300"
             lineHeight="1"
           >
             {unit.currentTemp}°
           </Text>
-          {unit.targetTemp != null && (
+          {!isOff && unit.targetTemp != null && (
             <Text fontSize="3.4vmin" color="var(--theme-fg-faint)">
               → {unit.targetTemp}°
             </Text>
@@ -416,7 +416,12 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
           >
             <GridItem colSpan={4}>
               <HStack gap="1.5vmin" align="center">
-                <Box fontSize="3.5vmin" lineHeight="1" color="yellow.600">
+                <Box
+                  fontSize="3.5vmin"
+                  lineHeight="1"
+                  color="yellow.600"
+                  flexShrink={0}
+                >
                   <PiSolarRoof size="1.4em" />
                 </Box>
                 <Text
@@ -424,6 +429,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
                   color="yellow.600"
                   fontWeight="300"
                   lineHeight="1"
+                  whiteSpace="nowrap"
                 >
                   {fmtKwh(productionToday)} kWh
                 </Text>
@@ -431,7 +437,12 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
             </GridItem>
             <GridItem colSpan={4}>
               <HStack gap="1.5vmin" align="center">
-                <Box fontSize="3.5vmin" lineHeight="1" color="var(--theme-fg)">
+                <Box
+                  fontSize="3.5vmin"
+                  lineHeight="1"
+                  color="var(--theme-fg)"
+                  flexShrink={0}
+                >
                   <IoFlash size="1em" />
                 </Box>
                 <Text
@@ -439,6 +450,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
                   color="var(--theme-fg)"
                   fontWeight="300"
                   lineHeight="1"
+                  whiteSpace="nowrap"
                 >
                   {fmtKwh(consumptionToday)} kWh
                 </Text>
@@ -469,7 +481,12 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
           >
             <GridItem colSpan={4}>
               <HStack gap="1.5vmin" align="center">
-                <Box fontSize="3.5vmin" lineHeight="1" color="yellow.600">
+                <Box
+                  fontSize="3.5vmin"
+                  lineHeight="1"
+                  color="yellow.600"
+                  flexShrink={0}
+                >
                   <LuMoveDown size="1em" />
                 </Box>
                 <Text
@@ -477,6 +494,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
                   color="yellow.600"
                   fontWeight="300"
                   lineHeight="1"
+                  whiteSpace="nowrap"
                 >
                   {fmtKw(currentProduction)} kW
                 </Text>
@@ -484,7 +502,12 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
             </GridItem>
             <GridItem colSpan={4}>
               <HStack gap="1.5vmin" align="center">
-                <Box fontSize="3.5vmin" lineHeight="1" color="var(--theme-fg)">
+                <Box
+                  fontSize="3.5vmin"
+                  lineHeight="1"
+                  color="var(--theme-fg)"
+                  flexShrink={0}
+                >
                   <LuMoveUp size="1em" />
                 </Box>
                 <Text
@@ -492,6 +515,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
                   color="var(--theme-fg)"
                   fontWeight="300"
                   lineHeight="1"
+                  whiteSpace="nowrap"
                 >
                   {fmtKw(currentConsumption)} kW
                 </Text>

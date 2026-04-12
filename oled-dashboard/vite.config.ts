@@ -8,11 +8,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       "/api": {
-        target: "https://control.unserver23.net",
+        target: "http://localhost:4000",
         changeOrigin: true,
       },
       "/socket.io": {
-        target: "https://control.unserver23.net",
+        target: "http://localhost:4000",
         changeOrigin: true,
         ws: true,
       },

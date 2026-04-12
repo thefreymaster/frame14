@@ -26,10 +26,46 @@ router.get("/config", async (_req, res) => {
     const value = typeof data.state === "string" ? data.state.trim() : "";
     const defaultAlbumId =
       value && value !== "unknown" && value !== "unavailable" ? value : null;
-    res.json({ defaultAlbumId });
+    const options = Array.isArray(data.attributes?.options)
+      ? data.attributes.options.filter((o) => typeof o === "string")
+      : [];
+    res.json({ defaultAlbumId, options });
   } catch (err) {
     console.error("HA album entity fetch error:", err);
     res.status(500).json({ error: "Failed to fetch album entity from HA" });
+  }
+});
+
+router.post("/config", async (req, res) => {
+  if (!HA_TOKEN) {
+    res.status(503).json({ error: "HA_TOKEN not configured" });
+    return;
+  }
+  const option = typeof req.body?.option === "string" ? req.body.option : "";
+  if (!option) {
+    res.status(400).json({ error: "Missing option" });
+    return;
+  }
+  try {
+    const response = await fetch(
+      `${HA_URL}/api/services/input_select/select_option`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HA_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ entity_id: ALBUM_ENTITY, option }),
+      },
+    );
+    if (!response.ok) {
+      res.status(502).json({ error: `HA responded with ${response.status}` });
+      return;
+    }
+    res.json({ defaultAlbumId: option });
+  } catch (err) {
+    console.error("HA album entity set error:", err);
+    res.status(500).json({ error: "Failed to set album entity in HA" });
   }
 });
 

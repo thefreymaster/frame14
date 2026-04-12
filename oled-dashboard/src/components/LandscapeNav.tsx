@@ -1,19 +1,51 @@
 import { useState, useEffect } from "react";
-import { Box, HStack, VStack, Spacer, Flex } from "@chakra-ui/react";
+import { Box, HStack, VStack, Spacer, Flex, Text } from "@chakra-ui/react";
+import type { IconType } from "react-icons";
 import { useLocation, useNavigate } from "react-router";
-import { MdHome, MdPin, MdPhoto, MdTune } from "react-icons/md";
-import { BsClockFill } from "react-icons/bs";
+import {
+  IoTimeOutline,
+  IoTime,
+  IoKeypadOutline,
+  IoKeypad,
+  IoImagesOutline,
+  IoImages,
+  IoSettingsOutline,
+  IoSettings,
+} from "react-icons/io5";
+import { RiHome5Line, RiHome5Fill } from "react-icons/ri";
 import { socket } from "../lib/socket";
 
-const NAV_ITEMS = [
-  { path: "/home", icon: MdHome },
-  { path: "/clock", icon: BsClockFill },
-  { path: "/digital", icon: MdPin },
-  { path: "/photos", icon: MdPhoto },
+type NavItem = {
+  path: string;
+  label: string;
+  icon: IconType;
+  activeIcon: IconType;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { path: "/home", label: "Home", icon: RiHome5Line, activeIcon: RiHome5Fill },
+  { path: "/clock", label: "Clock", icon: IoTimeOutline, activeIcon: IoTime },
+  {
+    path: "/digital",
+    label: "Digital",
+    icon: IoKeypadOutline,
+    activeIcon: IoKeypad,
+  },
+  {
+    path: "/photos",
+    label: "Photos",
+    icon: IoImagesOutline,
+    activeIcon: IoImages,
+  },
 ];
 
-const BOTTOM_NAV_ITEMS = [
-  { path: "/control", icon: MdTune },
+const BOTTOM_NAV_ITEMS: NavItem[] = [
+  {
+    path: "/control",
+    label: "Settings",
+    icon: IoSettingsOutline,
+    activeIcon: IoSettings,
+  },
 ];
 
 export function LandscapeNav() {
@@ -43,27 +75,68 @@ export function LandscapeNav() {
     setActiveView(path);
   }
 
-  function renderItem(item: { path: string; icon: typeof MdHome }) {
+  function renderItem(item: NavItem) {
     const isActive = activeView === item.path;
-    const Icon = item.icon;
+    const Icon = isActive ? item.activeIcon : item.icon;
     return (
       <Box
         key={item.path}
         as="button"
         onClick={() => handleClick(item.path)}
         display="flex"
+        flexDirection="column"
         alignItems="center"
         justifyContent="center"
-        width="40px"
-        height="40px"
-        borderRadius="8px"
+        gap="2px"
+        flex="1"
+        height="100%"
         bg="transparent"
         color={isActive ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
-        _hover={{ color: "var(--theme-fg)" }}
-        _active={{ opacity: 0.5 }}
-        transition="all 0.15s"
+        _active={{ opacity: 0.4 }}
+        transition="color 0.15s, opacity 0.1s"
       >
-        <Icon size={22} />
+        <Icon size={26} />
+        <Text
+          fontSize="10px"
+          lineHeight="1"
+          fontWeight={isActive ? "600" : "500"}
+          letterSpacing="0.01em"
+        >
+          {item.label}
+        </Text>
+      </Box>
+    );
+  }
+
+  function renderItemVertical(item: NavItem) {
+    const isActive = activeView === item.path;
+    const Icon = isActive ? item.activeIcon : item.icon;
+    return (
+      <Box
+        key={item.path}
+        as="button"
+        onClick={() => handleClick(item.path)}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        gap="2px"
+        width="100%"
+        py="6px"
+        bg="transparent"
+        color={isActive ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
+        _active={{ opacity: 0.4 }}
+        transition="color 0.15s, opacity 0.1s"
+      >
+        <Icon size={24} />
+        <Text
+          fontSize="9px"
+          lineHeight="1"
+          fontWeight={isActive ? "600" : "500"}
+          letterSpacing="0.01em"
+        >
+          {item.label}
+        </Text>
       </Box>
     );
   }
@@ -82,13 +155,14 @@ export function LandscapeNav() {
         bottom={0}
         left={0}
         right={0}
-        height="56px"
+        height="calc(64px + env(safe-area-inset-bottom, 0px))"
+        pb="env(safe-area-inset-bottom, 0px)"
         bg="var(--theme-bg)"
         borderTop="1px solid"
         borderColor="var(--theme-divider)"
         zIndex={100}
       >
-        <HStack justify="space-around" align="center" height="100%" px="8px">
+        <HStack gap="0" align="stretch" height="64px" px="4px">
           {allItems.map(renderItem)}
         </HStack>
       </Box>
@@ -103,23 +177,21 @@ export function LandscapeNav() {
         left={0}
         top={0}
         bottom={0}
-        width="56px"
+        width="68px"
         bg="var(--theme-bg)"
         borderRight="1px solid"
         borderColor="var(--theme-divider)"
         zIndex={100}
       >
-        <Flex
-          direction="column"
-          align="center"
-          justify="center"
-          height="100%"
-          py="16px"
-        >
+        <Flex direction="column" align="stretch" height="100%" py="12px">
           <Spacer />
-          <VStack gap="6px">{NAV_ITEMS.map(renderItem)}</VStack>
+          <VStack gap="4px" align="stretch">
+            {NAV_ITEMS.map(renderItemVertical)}
+          </VStack>
           <Spacer />
-          <VStack gap="6px">{BOTTOM_NAV_ITEMS.map(renderItem)}</VStack>
+          <VStack gap="4px" align="stretch">
+            {BOTTOM_NAV_ITEMS.map(renderItemVertical)}
+          </VStack>
         </Flex>
       </Box>
     </>

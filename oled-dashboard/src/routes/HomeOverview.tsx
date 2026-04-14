@@ -25,7 +25,6 @@ import {
   WiStrongWind,
 } from "react-icons/wi";
 import { PiSolarRoof } from "react-icons/pi";
-import { LuMoveDown, LuMoveUp } from "react-icons/lu";
 
 import { IoFlash } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
@@ -98,10 +97,10 @@ function fmtKwh(n: number) {
   return isNaN(n) ? "--" : n.toFixed(0);
 }
 
-function fmtKw(watts: number) {
-  if (isNaN(watts)) return "--";
-  return watts.toFixed(0);
-}
+// function fmtKw(watts: number) {
+//   if (isNaN(watts)) return "--";
+//   return watts.toFixed(0);
+// }
 
 function fmtMins(minutes: number) {
   const h = Math.floor(minutes / 60);
@@ -373,12 +372,7 @@ function ClimateSection({ climate }: { climate: HomeClimate[] }) {
 // ── Energy ────────────────────────────────────────────────────────────────────
 
 function EnergySection({ energy }: { energy: HomeEnergy }) {
-  const {
-    productionToday,
-    consumptionToday,
-    currentProduction,
-    currentConsumption,
-  } = energy;
+  const { productionToday, consumptionToday } = energy;
   const pct =
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
   const pctColor =

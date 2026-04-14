@@ -25,7 +25,7 @@ import {
   WiStrongWind,
 } from "react-icons/wi";
 import { PiSolarRoof } from "react-icons/pi";
-
+import NumberFlow from "@number-flow/react";
 import { IoFlash } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
 import type {
@@ -143,8 +143,8 @@ function Header({ internet }: { internet: HomeInternet }) {
   }, []);
 
   const rawHours = now.getHours();
-  const hours = pad(rawHours % 12 || 12);
-  const minutes = pad(now.getMinutes());
+  const hours = rawHours % 12 || 12;
+  const minutes = now.getMinutes();
   const ampm = rawHours < 12 ? "am" : "pm";
   const day = DAYS[now.getDay()];
   const month = MONTHS[now.getMonth()];
@@ -178,7 +178,8 @@ function Header({ internet }: { internet: HomeInternet }) {
         color="var(--theme-fg)"
         lineHeight="0.9"
       >
-        {hours}:{minutes}
+        <NumberFlow digits={{ 2: { max: 2 } }} value={hours} />:
+        <NumberFlow digits={{ 2: { max: 2 } }} value={minutes} />
         <Text
           as="span"
           fontSize="8vmin"
@@ -254,7 +255,7 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
             lineHeight="1"
             flexShrink={0}
           >
-            {Math.round(weather.temperature)}°
+            <NumberFlow value={Math.round(weather.temperature)} />°
           </Text>
         )}
 
@@ -560,7 +561,7 @@ function PrinterSection({ printer }: { printer: HomePrinter }) {
             fontWeight="300"
             lineHeight="1"
           >
-            {Math.round(printer.progress)}%
+            <NumberFlow value={printer.progress} />%
           </Text>
           <Text fontSize="4vmin" color="var(--theme-fg-dim)" fontWeight="300">
             {fmtMins(printer.remainingTime)}

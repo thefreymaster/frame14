@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { setLastRoute } from "../ha-motion.js";
+import { setLastRoute } from "../ha-socket.js";
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:24.7.0-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -6,7 +6,7 @@ COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=256"
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:24.7.0-alpine
 LABEL \
     io.hass.name="OLED Dashboard" \
     io.hass.description="OLED-optimized home dashboard with clock, weather, and Immich photo slideshow" \
@@ -17,7 +17,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
-COPY index.js config.js openapi.js ha-motion.js ./
+COPY index.js config.js openapi.js ha-socket.js ./
 COPY routes ./routes
 
 CMD ["node", "index.js"]

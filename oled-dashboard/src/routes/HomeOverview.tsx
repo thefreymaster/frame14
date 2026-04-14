@@ -178,8 +178,17 @@ function Header({ internet }: { internet: HomeInternet }) {
         color="var(--theme-fg)"
         lineHeight="0.9"
       >
-        <NumberFlow digits={{ 2: { max: 2 } }} value={hours} />:
-        <NumberFlow digits={{ 2: { max: 2 } }} value={minutes} />
+        <NumberFlow
+          digits={{ 2: { max: 2 } }}
+          value={hours}
+          prefix={minutes < 10 ? "0" : ""}
+        />
+        :
+        <NumberFlow
+          digits={{ 2: { max: 2 } }}
+          value={minutes}
+          prefix={minutes < 10 ? "0" : ""}
+        />
         <Text
           as="span"
           fontSize="8vmin"
@@ -769,6 +778,12 @@ export function HomeOverview() {
                 <WeatherSection weather={data.weather} />
               </>
             )}
+            {printerActive && (
+              <>
+                <Divider />
+                <PrinterSection printer={data.printer} />
+              </>
+            )}
           </Box>
 
           {/* Right column — details */}
@@ -792,12 +807,6 @@ export function HomeOverview() {
             <ClimateSection climate={data.climate} />
             <Divider />
             <EnergySection energy={data.energy} />
-            {printerActive && (
-              <>
-                <Divider />
-                <PrinterSection printer={data.printer} />
-              </>
-            )}
           </Box>
         </>
       ) : (

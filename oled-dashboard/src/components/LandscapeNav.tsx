@@ -5,8 +5,6 @@ import { useLocation, useNavigate } from "react-router";
 import {
   IoTimeOutline,
   IoTime,
-  IoKeypadOutline,
-  IoKeypad,
   IoImagesOutline,
   IoImages,
   IoSettingsOutline,
@@ -25,12 +23,6 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { path: "/home", label: "Home", icon: RiHome5Line, activeIcon: RiHome5Fill },
   { path: "/clock", label: "Clock", icon: IoTimeOutline, activeIcon: IoTime },
-  {
-    path: "/digital",
-    label: "Digital",
-    icon: IoKeypadOutline,
-    activeIcon: IoKeypad,
-  },
   {
     path: "/photos",
     label: "Photos",

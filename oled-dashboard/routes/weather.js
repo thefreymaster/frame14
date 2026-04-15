@@ -16,7 +16,15 @@ router.get("/", async (_req, res) => {
         "Content-Type": "application/json",
       },
     });
-    console.log(response.body);
+    const response2 = await fetch(
+      `${HA_URL}/api/states/weather.openweathermap`,
+      {
+        headers: {
+          Authorization: `Bearer ${HA_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
     if (!response.ok) {
       res.status(502).json({ error: `HA responded with ${response.status}` });
@@ -24,6 +32,8 @@ router.get("/", async (_req, res) => {
     }
 
     const data = await response.json();
+    const data2 = await response2.json();
+    console.log({ data, data2 });
     const attrs = data.attributes ?? {};
 
     res.json({

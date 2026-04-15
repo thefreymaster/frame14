@@ -29,7 +29,8 @@ export function Layout() {
       <SocketViewListener />
       {showNav && <LandscapeNav />}
       <Box
-        overflow="hidden"
+        height="100%"
+        overflow={isControl ? "auto" : "hidden"}
         css={
           showNav
             ? {

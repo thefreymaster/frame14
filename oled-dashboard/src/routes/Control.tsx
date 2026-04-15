@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
-import { Box, Text, HStack, VStack } from "@chakra-ui/react";
-import { MdSkipNext } from "react-icons/md";
+import { Box, Text, HStack } from "@chakra-ui/react";
+import {
+  MdSkipNext,
+  MdHome,
+  MdAccessTime,
+  MdPhotoLibrary,
+} from "react-icons/md";
+import type { IconType } from "react-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "../hooks/useSocket";
 import { socket } from "../lib/socket";
@@ -9,12 +15,10 @@ import { useThemeMode } from "../hooks/useThemeMode";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import type { ThemeModePreference } from "../lib/themeMode";
 
-const VIEWS = [
-  { path: "/home", label: "Overview" },
-  { path: "/clock", label: "Analog Clock" },
-  { path: "/digital", label: "Digital Clock" },
-  { path: "/photos", label: "Photo Slideshow" },
-  { path: "/blank", label: "Blank Screen" },
+const VIEWS: { path: string; label: string; Icon: IconType }[] = [
+  { path: "/home", label: "Overview", Icon: MdHome },
+  { path: "/clock", label: "Clock", Icon: MdAccessTime },
+  { path: "/photos", label: "Photos", Icon: MdPhotoLibrary },
 ];
 
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
@@ -75,11 +79,16 @@ export function Control() {
     >
       <Box
         width="100%"
-        maxWidth="560px"
         px="min(8vmin, 40px)"
         py="min(12vmin, 56px)"
         display="flex"
         flexDirection="column"
+        css={{
+          maxWidth: "560px",
+          "@media (orientation: landscape)": {
+            maxWidth: "960px",
+          },
+        }}
       >
         {/* Use as frame */}
         <Text
@@ -105,14 +114,14 @@ export function Control() {
             fontWeight="300"
             letterSpacing="0.02em"
           >
-            Control
+            Remote
           </Text>
           <HStack gap="min(1.5vmin, 8px)" align="center">
             <Box
-              width="5px"
-              height="5px"
+              width="8px"
+              height="8px"
               borderRadius="full"
-              bg={connected ? "green.700" : "var(--theme-fg-faint)"}
+              bg={connected ? "green.400" : "var(--theme-fg-faint)"}
             />
             <Text fontSize="min(3vmin, 13px)" color="var(--theme-fg-faint)">
               {connected ? "connected" : "disconnected"}
@@ -120,65 +129,95 @@ export function Control() {
           </HStack>
         </HStack>
 
-        {/* View rows */}
-        <VStack gap={0} align="stretch" width="100%">
-          {VIEWS.map((v, i) => {
+        {/* Body: stacked portrait, side-by-side landscape */}
+        <Box
+          css={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "min(10vmin, 48px)",
+            "@media (orientation: landscape)": {
+              flexDirection: "row",
+              alignItems: "flex-start",
+            },
+          }}
+        >
+        <Box flex="1" minWidth="0">
+        {/* View grid */}
+        <Box
+          display="grid"
+          gridTemplateColumns="1fr 1fr"
+          gap="min(3vmin, 14px)"
+          width="100%"
+        >
+          {VIEWS.map((v) => {
             const isActive = activeView === v.path;
             const isPhotos = v.path === "/photos";
+            const Icon = v.Icon;
 
             return (
-              <Box key={v.path}>
-                {i > 0 && <Box height="1px" bg="var(--theme-divider)" />}
-                <HStack
-                  justify="space-between"
-                  align="center"
-                  py="min(4.5vmin, 20px)"
-                  cursor="pointer"
-                  onClick={() => changeView(v.path)}
-                  _active={{ opacity: 0.5 }}
+              <Box
+                key={v.path}
+                position="relative"
+                onClick={() => changeView(v.path)}
+                cursor="pointer"
+                aspectRatio="1"
+                borderRadius="12px"
+                border="1px solid"
+                borderColor={
+                  isActive ? "var(--theme-fg-dim)" : "var(--theme-divider)"
+                }
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                gap="min(2vmin, 10px)"
+                _active={{ opacity: 0.5 }}
+              >
+                <Box
+                  color={isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"}
+                  fontSize="min(9vmin, 44px)"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  <Text
-                    fontSize="min(4.5vmin, 22px)"
-                    fontWeight={isActive ? "400" : "300"}
-                    color={isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"}
-                    letterSpacing="0.01em"
+                  <Icon />
+                </Box>
+                <Text
+                  fontSize="min(3.6vmin, 16px)"
+                  fontWeight={isActive ? "400" : "300"}
+                  color={isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"}
+                  letterSpacing="0.01em"
+                >
+                  {v.label}
+                </Text>
+                {isPhotos && (
+                  <Box
+                    as="button"
+                    position="absolute"
+                    top="min(2vmin, 10px)"
+                    right="min(2vmin, 10px)"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      nextPhoto();
+                    }}
+                    color="var(--theme-fg-faint)"
+                    _hover={{ color: "var(--theme-fg)" }}
+                    display="flex"
+                    alignItems="center"
+                    p="min(1vmin, 6px)"
                   >
-                    {v.label}
-                  </Text>
-                  <HStack gap="min(3vmin, 14px)" align="center">
-                    {isActive && (
-                      <Box
-                        width="5px"
-                        height="5px"
-                        borderRadius="full"
-                        bg="var(--theme-fg)"
-                      />
-                    )}
-                    {isPhotos && (
-                      <Box
-                        as="button"
-                        onClick={(e: React.MouseEvent) => {
-                          e.stopPropagation();
-                          nextPhoto();
-                        }}
-                        color="var(--theme-fg-faint)"
-                        _hover={{ color: "var(--theme-fg)" }}
-                        display="flex"
-                        alignItems="center"
-                        p="min(1vmin, 6px)"
-                      >
-                        <MdSkipNext size={20} />
-                      </Box>
-                    )}
-                  </HStack>
-                </HStack>
+                    <MdSkipNext size={18} />
+                  </Box>
+                )}
               </Box>
             );
           })}
-        </VStack>
+        </Box>
 
+        </Box>
+        <Box flex="1" minWidth="0" display="flex" flexDirection="column" gap="min(10vmin, 48px)">
         {/* Display mode */}
-        <Box mt="min(10vmin, 48px)">
+        <Box>
           <HStack
             justify="space-between"
             align="baseline"
@@ -231,7 +270,7 @@ export function Control() {
         </Box>
 
         {/* Album */}
-        <Box mt="min(10vmin, 48px)">
+        <Box>
           <Text
             fontSize="min(3.2vmin, 14px)"
             color="var(--theme-fg-muted)"
@@ -262,6 +301,8 @@ export function Control() {
               </option>
             ))}
           </select>
+        </Box>
+        </Box>
         </Box>
       </Box>
     </Box>

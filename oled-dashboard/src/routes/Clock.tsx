@@ -1,5 +1,18 @@
-import { useEffect, useRef } from "react";
-import { Box } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
+import { Box, Text } from "@chakra-ui/react";
+import NumberFlow from "@number-flow/react";
+import { PageTransition } from "../components/PageTransition";
+import { useWeather } from "../hooks/useWeather";
+
+type ClockStyle = "analog" | "digital";
+
+const STORAGE_KEY = "clockStyle";
+
+function loadStyle(): ClockStyle {
+  if (typeof window === "undefined") return "analog";
+  const saved = window.localStorage.getItem(STORAGE_KEY);
+  return saved === "digital" ? "digital" : "analog";
+}
 
 // ── Analog Clock ──────────────────────────────────────────────────────────────
 
@@ -14,8 +27,6 @@ function buildMarkers() {
     const isCardinal = i % 15 === 0;
     const outerR = 92;
     const innerR = isCardinal ? 78 : isHour ? 82 : 88;
-    // Use CSS variables via `style` since SVG presentation attributes
-    // do not resolve `var(...)` references.
     const strokeVar = isCardinal
       ? "var(--theme-marker-cardinal)"
       : isHour
@@ -159,11 +170,128 @@ function AnalogClock() {
   );
 }
 
+// ── Digital Clock ─────────────────────────────────────────────────────────────
+
+const DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function DigitalClock() {
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const rawHours = now.getHours();
+  const hours = rawHours % 12 || 12;
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ampm = rawHours < 12 ? "am" : "pm";
+
+  return (
+    <Box
+      width="100%"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <Text
+        fontSize="24vmin"
+        fontWeight="200"
+        letterSpacing="-0.03em"
+        color="var(--theme-fg)"
+        lineHeight="1"
+        fontVariantNumeric="tabular-nums"
+      >
+        <NumberFlow
+          digits={{ 2: { max: 2 } }}
+          value={hours}
+          prefix={hours < 10 ? "0" : ""}
+        />
+        :
+        <NumberFlow
+          digits={{ 2: { max: 2 } }}
+          value={minutes}
+          prefix={minutes < 10 ? "0" : ""}
+        />
+        <Text
+          as="span"
+          fontSize="10vmin"
+          fontWeight="200"
+          color="var(--theme-fg-dim)"
+          ml="1.5vmin"
+        >
+          <NumberFlow
+            digits={{ 2: { max: 2 } }}
+            value={seconds}
+            prefix={seconds < 10 ? "0" : ""}
+          />
+        </Text>
+        <Text
+          as="span"
+          fontSize="8vmin"
+          fontWeight="300"
+          color="var(--theme-fg-dim)"
+          ml="2vmin"
+        >
+          {ampm}
+        </Text>
+      </Text>
+
+      <Text
+        fontSize="4vmin"
+        color="var(--theme-fg-muted)"
+        fontWeight="300"
+        letterSpacing="0.04em"
+        mt="3vmin"
+      >
+        {DAYS[now.getDay()]}, {MONTHS[now.getMonth()]} {now.getDate()}
+      </Text>
+    </Box>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function Clock() {
+  const [style, setStyle] = useState<ClockStyle>(loadStyle);
+  const { data: weather } = useWeather();
+
+  function toggle() {
+    setStyle((prev) => {
+      const next = prev === "analog" ? "digital" : "analog";
+      window.localStorage.setItem(STORAGE_KEY, next);
+      return next;
+    });
+  }
+
   return (
     <Box
+      position="relative"
       width="100%"
       height="100vh"
       bg="var(--theme-bg)"
@@ -171,8 +299,29 @@ export function Clock() {
       display="flex"
       alignItems="center"
       justifyContent="center"
+      onClick={toggle}
+      cursor="pointer"
     >
-      <AnalogClock />
+      <PageTransition key={style}>
+        {style === "analog" ? <AnalogClock /> : <DigitalClock />}
+      </PageTransition>
+      {weather?.temperature != null && (
+        <Text
+          position="absolute"
+          bottom="6vmin"
+          left="50%"
+          transform="translateX(-50%)"
+          fontSize="6vmin"
+          fontWeight="200"
+          color="var(--theme-fg-dim)"
+          letterSpacing="-0.02em"
+          lineHeight="1"
+          fontVariantNumeric="tabular-nums"
+          pointerEvents="none"
+        >
+          <NumberFlow value={Math.round(weather.temperature)} />°
+        </Text>
+      )}
     </Box>
   );
 }

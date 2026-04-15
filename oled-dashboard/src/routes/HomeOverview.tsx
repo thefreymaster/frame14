@@ -7,6 +7,7 @@ import {
   Grid,
   GridItem,
   Spacer,
+  Alert,
 } from "@chakra-ui/react";
 import {
   WiMoonAltWaningCrescent4,
@@ -135,7 +136,11 @@ function Divider() {
 
 // ── Header: date + time + temp ────────────────────────────────────────────────
 
-function Header({ internet }: { internet: HomeInternet }) {
+function Header({
+  internet: { connected = true },
+}: {
+  internet: HomeInternet;
+}) {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -152,22 +157,19 @@ function Header({ internet }: { internet: HomeInternet }) {
 
   return (
     <Box width="100%">
+      {connected === false && (
+        <Alert.Root status="error" variant="solid" p="2">
+          <Alert.Indicator />
+          <Alert.Title>Offline!</Alert.Title>
+          <Alert.Description>Internet outage detected.</Alert.Description>
+        </Alert.Root>
+      )}
       {/* Date line */}
       <HStack align="baseline" gap="2vmin" mb="0.8vmin">
-        <Text
-          fontSize="3.8vmin"
-          color="var(--theme-fg-muted)"
-          fontWeight="400"
-          letterSpacing="0.02em"
-        >
+        <Text fontSize="3.8vmin" fontWeight="400" letterSpacing="0.02em">
           {day}, {month} {date}
         </Text>
         <Spacer />
-        {!internet.connected && (
-          <Text fontSize="3vmin" color="red.500" fontWeight="400">
-            Offline
-          </Text>
-        )}
       </HStack>
 
       {/* Time */}
@@ -175,7 +177,6 @@ function Header({ internet }: { internet: HomeInternet }) {
         fontSize="18vmin"
         fontWeight="300"
         letterSpacing="-0.03em"
-        color="var(--theme-fg)"
         lineHeight="0.9"
       >
         <NumberFlow
@@ -290,7 +291,7 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
             >
               HUMIDITY
             </Text>
-            <Text fontSize="4vmin" color="var(--theme-fg)" fontWeight="300">
+            <Text fontSize="4vmin" fontWeight="300">
               {weather.humidity}%
             </Text>
           </VStack>
@@ -304,7 +305,7 @@ function WeatherSection({ weather }: { weather: HomeWeather }) {
             >
               WIND
             </Text>
-            <Text fontSize="4vmin" color="var(--theme-fg)" fontWeight="300">
+            <Text fontSize="4vmin" fontWeight="300">
               {Math.round(weather.windSpeed)}
               {weather.windDirection != null
                 ? ` ${degToCompass(weather.windDirection)}`
@@ -338,12 +339,7 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
       </Text>
       {unit.currentTemp != null ? (
         <HStack align="baseline" gap="1vmin" flex="1" justify="flex-end">
-          <Text
-            fontSize="3.4vmin"
-            color="var(--theme-fg)"
-            fontWeight="300"
-            lineHeight="1"
-          >
+          <Text fontSize="3.4vmin" fontWeight="300" lineHeight="1">
             {unit.currentTemp}°
           </Text>
           {!isOff && unit.targetTemp != null && (
@@ -387,9 +383,9 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
   const pctColor =
     pct >= 100
-      ? "green.700"
+      ? "green.500"
       : pct >= 50
-        ? "yellow.700"
+        ? "yellow.500"
         : "var(--theme-fg-faint)";
 
   return (
@@ -405,13 +401,6 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
       <VStack width="100%" align="stretch" gap="0.4vmin">
         {/* Today totals */}
         <VStack align="flex-start" gap="0.4vmin" width="100%">
-          {/* <Text
-            fontSize="2.6vmin"
-            color="var(--theme-fg-faint)"
-            letterSpacing="0.1em"
-          >
-            TODAY
-          </Text> */}
           <Grid
             templateColumns="repeat(12, 1fr)"
             gap="1.5vmin"
@@ -423,7 +412,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
                 <Box
                   fontSize="3.5vmin"
                   lineHeight="1"
-                  color="yellow.600"
+                  color="yellow.500"
                   flexShrink={0}
                 >
                   <PiSolarRoof size="1.4em" />
@@ -441,17 +430,11 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
             </GridItem>
             <GridItem colSpan={4}>
               <HStack gap="1.5vmin" align="center">
-                <Box
-                  fontSize="3.5vmin"
-                  lineHeight="1"
-                  color="var(--theme-fg)"
-                  flexShrink={0}
-                >
+                <Box fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
                   <IoFlash size="1em" />
                 </Box>
                 <Text
                   fontSize="5.5vmin"
-                  color="var(--theme-fg)"
                   fontWeight="300"
                   lineHeight="1"
                   whiteSpace="nowrap"
@@ -509,14 +492,14 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
                 <Box
                   fontSize="3.5vmin"
                   lineHeight="1"
-                  color="var(--theme-fg)"
+                  
                   flexShrink={0}
                 >
                   <LuMoveUp size="1em" />
                 </Box>
                 <Text
                   fontSize="5.5vmin"
-                  color="var(--theme-fg)"
+                  
                   fontWeight="300"
                   lineHeight="1"
                   whiteSpace="nowrap"
@@ -631,7 +614,6 @@ function EventList({
         <HStack key={i} justify="space-between" align="baseline" width="100%">
           <Text
             fontSize="3.8vmin"
-            color="var(--theme-fg)"
             fontWeight="300"
             overflow="hidden"
             whiteSpace="nowrap"

@@ -1,9 +1,12 @@
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Load dotenv for local dev fallback
 try {
   const { config } = await import("dotenv");
-  config();
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  config({ path: path.join(__dirname, ".env") });
 } catch {
   // dotenv not critical
 }
@@ -28,7 +31,7 @@ function get(addonKey, envKey, fallback = "") {
 }
 
 export const HA_URL = get("ha_url", "HA_URL", "http://supervisor/core");
-export const HA_TOKEN = get("ha_token", "HA_TOKEN", "");
+export const HA_TOKEN = process.env.HA_TOKEN ?? "";
 export const IMMICH_URL = get("immich_url", "IMMICH_URL", "");
 export const IMMICH_API_KEY = get("immich_api_key", "IMMICH_API_KEY", "");
 export const PORT = Number(get("port", "PORT", "4000"));

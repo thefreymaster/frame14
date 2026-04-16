@@ -86,6 +86,27 @@ const CONDITION_LABEL: Record<string, string> = {
   "windy-variant": "Windy",
 };
 
+const CONDITION_ICON: Record<
+  string,
+  React.ComponentType<{ size?: string | number; color?: string }>
+> = {
+  "clear-night": WiMoonAltWaningCrescent4,
+  cloudy: WiCloudy,
+  exceptional: WiNa,
+  fog: WiFog,
+  hail: WiHail,
+  lightning: WiLightning,
+  "lightning-rainy": WiThunderstorm,
+  partlycloudy: WiDayCloudy,
+  pouring: WiRain,
+  rainy: WiShowers,
+  snowy: WiSnow,
+  "snowy-rainy": WiRainMix,
+  sunny: WiDaySunny,
+  windy: WiStrongWind,
+  "windy-variant": WiStrongWind,
+};
+
 const HVAC_COLOR: Record<string, string> = {
   cool: "blue.400",
   heat: "orange.400",
@@ -138,8 +159,10 @@ function Divider() {
 
 function Header({
   internet: { connected = true },
+  weather,
 }: {
   internet: HomeInternet;
+  weather?: HomeWeather | null;
 }) {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -154,6 +177,9 @@ function Header({
   const day = DAYS[now.getDay()];
   const month = MONTHS[now.getMonth()];
   const date = now.getDate();
+
+  const label = weather ? (CONDITION_LABEL[weather.state] ?? weather.state) : "";
+  const Icon = weather ? (CONDITION_ICON[weather.state] ?? WiDaySunny) : null;
 
   return (
     <Box width="100%">
@@ -172,151 +198,75 @@ function Header({
         <Spacer />
       </HStack>
 
-      {/* Time */}
-      <Text
-        fontSize="18vmin"
-        fontWeight="300"
-        letterSpacing="-0.03em"
-        lineHeight="0.9"
-      >
-        <NumberFlow
-          digits={{ 2: { max: 2 } }}
-          value={hours}
-          prefix={hours < 10 ? "0" : ""}
-        />
-        :
-        <NumberFlow
-          digits={{ 2: { max: 2 } }}
-          value={minutes}
-          prefix={minutes < 10 ? "0" : ""}
-        />
+      <HStack width="100%" align="flex-end" justify="space-between">
+        {/* Time */}
         <Text
-          as="span"
-          fontSize="8vmin"
+          fontSize="14vmin"
           fontWeight="300"
-          color="var(--theme-fg-dim)"
-          ml="1.5vmin"
+          letterSpacing="-0.03em"
+          lineHeight="0.9"
+          flexShrink={0}
         >
-          {ampm}
+          <NumberFlow
+            digits={{ 2: { max: 2 } }}
+            value={hours}
+            prefix={hours < 10 ? "0" : ""}
+          />
+          :
+          <NumberFlow
+            digits={{ 2: { max: 2 } }}
+            value={minutes}
+            prefix={minutes < 10 ? "0" : ""}
+          />
+          <Text
+            as="span"
+            fontSize="6vmin"
+            fontWeight="300"
+            color="var(--theme-fg-dim)"
+            ml="1vmin"
+          >
+            {ampm}
+          </Text>
         </Text>
-      </Text>
+
+        {/* Weather — right of time */}
+        {weather && (
+          <VStack align="flex-end" gap="0.5vmin" pb="0.5vmin">
+            <HStack align="center" gap="1.5vmin">
+              {Icon && (
+                <Box fontSize="8vmin" lineHeight="1" color="var(--theme-fg-dim)">
+                  <Icon size="1em" />
+                </Box>
+              )}
+              {weather.temperature != null && (
+                <Text
+                  fontSize="10vmin"
+                  fontWeight="300"
+                  letterSpacing="-0.03em"
+                  color="var(--theme-fg-dim)"
+                  lineHeight="1"
+                >
+                  <NumberFlow value={Math.round(weather.temperature)} />°
+                </Text>
+              )}
+            </HStack>
+            <HStack gap="2vmin" align="baseline">
+              <Text fontSize="3.5vmin" color="var(--theme-fg-dim)" fontWeight="300">
+                {label}
+              </Text>
+              {weather.humidity != null && (
+                <Text fontSize="3.5vmin" color="var(--theme-fg-faint)" fontWeight="300">
+                  {weather.humidity}%
+                </Text>
+              )}
+            </HStack>
+          </VStack>
+        )}
+      </HStack>
     </Box>
   );
 }
 
-// ── Weather condition icons ───────────────────────────────────────────────────
-
-const CONDITION_ICON: Record<
-  string,
-  React.ComponentType<{ size?: string | number; color?: string }>
-> = {
-  "clear-night": WiMoonAltWaningCrescent4,
-  cloudy: WiCloudy,
-  exceptional: WiNa,
-  fog: WiFog,
-  hail: WiHail,
-  lightning: WiLightning,
-  "lightning-rainy": WiThunderstorm,
-  partlycloudy: WiDayCloudy,
-  pouring: WiRain,
-  rainy: WiShowers,
-  snowy: WiSnow,
-  "snowy-rainy": WiRainMix,
-  sunny: WiDaySunny,
-  windy: WiStrongWind,
-  "windy-variant": WiStrongWind,
-};
-
-// ── Wind direction helpers ────────────────────────────────────────────────────
-
-const WIND_DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] as const;
-
-function degToCompass(deg: number) {
-  const idx = Math.round(deg / 45) % 8;
-  return WIND_DIRS[idx];
-}
-
-// ── Weather section ──────────────────────────────────────────────────────────
-
-function WeatherSection({ weather }: { weather: HomeWeather }) {
-  const label = CONDITION_LABEL[weather.state] ?? weather.state;
-  const Icon = CONDITION_ICON[weather.state] ?? WiDaySunny;
-
-  return (
-    <HStack width="100%" gap="4vmin" align="center">
-      {/* Icon */}
-      <Box
-        fontSize="14vmin"
-        lineHeight="1"
-        flexShrink={0}
-        color="var(--theme-fg-dim)"
-      >
-        <Icon size="1em" />
-      </Box>
-
-      <VStack display="flex" alignItems="flex-start" lineHeight={1}>
-        {/* Temperature */}
-        {weather.temperature != null && (
-          <Text
-            fontSize="14vmin"
-            fontWeight="300"
-            letterSpacing="-0.03em"
-            color="var(--theme-fg-dim)"
-            lineHeight="1"
-            flexShrink={0}
-          >
-            <NumberFlow value={Math.round(weather.temperature)} />°
-          </Text>
-        )}
-
-        {/* Condition label */}
-        <Text
-          fontSize="6vmin"
-          color="var(--theme-fg-dim)"
-          fontWeight="300"
-          flexShrink={0}
-        >
-          {label}
-        </Text>
-      </VStack>
-
-      {/* Stats pushed to the right */}
-      <VStack flex="1" gap="4vmin" justify="flex-end" align="center">
-        {weather.humidity != null && (
-          <VStack align="center" gap="0.3vmin">
-            <Text
-              fontSize="2.6vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              HUMIDITY
-            </Text>
-            <Text fontSize="4vmin" fontWeight="300">
-              {weather.humidity}%
-            </Text>
-          </VStack>
-        )}
-        {weather.windSpeed != null && (
-          <VStack align="center" gap="0.3vmin">
-            <Text
-              fontSize="2.6vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              WIND
-            </Text>
-            <Text fontSize="4vmin" fontWeight="300">
-              {Math.round(weather.windSpeed)}
-              {weather.windDirection != null
-                ? ` ${degToCompass(weather.windDirection)}`
-                : " mph"}
-            </Text>
-          </VStack>
-        )}
-      </VStack>
-    </HStack>
-  );
-}
 
 // ── Climate ───────────────────────────────────────────────────────────────────
 
@@ -740,7 +690,7 @@ export function HomeOverview() {
       flexDirection={isLandscape ? "row" : "column"}
       alignItems={isLandscape ? "flex-start" : "center"}
       justifyContent={isLandscape ? "flex-start" : "space-between"}
-      p={isLandscape ? "8" : "10"}
+      p={isLandscape ? "8" : "20"}
       gap={isLandscape ? "4vmin" : "0"}
     >
       {isLandscape ? (
@@ -753,13 +703,7 @@ export function HomeOverview() {
             justifyContent="flex-start"
             gap="3vmin"
           >
-            <Header internet={data.internet} />
-            {data.weather && (
-              <>
-                <Divider />
-                <WeatherSection weather={data.weather} />
-              </>
-            )}
+            <Header internet={data.internet} weather={data.weather} />
             {printerActive && (
               <>
                 <Divider />
@@ -793,9 +737,7 @@ export function HomeOverview() {
         </>
       ) : (
         <>
-          <Header internet={data.internet} />
-          <Divider />
-          {data.weather && <WeatherSection weather={data.weather} />}
+          <Header internet={data.internet} weather={data.weather} />
           <Divider />
           {hasCalendar && (
             <>

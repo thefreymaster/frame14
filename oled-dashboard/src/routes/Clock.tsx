@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { PageTransition } from "../components/PageTransition";
-import { useWeather } from "../hooks/useWeather";
 
 type ClockStyle = "analog" | "digital";
 
@@ -279,7 +278,6 @@ function DigitalClock() {
 
 export function Clock() {
   const [style, setStyle] = useState<ClockStyle>(loadStyle);
-  const { data: weather } = useWeather();
 
   function toggle() {
     setStyle((prev) => {
@@ -305,23 +303,6 @@ export function Clock() {
       <PageTransition key={style}>
         {style === "analog" ? <AnalogClock /> : <DigitalClock />}
       </PageTransition>
-      {weather?.temperature != null && (
-        <Text
-          position="absolute"
-          bottom="6vmin"
-          left="50%"
-          transform="translateX(-50%)"
-          fontSize="6vmin"
-          fontWeight="200"
-          color="var(--theme-fg-dim)"
-          letterSpacing="-0.02em"
-          lineHeight="1"
-          fontVariantNumeric="tabular-nums"
-          pointerEvents="none"
-        >
-          <NumberFlow value={Math.round(weather.temperature)} />°
-        </Text>
-      )}
     </Box>
   );
 }

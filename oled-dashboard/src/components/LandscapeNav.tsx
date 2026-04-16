@@ -10,7 +10,12 @@ import {
   IoSettingsOutline,
   IoSettings,
 } from "react-icons/io5";
-import { RiHome5Line, RiHome5Fill } from "react-icons/ri";
+import {
+  RiHome5Line,
+  RiHome5Fill,
+  RiLightbulbLine,
+  RiLightbulbFill,
+} from "react-icons/ri";
 import { socket } from "../lib/socket";
 
 type NavItem = {
@@ -29,7 +34,15 @@ const NAV_ITEMS: NavItem[] = [
     icon: IoImagesOutline,
     activeIcon: IoImages,
   },
+  {
+    path: "/lights",
+    label: "Lights",
+    icon: RiLightbulbLine,
+    activeIcon: RiLightbulbFill,
+  },
 ];
+
+const LOCAL_ONLY_PATHS = new Set(["/control", "/lights"]);
 
 const BOTTOM_NAV_ITEMS: NavItem[] = [
   {
@@ -61,7 +74,7 @@ export function LandscapeNav() {
 
   function handleClick(path: string) {
     navigate(path);
-    if (path !== "/control") {
+    if (!LOCAL_ONLY_PATHS.has(path)) {
       socket.emit("change", path.replace("/", ""));
     }
     setActiveView(path);

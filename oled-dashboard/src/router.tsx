@@ -5,6 +5,7 @@ import { Blank } from "./routes/Blank";
 import { Photos } from "./routes/Photos";
 import { Control } from "./routes/Control";
 import { HomeOverview } from "./routes/HomeOverview";
+import { Lights } from "./routes/Lights";
 import { getDeviceMode } from "./lib/deviceMode";
 
 export const router = createBrowserRouter([
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: "/photos", element: <Photos /> },
       { path: "/control", element: <Control /> },
       { path: "/home", element: <HomeOverview /> },
+      { path: "/lights", element: <Lights /> },
     ],
   },
 ]);

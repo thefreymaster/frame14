@@ -26,12 +26,37 @@ const SUBSCRIBE_EVENTS_ID = 2;
 
 const stateCache = new Map();
 
+let haWs = null;
+let nextMsgId = 3;
+
+const ALLOWED_DOMAINS = new Set(["light", "switch"]);
+const ALLOWED_SERVICES = new Set(["toggle", "turn_on", "turn_off"]);
+const ENTITY_ID_RE = /^[a-z_]+\.[a-z0-9_]+$/;
+
 export function getState(entityId) {
   return stateCache.get(entityId);
 }
 
 export function getAllStates() {
   return stateCache;
+}
+
+export function callService({ domain, service, entity_id }) {
+  if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
+  if (!ALLOWED_DOMAINS.has(domain)) return false;
+  if (!ALLOWED_SERVICES.has(service)) return false;
+  if (typeof entity_id !== "string" || !ENTITY_ID_RE.test(entity_id)) return false;
+  if (!entity_id.startsWith(domain + ".")) return false;
+  haWs.send(
+    JSON.stringify({
+      id: nextMsgId++,
+      type: "call_service",
+      domain,
+      service,
+      service_data: { entity_id },
+    }),
+  );
+  return true;
 }
 
 async function getLastRoute() {
@@ -114,6 +139,7 @@ export function startHaSocket(io) {
     const wsUrl = HA_URL.replace(/^http/, "ws") + "/api/websocket";
     console.log(`[ha-socket] connecting to ${wsUrl}`);
     const ws = new WebSocket(wsUrl);
+    haWs = ws;
 
     ws.on("message", (raw) => {
       let msg;
@@ -168,6 +194,14 @@ export function startHaSocket(io) {
         const data = msg.event?.data;
         if (!data?.entity_id) return;
         publishState(data.entity_id, data.new_state, data.old_state);
+        return;
+      }
+
+      if (msg.type === "result" && msg.success === false) {
+        console.warn(
+          `[ha-socket] call failed (id=${msg.id}):`,
+          msg.error?.message ?? msg.error,
+        );
       }
     });
 
@@ -176,6 +210,7 @@ export function startHaSocket(io) {
     });
 
     ws.on("close", () => {
+      if (haWs === ws) haWs = null;
       console.warn(
         `[ha-socket] disconnected, reconnecting in ${RECONNECT_DELAY_MS / 1000}s`,
       );

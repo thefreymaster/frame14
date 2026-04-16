@@ -5,8 +5,10 @@ import {
   MdHome,
   MdAccessTime,
   MdPhotoLibrary,
+  MdLightbulb,
 } from "react-icons/md";
 import type { IconType } from "react-icons";
+import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "../hooks/useSocket";
 import { socket } from "../lib/socket";
@@ -19,7 +21,10 @@ const VIEWS: { path: string; label: string; Icon: IconType }[] = [
   { path: "/home", label: "Overview", Icon: MdHome },
   { path: "/clock", label: "Clock", Icon: MdAccessTime },
   { path: "/photos", label: "Photos", Icon: MdPhotoLibrary },
+  { path: "/lights", label: "Lights", Icon: MdLightbulb },
 ];
+
+const LOCAL_ONLY_PATHS = new Set(["/lights"]);
 
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "auto", label: "Auto" },
@@ -36,6 +41,7 @@ export function Control() {
   const { preference, effectiveMode, setPreference } = useThemeMode();
   const { data: photosConfig } = usePhotosConfig();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<string | null>(null);
 
   async function handleAlbumChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -65,6 +71,10 @@ export function Control() {
   }, []);
 
   function changeView(path: string) {
+    if (LOCAL_ONLY_PATHS.has(path)) {
+      navigate(path);
+      return;
+    }
     socket.emit("change", path.replace("/", ""));
     setActiveView(path);
   }

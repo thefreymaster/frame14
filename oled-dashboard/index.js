@@ -6,7 +6,12 @@ import { fileURLToPath } from "node:url";
 import { Server } from "socket.io";
 
 import { PORT } from "./config.js";
-import { startHaSocket, getState, setLastRoute } from "./ha-socket.js";
+import {
+  startHaSocket,
+  getState,
+  setLastRoute,
+  callService,
+} from "./ha-socket.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
@@ -69,6 +74,12 @@ io.on("connection", (socket) => {
   socket.on("entity:unsubscribe", (entityId) => {
     if (typeof entityId !== "string" || !entityId) return;
     socket.leave(`entity:${entityId}`);
+  });
+
+  socket.on("entity:call", (payload) => {
+    if (!payload || typeof payload !== "object") return;
+    const ok = callService(payload);
+    if (!ok) console.warn("[entity:call] rejected", payload);
   });
 });
 

@@ -14,9 +14,11 @@ export function Layout() {
   const location = useLocation();
   const screenType = useScreenType();
   const isControl = location.pathname === "/control";
+  const isLights = location.pathname === "/lights";
   const isBlank = location.pathname === "/blank";
   const showNav = !isBlank;
   const isOled = screenType === "oled";
+  const scrollable = isControl || isLights;
 
   const content = (
     <PageTransition key={location.pathname}>
@@ -30,7 +32,7 @@ export function Layout() {
       {showNav && <LandscapeNav />}
       <Box
         height="100%"
-        overflow={isControl ? "auto" : "hidden"}
+        overflow={scrollable ? "auto" : "hidden"}
         css={
           showNav
             ? {
@@ -45,7 +47,7 @@ export function Layout() {
             : undefined
         }
       >
-        {isControl || !isOled ? content : <PixelShift>{content}</PixelShift>}
+        {scrollable || !isOled ? content : <PixelShift>{content}</PixelShift>}
       </Box>
     </>
   );

@@ -178,7 +178,9 @@ function Header({
   const month = MONTHS[now.getMonth()];
   const date = now.getDate();
 
-  const label = weather ? (CONDITION_LABEL[weather.state] ?? weather.state) : "";
+  const label = weather
+    ? (CONDITION_LABEL[weather.state] ?? weather.state)
+    : "";
   const Icon = weather ? (CONDITION_ICON[weather.state] ?? WiDaySunny) : null;
 
   return (
@@ -234,7 +236,11 @@ function Header({
           <VStack align="flex-end" gap="0.5vmin" pb="0.5vmin">
             <HStack align="center" gap="1.5vmin">
               {Icon && (
-                <Box fontSize="8vmin" lineHeight="1" color="var(--theme-fg-dim)">
+                <Box
+                  fontSize="8vmin"
+                  lineHeight="1"
+                  color="var(--theme-fg-dim)"
+                >
                   <Icon size="1em" />
                 </Box>
               )}
@@ -251,11 +257,19 @@ function Header({
               )}
             </HStack>
             <HStack gap="2vmin" align="baseline">
-              <Text fontSize="3.5vmin" color="var(--theme-fg-dim)" fontWeight="300">
+              <Text
+                fontSize="3.5vmin"
+                color="var(--theme-fg-dim)"
+                fontWeight="300"
+              >
                 {label}
               </Text>
               {weather.humidity != null && (
-                <Text fontSize="3.5vmin" color="var(--theme-fg-faint)" fontWeight="300">
+                <Text
+                  fontSize="3.5vmin"
+                  color="var(--theme-fg-faint)"
+                  fontWeight="300"
+                >
                   {weather.humidity}%
                 </Text>
               )}
@@ -266,7 +280,6 @@ function Header({
     </Box>
   );
 }
-
 
 // ── Climate ───────────────────────────────────────────────────────────────────
 
@@ -690,7 +703,7 @@ export function HomeOverview() {
       flexDirection={isLandscape ? "row" : "column"}
       alignItems={isLandscape ? "flex-start" : "center"}
       justifyContent={isLandscape ? "flex-start" : "space-between"}
-      p={isLandscape ? "8" : "20"}
+      p={isLandscape ? "8" : "16"}
       gap={isLandscape ? "4vmin" : "0"}
     >
       {isLandscape ? (

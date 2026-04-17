@@ -167,6 +167,7 @@ export function useHomeData() {
     staleTime: 1000 * 60 * 5,
   });
 
+  // @ts-ignore
   const homeWeather = useMemo<HomeWeather | null>(() => {
     const wx = weather.data;
     if (!wx) return null;

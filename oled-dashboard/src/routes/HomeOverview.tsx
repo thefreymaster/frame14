@@ -9,22 +9,22 @@ import {
   Spacer,
   Alert,
 } from "@chakra-ui/react";
-import {
-  WiMoonAltWaningCrescent4,
-  WiCloudy,
-  WiNa,
-  WiFog,
-  WiHail,
-  WiLightning,
-  WiThunderstorm,
-  WiDayCloudy,
-  WiRain,
-  WiShowers,
-  WiSnow,
-  WiRainMix,
-  WiDaySunny,
-  WiStrongWind,
-} from "react-icons/wi";
+// import {
+//   WiMoonAltWaningCrescent4,
+//   WiCloudy,
+//   WiNa,
+//   WiFog,
+//   WiHail,
+//   WiLightning,
+//   WiThunderstorm,
+//   WiDayCloudy,
+//   WiRain,
+//   WiShowers,
+//   WiSnow,
+//   WiRainMix,
+//   WiDaySunny,
+//   WiStrongWind,
+// } from "react-icons/wi";
 import { PiSolarRoof } from "react-icons/pi";
 import NumberFlow from "@number-flow/react";
 import { IoFlash } from "react-icons/io5";
@@ -86,26 +86,26 @@ const CONDITION_LABEL: Record<string, string> = {
   "windy-variant": "Windy",
 };
 
-const CONDITION_ICON: Record<
-  string,
-  React.ComponentType<{ size?: string | number; color?: string }>
-> = {
-  "clear-night": WiMoonAltWaningCrescent4,
-  cloudy: WiCloudy,
-  exceptional: WiNa,
-  fog: WiFog,
-  hail: WiHail,
-  lightning: WiLightning,
-  "lightning-rainy": WiThunderstorm,
-  partlycloudy: WiDayCloudy,
-  pouring: WiRain,
-  rainy: WiShowers,
-  snowy: WiSnow,
-  "snowy-rainy": WiRainMix,
-  sunny: WiDaySunny,
-  windy: WiStrongWind,
-  "windy-variant": WiStrongWind,
-};
+// const CONDITION_ICON: Record<
+//   string,
+//   React.ComponentType<{ size?: string | number; color?: string }>
+// > = {
+//   "clear-night": WiMoonAltWaningCrescent4,
+//   cloudy: WiCloudy,
+//   exceptional: WiNa,
+//   fog: WiFog,
+//   hail: WiHail,
+//   lightning: WiLightning,
+//   "lightning-rainy": WiThunderstorm,
+//   partlycloudy: WiDayCloudy,
+//   pouring: WiRain,
+//   rainy: WiShowers,
+//   snowy: WiSnow,
+//   "snowy-rainy": WiRainMix,
+//   sunny: WiDaySunny,
+//   windy: WiStrongWind,
+//   "windy-variant": WiStrongWind,
+// };
 
 const HVAC_COLOR: Record<string, string> = {
   cool: "blue.400",
@@ -181,7 +181,7 @@ function Header({
   const label = weather
     ? (CONDITION_LABEL[weather.state] ?? weather.state)
     : "";
-  const Icon = weather ? (CONDITION_ICON[weather.state] ?? WiDaySunny) : null;
+  // const Icon = weather ? (CONDITION_ICON[weather.state] ?? WiDaySunny) : null;
 
   return (
     <Box width="100%">

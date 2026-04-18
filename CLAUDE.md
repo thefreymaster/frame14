@@ -21,11 +21,12 @@ Two separate processes:
 
 **Client** (`src/`) — Vite + React 19 + TypeScript. Entry: `src/main.tsx`. Providers: `ChakraProvider` (Chakra UI v3) + `QueryClientProvider` (TanStack Query). Built output (`dist/`) is served statically by Express in production.
 
-**Server** (`index.js`) — Express 5 + Socket.IO (JavaScript, not TypeScript). Config is read from `/data/options.json` (HA addon) with `.env` fallback via `config.js`. Routes are split into `routes/` files and mounted in `index.js`. The OpenAPI document lives in `openapi.js`.
+**Server** (`index.js`) — Express 5 + Socket.IO (JavaScript, not TypeScript). Config is read from `/data/options.json` (HA addon) with `.env` fallback via `config.js`. Entity IDs are read from `options.json` (HA addon) or `frame14.json` (local dev) via `entities.js`. Routes are split into `routes/` files and mounted in `index.js`. The OpenAPI document lives in `openapi.js`.
 
 ## Configuration
 
-Config priority: `/data/options.json` (HA addon) → `.env` file (local dev). See `.env.example` for all variables.
+### Credentials (`config.js`)
+Priority: `/data/options.json` (HA addon) → `.env` file (local dev). See `.env.example` for all variables.
 
 | Variable | Description |
 |---|---|
@@ -36,15 +37,37 @@ Config priority: `/data/options.json` (HA addon) → `.env` file (local dev). Se
 | `IMMICH_ALBUM_ID` | (Optional) Pin a specific album for the photo slideshow |
 | `PORT` | Express server port (default 4000) |
 
+### Entity IDs (`entities.js`)
+Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
+
+`frame14.json` schema:
+```json
+{
+  "lights": ["light.living_room", "switch.sonoff_xxx"],
+  "weather": { "current": "weather.openweathermap", "forecast": "weather.openweathermap_2" },
+  "climate": ["climate.1st_floor_ac"],
+  "energy": {
+    "currentProduction": "sensor.envoy_xxx_current_power_production",
+    "currentConsumption": "sensor.envoy_xxx_current_power_consumption",
+    "productionToday": "sensor.envoy_xxx_energy_production_today",
+    "consumptionToday": "sensor.envoy_xxx_energy_consumption_today"
+  }
+}
+```
+
+In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` fields in `config.yaml`).
+
 ## Frontend Routes
 
 | Path | Component | Description |
 |---|---|---|
 | `/` | redirect | → `/clock` |
-| `/clock` | `ClockWeather` | Portrait OLED display: clock + NWS weather |
+| `/clock` | `Clock` | Portrait display: clock + NWS weather |
+| `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar |
+| `/lights` | `Lights` | Light + switch controls |
 | `/blank` | `Blank` | Pure black screen (motion off) |
 | `/photos` | `Photos` | Immich photo slideshow |
-| `/control` | `Mobile` | Mobile remote control — emits socket events only, never navigates itself |
+| `/control` | `Control` | Mobile remote control — emits socket events only, never navigates itself |
 
 ## Frontend Structure
 
@@ -54,10 +77,12 @@ src/
   App.tsx                         — RouterProvider
   router.tsx                      — createBrowserRouter, Layout wraps all routes
   routes/
-    ClockWeather.tsx              — clock + weather page
+    Clock.tsx                     — clock + weather page
+    HomeOverview.tsx              — home overview page
+    Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
     Photos.tsx                    — Immich slideshow
-    Mobile.tsx                    — remote control
+    Control.tsx                   — remote control
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
     PageTransition.tsx            — fade+scale animation on route mount
@@ -66,9 +91,14 @@ src/
     WeatherCurrent.tsx            — current conditions (emoji, temp, humidity, wind)
     WeatherForecast.tsx           — 5-period hourly forecast strip
     PhotoSlide.tsx                — full-bleed crossfade image slide
-    ViewButton.tsx                — button used in /control
+    LightsSection.tsx             — renders a group of LightEntry controls
+    LightControl.tsx              — single light/switch toggle
+    EnergyPanel.tsx               — solar production/consumption display
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
+    useHomeData.ts                — weather+climate+energy+calendar+people+printer; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s
+    useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
+    useEntity.ts                  — subscribes to a single HA entity via Socket.IO room
     useImmichAlbums.ts            — fetches /api/photos/albums
     useAlbumPhotos.ts             — fetches /api/photos/albums/:id
     usePhotosConfig.ts            — fetches /api/photos/config (pinned album ID)
@@ -76,18 +106,26 @@ src/
   lib/
     queryClient.ts                — TanStack QueryClient singleton
     socket.ts                     — socket.io-client singleton (connects to window.location.origin)
+    lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icon (domain-based) from entity IDs; no static registry
 ```
 
 ## Backend Structure
 
 ```
 index.js          — app setup, Socket.IO, mounts routers
-config.js         — reads /data/options.json or .env
+config.js         — reads credentials from /data/options.json or .env
+entities.js       — reads entity IDs from /data/options.json (HA addon) or frame14.json (local dev)
+frame14.json      — local dev entity ID config (not used in HA addon)
 openapi.js        — OpenAPI document + Swagger UI renderer
+ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album watchers
 routes/
   health.js       — GET /api
   docs.js         — GET /api/docs, GET /api/docs/openapi.json
-  weather.js      — GET /api/weather (proxies HA NWS entity)
+  weather.js      — GET /api/weather (entity IDs from entities.js)
+  home.js         — GET /api/home/weather, GET /api/home/calendar
+  climate.js      — GET /api/home/climate (fetches HA states for ENTITIES.climate array)
+  energy.js       — GET /api/energy (entity IDs from entities.js)
+  entities.js     — GET /api/entities (serves ENTITIES object to frontend)
   photos.js       — GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail
   views.js        — GET /api/change/:view (broadcasts change_view via io from app.locals)
   videos.js       — GET /api/videos/list, GET /videos/:file
@@ -96,7 +134,12 @@ routes/
 ## API Endpoints
 
 - `GET /api` — health check
-- `GET /api/weather` — current weather + 8-period forecast from HA `weather.nws_hourly` (edit entity name in `routes/weather.js` if needed)
+- `GET /api/entities` — returns entity ID config (from options.json or frame14.json)
+- `GET /api/weather` — current weather + forecast from HA (entity from `ENTITIES.weather`)
+- `GET /api/home/weather` — weather used by HomeOverview
+- `GET /api/home/climate` — climate states for all entities in `ENTITIES.climate`
+- `GET /api/home/calendar` — today + tomorrow calendar events from all HA calendars
+- `GET /api/energy` — solar production/consumption from HA (entity IDs from `ENTITIES.energy`)
 - `GET /api/photos/config` — returns `{ defaultAlbumId }` from config
 - `GET /api/photos/albums` — Immich album list
 - `GET /api/photos/albums/:albumId` — assets in an album (images only)
@@ -108,6 +151,8 @@ routes/
 ## Socket.IO
 
 - Client emits `change` with a view name → server broadcasts `change_view` to all **other** clients
+- Client emits `entity:subscribe` / `entity:unsubscribe` → joins/leaves Socket.IO room `entity:<id>`
+- HA WebSocket pushes state updates → server fans out to `entity:<id>` rooms
 - `GET /api/change/:view` broadcasts to **all** clients (used by HA automations)
 - `SocketViewListener` navigates on `change_view` but ignores it on `/control`
 - `io` instance is passed to route handlers via `app.locals.io`
@@ -123,15 +168,20 @@ routes/
 
 ## Home Assistant Addon
 
-- `config.yaml` — addon manifest (arch, ports, options schema)
-- `run.sh` — entry point, reads bashio config into env vars
+- `config.yaml` — addon manifest (arch, ports, options schema including all entity ID fields)
+- `run.sh` — entry point; exports scalar env vars via bashio (arrays read directly from options.json by entities.js)
+- `Dockerfile` — multi-stage build; copies `entities.js` and `frame14.json` into image
 - `ha-automation.yaml` — example motion sensor automation
-  - `binary_sensor.kitchen_motion_sensor_motion` on → `/clock`
-  - `binary_sensor.kitchen_motion_sensor_motion` off → `/blank`
-  - Uses `rest_command.oled_change_view` calling `GET /api/change/:view`
 
 ## Adding API Endpoints
 
 1. Add the route handler in the appropriate `routes/*.js` file (or create a new one)
-2. Mount it in `index.js`
+2. Mount it in `index.js` — mount more-specific paths before less-specific (e.g. `/api/home/climate` before `/api/home`)
 3. Document it in `openapi.js`
+
+## Adding Entity IDs
+
+1. Add the field to `frame14.json` for local dev
+2. Add the field to `config.yaml` options + schema for the HA addon
+3. Read it in `entities.js` from `options` (addon path) and export it on `ENTITIES`
+4. Use `ENTITIES.yourField` in the relevant route handler

@@ -100,9 +100,9 @@ app.use("/api/weather", weatherRouter);
 app.use("/api/photos", photosRouter);
 app.use("/api", viewsRouter);
 app.use("/api/energy", energyRouter);
-app.use("/api/home", homeRouter);
 app.use("/api/entities", entitiesRouter);
 app.use("/api/home/climate", climateRouter);
+app.use("/api/home", homeRouter);
 app.use("/api/videos", videosRouter);
 app.use("/videos", videosRouter);
 

@@ -26,6 +26,11 @@ router.get("/", async (_req, res) => {
     return;
   }
 
+  if (!PRODUCTION_ENTITY || !CONSUMPTION_ENTITY || !CURRENT_PRODUCTION_ENTITY || !CURRENT_CONSUMPTION_ENTITY) {
+    res.status(503).json({ error: "Energy entities not configured" });
+    return;
+  }
+
   try {
     const [production, consumption, currentProduction, currentConsumption] = await Promise.all([
       fetchState(PRODUCTION_ENTITY),

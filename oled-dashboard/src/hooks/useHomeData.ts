@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useEntity, type HAState } from "./useEntity";
+import { useEntity } from "./useEntity";
 
 export interface HomeForecastPeriod {
   datetime: string;
@@ -85,32 +85,6 @@ interface WeatherResponse {
   forecast: HomeForecastPeriod[];
 }
 
-interface ClimateAttributes {
-  current_temperature?: number;
-  temperature?: number;
-  hvac_mode?: string;
-}
-
-function projectClimate(
-  name: string,
-  d: HAState<ClimateAttributes> | undefined,
-): HomeClimate {
-  return {
-    name,
-    state: d?.state ?? "unknown",
-    currentTemp: d?.attributes?.current_temperature ?? null,
-    targetTemp: d?.attributes?.temperature ?? null,
-    hvacMode: d?.attributes?.hvac_mode ?? d?.state ?? null,
-  };
-}
-
-const CLIMATE_ENTITIES = [
-  { id: "climate.1st_floor_ac", name: "1st Floor" },
-  { id: "climate.2nd_floor_ac", name: "2nd Floor" },
-  { id: "climate.3rd_floor_ac", name: "3rd Floor" },
-  { id: "climate.guest_room_ac", name: "Guest" },
-] as const;
-
 const PERSON_ENTITIES = [
   { id: "person.evan", name: "Evan" },
   { id: "person.elizabeth", name: "Elizabeth" },
@@ -124,6 +98,34 @@ function parseFloatOrNull(value: string | undefined | null): number | null {
 
 function parseFloatOrZero(value: string | undefined | null): number {
   return parseFloatOrNull(value) ?? 0;
+}
+
+interface ClimateResponse {
+  entity_id: string;
+  name: string;
+  state: string;
+  currentTemp: number | null;
+  targetTemp: number | null;
+  hvacMode: string | null;
+}
+
+interface EnergyResponse {
+  production: number;
+  consumption: number;
+  currentProduction: number;
+  currentConsumption: number;
+}
+
+async function fetchClimate(): Promise<ClimateResponse[]> {
+  const res = await fetch("/api/home/climate");
+  if (!res.ok) throw new Error(`Climate fetch failed: ${res.status}`);
+  return res.json() as Promise<ClimateResponse[]>;
+}
+
+async function fetchEnergy(): Promise<EnergyResponse> {
+  const res = await fetch("/api/energy");
+  if (!res.ok) throw new Error(`Energy fetch failed: ${res.status}`);
+  return res.json() as Promise<EnergyResponse>;
 }
 
 async function fetchCalendar(): Promise<CalendarResponse> {
@@ -148,10 +150,20 @@ export function useHomeData() {
   });
 
   // Climate
-  const climate1 = useEntity<ClimateAttributes>(CLIMATE_ENTITIES[0].id);
-  const climate2 = useEntity<ClimateAttributes>(CLIMATE_ENTITIES[1].id);
-  const climate3 = useEntity<ClimateAttributes>(CLIMATE_ENTITIES[2].id);
-  const climateGuest = useEntity<ClimateAttributes>(CLIMATE_ENTITIES[3].id);
+  const climateQuery = useQuery<ClimateResponse[]>({
+    queryKey: ["home", "climate"],
+    queryFn: fetchClimate,
+    refetchInterval: 1000 * 60,
+    staleTime: 1000 * 60,
+  });
+
+  // Energy
+  const energyQuery = useQuery<EnergyResponse>({
+    queryKey: ["home", "energy"],
+    queryFn: fetchEnergy,
+    refetchInterval: 1000 * 30,
+    staleTime: 1000 * 30,
+  });
 
   // People
   const personEvan = useEntity(PERSON_ENTITIES[0].id);
@@ -165,20 +177,6 @@ export function useHomeData() {
   );
   const printerTask = useEntity("sensor.a1_03919c442700723_task_name");
   const printerFinish = useEntity("sensor.a1_finish_time");
-
-  // Energy
-  const energyCurProd = useEntity(
-    "sensor.envoy_482518016321_current_power_production",
-  );
-  const energyCurCons = useEntity(
-    "sensor.envoy_482518016321_current_power_consumption",
-  );
-  const energyProdToday = useEntity(
-    "sensor.envoy_482518016321_energy_production_today",
-  );
-  const energyConsToday = useEntity(
-    "sensor.envoy_482518016321_energy_consumption_today",
-  );
 
   // Internet
   const ping = useEntity("binary_sensor.1_1_1_1");
@@ -202,13 +200,15 @@ export function useHomeData() {
   }, [weatherQuery.data]);
 
   const homeClimate = useMemo<HomeClimate[]>(
-    () => [
-      projectClimate(CLIMATE_ENTITIES[0].name, climate1.data),
-      projectClimate(CLIMATE_ENTITIES[1].name, climate2.data),
-      projectClimate(CLIMATE_ENTITIES[2].name, climate3.data),
-      projectClimate(CLIMATE_ENTITIES[3].name, climateGuest.data),
-    ],
-    [climate1.data, climate2.data, climate3.data, climateGuest.data],
+    () =>
+      (climateQuery.data ?? []).map((c) => ({
+        name: c.name,
+        state: c.state,
+        currentTemp: c.currentTemp,
+        targetTemp: c.targetTemp,
+        hvacMode: c.hvacMode,
+      })),
+    [climateQuery.data],
   );
 
   const homePeople = useMemo<HomePerson[]>(
@@ -244,17 +244,12 @@ export function useHomeData() {
 
   const homeEnergy = useMemo<HomeEnergy>(
     () => ({
-      currentProduction: parseFloatOrZero(energyCurProd.data?.state),
-      currentConsumption: parseFloatOrZero(energyCurCons.data?.state),
-      productionToday: parseFloatOrZero(energyProdToday.data?.state),
-      consumptionToday: parseFloatOrZero(energyConsToday.data?.state),
+      currentProduction: energyQuery.data?.currentProduction ?? 0,
+      currentConsumption: energyQuery.data?.currentConsumption ?? 0,
+      productionToday: energyQuery.data?.production ?? 0,
+      consumptionToday: energyQuery.data?.consumption ?? 0,
     }),
-    [
-      energyCurProd.data,
-      energyCurCons.data,
-      energyProdToday.data,
-      energyConsToday.data,
-    ],
+    [energyQuery.data],
   );
 
   const homeInternet = useMemo<HomeInternet>(

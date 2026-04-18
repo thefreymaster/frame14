@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { HA_URL, HA_TOKEN } from "../config.js";
+import { ENTITIES } from "../entities.js";
 
 const router = Router();
 
-const PRODUCTION_ENTITY = "sensor.envoy_482518016321_energy_production_today";
-const CONSUMPTION_ENTITY = "sensor.envoy_482518016321_energy_consumption_today";
-const CURRENT_PRODUCTION_ENTITY = "sensor.envoy_482518016321_current_power_production";
-const CURRENT_CONSUMPTION_ENTITY = "sensor.envoy_482518016321_current_power_consumption";
+const PRODUCTION_ENTITY = ENTITIES.energy?.productionToday ?? "";
+const CONSUMPTION_ENTITY = ENTITIES.energy?.consumptionToday ?? "";
+const CURRENT_PRODUCTION_ENTITY = ENTITIES.energy?.currentProduction ?? "";
+const CURRENT_CONSUMPTION_ENTITY = ENTITIES.energy?.currentConsumption ?? "";
 
 async function fetchState(entity) {
   const response = await fetch(`${HA_URL}/api/states/${entity}`, {

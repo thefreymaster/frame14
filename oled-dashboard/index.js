@@ -20,6 +20,8 @@ import viewsRouter from "./routes/views.js";
 import videosRouter from "./routes/videos.js";
 import energyRouter from "./routes/energy.js";
 import homeRouter from "./routes/home.js";
+import entitiesRouter from "./routes/entities.js";
+import climateRouter from "./routes/climate.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -99,6 +101,8 @@ app.use("/api/photos", photosRouter);
 app.use("/api", viewsRouter);
 app.use("/api/energy", energyRouter);
 app.use("/api/home", homeRouter);
+app.use("/api/entities", entitiesRouter);
+app.use("/api/home/climate", climateRouter);
 app.use("/api/videos", videosRouter);
 app.use("/videos", videosRouter);
 

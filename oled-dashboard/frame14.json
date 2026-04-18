@@ -1,0 +1,38 @@
+{
+  "lights": [
+    "light.living_room",
+    "light.kitchen_main_lights",
+    "light.living_room_fireplace",
+    "light.backyard",
+    "light.lady_lamp",
+    "light.kitchen_cabinet_lights",
+    "switch.sonoff_1001816bdb",
+    "light.dining_room_chandelier",
+    "light.front_yard",
+    "switch.ihome_smartplug_05b4df_outlet",
+    "light.front_porch",
+    "light.hue_ambiance_lamp_1",
+    "light.lizs_lamp",
+    "light.movie_theater",
+    "light.evans_office",
+    "light.aidens_hatch_light",
+    "light.basement_2",
+    "light.workshop"
+  ],
+  "weather": {
+    "current": "weather.openweathermap",
+    "forecast": "weather.openweathermap_2"
+  },
+  "climate": [
+    "climate.1st_floor_ac",
+    "climate.2nd_floor_ac",
+    "climate.3rd_floor_ac",
+    "climate.guest_room_ac"
+  ],
+  "energy": {
+    "currentProduction": "sensor.envoy_482518016321_current_power_production",
+    "currentConsumption": "sensor.envoy_482518016321_current_power_consumption",
+    "productionToday": "sensor.envoy_482518016321_energy_production_today",
+    "consumptionToday": "sensor.envoy_482518016321_energy_consumption_today"
+  }
+}

@@ -1,7 +1,7 @@
-name: OLED Dashboard
+name: Frame14
 version: "1.9.2"
 slug: oled_dashboard
-description: OLED-optimized home dashboard with clock, NWS weather, and Immich photo slideshow
+description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
 arch:
   - aarch64
@@ -21,6 +21,36 @@ options:
   immich_api_key: ""
   port: 4000
   screen_type: "oled"
+  weather_entity: "weather.openweathermap"
+  weather_forecast_entity: "weather.openweathermap_2"
+  light_entities:
+    - "light.living_room"
+    - "light.kitchen_main_lights"
+    - "light.living_room_fireplace"
+    - "light.backyard"
+    - "light.lady_lamp"
+    - "light.kitchen_cabinet_lights"
+    - "switch.sonoff_1001816bdb"
+    - "light.dining_room_chandelier"
+    - "light.front_yard"
+    - "switch.ihome_smartplug_05b4df_outlet"
+    - "light.front_porch"
+    - "light.hue_ambiance_lamp_1"
+    - "light.lizs_lamp"
+    - "light.movie_theater"
+    - "light.evans_office"
+    - "light.aidens_hatch_light"
+    - "light.basement_2"
+    - "light.workshop"
+  climate_entities:
+    - "climate.1st_floor_ac"
+    - "climate.2nd_floor_ac"
+    - "climate.3rd_floor_ac"
+    - "climate.guest_room_ac"
+  energy_current_production: "sensor.envoy_482518016321_current_power_production"
+  energy_current_consumption: "sensor.envoy_482518016321_current_power_consumption"
+  energy_production_today: "sensor.envoy_482518016321_energy_production_today"
+  energy_consumption_today: "sensor.envoy_482518016321_energy_consumption_today"
 schema:
   ha_url: str
   ha_token: str
@@ -28,3 +58,13 @@ schema:
   immich_api_key: str
   port: int
   screen_type: str
+  weather_entity: str
+  weather_forecast_entity: str
+  light_entities:
+    - str
+  climate_entities:
+    - str
+  energy_current_production: str
+  energy_current_consumption: str
+  energy_production_today: str
+  energy_consumption_today: str

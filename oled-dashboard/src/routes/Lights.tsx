@@ -1,8 +1,12 @@
 import { Box, Text } from "@chakra-ui/react";
 import { LightsSection } from "../components/LightsSection";
-import { LIGHT_SECTIONS } from "../lib/lightsConfig";
+import { buildLightSections } from "../lib/lightsConfig";
+import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 
 export function Lights() {
+  const { data: entities } = useEntitiesConfig();
+  const sections = buildLightSections(entities?.lights ?? []);
+
   return (
     <Box
       width="100%"
@@ -34,7 +38,7 @@ export function Lights() {
           Lights
         </Text>
 
-        {LIGHT_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <LightsSection
             key={section.title}
             title={section.title}

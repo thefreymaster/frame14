@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { HA_URL, HA_TOKEN } from "../config.js";
+import { ENTITIES } from "../entities.js";
 
 const router = Router();
 
@@ -94,8 +95,10 @@ router.get("/weather", async (_req, res) => {
     return;
   }
   try {
+    const weatherCurrent = ENTITIES.weather?.current ?? "";
+    const weatherForecast = ENTITIES.weather?.forecast ?? weatherCurrent;
     const [currentRes, forecastRes] = await Promise.all([
-      fetch(`${HA_URL}/api/states/weather.openweathermap`, {
+      fetch(`${HA_URL}/api/states/${weatherCurrent}`, {
         headers: WEATHER_HEADERS(HA_TOKEN),
       }),
       fetch(
@@ -104,7 +107,7 @@ router.get("/weather", async (_req, res) => {
           method: "POST",
           headers: WEATHER_HEADERS(HA_TOKEN),
           body: JSON.stringify({
-            entity_id: "weather.openweathermap_2",
+            entity_id: weatherForecast,
             type: "hourly",
           }),
         },
@@ -118,7 +121,7 @@ router.get("/weather", async (_req, res) => {
     const forecastData = await forecastRes.json();
     const attrs = current.attributes ?? {};
     const forecastList =
-      forecastData?.service_response?.["weather.openweathermap_2"]?.forecast ?? [];
+      forecastData?.service_response?.[weatherForecast]?.forecast ?? [];
     res.json({
       state: current.state,
       temperature: attrs.temperature,

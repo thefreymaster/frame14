@@ -16,6 +16,7 @@ import {
   RiLightbulbLine,
   RiLightbulbFill,
 } from "react-icons/ri";
+import { MdRadar } from "react-icons/md";
 import { socket } from "../lib/socket";
 
 type NavItem = {
@@ -40,9 +41,10 @@ const NAV_ITEMS: NavItem[] = [
     icon: RiLightbulbLine,
     activeIcon: RiLightbulbFill,
   },
+  { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar },
 ];
 
-const LOCAL_ONLY_PATHS = new Set(["/control", "/lights"]);
+const LOCAL_ONLY_PATHS = new Set(["/control", "/lights", "/radar"]);
 
 const BOTTOM_NAV_ITEMS: NavItem[] = [
   {

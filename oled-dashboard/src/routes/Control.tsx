@@ -7,6 +7,7 @@ import {
   MdPhotoLibrary,
   MdLightbulb,
   MdRefresh,
+  MdRadar,
 } from "react-icons/md";
 import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
@@ -24,9 +25,10 @@ const VIEWS: { path: string; label: string; Icon: IconType }[] = [
   { path: "/clock", label: "Clock", Icon: MdAccessTime },
   { path: "/photos", label: "Photos", Icon: MdPhotoLibrary },
   { path: "/lights", label: "Lights", Icon: MdLightbulb },
+  { path: "/radar", label: "Radar", Icon: MdRadar },
 ];
 
-const LOCAL_ONLY_PATHS = new Set(["/lights"]);
+const LOCAL_ONLY_PATHS = new Set(["/lights", "/radar"]);
 
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "auto", label: "Auto" },

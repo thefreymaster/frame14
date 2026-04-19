@@ -1,4 +1,4 @@
-# OLED Dashboard — Motion Control Automation
+# Frame14 — Motion Control Automation
 #
 # Prerequisites: Add this to your configuration.yaml:
 #
@@ -9,7 +9,7 @@
 #
 # Then add this automation via the UI or automations.yaml:
 
-alias: OLED Dashboard Motion Control
+alias: Frame14 Motion Control
 description: >
   On motion: routes to clock immediately, then photos after 5 min, then blank
   after 10 min. On motion off: cancels timers and routes to blank immediately.

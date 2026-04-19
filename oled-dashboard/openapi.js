@@ -1,10 +1,10 @@
 export const openApiDocument = {
   openapi: "3.0.3",
   info: {
-    title: "OLED Dashboard API",
+    title: "Frame14 API",
     version: "1.0.0",
     description:
-      "REST API for the OLED Dashboard server. Connected Socket.IO clients can emit `change` and receive `change_view` events to synchronize view changes.",
+      "REST API for the Frame14 server. Connected Socket.IO clients can emit `change` and receive `change_view` events to synchronize view changes.",
   },
   servers: [
     {
@@ -301,7 +301,7 @@ export const openApiDocument = {
 };
 
 export function renderSwaggerUiHtml({
-  title = "OLED Dashboard API Docs",
+  title = "Frame14 API Docs",
   specUrl = "/api/docs/openapi.json",
 } = {}) {
   return `<!DOCTYPE html>

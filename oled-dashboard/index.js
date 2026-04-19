@@ -112,7 +112,7 @@ app.get("/{*path}", (_req, res) => {
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`OLED Dashboard server running on port ${PORT}`);
+  console.log(`Frame14 server running on port ${PORT}`);
   io.emit("ready");
   startHaSocket(io);
 });

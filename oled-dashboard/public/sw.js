@@ -1,4 +1,4 @@
-const CACHE = "oled-dashboard-v2";
+const CACHE = "frame14-v2";
 const PRECACHE = ["/", "/clock", "/blank", "/photos", "/control"];
 
 self.addEventListener("install", (e) => {

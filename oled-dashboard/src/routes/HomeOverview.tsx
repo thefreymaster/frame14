@@ -555,6 +555,13 @@ function formatEventTime(isoStr: string | null) {
   return `${h}:${m}${ampm}`;
 }
 
+function isPast(event: HomeCalendarEvent): boolean {
+  if (event.allDay) return false;
+  const end = event.end ?? event.start;
+  if (!end) return false;
+  return new Date(end) < new Date();
+}
+
 function EventList({
   events,
   max = 5,
@@ -564,29 +571,35 @@ function EventList({
 }) {
   return (
     <VStack gap="1vmin" align="stretch" width="100%">
-      {events.slice(0, max).map((event, i) => (
-        <HStack key={i} justify="space-between" align="baseline" width="100%">
-          <Text
-            fontSize="3.8vmin"
-            fontWeight="300"
-            overflow="hidden"
-            whiteSpace="nowrap"
-            textOverflow="ellipsis"
-            flex="1"
-            mr="3vmin"
-          >
-            {event.summary}
-          </Text>
-          <Text
-            fontSize="3.2vmin"
-            color="var(--theme-fg-muted)"
-            fontWeight="300"
-            flexShrink={0}
-          >
-            {event.allDay ? "all day" : formatEventTime(event.start)}
-          </Text>
-        </HStack>
-      ))}
+      {events.slice(0, max).map((event, i) => {
+        const past = isPast(event);
+        return (
+          <HStack key={i} justify="space-between" align="baseline" width="100%">
+            <Text
+              fontSize="3.8vmin"
+              fontWeight="300"
+              overflow="hidden"
+              whiteSpace="nowrap"
+              textOverflow="ellipsis"
+              flex="1"
+              mr="3vmin"
+              textDecoration={past ? "line-through" : undefined}
+              color={past ? "var(--theme-fg-faint)" : undefined}
+            >
+              {event.summary}
+            </Text>
+            <Text
+              fontSize="3.2vmin"
+              color={past ? "var(--theme-fg-faint)" : "var(--theme-fg-muted)"}
+              fontWeight="300"
+              flexShrink={0}
+              textDecoration={past ? "line-through" : undefined}
+            >
+              {event.allDay ? "all day" : formatEventTime(event.start)}
+            </Text>
+          </HStack>
+        );
+      })}
     </VStack>
   );
 }

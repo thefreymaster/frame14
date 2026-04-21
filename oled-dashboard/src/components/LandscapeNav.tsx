@@ -9,6 +9,8 @@ import {
   IoImages,
   IoSettingsOutline,
   IoSettings,
+  IoTimerOutline,
+  IoTimer,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -24,6 +26,7 @@ type NavItem = {
   label: string;
   icon: IconType;
   activeIcon: IconType;
+  portraitHidden?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -41,10 +44,11 @@ const NAV_ITEMS: NavItem[] = [
     icon: RiLightbulbLine,
     activeIcon: RiLightbulbFill,
   },
-  { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar },
+  { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar, portraitHidden: true },
+  { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer, portraitHidden: true },
 ];
 
-const LOCAL_ONLY_PATHS = new Set(["/control", "/lights", "/radar"]);
+const LOCAL_ONLY_PATHS = new Set(["/control", "/lights", "/radar", "/timer"]);
 
 const BOTTOM_NAV_ITEMS: NavItem[] = [
   {
@@ -149,6 +153,7 @@ export function LandscapeNav() {
   }
 
   const allItems = [...NAV_ITEMS, ...BOTTOM_NAV_ITEMS];
+  const portraitItems = allItems.filter((i) => !i.portraitHidden);
 
   return (
     <>
@@ -170,7 +175,7 @@ export function LandscapeNav() {
         zIndex={100}
       >
         <HStack gap="0" align="stretch" height="64px" px="4px">
-          {allItems.map(renderItem)}
+          {portraitItems.map(renderItem)}
         </HStack>
       </Box>
 

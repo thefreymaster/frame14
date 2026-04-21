@@ -7,6 +7,7 @@ import { Control } from "./routes/Control";
 import { HomeOverview } from "./routes/HomeOverview";
 import { Lights } from "./routes/Lights";
 import { Radar } from "./routes/Radar";
+import { Timer } from "./routes/Timer";
 import { getDeviceMode } from "./lib/deviceMode";
 
 export const router = createBrowserRouter([
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: "/home", element: <HomeOverview /> },
       { path: "/lights", element: <Lights /> },
       { path: "/radar", element: <Radar /> },
+      { path: "/timer", element: <Timer /> },
     ],
   },
 ]);

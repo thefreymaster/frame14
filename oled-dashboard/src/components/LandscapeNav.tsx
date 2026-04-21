@@ -20,6 +20,7 @@ import {
 } from "react-icons/ri";
 import { MdRadar } from "react-icons/md";
 import { socket } from "../lib/socket";
+import { getDeviceMode } from "../lib/deviceMode";
 
 type NavItem = {
   path: string;
@@ -27,6 +28,7 @@ type NavItem = {
   icon: IconType;
   activeIcon: IconType;
   portraitHidden?: boolean;
+  frameOnly?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -50,6 +52,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: MdRadar,
     activeIcon: MdRadar,
     portraitHidden: true,
+    frameOnly: true,
   },
   {
     path: "/timer",
@@ -57,6 +60,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: IoTimerOutline,
     activeIcon: IoTimer,
     portraitHidden: true,
+    frameOnly: true,
   },
 ];
 
@@ -75,6 +79,7 @@ export function LandscapeNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState(location.pathname);
+  const isFrame = getDeviceMode() === "frame";
 
   useEffect(() => {
     setActiveView(location.pathname);
@@ -164,7 +169,8 @@ export function LandscapeNav() {
     );
   }
 
-  const allItems = [...NAV_ITEMS, ...BOTTOM_NAV_ITEMS];
+  const visibleNavItems = NAV_ITEMS.filter((i) => isFrame || !i.frameOnly);
+  const allItems = [...visibleNavItems, ...BOTTOM_NAV_ITEMS];
   const portraitItems = allItems.filter((i) => !i.portraitHidden);
 
   return (
@@ -209,7 +215,7 @@ export function LandscapeNav() {
       >
         <Flex direction="column" align="stretch" height="100%" py="12px">
           <VStack gap="4px" align="stretch">
-            {NAV_ITEMS.map(renderItemVertical)}
+            {visibleNavItems.map(renderItemVertical)}
           </VStack>
           <Spacer />
           <VStack gap="4px" align="stretch">

@@ -67,7 +67,9 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/lights` | `Lights` | Light + switch controls |
 | `/blank` | `Blank` | Pure black screen (motion off) |
 | `/photos` | `Photos` | Immich photo slideshow |
-| `/control` | `Control` | Mobile remote control — emits socket events only, never navigates itself |
+| `/radar` | `Radar` | Radar view — frame-only nav item |
+| `/timer` | `Timer` | Timer — frame-only nav item |
+| `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
 ## Frontend Structure
 
@@ -82,10 +84,14 @@ src/
     Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
     Photos.tsx                    — Immich slideshow
-    Control.tsx                   — remote control
+    Radar.tsx                     — radar view (frame-only)
+    Timer.tsx                     — timer (frame-only)
+    Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
+    LandscapeNav.tsx              — bottom bar (portrait) + left sidebar (landscape); radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
+    PixelShift.tsx                — slow pixel offset to prevent OLED burn-in
     SocketViewListener.tsx        — listens for change_view, navigates (skips /control)
     ClockDisplay.tsx              — 12-hour clock + date, no seconds
     WeatherCurrent.tsx            — current conditions (emoji, temp, humidity, wind)
@@ -94,19 +100,29 @@ src/
     LightsSection.tsx             — renders a group of LightEntry controls
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
+    Divider.tsx                   — thin themed divider line
+    ViewButton.tsx                — styled outline/solid toggle button
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
     useHomeData.ts                — weather+climate+energy+calendar+people+printer; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s
     useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
     useEntity.ts                  — subscribes to a single HA entity via Socket.IO room
+    useEnergy.ts                  — fetches /api/energy, refetches every 5min
+    useThemeMode.ts               — reads/writes theme preference (auto/bright/dark), syncs via socket
+    useScreenType.ts              — fetches /api for screenType field ("oled" | "lcd")
     useImmichAlbums.ts            — fetches /api/photos/albums
     useAlbumPhotos.ts             — fetches /api/photos/albums/:id
     usePhotosConfig.ts            — fetches /api/photos/config (pinned album ID)
     useSocket.ts                  — socket.io-client connection status
+    useReady.ts                   — reloads page on socket "ready" event (server restart)
+    useRegionLuminance.ts         — samples top-left region of an image to determine dark/light
   lib/
     queryClient.ts                — TanStack QueryClient singleton
     socket.ts                     — socket.io-client singleton (connects to window.location.origin)
     lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icon (domain-based) from entity IDs; no static registry
+    deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
+    themeMode.ts                  — theme CSS vars, preference storage, socket sync; "auto" uses daylight window 07:00–19:00
+    callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
 ```
 
 ## Backend Structure

@@ -16,7 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "../hooks/useSocket";
 import { Divider } from "../components/Divider";
 import { socket } from "../lib/socket";
-import { setDeviceMode } from "../lib/deviceMode";
+import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import type { ThemeModePreference } from "../lib/themeMode";
@@ -49,6 +49,7 @@ export function Control() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<string | null>(null);
+  const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
 
   async function handleAlbumChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const option = e.target.value;
@@ -106,24 +107,47 @@ export function Control() {
           },
         }}
       >
-        {/* Use as frame */}
-        <Text
-          fontSize="min(3.5vmin, 15px)"
-          color="var(--theme-fg-faint)"
-          cursor="pointer"
-          _active={{ opacity: 0.5 }}
-          mb="min(4.5vmin, 20px)"
-          onClick={() => {
-            setDeviceMode("frame");
-            window.location.href = "/home";
-          }}
-        >
-          Use as display frame
-        </Text>
+        {/* Device mode buttons */}
+        <HStack gap="min(2vmin, 10px)" mb="min(4.5vmin, 20px)">
+          {(["frame", "controller"] as const).map((mode) => {
+            const isActive = deviceMode === mode;
+            const label = mode === "frame" ? "Use as display" : "Use as remote";
+            return (
+              <Box
+                key={mode}
+                as="button"
+                onClick={() => {
+                  setDeviceMode(mode);
+                  setDeviceModeState(mode);
+                  if (mode === "frame") window.location.href = "/home";
+                }}
+                flex="1"
+                py="min(3vmin, 13px)"
+                px="min(4vmin, 18px)"
+                borderRadius="8px"
+                border="1px solid"
+                borderColor={isActive ? "var(--theme-fg-dim)" : "var(--theme-divider)"}
+                bg="transparent"
+                cursor="pointer"
+                _active={{ opacity: 0.5 }}
+                transition="border-color 0.15s"
+              >
+                <Text
+                  fontSize="min(3.2vmin, 14px)"
+                  color={isActive ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
+                  fontWeight={isActive ? "400" : "300"}
+                  letterSpacing="0.02em"
+                >
+                  {label}
+                </Text>
+              </Box>
+            );
+          })}
+        </HStack>
         <Divider mb="min(8vmin, 36px)" />
 
         {/* Header */}
-        <HStack justify="space-between" align="baseline" mb="min(8vmin, 36px)">
+        {deviceMode !== "frame" && <HStack justify="space-between" align="baseline" mb="min(8vmin, 36px)">
           <Text
             fontSize="min(5vmin, 28px)"
             color="var(--theme-fg)"
@@ -143,7 +167,7 @@ export function Control() {
               {connected ? "connected" : "disconnected"}
             </Text>
           </HStack>
-        </HStack>
+        </HStack>}
 
         {/* Body: stacked portrait, side-by-side landscape */}
         <Box
@@ -157,7 +181,7 @@ export function Control() {
             },
           }}
         >
-        <Box flex="1" minWidth="0">
+        {deviceMode !== "frame" && <Box flex="1" minWidth="0">
         {/* View grid */}
         <Box
           display="grid"
@@ -253,7 +277,7 @@ export function Control() {
           </Text>
         </Box>
 
-        </Box>
+        </Box>}
         <Box flex="1" minWidth="0" display="flex" flexDirection="column" gap="min(10vmin, 48px)">
         {/* Display mode */}
         <Box>

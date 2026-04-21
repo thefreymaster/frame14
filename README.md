@@ -68,8 +68,10 @@ Enable **Start on boot** and **Watchdog**, then start it. The dashboard is avail
 | `/home` | Overview: weather, climate, energy, calendar |
 | `/lights` | Light and switch controls |
 | `/photos` | Immich photo slideshow |
+| `/radar` | Radar view (frame-only nav item) |
+| `/timer` | Timer (frame-only nav item) |
 | `/blank` | Black screen (motion off) |
-| `/control` | Mobile remote |
+| `/control` | Settings + remote control; use "Use as display" / "Use as remote" to set device mode |
 
 ---
 

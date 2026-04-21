@@ -44,8 +44,20 @@ const NAV_ITEMS: NavItem[] = [
     icon: RiLightbulbLine,
     activeIcon: RiLightbulbFill,
   },
-  { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar, portraitHidden: true },
-  { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer, portraitHidden: true },
+  {
+    path: "/radar",
+    label: "Radar",
+    icon: MdRadar,
+    activeIcon: MdRadar,
+    portraitHidden: true,
+  },
+  {
+    path: "/timer",
+    label: "Timer",
+    icon: IoTimerOutline,
+    activeIcon: IoTimer,
+    portraitHidden: true,
+  },
 ];
 
 const LOCAL_ONLY_PATHS = new Set(["/control", "/lights", "/radar", "/timer"]);
@@ -196,7 +208,6 @@ export function LandscapeNav() {
         zIndex={100}
       >
         <Flex direction="column" align="stretch" height="100%" py="12px">
-          <Spacer />
           <VStack gap="4px" align="stretch">
             {NAV_ITEMS.map(renderItemVertical)}
           </VStack>

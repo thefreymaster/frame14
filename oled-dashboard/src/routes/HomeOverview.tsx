@@ -197,7 +197,7 @@ function Header({
       <HStack width="100%" align="start" justify="space-between">
         {/* Time */}
         <Text
-          fontSize="18vmin"
+          fontSize="17vmin"
           fontWeight="300"
           letterSpacing="-0.03em"
           lineHeight="0.9"
@@ -727,16 +727,6 @@ export function HomeOverview() {
                 <PrinterSection printer={data.printer} />
               </>
             )}
-            {hasCalendar && (
-              <>
-                <Divider />
-                <CalendarSection
-                  today={data.calendar.today}
-                  tomorrow={data.calendar.tomorrow}
-                />
-                <Divider />
-              </>
-            )}
           </Box>
 
           {/* Right column — details */}
@@ -751,6 +741,15 @@ export function HomeOverview() {
             <ClimateSection climate={data.climate} />
             <Divider />
             <EnergySection energy={data.energy} />
+            {hasCalendar && (
+              <>
+                <Divider />
+                <CalendarSection
+                  today={data.calendar.today}
+                  tomorrow={data.calendar.tomorrow}
+                />
+              </>
+            )}
           </Box>
         </>
       ) : (

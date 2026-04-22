@@ -5,6 +5,19 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Server } from "socket.io";
 
+process.on("uncaughtException", (err) => {
+  console.error("[fatal] uncaughtException:", err.message, err.stack);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error(
+    "[fatal] unhandledRejection:",
+    reason instanceof Error ? reason.stack : reason,
+  );
+  process.exit(1);
+});
+
 import { PORT } from "./config.js";
 import {
   startHaSocket,
@@ -109,6 +122,12 @@ app.use("/videos", videosRouter);
 // SPA fallback
 app.get("/{*path}", (_req, res) => {
   res.sendFile(path.join(clientBuildDir, "index.html"));
+});
+
+// Global Express error handler
+app.use((err, _req, res, _next) => {
+  console.error("[error] unhandled route error:", err.message, err.stack);
+  if (!res.headersSent) res.status(500).json({ error: "Internal server error" });
 });
 
 httpServer.listen(PORT, () => {

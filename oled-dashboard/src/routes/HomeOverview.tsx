@@ -700,7 +700,7 @@ export function HomeOverview() {
   return (
     <Box
       width="100%"
-      height="95vh"
+      height="100%"
       bg="var(--theme-bg)"
       overflow="hidden"
       display="flex"

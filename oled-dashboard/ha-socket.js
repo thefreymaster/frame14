@@ -60,15 +60,20 @@ export function callService({ domain, service, entity_id }) {
 }
 
 async function getLastRoute() {
-  const res = await fetch(`${HA_URL}/api/states/${ROUTE_ENTITY}`, {
-    headers: { Authorization: `Bearer ${HA_TOKEN}` },
-  });
-  if (!res.ok) {
-    console.error(`[ha-socket] failed to get ${ROUTE_ENTITY}: ${res.status}`);
+  try {
+    const res = await fetch(`${HA_URL}/api/states/${ROUTE_ENTITY}`, {
+      headers: { Authorization: `Bearer ${HA_TOKEN}` },
+    });
+    if (!res.ok) {
+      console.error(`[ha-socket] failed to get ${ROUTE_ENTITY}: ${res.status}`);
+      return "home";
+    }
+    const data = await res.json();
+    return data.state || "home";
+  } catch (err) {
+    console.error("[ha-socket] getLastRoute network error:", err.message);
     return "home";
   }
-  const data = await res.json();
-  return data.state || "home";
 }
 
 export async function setLastRoute(route) {
@@ -121,7 +126,9 @@ export function startHaSocket(io) {
     io.to(`entity:${entityId}`).emit(entityId, newState);
 
     if (entityId === MOTION_ENTITY && newState.state === "on") {
-      onMotionOn();
+      onMotionOn().catch((err) =>
+        console.error("[ha-socket] onMotionOn error:", err.message),
+      );
       return;
     }
 

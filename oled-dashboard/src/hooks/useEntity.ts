@@ -1,5 +1,10 @@
-import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import {
+  useQueries,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import { socket } from "../lib/socket";
 
 export interface HAState<A = Record<string, unknown>> {
@@ -11,6 +16,19 @@ export interface HAState<A = Record<string, unknown>> {
 }
 
 const refCounts = new Map<string, number>();
+
+function normalizeEntityIds(entityIds: readonly string[]) {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (const entityId of entityIds) {
+    if (!entityId || seen.has(entityId)) continue;
+    seen.add(entityId);
+    normalized.push(entityId);
+  }
+
+  return normalized;
+}
 
 function refSubscribe(entityId: string) {
   const cur = refCounts.get(entityId) ?? 0;
@@ -60,4 +78,45 @@ export function useEntity<A = Record<string, unknown>>(entityId: string) {
     enabled: false,
     staleTime: Infinity,
   });
+}
+
+export function useEntities<A = Record<string, unknown>>(
+  entityIds: readonly string[],
+) {
+  const qc = useQueryClient();
+  const entityKey = entityIds.join("\0");
+  const normalizedEntityIds = useMemo(
+    () => normalizeEntityIds(entityIds),
+    [entityKey],
+  );
+
+  useEffect(() => {
+    const handlers = new Map<string, (data: HAState<A>) => void>();
+
+    for (const entityId of normalizedEntityIds) {
+      const onUpdate = (data: HAState<A>) => {
+        qc.setQueryData<HAState<A>>(["entity", entityId], data);
+      };
+
+      handlers.set(entityId, onUpdate);
+      socket.on(entityId, onUpdate);
+      refSubscribe(entityId);
+    }
+
+    return () => {
+      for (const [entityId, onUpdate] of handlers) {
+        refUnsubscribe(entityId);
+        socket.off(entityId, onUpdate);
+      }
+    };
+  }, [normalizedEntityIds, qc]);
+
+  return useQueries({
+    queries: normalizedEntityIds.map((entityId) => ({
+      queryKey: ["entity", entityId],
+      queryFn: () => qc.getQueryData<HAState<A>>(["entity", entityId]),
+      enabled: false,
+      staleTime: Infinity,
+    })),
+  }) as UseQueryResult<HAState<A> | undefined>[];
 }

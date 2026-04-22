@@ -230,12 +230,14 @@ function DigitalClock() {
           digits={{ 2: { max: 2 } }}
           value={hours}
           prefix={hours < 10 ? "0" : ""}
+          trend={1}
         />
         :
         <NumberFlow
           digits={{ 2: { max: 2 } }}
           value={minutes}
           prefix={minutes < 10 ? "0" : ""}
+          trend={1}
         />
         <Text
           as="span"
@@ -248,6 +250,7 @@ function DigitalClock() {
             digits={{ 2: { max: 2 } }}
             value={seconds}
             prefix={seconds < 10 ? "0" : ""}
+            trend={1}
           />
         </Text>
         <Text

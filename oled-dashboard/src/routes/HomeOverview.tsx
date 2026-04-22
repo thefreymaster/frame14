@@ -215,12 +215,14 @@ function Header({
             digits={{ 2: { max: 2 } }}
             value={hours}
             prefix={hours < 10 ? "0" : ""}
+            trend={1}
           />
           :
           <NumberFlow
             digits={{ 2: { max: 2 } }}
             value={minutes}
             prefix={minutes < 10 ? "0" : ""}
+            trend={1}
           />
           <Text
             as="span"
@@ -298,6 +300,12 @@ function ClimateModal({
   const queryClient = useQueryClient();
   const [mode, setMode] = useState(unit.state);
   const [temp, setTemp] = useState(unit.targetTemp ?? 72);
+
+  useEffect(() => {
+    setMode(unit.state);
+    setTemp(unit.targetTemp ?? 72);
+  }, [unit.entity_id, unit.state, unit.targetTemp]);
+
   const isOff = mode === "off" || mode === "unknown";
 
   function applyMode(newMode: string) {
@@ -306,7 +314,8 @@ function ClimateModal({
       hvac_mode: newMode as HvacMode,
     });
     setTimeout(
-      () => void queryClient.invalidateQueries({ queryKey: ["home", "climate"] }),
+      () =>
+        void queryClient.invalidateQueries({ queryKey: ["home", "climate"] }),
       2500,
     );
   }
@@ -318,7 +327,8 @@ function ClimateModal({
       temperature: newTemp,
     });
     setTimeout(
-      () => void queryClient.invalidateQueries({ queryKey: ["home", "climate"] }),
+      () =>
+        void queryClient.invalidateQueries({ queryKey: ["home", "climate"] }),
       2500,
     );
   }
@@ -356,7 +366,11 @@ function ClimateModal({
         </Text>
 
         {unit.currentTemp != null && (
-          <Text fontSize="3.2vmin" color="var(--theme-fg-faint)" fontWeight="300">
+          <Text
+            fontSize="3.2vmin"
+            color="var(--theme-fg-faint)"
+            fontWeight="300"
+          >
             current {unit.currentTemp}°
           </Text>
         )}
@@ -461,13 +475,7 @@ function ClimateModal({
   );
 }
 
-function ClimateRow({
-  unit,
-  onTap,
-}: {
-  unit: HomeClimate;
-  onTap: () => void;
-}) {
+function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
   const isOff = unit.state === "off" || unit.state === "unknown";
   const modeColor = HVAC_COLOR[unit.state] ?? "var(--theme-fg-faint)";
 
@@ -511,7 +519,9 @@ function ClimateRow({
 }
 
 function ClimateSection({ climate }: { climate: HomeClimate[] }) {
-  const [selectedUnit, setSelectedUnit] = useState<HomeClimate | null>(null);
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+  const selectedUnit =
+    climate.find((unit) => unit.entity_id === selectedEntityId) ?? null;
 
   return (
     <Box width="100%">
@@ -528,12 +538,15 @@ function ClimateSection({ climate }: { climate: HomeClimate[] }) {
           <ClimateRow
             key={unit.entity_id || unit.name}
             unit={unit}
-            onTap={() => setSelectedUnit(unit)}
+            onTap={() => setSelectedEntityId(unit.entity_id)}
           />
         ))}
       </VStack>
       {selectedUnit && (
-        <ClimateModal unit={selectedUnit} onClose={() => setSelectedUnit(null)} />
+        <ClimateModal
+          unit={selectedUnit}
+          onClose={() => setSelectedEntityId(null)}
+        />
       )}
     </Box>
   );
@@ -555,71 +568,78 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
 
   return (
     <>
-    {showModal && <EnergyModal energy={energy} onClose={() => setShowModal(false)} />}
-    <Box width="100%" cursor="pointer" onClick={() => setShowModal(true)} style={{ WebkitTapHighlightColor: "transparent" }}>
-      <Text
-        fontSize="2.6vmin"
-        color="var(--theme-fg-faint)"
-        letterSpacing="0.14em"
-        mb="1.5vmin"
+      {showModal && (
+        <EnergyModal energy={energy} onClose={() => setShowModal(false)} />
+      )}
+      <Box
+        width="100%"
+        cursor="pointer"
+        onClick={() => setShowModal(true)}
+        style={{ WebkitTapHighlightColor: "transparent" }}
       >
-        ENERGY
-      </Text>
-      <VStack width="100%" align="stretch" gap="0.4vmin">
-        {/* Today totals */}
-        <VStack align="flex-start" gap="0.4vmin" width="100%">
-          <Grid
-            templateColumns="repeat(12, 1fr)"
-            gap="1.5vmin"
-            alignItems="center"
-            width="100%"
-          >
-            <GridItem colSpan={4}>
-              <HStack gap="1.5vmin" align="center">
-                <Box
-                  fontSize="3.5vmin"
-                  lineHeight="1"
-                  color="yellow.500"
-                  flexShrink={0}
-                >
-                  <PiSolarRoof size="1.4em" />
-                </Box>
-                <Text
-                  fontSize="5.5vmin"
-                  color="yellow.600"
-                  fontWeight="300"
-                  lineHeight="1"
-                  whiteSpace="nowrap"
-                >
-                  {fmtKwh(productionToday)} kWh
+        <Text
+          fontSize="2.6vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.14em"
+          mb="1.5vmin"
+        >
+          ENERGY
+        </Text>
+        <VStack width="100%" align="stretch" gap="0.4vmin">
+          {/* Today totals */}
+          <VStack align="flex-start" gap="0.4vmin" width="100%">
+            <Grid
+              templateColumns="repeat(12, 1fr)"
+              gap="1.5vmin"
+              alignItems="center"
+              width="100%"
+            >
+              <GridItem colSpan={4}>
+                <HStack gap="1.5vmin" align="center">
+                  <Box
+                    fontSize="3.5vmin"
+                    lineHeight="1"
+                    color="yellow.500"
+                    flexShrink={0}
+                  >
+                    <PiSolarRoof size="1.4em" />
+                  </Box>
+                  <Text
+                    fontSize="5.5vmin"
+                    color="yellow.600"
+                    fontWeight="300"
+                    lineHeight="1"
+                    whiteSpace="nowrap"
+                  >
+                    {fmtKwh(productionToday)} kWh
+                  </Text>
+                </HStack>
+              </GridItem>
+              <GridItem colSpan={4}>
+                <HStack gap="1.5vmin" align="center">
+                  <Box fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
+                    <IoFlash size="1em" />
+                  </Box>
+                  <Text
+                    fontSize="5.5vmin"
+                    fontWeight="300"
+                    lineHeight="1"
+                    whiteSpace="nowrap"
+                  >
+                    {fmtKwh(consumptionToday)} kWh
+                  </Text>
+                </HStack>
+              </GridItem>
+              <GridItem colSpan={4} justifySelf="flex-end">
+                <Text fontSize="5.5vmin" color={pctColor} fontWeight="400">
+                  {Math.round(pct)}%
                 </Text>
-              </HStack>
-            </GridItem>
-            <GridItem colSpan={4}>
-              <HStack gap="1.5vmin" align="center">
-                <Box fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
-                  <IoFlash size="1em" />
-                </Box>
-                <Text
-                  fontSize="5.5vmin"
-                  fontWeight="300"
-                  lineHeight="1"
-                  whiteSpace="nowrap"
-                >
-                  {fmtKwh(consumptionToday)} kWh
-                </Text>
-              </HStack>
-            </GridItem>
-            <GridItem colSpan={4} justifySelf="flex-end">
-              <Text fontSize="5.5vmin" color={pctColor} fontWeight="400">
-                {Math.round(pct)}%
-              </Text>
-            </GridItem>
-          </Grid>
-        </VStack>
+              </GridItem>
+            </Grid>
+          </VStack>
 
-        {/* Real-time power */}
-        {/* <VStack align="flex-start" gap="0.4vmin" width="100%">
+          {/* Real-time power */}
+          {/* <VStack align="flex-start" gap="0.4vmin" width="100%">
           <Text
             fontSize="2.6vmin"
             color="var(--theme-fg-faint)"
@@ -677,8 +697,8 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
             </GridItem>
           </Grid>
         </VStack> */}
-      </VStack>
-    </Box>
+        </VStack>
+      </Box>
     </>
   );
 }
@@ -686,16 +706,32 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
 // ── Energy Modal ──────────────────────────────────────────────────────────────
 
 function FlowDots({
-  x1, y1, x2, y2, active, color, numDots = 4, duration = 1.6,
+  x1,
+  y1,
+  x2,
+  y2,
+  active,
+  color,
+  numDots = 4,
+  duration = 1.6,
 }: {
-  x1: number; y1: number; x2: number; y2: number;
-  active: boolean; color: string; numDots?: number; duration?: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  active: boolean;
+  color: string;
+  numDots?: number;
+  duration?: number;
 }) {
   const pathD = `M ${x1} ${y1} L ${x2} ${y2}`;
   return (
     <g>
       <line
-        x1={x1} y1={y1} x2={x2} y2={y2}
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
         stroke={active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}
         strokeWidth="1.5"
         strokeDasharray="3 6"
@@ -715,51 +751,91 @@ function FlowDots({
   );
 }
 
-function EnergyModal({ energy, onClose }: { energy: HomeEnergy; onClose: () => void }) {
-  const { currentProduction, currentConsumption, productionToday, consumptionToday } = energy;
+function EnergyModal({
+  energy,
+  onClose,
+}: {
+  energy: HomeEnergy;
+  onClose: () => void;
+}) {
+  const {
+    currentProduction,
+    currentConsumption,
+    productionToday,
+    consumptionToday,
+  } = energy;
   const gridDraw = currentConsumption - currentProduction;
   const isExporting = gridDraw < 0;
   const gridAbs = Math.abs(gridDraw);
   const solarActive = currentProduction > 5;
   const gridActive = gridAbs > 5;
-  const pct = consumptionToday > 0 ? Math.round((productionToday / consumptionToday) * 100) : 0;
-  const pctColor = pct >= 100 ? "#22c55e" : pct >= 50 ? "#eab308" : "rgba(255,255,255,0.3)";
+  const pct =
+    consumptionToday > 0
+      ? Math.round((productionToday / consumptionToday) * 100)
+      : 0;
+  const pctColor =
+    pct >= 100 ? "#22c55e" : pct >= 50 ? "#eab308" : "rgba(255,255,255,0.3)";
 
   // SVG layout — icons left of center, labels right
-  const W = 250, H = 330;
-  const IX = 95;  // icon center X
+  const W = 250,
+    H = 330;
+  const IX = 95; // icon center X
   const LX = 148; // label left X
 
-  const SC = { x: IX, y: 68 };  // solar
+  const SC = { x: IX, y: 68 }; // solar
   const HC = { x: IX, y: 182 }; // house
   const GC = { x: IX, y: 290 }; // grid
 
   const solarBottomY = SC.y + 25;
-  const houseTipY    = HC.y - 50;
+  const houseTipY = HC.y - 50;
   const houseBottomY = HC.y + 30;
-  const gridTopY     = GC.y - 22;
+  const gridTopY = GC.y - 22;
 
   return (
     <Box
-      position="fixed" inset="0" bg="rgba(0,0,0,0.93)" zIndex={200}
-      display="flex" alignItems="center" justifyContent="center"
+      position="fixed"
+      inset="0"
+      bg="rgba(0,0,0,0.93)"
+      zIndex={200}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
       onClick={onClose}
     >
       <Box
-        bg="#0d0d0d" p="5vmin" borderRadius="3vmin"
-        minW="62vmin" maxW="86vmin"
-        display="flex" flexDirection="column" alignItems="center" gap="3vmin"
+        bg="#0d0d0d"
+        p="5vmin"
+        borderRadius="3vmin"
+        minW="62vmin"
+        maxW="86vmin"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        gap="3vmin"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-        <Text fontSize="3.8vmin" fontWeight="400" color="var(--theme-fg-dim)" letterSpacing="0.1em">
+        <Text
+          fontSize="3.8vmin"
+          fontWeight="400"
+          color="var(--theme-fg-dim)"
+          letterSpacing="0.1em"
+        >
           ENERGY
         </Text>
 
-        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "50vmin", height: "66vmin" }}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ width: "50vmin", height: "66vmin" }}
+        >
           {/* ── Flow lines ── */}
           <FlowDots
-            x1={SC.x} y1={solarBottomY} x2={HC.x} y2={houseTipY}
-            active={solarActive} color="#fbbf24" duration={1.3}
+            x1={SC.x}
+            y1={solarBottomY}
+            x2={HC.x}
+            y2={houseTipY}
+            active={solarActive}
+            color="#fbbf24"
+            duration={1.3}
           />
           <FlowDots
             x1={isExporting ? HC.x : GC.x}
@@ -776,88 +852,285 @@ function EnergyModal({ energy, onClose }: { energy: HomeEnergy; onClose: () => v
           {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
             const r = (deg * Math.PI) / 180;
             return (
-              <line key={deg}
-                x1={SC.x + Math.cos(r) * 10} y1={(SC.y - 34) + Math.sin(r) * 10}
-                x2={SC.x + Math.cos(r) * 14} y2={(SC.y - 34) + Math.sin(r) * 14}
-                stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"
+              <line
+                key={deg}
+                x1={SC.x + Math.cos(r) * 10}
+                y1={SC.y - 34 + Math.sin(r) * 10}
+                x2={SC.x + Math.cos(r) * 14}
+                y2={SC.y - 34 + Math.sin(r) * 14}
+                stroke="#fbbf24"
+                strokeWidth="1.5"
+                strokeLinecap="round"
               />
             );
           })}
 
           {/* ── Solar panel ── */}
-          <rect x={SC.x - 27} y={SC.y - 18} width="54" height="37" rx="2"
-            fill="rgba(59,130,246,0.18)" stroke="#60a5fa" strokeWidth="1.5" />
-          <line x1={SC.x - 9} y1={SC.y - 18} x2={SC.x - 9} y2={SC.y + 19} stroke="#60a5fa" strokeWidth="0.6" opacity="0.5" />
-          <line x1={SC.x + 9} y1={SC.y - 18} x2={SC.x + 9} y2={SC.y + 19} stroke="#60a5fa" strokeWidth="0.6" opacity="0.5" />
-          <line x1={SC.x - 27} y1={SC.y + 1} x2={SC.x + 27} y2={SC.y + 1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.5" />
+          <rect
+            x={SC.x - 27}
+            y={SC.y - 18}
+            width="54"
+            height="37"
+            rx="2"
+            fill="rgba(59,130,246,0.18)"
+            stroke="#60a5fa"
+            strokeWidth="1.5"
+          />
+          <line
+            x1={SC.x - 9}
+            y1={SC.y - 18}
+            x2={SC.x - 9}
+            y2={SC.y + 19}
+            stroke="#60a5fa"
+            strokeWidth="0.6"
+            opacity="0.5"
+          />
+          <line
+            x1={SC.x + 9}
+            y1={SC.y - 18}
+            x2={SC.x + 9}
+            y2={SC.y + 19}
+            stroke="#60a5fa"
+            strokeWidth="0.6"
+            opacity="0.5"
+          />
+          <line
+            x1={SC.x - 27}
+            y1={SC.y + 1}
+            x2={SC.x + 27}
+            y2={SC.y + 1}
+            stroke="#60a5fa"
+            strokeWidth="0.6"
+            opacity="0.5"
+          />
 
           {/* Solar labels */}
-          <text x={LX} y={SC.y - 5} fill={solarActive ? "#fbbf24" : "rgba(255,255,255,0.4)"}
-            fontSize="13" fontWeight="600" fontFamily="Inter,sans-serif">{fmtW(currentProduction)}</text>
-          <text x={LX} y={SC.y + 10} fill="rgba(255,255,255,0.3)" fontSize="9.5" fontFamily="Inter,sans-serif">SOLAR</text>
+          <text
+            x={LX}
+            y={SC.y - 5}
+            fill={solarActive ? "#fbbf24" : "rgba(255,255,255,0.4)"}
+            fontSize="13"
+            fontWeight="600"
+            fontFamily="Inter,sans-serif"
+          >
+            {fmtW(currentProduction)}
+          </text>
+          <text
+            x={LX}
+            y={SC.y + 10}
+            fill="rgba(255,255,255,0.3)"
+            fontSize="9.5"
+            fontFamily="Inter,sans-serif"
+          >
+            SOLAR
+          </text>
 
           {/* ── House ── */}
           {/* roof */}
           <polygon
             points={`${HC.x},${HC.y - 50} ${HC.x - 33},${HC.y - 18} ${HC.x + 33},${HC.y - 18}`}
-            fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinejoin="round"
+            fill="rgba(255,255,255,0.07)"
+            stroke="rgba(255,255,255,0.55)"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
           />
           {/* body */}
-          <rect x={HC.x - 29} y={HC.y - 18} width="58" height="48"
-            fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" />
+          <rect
+            x={HC.x - 29}
+            y={HC.y - 18}
+            width="58"
+            height="48"
+            fill="rgba(255,255,255,0.04)"
+            stroke="rgba(255,255,255,0.55)"
+            strokeWidth="1.5"
+          />
           {/* door */}
-          <rect x={HC.x - 10} y={HC.y + 5} width="20" height="25"
-            fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" rx="1" />
+          <rect
+            x={HC.x - 10}
+            y={HC.y + 5}
+            width="20"
+            height="25"
+            fill="rgba(255,255,255,0.08)"
+            stroke="rgba(255,255,255,0.3)"
+            strokeWidth="1"
+            rx="1"
+          />
           {/* windows */}
-          <rect x={HC.x - 27} y={HC.y - 9} width="14" height="12"
-            fill="rgba(251,191,36,0.12)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-          <rect x={HC.x + 13} y={HC.y - 9} width="14" height="12"
-            fill="rgba(251,191,36,0.12)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+          <rect
+            x={HC.x - 27}
+            y={HC.y - 9}
+            width="14"
+            height="12"
+            fill="rgba(251,191,36,0.12)"
+            stroke="rgba(255,255,255,0.25)"
+            strokeWidth="1"
+          />
+          <rect
+            x={HC.x + 13}
+            y={HC.y - 9}
+            width="14"
+            height="12"
+            fill="rgba(251,191,36,0.12)"
+            stroke="rgba(255,255,255,0.25)"
+            strokeWidth="1"
+          />
 
           {/* House labels */}
-          <text x={LX} y={HC.y - 5} fill="rgba(255,255,255,0.85)"
-            fontSize="13" fontWeight="600" fontFamily="Inter,sans-serif">{fmtW(currentConsumption)}</text>
-          <text x={LX} y={HC.y + 10} fill="rgba(255,255,255,0.3)" fontSize="9.5" fontFamily="Inter,sans-serif">HOME</text>
+          <text
+            x={LX}
+            y={HC.y - 5}
+            fill="rgba(255,255,255,0.85)"
+            fontSize="13"
+            fontWeight="600"
+            fontFamily="Inter,sans-serif"
+          >
+            {fmtW(currentConsumption)}
+          </text>
+          <text
+            x={LX}
+            y={HC.y + 10}
+            fill="rgba(255,255,255,0.3)"
+            fontSize="9.5"
+            fontFamily="Inter,sans-serif"
+          >
+            HOME
+          </text>
 
           {/* ── Power tower (grid) ── */}
-          <line x1={GC.x} y1={GC.y - 22} x2={GC.x} y2={GC.y + 20} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-          <line x1={GC.x - 22} y1={GC.y - 14} x2={GC.x + 22} y2={GC.y - 14} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-          <line x1={GC.x - 16} y1={GC.y - 4} x2={GC.x + 16} y2={GC.y - 4} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-          <line x1={GC.x - 8} y1={GC.y + 20} x2={GC.x + 8} y2={GC.y + 20} stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
+          <line
+            x1={GC.x}
+            y1={GC.y - 22}
+            x2={GC.x}
+            y2={GC.y + 20}
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="1.5"
+          />
+          <line
+            x1={GC.x - 22}
+            y1={GC.y - 14}
+            x2={GC.x + 22}
+            y2={GC.y - 14}
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="1.5"
+          />
+          <line
+            x1={GC.x - 16}
+            y1={GC.y - 4}
+            x2={GC.x + 16}
+            y2={GC.y - 4}
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="1.5"
+          />
+          <line
+            x1={GC.x - 8}
+            y1={GC.y + 20}
+            x2={GC.x + 8}
+            y2={GC.y + 20}
+            stroke="rgba(255,255,255,0.3)"
+            strokeWidth="1.2"
+          />
           {[-22, -12, 12, 22].map((off) => (
-            <circle key={off} cx={GC.x + off} cy={GC.y - 14} r="2"
-              fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+            <circle
+              key={off}
+              cx={GC.x + off}
+              cy={GC.y - 14}
+              r="2"
+              fill="rgba(255,255,255,0.2)"
+              stroke="rgba(255,255,255,0.35)"
+              strokeWidth="0.5"
+            />
           ))}
-          <line x1={GC.x - 36} y1={GC.y - 14} x2={GC.x - 22} y2={GC.y - 14} stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
-          <line x1={GC.x + 22} y1={GC.y - 14} x2={GC.x + 36} y2={GC.y - 14} stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+          <line
+            x1={GC.x - 36}
+            y1={GC.y - 14}
+            x2={GC.x - 22}
+            y2={GC.y - 14}
+            stroke="rgba(255,255,255,0.18)"
+            strokeWidth="1"
+          />
+          <line
+            x1={GC.x + 22}
+            y1={GC.y - 14}
+            x2={GC.x + 36}
+            y2={GC.y - 14}
+            stroke="rgba(255,255,255,0.18)"
+            strokeWidth="1"
+          />
 
           {/* Grid labels */}
-          <text x={LX} y={GC.y - 5}
-            fill={gridActive ? (isExporting ? "#22c55e" : "#f97316") : "rgba(255,255,255,0.25)"}
-            fontSize="13" fontWeight="600" fontFamily="Inter,sans-serif">
+          <text
+            x={LX}
+            y={GC.y - 5}
+            fill={
+              gridActive
+                ? isExporting
+                  ? "#22c55e"
+                  : "#f97316"
+                : "rgba(255,255,255,0.25)"
+            }
+            fontSize="13"
+            fontWeight="600"
+            fontFamily="Inter,sans-serif"
+          >
             {gridActive ? fmtW(gridAbs) : "—"}
           </text>
-          <text x={LX} y={GC.y + 10} fill="rgba(255,255,255,0.3)" fontSize="9.5" fontFamily="Inter,sans-serif">
+          <text
+            x={LX}
+            y={GC.y + 10}
+            fill="rgba(255,255,255,0.3)"
+            fontSize="9.5"
+            fontFamily="Inter,sans-serif"
+          >
             {!gridActive ? "GRID" : isExporting ? "EXPORTING" : "IMPORTING"}
           </text>
         </svg>
 
         {/* Today summary */}
         <HStack justify="space-between" width="100%" px="1vmin">
-          <Text fontSize="2.8vmin" color="yellow.600" fontWeight="300">{fmtKwh(productionToday)} kWh</Text>
-          <Text fontSize="2.8vmin" fontWeight="600" color={pctColor}>{pct}% solar</Text>
-          <Text fontSize="2.8vmin" color="var(--theme-fg-dim)" fontWeight="300">{fmtKwh(consumptionToday)} kWh</Text>
+          <Text fontSize="2.8vmin" color="yellow.600" fontWeight="300">
+            {fmtKwh(productionToday)} kWh
+          </Text>
+          <Text fontSize="2.8vmin" fontWeight="600" color={pctColor}>
+            {pct}% solar
+          </Text>
+          <Text fontSize="2.8vmin" color="var(--theme-fg-dim)" fontWeight="300">
+            {fmtKwh(consumptionToday)} kWh
+          </Text>
         </HStack>
         <HStack justify="space-between" width="100%" px="1vmin">
-          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.08em">PRODUCED</Text>
-          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.08em">TODAY</Text>
-          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.08em">USED</Text>
+          <Text
+            fontSize="2.2vmin"
+            color="var(--theme-fg-faint)"
+            letterSpacing="0.08em"
+          >
+            PRODUCED
+          </Text>
+          <Text
+            fontSize="2.2vmin"
+            color="var(--theme-fg-faint)"
+            letterSpacing="0.08em"
+          >
+            TODAY
+          </Text>
+          <Text
+            fontSize="2.2vmin"
+            color="var(--theme-fg-faint)"
+            letterSpacing="0.08em"
+          >
+            USED
+          </Text>
         </HStack>
 
         <Box
-          as="button" px="6vmin" py="2vmin" fontSize="3vmin"
-          color="var(--theme-fg-faint)" letterSpacing="0.1em" cursor="pointer"
-          onClick={onClose} style={{ WebkitTapHighlightColor: "transparent" }}
+          as="button"
+          px="6vmin"
+          py="2vmin"
+          fontSize="3vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.1em"
+          cursor="pointer"
+          onClick={onClose}
+          style={{ WebkitTapHighlightColor: "transparent" }}
         >
           DONE
         </Box>

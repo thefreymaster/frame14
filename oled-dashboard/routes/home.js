@@ -21,7 +21,7 @@ async function fetchCalendarEvents() {
       "Content-Type": "application/json",
     },
   });
-  if (!listRes.ok) return { today: [], tomorrow: [] };
+  if (!listRes.ok) return { today: [], tomorrow: [], entities: [] };
   const calendars = await listRes.json();
 
   const now = new Date();
@@ -70,7 +70,11 @@ async function fetchCalendarEvents() {
     fetchRange(`${tmrwStr}T00:00:00`, `${tmrwStr}T23:59:59`),
   ]);
 
-  return { today, tomorrow };
+  return {
+    today,
+    tomorrow,
+    entities: included.map((cal) => cal.entity_id),
+  };
 }
 
 const WEATHER_HEADERS = (token) => ({

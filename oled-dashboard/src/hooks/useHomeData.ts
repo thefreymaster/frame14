@@ -28,6 +28,7 @@ export interface HomeClimate {
   currentTemp: number | null;
   targetTemp: number | null;
   hvacMode: string | null;
+  hvacAction: string | null;
 }
 
 export interface HomePerson {
@@ -93,6 +94,7 @@ interface ClimateAttributes {
   current_temperature?: number | string | null;
   temperature?: number | string | null;
   hvac_mode?: string | null;
+  hvac_action?: string | null;
 }
 
 interface WeatherAttributes {
@@ -124,6 +126,7 @@ interface ClimateResponse {
   currentTemp: number | null;
   targetTemp: number | null;
   hvacMode: string | null;
+  hvacAction: string | null;
 }
 
 interface EnergyResponse {
@@ -141,6 +144,7 @@ function mapClimateResponse(climate: ClimateResponse): HomeClimate {
     currentTemp: climate.currentTemp,
     targetTemp: climate.targetTemp,
     hvacMode: climate.hvacMode,
+    hvacAction: climate.hvacAction,
   };
 }
 
@@ -152,6 +156,7 @@ function mapClimateState(state: HAState<ClimateAttributes>): HomeClimate {
     currentTemp: parseFloatOrNull(state.attributes?.current_temperature),
     targetTemp: parseFloatOrNull(state.attributes?.temperature),
     hvacMode: state.attributes?.hvac_mode ?? state.state ?? null,
+    hvacAction: state.attributes?.hvac_action ?? null,
   };
 }
 

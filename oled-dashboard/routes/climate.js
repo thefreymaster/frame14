@@ -37,6 +37,7 @@ router.get("/", async (_req, res) => {
         currentTemp: s.attributes?.current_temperature ?? null,
         targetTemp: s.attributes?.temperature ?? null,
         hvacMode: s.attributes?.hvac_mode ?? s.state ?? null,
+        hvacAction: s.attributes?.hvac_action ?? null,
       })),
     );
   } catch (err) {

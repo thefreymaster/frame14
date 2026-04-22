@@ -27,3 +27,592 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+
+.thermostat-modal {
+  --thermostat-accent: #ff7b49;
+  --thermostat-accent-soft: rgba(255, 123, 73, 0.26);
+  --thermostat-accent-faint: rgba(255, 123, 73, 0.14);
+  --thermostat-accent-glow: rgba(255, 98, 41, 0.6);
+  --thermostat-status-bg: rgba(77, 23, 9, 0.42);
+  --thermostat-status-border: rgba(255, 177, 138, 0.16);
+  --thermostat-text: #fff4ee;
+  background:
+    radial-gradient(circle at 50% 24%, var(--thermostat-accent-faint) 0%, transparent 34%),
+    rgba(2, 5, 10, 0.92);
+  animation: thermostatModalFadeIn 240ms ease-out both;
+}
+
+.thermostat-modal--closing {
+  pointer-events: none;
+  animation: thermostatModalFadeOut 260ms ease-in both;
+}
+
+.thermostat-modal--cool {
+  --thermostat-accent: #4dbdff;
+  --thermostat-accent-soft: rgba(77, 189, 255, 0.24);
+  --thermostat-accent-faint: rgba(77, 189, 255, 0.12);
+  --thermostat-accent-glow: rgba(90, 205, 255, 0.58);
+  --thermostat-status-bg: rgba(8, 44, 74, 0.44);
+  --thermostat-status-border: rgba(154, 220, 255, 0.18);
+  --thermostat-text: #eef9ff;
+}
+
+.thermostat-modal--off {
+  --thermostat-accent: #b5bfcc;
+  --thermostat-accent-soft: rgba(181, 191, 204, 0.16);
+  --thermostat-accent-faint: rgba(181, 191, 204, 0.08);
+  --thermostat-accent-glow: rgba(181, 191, 204, 0.3);
+  --thermostat-status-bg: rgba(29, 35, 43, 0.56);
+  --thermostat-status-border: rgba(181, 191, 204, 0.14);
+  --thermostat-text: #f4f7fb;
+}
+
+.thermostat-panel {
+  position: relative;
+  width: min(92vw, 78vmin);
+  transform-origin: 50% 50%;
+  animation: thermostatPanelIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.thermostat-modal--closing .thermostat-panel {
+  animation: thermostatPanelOut 260ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.thermostat-close {
+  position: absolute;
+  top: 1.2vmin;
+  right: 0;
+  width: clamp(2.75rem, 6.5vmin, 3.5rem);
+  height: clamp(2.75rem, 6.5vmin, 3.5rem);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(14, 18, 24, 0.96);
+  color: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.15rem, 2.8vmin, 1.5rem);
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+  z-index: 3;
+  animation: thermostatControlIn 280ms 70ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.thermostat-close:hover {
+  transform: scale(1.03);
+  border-color: var(--thermostat-status-border);
+  background: rgba(18, 23, 30, 0.98);
+}
+
+.thermostat-modal--closing .thermostat-close {
+  animation: thermostatControlOut 180ms ease-in both;
+}
+
+.thermostat-dial {
+  position: relative;
+  width: min(74vmin, 32rem);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 50%;
+  overflow: hidden;
+  isolation: isolate;
+  border: min(0.45vmin, 4px) solid rgba(255, 255, 255, 0.08);
+  background: rgba(9, 12, 17, 0.98);
+  animation: thermostatDialIn 360ms 30ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.thermostat-modal--closing .thermostat-dial {
+  animation: thermostatDialOut 240ms ease-in both;
+}
+
+.thermostat-dial::before {
+  content: "";
+  position: absolute;
+  inset: 2.2vmin;
+  border-radius: 50%;
+  border: min(0.28vmin, 2px) solid rgba(255, 255, 255, 0.08);
+}
+
+.thermostat-dial::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--thermostat-accent-faint) 0%, transparent 66%);
+  opacity: 0.24;
+  transform: scale(1);
+}
+
+.thermostat-dial--active::after {
+  animation: thermostatPulse 4.2s ease-in-out infinite;
+}
+
+.thermostat-dial__edge {
+  position: absolute;
+  inset: 0.9vmin;
+  padding: 1.2vmin;
+  border-radius: 50%;
+  background:
+    conic-gradient(from 210deg,
+      transparent 0deg,
+      rgba(255, 255, 255, 0.05) 48deg,
+      var(--thermostat-accent) 104deg,
+      rgba(255, 255, 255, 0.06) 148deg,
+      transparent 220deg,
+      rgba(255, 255, 255, 0.04) 290deg,
+      transparent 360deg);
+  opacity: 0.24;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.thermostat-dial--active .thermostat-dial__edge {
+  opacity: 0.62;
+  animation: thermostatSpin 14s linear infinite;
+}
+
+.thermostat-dial__weather {
+  position: absolute;
+  left: 23%;
+  right: 23%;
+  bottom: 18%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 100%, rgba(255, 139, 90, 0.28), rgba(255, 73, 0, 0.04) 60%, transparent 80%);
+  opacity: 0.24;
+  filter: blur(1.2vmin);
+  transform: translateY(0.8vmin);
+}
+
+.thermostat-modal--cool .thermostat-dial__weather {
+  background: radial-gradient(circle at 50% 100%, rgba(144, 221, 255, 0.28), rgba(51, 130, 255, 0.05) 60%, transparent 80%);
+}
+
+.thermostat-modal--off .thermostat-dial__weather {
+  background: radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.1), transparent 78%);
+  opacity: 0.12;
+}
+
+.thermostat-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.thermostat-particle {
+  position: absolute;
+  bottom: 19%;
+  left: 50%;
+  opacity: 0;
+}
+
+.thermostat-dial--heat .thermostat-particle {
+  width: 1.2vmin;
+  height: 2.6vmin;
+  background: linear-gradient(180deg, rgba(255, 238, 199, 0.96), rgba(255, 130, 53, 0.82) 56%, rgba(255, 46, 46, 0.18) 100%);
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  filter: blur(0.08vmin);
+  box-shadow: 0 0 1.4vmin var(--thermostat-accent-glow);
+}
+
+.thermostat-dial--cool .thermostat-particle {
+  width: 1vmin;
+  height: 1vmin;
+  border-radius: 50%;
+  background: rgba(234, 249, 255, 0.94);
+  box-shadow: 0 0 1.2vmin rgba(90, 210, 255, 0.68);
+}
+
+.thermostat-particle:nth-child(1) {
+  left: 26%;
+  animation-delay: 0s;
+  animation-duration: 4.4s;
+}
+
+.thermostat-particle:nth-child(2) {
+  left: 35%;
+  animation-delay: 1.2s;
+  animation-duration: 5.2s;
+}
+
+.thermostat-particle:nth-child(3) {
+  left: 44%;
+  animation-delay: 0.8s;
+  animation-duration: 4.8s;
+}
+
+.thermostat-particle:nth-child(4) {
+  left: 56%;
+  animation-delay: 1.7s;
+  animation-duration: 5.6s;
+}
+
+.thermostat-particle:nth-child(5) {
+  left: 67%;
+  animation-delay: 0.4s;
+  animation-duration: 4.9s;
+}
+
+.thermostat-particle:nth-child(6) {
+  left: 75%;
+  animation-delay: 1.4s;
+  animation-duration: 5.4s;
+}
+
+.thermostat-dial--active.thermostat-dial--heat .thermostat-particle {
+  animation-name: thermostatEmberRise;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in;
+}
+
+.thermostat-dial--active.thermostat-dial--cool .thermostat-particle {
+  animation-name: thermostatSnowDrift;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.thermostat-dial__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8.5vmin 7vmin 10.5vmin;
+}
+
+.thermostat-room {
+  font-size: clamp(0.82rem, 2.2vmin, 1.3rem);
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.thermostat-status {
+  margin-top: 2vmin;
+  padding: 0.9vmin 1.8vmin;
+  border-radius: 999px;
+  border: 1px solid var(--thermostat-status-border);
+  background: var(--thermostat-status-bg);
+  color: #ffffff;
+  font-size: clamp(0.76rem, 1.95vmin, 1rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.thermostat-status svg {
+  font-size: 1.25em;
+}
+
+.thermostat-temp {
+  margin-top: 3.5vmin;
+  font-size: clamp(5.75rem, 19vmin, 11rem);
+  line-height: 0.88;
+  font-weight: 300;
+  letter-spacing: -0.08em;
+  color: var(--thermostat-text);
+}
+
+.thermostat-temp-label {
+  margin-top: 1.2vmin;
+  font-size: clamp(0.72rem, 1.8vmin, 0.98rem);
+  color: rgba(255, 255, 255, 0.42);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.thermostat-detail {
+  margin-top: 1.5vmin;
+  font-size: clamp(0.86rem, 2.1vmin, 1.1rem);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 300;
+}
+
+.thermostat-step {
+  position: absolute;
+  top: 50%;
+  width: clamp(3.3rem, 10vmin, 4.9rem);
+  height: clamp(3.3rem, 10vmin, 4.9rem);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(14, 18, 24, 0.98);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.5rem, 4.2vmin, 2.2rem);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+  z-index: 2;
+}
+
+.thermostat-step--down {
+  left: 6%;
+}
+
+.thermostat-step--up {
+  right: 6%;
+}
+
+.thermostat-step:hover {
+  transform: translateY(-50%) scale(1.03);
+  border-color: var(--thermostat-status-border);
+  background: rgba(18, 23, 30, 0.98);
+}
+
+.thermostat-mode-strip {
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1.15vmin;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 12, 18, 0.96);
+  animation: thermostatFooterIn 320ms 90ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.thermostat-modal--closing .thermostat-mode-strip {
+  animation: thermostatFooterOut 180ms ease-in both;
+}
+
+.thermostat-mode-button {
+  appearance: none;
+  border: 0;
+  min-width: clamp(5.3rem, 14vmin, 7.4rem);
+  padding: 1.3vmin 2.2vmin;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1vmin;
+  font-size: clamp(0.82rem, 2.1vmin, 1.02rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.thermostat-mode-button svg {
+  font-size: 1.1em;
+}
+
+.thermostat-mode-button:hover {
+  transform: translateY(-0.1vmin);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.thermostat-mode-button--active {
+  background: var(--thermostat-accent-soft);
+  color: #ffffff;
+  border: 1px solid var(--thermostat-status-border);
+}
+
+@keyframes thermostatSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes thermostatModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes thermostatModalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes thermostatPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(2.4vmin) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes thermostatPanelOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(1.8vmin) scale(0.985);
+  }
+}
+
+@keyframes thermostatDialIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes thermostatDialOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes thermostatFooterIn {
+  from {
+    opacity: 0;
+    transform: translateY(2.8vmin);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes thermostatFooterOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(1.8vmin);
+  }
+}
+
+@keyframes thermostatControlIn {
+  from {
+    opacity: 0;
+    transform: translateY(-1.4vmin) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes thermostatControlOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-1vmin) scale(0.96);
+  }
+}
+
+@keyframes thermostatPulse {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.94;
+    transform: scale(1);
+  }
+}
+
+@keyframes thermostatEmberRise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.45) rotate(0deg);
+  }
+  16% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-1.2vmin, -24vmin, 0) scale(1.2) rotate(-12deg);
+  }
+}
+
+@keyframes thermostatSnowDrift {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.45);
+  }
+  18% {
+    opacity: 0.84;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(3vmin, -24vmin, 0) scale(1.08);
+  }
+}
+
+@media (max-width: 768px) {
+  .thermostat-panel {
+    width: min(96vw, 88vmin);
+  }
+
+  .thermostat-close {
+    top: -0.4vmin;
+    right: 1vmin;
+  }
+
+  .thermostat-dial {
+    width: min(90vw, 82vmin);
+  }
+
+  .thermostat-mode-strip {
+    gap: 0.8vmin;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thermostat-modal,
+  .thermostat-panel,
+  .thermostat-close,
+  .thermostat-dial,
+  .thermostat-mode-strip,
+  .thermostat-dial--active::after,
+  .thermostat-dial--active .thermostat-dial__edge,
+  .thermostat-dial--active .thermostat-particle {
+    animation: none !important;
+  }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { callClimateService, type HvacMode } from "../lib/callService";
 import {
@@ -29,7 +29,15 @@ import {
 // } from "react-icons/wi";
 import { PiSolarRoof } from "react-icons/pi";
 import NumberFlow from "@number-flow/react";
-import { IoFlash } from "react-icons/io5";
+import {
+  IoAdd,
+  IoClose,
+  IoFlame,
+  IoFlash,
+  IoPowerOutline,
+  IoRemove,
+  IoSnow,
+} from "react-icons/io5";
 import { WeatherForecast } from "../components/WeatherForecast";
 import { Divider } from "../components/Divider";
 import { useHomeData } from "../hooks/useHomeData";
@@ -111,12 +119,19 @@ const CONDITION_LABEL: Record<string, string> = {
 //   "windy-variant": WiStrongWind,
 // };
 
+type ClimateVisualMode = "heat" | "cool" | "off";
+
 const HVAC_COLOR: Record<string, string> = {
   cool: "blue.400",
   heat: "orange.400",
   off: "var(--theme-fg-faint)",
   auto: "green.500",
   unknown: "var(--theme-fg-faint)",
+};
+
+const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
+  heating: "heat",
+  cooling: "cool",
 };
 
 function fmtKwh(n: number) {
@@ -139,6 +154,33 @@ function fmtMins(minutes: number) {
   const m = Math.round(minutes % 60);
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
+}
+
+function normalizeClimateMode(mode: string | null | undefined): ClimateVisualMode {
+  if (mode === "heat" || mode === "cool") return mode;
+  return "off";
+}
+
+function fmtClimateTemp(temp: number | null | undefined) {
+  return temp == null ? null : Math.round(temp);
+}
+
+function getClimateAction(
+  mode: ClimateVisualMode,
+  unit: HomeClimate,
+  targetTemp: number,
+): ClimateVisualMode | null {
+  const liveAction = unit.hvacAction
+    ? ACTIVE_HVAC_ACTION[unit.hvacAction.toLowerCase()]
+    : null;
+  if (liveAction) return liveAction;
+  if (mode === "off") return null;
+
+  const currentTemp = fmtClimateTemp(unit.currentTemp);
+  if (currentTemp == null) return null;
+  if (mode === "heat" && currentTemp <= targetTemp - 1) return "heat";
+  if (mode === "cool" && currentTemp >= targetTemp + 1) return "cool";
+  return null;
 }
 
 // ── Orientation hook ─────────────────────────────────────────────────────────
@@ -284,11 +326,13 @@ function Header({
 
 // ── Climate ───────────────────────────────────────────────────────────────────
 
-const HVAC_MODES: { key: string; label: string }[] = [
+const HVAC_MODES: { key: ClimateVisualMode; label: string }[] = [
   { key: "heat", label: "HEAT" },
   { key: "cool", label: "COOL" },
   { key: "off", label: "OFF" },
 ];
+
+const THERMOSTAT_EXIT_MS = 260;
 
 function ClimateModal({
   unit,
@@ -298,17 +342,95 @@ function ClimateModal({
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState(unit.state);
-  const [temp, setTemp] = useState(unit.targetTemp ?? 72);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mode, setMode] = useState<ClimateVisualMode>(
+    normalizeClimateMode(unit.hvacMode ?? unit.state),
+  );
+  const [temp, setTemp] = useState(fmtClimateTemp(unit.targetTemp) ?? 72);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
-    setMode(unit.state);
-    setTemp(unit.targetTemp ?? 72);
-  }, [unit.entity_id, unit.state, unit.targetTemp]);
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setIsClosing(false);
+    setMode(normalizeClimateMode(unit.hvacMode ?? unit.state));
+    setTemp(fmtClimateTemp(unit.targetTemp) ?? 72);
+  }, [unit.entity_id, unit.hvacMode, unit.state, unit.targetTemp]);
 
-  const isOff = mode === "off" || mode === "unknown";
+  function requestClose() {
+    if (isClosing) return;
+    setIsClosing(true);
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = null;
+      onClose();
+    }, THERMOSTAT_EXIT_MS);
+  }
 
-  function applyMode(newMode: string) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        requestClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isClosing, onClose]);
+
+  useEffect(
+    () => () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const activeAction = getClimateAction(mode, unit, temp);
+  const isOff = mode === "off";
+  const isActive = activeAction === mode && !isOff;
+  const currentTemp = fmtClimateTemp(unit.currentTemp);
+  const previousTarget = fmtClimateTemp(unit.targetTemp);
+  const displayedTemp = isOff ? currentTemp ?? previousTarget ?? temp : temp;
+  const displayLabel = isOff
+    ? currentTemp != null
+      ? "Indoor temperature"
+      : previousTarget != null
+        ? "Last target"
+        : "Thermostat"
+    : "Target temperature";
+  const detailLabel = isOff
+    ? previousTarget != null
+      ? `Last target ${previousTarget}°`
+      : "Choose heat or cool to wake it up"
+    : currentTemp != null
+      ? `Indoor ${currentTemp}°`
+      : "Connected to Home Assistant";
+  const statusLabel =
+    activeAction === "heat"
+      ? "Heating now"
+      : activeAction === "cool"
+        ? "Cooling now"
+        : mode === "heat"
+          ? "Heat standby"
+          : mode === "cool"
+            ? "Cool standby"
+            : "System off";
+  const AccentIcon =
+    activeAction === "heat"
+      ? IoFlame
+      : activeAction === "cool"
+        ? IoSnow
+        : mode === "heat"
+          ? IoFlame
+          : mode === "cool"
+            ? IoSnow
+            : IoPowerOutline;
+
+  function applyMode(newMode: ClimateVisualMode) {
+    if (newMode === mode) return;
     setMode(newMode);
     callClimateService(unit.entity_id, "set_hvac_mode", {
       hvac_mode: newMode as HvacMode,
@@ -322,6 +444,7 @@ function ClimateModal({
 
   function adjustTemp(delta: number) {
     const newTemp = Math.min(85, Math.max(60, temp + delta));
+    if (newTemp === temp) return;
     setTemp(newTemp);
     callClimateService(unit.entity_id, "set_temperature", {
       temperature: newTemp,
@@ -335,149 +458,123 @@ function ClimateModal({
 
   return (
     <Box
+      className={`thermostat-modal thermostat-modal--${mode}${isClosing ? " thermostat-modal--closing" : ""}`}
       position="fixed"
       inset="0"
-      bg="rgba(0,0,0,0.92)"
       zIndex={200}
       display="flex"
       alignItems="center"
       justifyContent="center"
-      onClick={onClose}
+      p="4vmin"
+      onClick={requestClose}
     >
       <Box
-        bg="#0d0d0d"
-        p="6vmin"
-        borderRadius="3vmin"
-        minW="55vmin"
-        maxW="80vmin"
+        className="thermostat-panel"
         display="flex"
         flexDirection="column"
         alignItems="center"
-        gap="4vmin"
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        gap="3vmin"
+        onClick={(event) => event.stopPropagation()}
       >
-        <Text
-          fontSize="4vmin"
-          fontWeight="400"
-          color="var(--theme-fg-dim)"
-          letterSpacing="0.08em"
+        <Box
+          as="button"
+          className="thermostat-close"
+          aria-label="Close thermostat controls"
+          onClick={requestClose}
         >
-          {unit.name.toUpperCase()}
-        </Text>
+          <IoClose />
+        </Box>
 
-        {unit.currentTemp != null && (
-          <Text
-            fontSize="3.2vmin"
-            color="var(--theme-fg-faint)"
-            fontWeight="300"
-          >
-            current {unit.currentTemp}°
-          </Text>
-        )}
+        <Box
+          className={`thermostat-dial thermostat-dial--${mode}${isActive ? " thermostat-dial--active" : ""}`}
+        >
+          <Box className="thermostat-dial__edge" />
+          <Box className="thermostat-dial__weather" />
+          <Box className="thermostat-particles" aria-hidden="true">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Box
+                key={index}
+                as="span"
+                className="thermostat-particle"
+              />
+            ))}
+          </Box>
+          {!isOff && (
+            <>
+              <Box
+                as="button"
+                className="thermostat-step thermostat-step--down"
+                aria-label="Decrease target temperature"
+                onClick={() => adjustTemp(-1)}
+                style={{ WebkitTapHighlightColor: "transparent" }}
+              >
+                <IoRemove />
+              </Box>
+              <Box
+                as="button"
+                className="thermostat-step thermostat-step--up"
+                aria-label="Increase target temperature"
+                onClick={() => adjustTemp(1)}
+                style={{ WebkitTapHighlightColor: "transparent" }}
+              >
+                <IoAdd />
+              </Box>
+            </>
+          )}
 
-        <HStack gap="2vmin">
+          <VStack className="thermostat-dial__content" gap="0">
+            <Text className="thermostat-room">{unit.name}</Text>
+            <HStack className="thermostat-status" gap="1.2vmin">
+              <AccentIcon />
+              <Text as="span">{statusLabel}</Text>
+            </HStack>
+            <Text className="thermostat-temp">{displayedTemp}°</Text>
+            <Text className="thermostat-temp-label">{displayLabel}</Text>
+            <Text className="thermostat-detail">{detailLabel}</Text>
+          </VStack>
+        </Box>
+
+        <HStack className="thermostat-mode-strip" gap="1.4vmin">
           {HVAC_MODES.map(({ key, label }) => {
             const active = mode === key;
-            const color = active
-              ? (HVAC_COLOR[key] ?? "white")
-              : "var(--theme-fg-faint)";
+            const ModeIcon =
+              key === "heat" ? IoFlame : key === "cool" ? IoSnow : IoPowerOutline;
+
             return (
               <Box
                 key={key}
                 as="button"
-                px="4vmin"
-                py="2.5vmin"
-                borderRadius="1.5vmin"
-                border="0.3vmin solid"
-                borderColor={active ? color : "var(--theme-fg-faint)"}
-                color={color}
-                fontSize="3.2vmin"
-                fontWeight={active ? "600" : "300"}
-                letterSpacing="0.08em"
-                bg={active ? "rgba(255,255,255,0.05)" : "transparent"}
-                cursor="pointer"
+                className={`thermostat-mode-button${active ? " thermostat-mode-button--active" : ""}`}
                 onClick={() => applyMode(key)}
                 style={{ WebkitTapHighlightColor: "transparent" }}
               >
-                {label}
+                <ModeIcon />
+                <Text as="span">{label}</Text>
               </Box>
             );
           })}
         </HStack>
-
-        {!isOff && (
-          <HStack gap="5vmin" align="center" mt="1vmin">
-            <Box
-              as="button"
-              w="12vmin"
-              h="12vmin"
-              borderRadius="50%"
-              border="0.3vmin solid var(--theme-fg-faint)"
-              color="var(--theme-fg-dim)"
-              fontSize="7vmin"
-              fontWeight="300"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              cursor="pointer"
-              onClick={() => adjustTemp(-1)}
-              style={{ WebkitTapHighlightColor: "transparent" }}
-            >
-              −
-            </Box>
-            <Text
-              fontSize="12vmin"
-              fontWeight="300"
-              letterSpacing="-0.03em"
-              lineHeight="1"
-              minW="14vmin"
-              textAlign="center"
-            >
-              {temp}°
-            </Text>
-            <Box
-              as="button"
-              w="12vmin"
-              h="12vmin"
-              borderRadius="50%"
-              border="0.3vmin solid var(--theme-fg-faint)"
-              color="var(--theme-fg-dim)"
-              fontSize="7vmin"
-              fontWeight="300"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              cursor="pointer"
-              onClick={() => adjustTemp(1)}
-              style={{ WebkitTapHighlightColor: "transparent" }}
-            >
-              +
-            </Box>
-          </HStack>
-        )}
-
-        <Box
-          as="button"
-          mt="1vmin"
-          px="6vmin"
-          py="2vmin"
-          fontSize="3vmin"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.1em"
-          cursor="pointer"
-          onClick={onClose}
-          style={{ WebkitTapHighlightColor: "transparent" }}
-        >
-          DONE
-        </Box>
       </Box>
     </Box>
   );
 }
 
 function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
-  const isOff = unit.state === "off" || unit.state === "unknown";
-  const modeColor = HVAC_COLOR[unit.state] ?? "var(--theme-fg-faint)";
+  const displayMode = unit.hvacMode ?? unit.state;
+  const activeAction =
+    unit.hvacAction === "heating"
+      ? "heating"
+      : unit.hvacAction === "cooling"
+        ? "cooling"
+        : null;
+  const statusLabel = activeAction ?? displayMode;
+  const statusColor =
+    activeAction != null
+      ? HVAC_COLOR[activeAction === "heating" ? "heat" : "cool"]
+      : (HVAC_COLOR[displayMode] ?? "var(--theme-fg-faint)");
+  const isOff = normalizeClimateMode(displayMode) === "off";
+  const currentTemp = fmtClimateTemp(unit.currentTemp);
+  const targetTemp = fmtClimateTemp(unit.targetTemp);
 
   return (
     <HStack
@@ -497,17 +594,17 @@ function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
       >
         {unit.name}
       </Text>
-      <Text fontSize="3.4vmin" color={modeColor} minW="10vmin">
-        {unit.state}
+      <Text fontSize="3.4vmin" color={statusColor} minW="12vmin">
+        {statusLabel}
       </Text>
-      {unit.currentTemp != null ? (
+      {currentTemp != null ? (
         <HStack align="baseline" gap="1vmin" flex="1" justify="flex-end">
           <Text fontSize="3.4vmin" fontWeight="300" lineHeight="1">
-            {unit.currentTemp}°
+            {currentTemp}°
           </Text>
-          {!isOff && unit.targetTemp != null && (
+          {!isOff && targetTemp != null && (
             <Text fontSize="3.4vmin" color="var(--theme-fg-faint)">
-              → {unit.targetTemp}°
+              → {targetTemp}°
             </Text>
           )}
         </HStack>

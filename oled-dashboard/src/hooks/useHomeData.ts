@@ -21,6 +21,7 @@ export interface HomeWeather {
 }
 
 export interface HomeClimate {
+  entity_id: string;
   name: string;
   state: string;
   currentTemp: number | null;
@@ -202,6 +203,7 @@ export function useHomeData() {
   const homeClimate = useMemo<HomeClimate[]>(
     () =>
       (climateQuery.data ?? []).map((c) => ({
+        entity_id: c.entity_id,
         name: c.name,
         state: c.state,
         currentTemp: c.currentTemp,
@@ -253,7 +255,7 @@ export function useHomeData() {
   );
 
   const homeInternet = useMemo<HomeInternet>(
-    () => ({ connected: ping.data?.state === "on" }),
+    () => ({ connected: ping.data === undefined || ping.data.state === "on" }),
     [ping.data],
   );
 

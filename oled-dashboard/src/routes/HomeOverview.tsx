@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { callClimateService, type HvacMode } from "../lib/callService";
 import {
   Box,
   Text,
@@ -119,6 +121,12 @@ const HVAC_COLOR: Record<string, string> = {
 
 function fmtKwh(n: number) {
   return isNaN(n) ? "--" : n.toFixed(0);
+}
+
+function fmtW(watts: number): string {
+  if (isNaN(watts)) return "--";
+  if (watts >= 1000) return `${(watts / 1000).toFixed(1)} kW`;
+  return `${Math.round(watts)} W`;
 }
 
 // function fmtKw(watts: number) {
@@ -274,12 +282,205 @@ function Header({
 
 // ── Climate ───────────────────────────────────────────────────────────────────
 
-function ClimateRow({ unit }: { unit: HomeClimate }) {
+const HVAC_MODES: { key: string; label: string }[] = [
+  { key: "heat", label: "HEAT" },
+  { key: "cool", label: "COOL" },
+  { key: "off", label: "OFF" },
+];
+
+function ClimateModal({
+  unit,
+  onClose,
+}: {
+  unit: HomeClimate;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [mode, setMode] = useState(unit.state);
+  const [temp, setTemp] = useState(unit.targetTemp ?? 72);
+  const isOff = mode === "off" || mode === "unknown";
+
+  function applyMode(newMode: string) {
+    setMode(newMode);
+    callClimateService(unit.entity_id, "set_hvac_mode", {
+      hvac_mode: newMode as HvacMode,
+    });
+    setTimeout(
+      () => void queryClient.invalidateQueries({ queryKey: ["home", "climate"] }),
+      2500,
+    );
+  }
+
+  function adjustTemp(delta: number) {
+    const newTemp = Math.min(85, Math.max(60, temp + delta));
+    setTemp(newTemp);
+    callClimateService(unit.entity_id, "set_temperature", {
+      temperature: newTemp,
+    });
+    setTimeout(
+      () => void queryClient.invalidateQueries({ queryKey: ["home", "climate"] }),
+      2500,
+    );
+  }
+
+  return (
+    <Box
+      position="fixed"
+      inset="0"
+      bg="rgba(0,0,0,0.92)"
+      zIndex={200}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      onClick={onClose}
+    >
+      <Box
+        bg="#0d0d0d"
+        p="6vmin"
+        borderRadius="3vmin"
+        minW="55vmin"
+        maxW="80vmin"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        gap="4vmin"
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+      >
+        <Text
+          fontSize="4vmin"
+          fontWeight="400"
+          color="var(--theme-fg-dim)"
+          letterSpacing="0.08em"
+        >
+          {unit.name.toUpperCase()}
+        </Text>
+
+        {unit.currentTemp != null && (
+          <Text fontSize="3.2vmin" color="var(--theme-fg-faint)" fontWeight="300">
+            current {unit.currentTemp}°
+          </Text>
+        )}
+
+        <HStack gap="2vmin">
+          {HVAC_MODES.map(({ key, label }) => {
+            const active = mode === key;
+            const color = active
+              ? (HVAC_COLOR[key] ?? "white")
+              : "var(--theme-fg-faint)";
+            return (
+              <Box
+                key={key}
+                as="button"
+                px="4vmin"
+                py="2.5vmin"
+                borderRadius="1.5vmin"
+                border="0.3vmin solid"
+                borderColor={active ? color : "var(--theme-fg-faint)"}
+                color={color}
+                fontSize="3.2vmin"
+                fontWeight={active ? "600" : "300"}
+                letterSpacing="0.08em"
+                bg={active ? "rgba(255,255,255,0.05)" : "transparent"}
+                cursor="pointer"
+                onClick={() => applyMode(key)}
+                style={{ WebkitTapHighlightColor: "transparent" }}
+              >
+                {label}
+              </Box>
+            );
+          })}
+        </HStack>
+
+        {!isOff && (
+          <HStack gap="5vmin" align="center" mt="1vmin">
+            <Box
+              as="button"
+              w="12vmin"
+              h="12vmin"
+              borderRadius="50%"
+              border="0.3vmin solid var(--theme-fg-faint)"
+              color="var(--theme-fg-dim)"
+              fontSize="7vmin"
+              fontWeight="300"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              cursor="pointer"
+              onClick={() => adjustTemp(-1)}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              −
+            </Box>
+            <Text
+              fontSize="12vmin"
+              fontWeight="300"
+              letterSpacing="-0.03em"
+              lineHeight="1"
+              minW="14vmin"
+              textAlign="center"
+            >
+              {temp}°
+            </Text>
+            <Box
+              as="button"
+              w="12vmin"
+              h="12vmin"
+              borderRadius="50%"
+              border="0.3vmin solid var(--theme-fg-faint)"
+              color="var(--theme-fg-dim)"
+              fontSize="7vmin"
+              fontWeight="300"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              cursor="pointer"
+              onClick={() => adjustTemp(1)}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              +
+            </Box>
+          </HStack>
+        )}
+
+        <Box
+          as="button"
+          mt="1vmin"
+          px="6vmin"
+          py="2vmin"
+          fontSize="3vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.1em"
+          cursor="pointer"
+          onClick={onClose}
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          DONE
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+function ClimateRow({
+  unit,
+  onTap,
+}: {
+  unit: HomeClimate;
+  onTap: () => void;
+}) {
   const isOff = unit.state === "off" || unit.state === "unknown";
   const modeColor = HVAC_COLOR[unit.state] ?? "var(--theme-fg-faint)";
 
   return (
-    <HStack justify="space-between" align="baseline" width="100%">
+    <HStack
+      justify="space-between"
+      align="baseline"
+      width="100%"
+      cursor="pointer"
+      py="0.8vmin"
+      onClick={onTap}
+      style={{ WebkitTapHighlightColor: "transparent" }}
+    >
       <Text
         fontSize="3.4vmin"
         color="var(--theme-fg-dim)"
@@ -310,6 +511,8 @@ function ClimateRow({ unit }: { unit: HomeClimate }) {
 }
 
 function ClimateSection({ climate }: { climate: HomeClimate[] }) {
+  const [selectedUnit, setSelectedUnit] = useState<HomeClimate | null>(null);
+
   return (
     <Box width="100%">
       <Text
@@ -320,11 +523,18 @@ function ClimateSection({ climate }: { climate: HomeClimate[] }) {
       >
         CLIMATE
       </Text>
-      <VStack gap="1.2vmin" align="stretch" width="100%">
+      <VStack gap="0" align="stretch" width="100%">
         {climate.map((unit) => (
-          <ClimateRow key={unit.name} unit={unit} />
+          <ClimateRow
+            key={unit.entity_id || unit.name}
+            unit={unit}
+            onTap={() => setSelectedUnit(unit)}
+          />
         ))}
       </VStack>
+      {selectedUnit && (
+        <ClimateModal unit={selectedUnit} onClose={() => setSelectedUnit(null)} />
+      )}
     </Box>
   );
 }
@@ -332,6 +542,7 @@ function ClimateSection({ climate }: { climate: HomeClimate[] }) {
 // ── Energy ────────────────────────────────────────────────────────────────────
 
 function EnergySection({ energy }: { energy: HomeEnergy }) {
+  const [showModal, setShowModal] = useState(false);
   const { productionToday, consumptionToday } = energy;
   const pct =
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
@@ -343,7 +554,9 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
         : "var(--theme-fg-faint)";
 
   return (
-    <Box width="100%">
+    <>
+    {showModal && <EnergyModal energy={energy} onClose={() => setShowModal(false)} />}
+    <Box width="100%" cursor="pointer" onClick={() => setShowModal(true)} style={{ WebkitTapHighlightColor: "transparent" }}>
       <Text
         fontSize="2.6vmin"
         color="var(--theme-fg-faint)"
@@ -465,6 +678,190 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
           </Grid>
         </VStack> */}
       </VStack>
+    </Box>
+    </>
+  );
+}
+
+// ── Energy Modal ──────────────────────────────────────────────────────────────
+
+function FlowDots({
+  x1, y1, x2, y2, active, color, numDots = 4, duration = 1.6,
+}: {
+  x1: number; y1: number; x2: number; y2: number;
+  active: boolean; color: string; numDots?: number; duration?: number;
+}) {
+  const pathD = `M ${x1} ${y1} L ${x2} ${y2}`;
+  return (
+    <g>
+      <line
+        x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke={active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}
+        strokeWidth="1.5"
+        strokeDasharray="3 6"
+      />
+      {active &&
+        Array.from({ length: numDots }, (_, i) => (
+          <circle key={i} r="3" fill={color} opacity="0.85">
+            <animateMotion
+              dur={`${duration}s`}
+              begin={`${-(i / numDots) * duration}s`}
+              repeatCount="indefinite"
+              path={pathD}
+            />
+          </circle>
+        ))}
+    </g>
+  );
+}
+
+function EnergyModal({ energy, onClose }: { energy: HomeEnergy; onClose: () => void }) {
+  const { currentProduction, currentConsumption, productionToday, consumptionToday } = energy;
+  const gridDraw = currentConsumption - currentProduction;
+  const isExporting = gridDraw < 0;
+  const gridAbs = Math.abs(gridDraw);
+  const solarActive = currentProduction > 5;
+  const gridActive = gridAbs > 5;
+  const pct = consumptionToday > 0 ? Math.round((productionToday / consumptionToday) * 100) : 0;
+  const pctColor = pct >= 100 ? "#22c55e" : pct >= 50 ? "#eab308" : "rgba(255,255,255,0.3)";
+
+  // SVG layout — icons left of center, labels right
+  const W = 250, H = 330;
+  const IX = 95;  // icon center X
+  const LX = 148; // label left X
+
+  const SC = { x: IX, y: 68 };  // solar
+  const HC = { x: IX, y: 182 }; // house
+  const GC = { x: IX, y: 290 }; // grid
+
+  const solarBottomY = SC.y + 25;
+  const houseTipY    = HC.y - 50;
+  const houseBottomY = HC.y + 30;
+  const gridTopY     = GC.y - 22;
+
+  return (
+    <Box
+      position="fixed" inset="0" bg="rgba(0,0,0,0.93)" zIndex={200}
+      display="flex" alignItems="center" justifyContent="center"
+      onClick={onClose}
+    >
+      <Box
+        bg="#0d0d0d" p="5vmin" borderRadius="3vmin"
+        minW="62vmin" maxW="86vmin"
+        display="flex" flexDirection="column" alignItems="center" gap="3vmin"
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+      >
+        <Text fontSize="3.8vmin" fontWeight="400" color="var(--theme-fg-dim)" letterSpacing="0.1em">
+          ENERGY
+        </Text>
+
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "50vmin", height: "66vmin" }}>
+          {/* ── Flow lines ── */}
+          <FlowDots
+            x1={SC.x} y1={solarBottomY} x2={HC.x} y2={houseTipY}
+            active={solarActive} color="#fbbf24" duration={1.3}
+          />
+          <FlowDots
+            x1={isExporting ? HC.x : GC.x}
+            y1={isExporting ? houseBottomY : gridTopY}
+            x2={isExporting ? GC.x : HC.x}
+            y2={isExporting ? gridTopY : houseBottomY}
+            active={gridActive}
+            color={isExporting ? "#22c55e" : "#f97316"}
+            duration={1.8}
+          />
+
+          {/* ── Sun ── */}
+          <circle cx={SC.x} cy={SC.y - 34} r="7" fill="#fbbf24" />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
+            const r = (deg * Math.PI) / 180;
+            return (
+              <line key={deg}
+                x1={SC.x + Math.cos(r) * 10} y1={(SC.y - 34) + Math.sin(r) * 10}
+                x2={SC.x + Math.cos(r) * 14} y2={(SC.y - 34) + Math.sin(r) * 14}
+                stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"
+              />
+            );
+          })}
+
+          {/* ── Solar panel ── */}
+          <rect x={SC.x - 27} y={SC.y - 18} width="54" height="37" rx="2"
+            fill="rgba(59,130,246,0.18)" stroke="#60a5fa" strokeWidth="1.5" />
+          <line x1={SC.x - 9} y1={SC.y - 18} x2={SC.x - 9} y2={SC.y + 19} stroke="#60a5fa" strokeWidth="0.6" opacity="0.5" />
+          <line x1={SC.x + 9} y1={SC.y - 18} x2={SC.x + 9} y2={SC.y + 19} stroke="#60a5fa" strokeWidth="0.6" opacity="0.5" />
+          <line x1={SC.x - 27} y1={SC.y + 1} x2={SC.x + 27} y2={SC.y + 1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.5" />
+
+          {/* Solar labels */}
+          <text x={LX} y={SC.y - 5} fill={solarActive ? "#fbbf24" : "rgba(255,255,255,0.4)"}
+            fontSize="13" fontWeight="600" fontFamily="Inter,sans-serif">{fmtW(currentProduction)}</text>
+          <text x={LX} y={SC.y + 10} fill="rgba(255,255,255,0.3)" fontSize="9.5" fontFamily="Inter,sans-serif">SOLAR</text>
+
+          {/* ── House ── */}
+          {/* roof */}
+          <polygon
+            points={`${HC.x},${HC.y - 50} ${HC.x - 33},${HC.y - 18} ${HC.x + 33},${HC.y - 18}`}
+            fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinejoin="round"
+          />
+          {/* body */}
+          <rect x={HC.x - 29} y={HC.y - 18} width="58" height="48"
+            fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" />
+          {/* door */}
+          <rect x={HC.x - 10} y={HC.y + 5} width="20" height="25"
+            fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" rx="1" />
+          {/* windows */}
+          <rect x={HC.x - 27} y={HC.y - 9} width="14" height="12"
+            fill="rgba(251,191,36,0.12)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+          <rect x={HC.x + 13} y={HC.y - 9} width="14" height="12"
+            fill="rgba(251,191,36,0.12)" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+
+          {/* House labels */}
+          <text x={LX} y={HC.y - 5} fill="rgba(255,255,255,0.85)"
+            fontSize="13" fontWeight="600" fontFamily="Inter,sans-serif">{fmtW(currentConsumption)}</text>
+          <text x={LX} y={HC.y + 10} fill="rgba(255,255,255,0.3)" fontSize="9.5" fontFamily="Inter,sans-serif">HOME</text>
+
+          {/* ── Power tower (grid) ── */}
+          <line x1={GC.x} y1={GC.y - 22} x2={GC.x} y2={GC.y + 20} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+          <line x1={GC.x - 22} y1={GC.y - 14} x2={GC.x + 22} y2={GC.y - 14} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+          <line x1={GC.x - 16} y1={GC.y - 4} x2={GC.x + 16} y2={GC.y - 4} stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+          <line x1={GC.x - 8} y1={GC.y + 20} x2={GC.x + 8} y2={GC.y + 20} stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
+          {[-22, -12, 12, 22].map((off) => (
+            <circle key={off} cx={GC.x + off} cy={GC.y - 14} r="2"
+              fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+          ))}
+          <line x1={GC.x - 36} y1={GC.y - 14} x2={GC.x - 22} y2={GC.y - 14} stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+          <line x1={GC.x + 22} y1={GC.y - 14} x2={GC.x + 36} y2={GC.y - 14} stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+
+          {/* Grid labels */}
+          <text x={LX} y={GC.y - 5}
+            fill={gridActive ? (isExporting ? "#22c55e" : "#f97316") : "rgba(255,255,255,0.25)"}
+            fontSize="13" fontWeight="600" fontFamily="Inter,sans-serif">
+            {gridActive ? fmtW(gridAbs) : "—"}
+          </text>
+          <text x={LX} y={GC.y + 10} fill="rgba(255,255,255,0.3)" fontSize="9.5" fontFamily="Inter,sans-serif">
+            {!gridActive ? "GRID" : isExporting ? "EXPORTING" : "IMPORTING"}
+          </text>
+        </svg>
+
+        {/* Today summary */}
+        <HStack justify="space-between" width="100%" px="1vmin">
+          <Text fontSize="2.8vmin" color="yellow.600" fontWeight="300">{fmtKwh(productionToday)} kWh</Text>
+          <Text fontSize="2.8vmin" fontWeight="600" color={pctColor}>{pct}% solar</Text>
+          <Text fontSize="2.8vmin" color="var(--theme-fg-dim)" fontWeight="300">{fmtKwh(consumptionToday)} kWh</Text>
+        </HStack>
+        <HStack justify="space-between" width="100%" px="1vmin">
+          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.08em">PRODUCED</Text>
+          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.08em">TODAY</Text>
+          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.08em">USED</Text>
+        </HStack>
+
+        <Box
+          as="button" px="6vmin" py="2vmin" fontSize="3vmin"
+          color="var(--theme-fg-faint)" letterSpacing="0.1em" cursor="pointer"
+          onClick={onClose} style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          DONE
+        </Box>
+      </Box>
     </Box>
   );
 }

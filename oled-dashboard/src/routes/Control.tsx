@@ -19,7 +19,6 @@ import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "../hooks/useSocket";
-import { Divider } from "../components/Divider";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";

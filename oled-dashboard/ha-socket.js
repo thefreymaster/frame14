@@ -29,8 +29,12 @@ const stateCache = new Map();
 let haWs = null;
 let nextMsgId = 3;
 
-const ALLOWED_DOMAINS = new Set(["light", "switch"]);
-const ALLOWED_SERVICES = new Set(["toggle", "turn_on", "turn_off"]);
+const ALLOWED_DOMAINS = new Set(["light", "switch", "climate"]);
+const ALLOWED_SERVICES = new Set([
+  "toggle", "turn_on", "turn_off",
+  "set_hvac_mode", "set_temperature",
+]);
+const ALLOWED_HVAC_MODES = new Set(["heat", "cool", "off", "auto", "heat_cool", "fan_only", "dry"]);
 const ENTITY_ID_RE = /^[a-z_]+\.[a-z0-9_]+$/;
 
 export function getState(entityId) {
@@ -41,19 +45,33 @@ export function getAllStates() {
   return stateCache;
 }
 
-export function callService({ domain, service, entity_id }) {
+export function callService({ domain, service, entity_id, hvac_mode, temperature }) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
   if (!ALLOWED_DOMAINS.has(domain)) return false;
   if (!ALLOWED_SERVICES.has(service)) return false;
   if (typeof entity_id !== "string" || !ENTITY_ID_RE.test(entity_id)) return false;
   if (!entity_id.startsWith(domain + ".")) return false;
+
+  const service_data = { entity_id };
+
+  if (service === "set_hvac_mode") {
+    if (typeof hvac_mode !== "string" || !ALLOWED_HVAC_MODES.has(hvac_mode)) return false;
+    service_data.hvac_mode = hvac_mode;
+  }
+
+  if (service === "set_temperature") {
+    const temp = Number(temperature);
+    if (!Number.isFinite(temp) || temp < 40 || temp > 95) return false;
+    service_data.temperature = temp;
+  }
+
   haWs.send(
     JSON.stringify({
       id: nextMsgId++,
       type: "call_service",
       domain,
       service,
-      service_data: { entity_id },
+      service_data,
     }),
   );
   return true;

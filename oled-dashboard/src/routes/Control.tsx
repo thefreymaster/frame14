@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
 import { Box, Text, HStack } from "@chakra-ui/react";
+import { MdSkipNext, MdRefresh, MdRadar } from "react-icons/md";
 import {
-  MdSkipNext,
-  MdHome,
-  MdAccessTime,
-  MdPhotoLibrary,
-  MdLightbulb,
-  MdRefresh,
-  MdRadar,
-  MdTimer,
-} from "react-icons/md";
+  IoTimeOutline,
+  IoTime,
+  IoImagesOutline,
+  IoImages,
+  IoTimerOutline,
+  IoTimer,
+} from "react-icons/io5";
+import {
+  RiHome5Line,
+  RiHome5Fill,
+  RiLightbulbLine,
+  RiLightbulbFill,
+} from "react-icons/ri";
 import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,13 +26,33 @@ import { useThemeMode } from "../hooks/useThemeMode";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import type { ThemeModePreference } from "../lib/themeMode";
 
-const VIEWS: { path: string; label: string; Icon: IconType }[] = [
-  { path: "/home", label: "Overview", Icon: MdHome },
-  { path: "/clock", label: "Clock", Icon: MdAccessTime },
-  { path: "/photos", label: "Photos", Icon: MdPhotoLibrary },
-  { path: "/lights", label: "Lights", Icon: MdLightbulb },
-  { path: "/radar", label: "Radar", Icon: MdRadar },
-  { path: "/timer", label: "Timer", Icon: MdTimer },
+const VIEWS: {
+  path: string;
+  label: string;
+  icon: IconType;
+  activeIcon: IconType;
+}[] = [
+  {
+    path: "/home",
+    label: "Overview",
+    icon: RiHome5Line,
+    activeIcon: RiHome5Fill,
+  },
+  { path: "/clock", label: "Clock", icon: IoTimeOutline, activeIcon: IoTime },
+  {
+    path: "/photos",
+    label: "Photos",
+    icon: IoImagesOutline,
+    activeIcon: IoImages,
+  },
+  {
+    path: "/lights",
+    label: "Lights",
+    icon: RiLightbulbLine,
+    activeIcon: RiLightbulbFill,
+  },
+  { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar },
+  { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
 ];
 
 const LOCAL_ONLY_PATHS = new Set(["/lights", "/radar", "/timer"]);
@@ -107,6 +132,34 @@ export function Control() {
           },
         }}
       >
+        {/* Header */}
+        {deviceMode !== "frame" && (
+          <HStack
+            justify="space-between"
+            align="baseline"
+            mb="min(8vmin, 36px)"
+          >
+            <Text
+              fontSize="min(5vmin, 28px)"
+              color="var(--theme-fg)"
+              fontWeight="300"
+              letterSpacing="0.02em"
+            >
+              Remote
+            </Text>
+            <HStack gap="min(1.5vmin, 8px)" align="center">
+              <Box
+                width="8px"
+                height="8px"
+                borderRadius="full"
+                bg={connected ? "green.400" : "var(--theme-fg-faint)"}
+              />
+              <Text fontSize="min(3vmin, 13px)" color="var(--theme-fg-faint)">
+                {connected ? "connected" : "disconnected"}
+              </Text>
+            </HStack>
+          </HStack>
+        )}
         {/* Device mode buttons */}
         <HStack gap="min(2vmin, 10px)" mb="min(4.5vmin, 20px)">
           {(["frame", "controller"] as const).map((mode) => {
@@ -126,7 +179,9 @@ export function Control() {
                 px="min(4vmin, 18px)"
                 borderRadius="8px"
                 border="1px solid"
-                borderColor={isActive ? "var(--theme-fg-dim)" : "var(--theme-divider)"}
+                borderColor={
+                  isActive ? "var(--theme-fg-dim)" : "var(--theme-divider)"
+                }
                 bg="transparent"
                 cursor="pointer"
                 _active={{ opacity: 0.5 }}
@@ -144,31 +199,6 @@ export function Control() {
             );
           })}
         </HStack>
-        <Divider mb="min(8vmin, 36px)" />
-
-        {/* Header */}
-        {deviceMode !== "frame" && <HStack justify="space-between" align="baseline" mb="min(8vmin, 36px)">
-          <Text
-            fontSize="min(5vmin, 28px)"
-            color="var(--theme-fg)"
-            fontWeight="300"
-            letterSpacing="0.02em"
-          >
-            Remote
-          </Text>
-          <HStack gap="min(1.5vmin, 8px)" align="center">
-            <Box
-              width="8px"
-              height="8px"
-              borderRadius="full"
-              bg={connected ? "green.400" : "var(--theme-fg-faint)"}
-            />
-            <Text fontSize="min(3vmin, 13px)" color="var(--theme-fg-faint)">
-              {connected ? "connected" : "disconnected"}
-            </Text>
-          </HStack>
-        </HStack>}
-
         {/* Body: stacked portrait, side-by-side landscape */}
         <Box
           css={{
@@ -181,191 +211,214 @@ export function Control() {
             },
           }}
         >
-        {deviceMode !== "frame" && <Box flex="1" minWidth="0">
-        {/* View grid */}
-        <Box
-          display="grid"
-          gridTemplateColumns="1fr 1fr"
-          gap="min(3vmin, 14px)"
-          width="100%"
-        >
-          {VIEWS.map((v) => {
-            const isActive = activeView === v.path;
-            const isPhotos = v.path === "/photos";
-            const Icon = v.Icon;
-
-            return (
+          {deviceMode !== "frame" && (
+            <Box flex="1" minWidth="0">
+              {/* View grid */}
               <Box
-                key={v.path}
-                position="relative"
-                onClick={() => changeView(v.path)}
-                cursor="pointer"
-                aspectRatio="1"
-                borderRadius="12px"
-                border="1px solid"
-                borderColor={
-                  isActive ? "var(--theme-fg-dim)" : "var(--theme-divider)"
-                }
+                display="grid"
+                gridTemplateColumns="1fr 1fr 1fr"
+                gap="min(3vmin, 14px)"
+                width="100%"
+              >
+                {VIEWS.map((v) => {
+                  const isActive = activeView === v.path;
+                  const isPhotos = v.path === "/photos";
+                  const Icon = isActive ? v.activeIcon : v.icon;
+
+                  return (
+                    <Box
+                      key={v.path}
+                      position="relative"
+                      onClick={() => changeView(v.path)}
+                      cursor="pointer"
+                      aspectRatio="1"
+                      borderRadius="12px"
+                      border="1px solid"
+                      borderColor={
+                        isActive
+                          ? "var(--theme-fg-dim)"
+                          : "var(--theme-divider)"
+                      }
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center"
+                      justifyContent="center"
+                      gap="min(2vmin, 10px)"
+                      _active={{ opacity: 0.5 }}
+                    >
+                      <Box
+                        color={
+                          isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"
+                        }
+                        fontSize="min(7vmin, 24px)"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+                        <Icon />
+                      </Box>
+                      <Text
+                        fontSize="min(3.6vmin, 16px)"
+                        fontWeight={isActive ? "400" : "300"}
+                        color={
+                          isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"
+                        }
+                        letterSpacing="0.01em"
+                      >
+                        {v.label}
+                      </Text>
+                      {isPhotos && (
+                        <Box
+                          as="button"
+                          position="absolute"
+                          top="min(2vmin, 10px)"
+                          right="min(2vmin, 10px)"
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            nextPhoto();
+                          }}
+                          color="var(--theme-fg-faint)"
+                          _hover={{ color: "var(--theme-fg)" }}
+                          display="flex"
+                          alignItems="center"
+                          p="min(1vmin, 6px)"
+                        >
+                          <MdSkipNext size={18} />
+                        </Box>
+                      )}
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+          <Box
+            flex="1"
+            minWidth="0"
+            display="flex"
+            flexDirection="column"
+            gap="min(10vmin, 48px)"
+          >
+            {/* Display mode */}
+            <Box>
+              <HStack
+                justify="space-between"
+                align="baseline"
+                mb="min(3vmin, 14px)"
+              >
+                <Text
+                  fontSize="min(3.2vmin, 14px)"
+                  color="var(--theme-fg-muted)"
+                  letterSpacing="0.12em"
+                  textTransform="uppercase"
+                >
+                  Display mode
+                </Text>
+                {preference === "auto" && (
+                  <Text
+                    fontSize="min(2.8vmin, 13px)"
+                    color="var(--theme-fg-faint)"
+                  >
+                    auto · {effectiveMode}
+                  </Text>
+                )}
+              </HStack>
+              <HStack gap="min(2vmin, 10px)" width="100%">
+                {THEME_MODES.map((m) => {
+                  const isActive = preference === m.value;
+                  return (
+                    <Box
+                      key={m.value}
+                      as="button"
+                      flex="1"
+                      py="min(3.5vmin, 16px)"
+                      borderRadius="8px"
+                      bg="transparent"
+                      border="1px solid"
+                      borderColor={
+                        isActive
+                          ? "var(--theme-fg-dim)"
+                          : "var(--theme-divider)"
+                      }
+                      onClick={() => setPreference(m.value)}
+                      _active={{ opacity: 0.5 }}
+                    >
+                      <Text
+                        fontSize="min(3.6vmin, 16px)"
+                        fontWeight={isActive ? "400" : "300"}
+                        color={
+                          isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"
+                        }
+                        letterSpacing="0.02em"
+                      >
+                        {m.label}
+                      </Text>
+                    </Box>
+                  );
+                })}
+              </HStack>
+              {/* Refresh all frames */}
+              <Box
+                as="button"
+                mt="min(3vmin, 14px)"
+                width="100%"
+                py="min(3.5vmin, 16px)"
+                borderRadius="8px"
+                bg="transparent"
+                border="1px solid var(--theme-divider)"
                 display="flex"
-                flexDirection="column"
                 alignItems="center"
                 justifyContent="center"
                 gap="min(2vmin, 10px)"
+                color="var(--theme-fg-dim)"
                 _active={{ opacity: 0.5 }}
+                onClick={() => socket.emit("refresh")}
               >
-                <Box
-                  color={isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"}
-                  fontSize="min(9vmin, 44px)"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Icon />
-                </Box>
+                <MdRefresh size={18} />
                 <Text
                   fontSize="min(3.6vmin, 16px)"
-                  fontWeight={isActive ? "400" : "300"}
-                  color={isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"}
-                  letterSpacing="0.01em"
+                  fontWeight="300"
+                  letterSpacing="0.02em"
                 >
-                  {v.label}
+                  Refresh displays
                 </Text>
-                {isPhotos && (
-                  <Box
-                    as="button"
-                    position="absolute"
-                    top="min(2vmin, 10px)"
-                    right="min(2vmin, 10px)"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      nextPhoto();
-                    }}
-                    color="var(--theme-fg-faint)"
-                    _hover={{ color: "var(--theme-fg)" }}
-                    display="flex"
-                    alignItems="center"
-                    p="min(1vmin, 6px)"
-                  >
-                    <MdSkipNext size={18} />
-                  </Box>
-                )}
               </Box>
-            );
-          })}
-        </Box>
+            </Box>
 
-        {/* Refresh all frames */}
-        <Box
-          as="button"
-          mt="min(3vmin, 14px)"
-          width="100%"
-          py="min(3.5vmin, 16px)"
-          borderRadius="8px"
-          bg="transparent"
-          border="1px solid var(--theme-divider)"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          gap="min(2vmin, 10px)"
-          color="var(--theme-fg-dim)"
-          _active={{ opacity: 0.5 }}
-          onClick={() => socket.emit("refresh")}
-        >
-          <MdRefresh size={18} />
-          <Text fontSize="min(3.6vmin, 16px)" fontWeight="300" letterSpacing="0.02em">
-            Refresh displays
-          </Text>
-        </Box>
-
-        </Box>}
-        <Box flex="1" minWidth="0" display="flex" flexDirection="column" gap="min(10vmin, 48px)">
-        {/* Display mode */}
-        <Box>
-          <HStack
-            justify="space-between"
-            align="baseline"
-            mb="min(3vmin, 14px)"
-          >
-            <Text
-              fontSize="min(3.2vmin, 14px)"
-              color="var(--theme-fg-muted)"
-              letterSpacing="0.12em"
-              textTransform="uppercase"
-            >
-              Display mode
-            </Text>
-            {preference === "auto" && (
-              <Text fontSize="min(2.8vmin, 13px)" color="var(--theme-fg-faint)">
-                auto · {effectiveMode}
+            {/* Album */}
+            <Box>
+              <Text
+                fontSize="min(3.2vmin, 14px)"
+                color="var(--theme-fg-muted)"
+                letterSpacing="0.12em"
+                textTransform="uppercase"
+                mb="min(3vmin, 14px)"
+              >
+                Album
               </Text>
-            )}
-          </HStack>
-          <HStack gap="min(2vmin, 10px)" width="100%">
-            {THEME_MODES.map((m) => {
-              const isActive = preference === m.value;
-              return (
-                <Box
-                  key={m.value}
-                  as="button"
-                  flex="1"
-                  py="min(3.5vmin, 16px)"
-                  borderRadius="8px"
-                  bg="transparent"
-                  border="1px solid"
-                  borderColor={
-                    isActive ? "var(--theme-fg-dim)" : "var(--theme-divider)"
-                  }
-                  onClick={() => setPreference(m.value)}
-                  _active={{ opacity: 0.5 }}
-                >
-                  <Text
-                    fontSize="min(3.6vmin, 16px)"
-                    fontWeight={isActive ? "400" : "300"}
-                    color={isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"}
-                    letterSpacing="0.02em"
-                  >
-                    {m.label}
-                  </Text>
-                </Box>
-              );
-            })}
-          </HStack>
-        </Box>
-
-        {/* Album */}
-        <Box>
-          <Text
-            fontSize="min(3.2vmin, 14px)"
-            color="var(--theme-fg-muted)"
-            letterSpacing="0.12em"
-            textTransform="uppercase"
-            mb="min(3vmin, 14px)"
-          >
-            Album
-          </Text>
-          <select
-            style={{
-              width: "100%",
-              padding: "min(3.5vmin, 16px) min(3vmin, 14px)",
-              borderRadius: "8px",
-              background: "transparent",
-              border: "1px solid var(--theme-divider)",
-              color: "var(--theme-fg)",
-              fontSize: "min(3.6vmin, 16px)",
-              fontWeight: 300,
-            }}
-            value={photosConfig?.defaultAlbumId ?? ""}
-            onChange={handleAlbumChange}
-          >
-            {!photosConfig?.defaultAlbumId && <option value="">—</option>}
-            {photosConfig?.options.map((id) => (
-              <option key={id} value={id} style={{ background: "#000" }}>
-                {id}
-              </option>
-            ))}
-          </select>
-        </Box>
-        </Box>
+              <select
+                style={{
+                  width: "100%",
+                  padding: "min(3.5vmin, 16px) min(3vmin, 14px)",
+                  borderRadius: "8px",
+                  background: "transparent",
+                  border: "1px solid var(--theme-divider)",
+                  color: "var(--theme-fg)",
+                  fontSize: "min(3.6vmin, 16px)",
+                  fontWeight: 300,
+                }}
+                value={photosConfig?.defaultAlbumId ?? ""}
+                onChange={handleAlbumChange}
+              >
+                {!photosConfig?.defaultAlbumId && <option value="">—</option>}
+                {photosConfig?.options.map((id) => (
+                  <option key={id} value={id} style={{ background: "#000" }}>
+                    {id}
+                  </option>
+                ))}
+              </select>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>

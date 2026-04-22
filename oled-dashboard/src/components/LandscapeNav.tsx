@@ -171,7 +171,7 @@ export function LandscapeNav() {
 
   const visibleNavItems = NAV_ITEMS.filter((i) => isFrame || !i.frameOnly);
   const allItems = [...visibleNavItems, ...BOTTOM_NAV_ITEMS];
-  const portraitItems = allItems.filter((i) => !i.portraitHidden);
+  const portraitItems = allItems.filter((i) => isFrame || !i.portraitHidden);
 
   return (
     <>

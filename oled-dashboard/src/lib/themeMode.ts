@@ -71,7 +71,7 @@ function loadPreference(): ThemeModePreference {
   } catch {
     // ignore
   }
-  return "auto";
+  return "dark";
 }
 
 type Listener = (pref: ThemeModePreference) => void;

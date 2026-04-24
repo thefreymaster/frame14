@@ -60,6 +60,7 @@ export function applyThemeVars(mode: EffectiveThemeMode) {
     root.style.setProperty(k, v);
   }
   root.dataset.themeMode = mode;
+  root.classList.toggle("dark", mode === "dark");
 }
 
 function loadPreference(): ThemeModePreference {

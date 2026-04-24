@@ -8,8 +8,9 @@ export function Divider({ mb }: Props) {
   return (
     <Box
       width="100%"
-      height="1px"
-      bg="var(--theme-divider)"
+      borderBottom="1px solid"
+      borderColor="gray.200"
+      _dark={{ borderColor: "gray.700" }}
       flexShrink={0}
       mb={mb}
     />

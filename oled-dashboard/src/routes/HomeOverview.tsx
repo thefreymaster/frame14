@@ -49,6 +49,7 @@ import type {
   HomeWeather,
   HomeCalendarEvent,
 } from "../hooks/useHomeData";
+import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
@@ -156,7 +157,9 @@ function fmtMins(minutes: number) {
   return `${m}m`;
 }
 
-function normalizeClimateMode(mode: string | null | undefined): ClimateVisualMode {
+function normalizeClimateMode(
+  mode: string | null | undefined,
+): ClimateVisualMode {
   if (mode === "heat" || mode === "cool") return mode;
   return "off";
 }
@@ -237,45 +240,46 @@ function Header({
         </Alert.Root>
       )}
       {/* Date line */}
-      <HStack align="baseline" gap="2vmin" mb="0.8vmin">
-        <Text fontSize="3.8vmin" fontWeight="400" letterSpacing="0.02em">
-          {day}, {month} {date}
-        </Text>
-        <Spacer />
-      </HStack>
 
-      <HStack width="100%" align="start" justify="space-between">
-        {/* Time */}
-        <Text
-          fontSize="17vmin"
-          fontWeight="300"
-          letterSpacing="-0.03em"
-          lineHeight="0.9"
-          flexShrink={0}
-        >
-          <NumberFlow
-            digits={{ 2: { max: 2 } }}
-            value={hours}
-            prefix={hours < 10 ? "0" : ""}
-            trend={1}
-          />
-          :
-          <NumberFlow
-            digits={{ 2: { max: 2 } }}
-            value={minutes}
-            prefix={minutes < 10 ? "0" : ""}
-            trend={1}
-          />
+      <HStack width="100%" alignItems="flex-start" justify="space-between">
+        <VStack alignItems="flex-start">
+          <HStack align="baseline" gap="2vmin" mb="0.8vmin">
+            <Text fontSize="3.8vmin" fontWeight="400" letterSpacing="0.02em">
+              {day}, {month} {date}
+            </Text>
+            <Spacer />
+          </HStack>
           <Text
-            as="span"
-            fontSize="6vmin"
+            fontSize="17vmin"
             fontWeight="300"
-            color="var(--theme-fg-dim)"
-            ml="1vmin"
+            letterSpacing="-0.03em"
+            lineHeight="0.9"
+            flexShrink={0}
           >
-            {ampm}
+            <NumberFlow
+              digits={{ 2: { max: 2 } }}
+              value={hours}
+              prefix={hours < 10 ? "0" : ""}
+              trend={1}
+            />
+            :
+            <NumberFlow
+              digits={{ 2: { max: 2 } }}
+              value={minutes}
+              prefix={minutes < 10 ? "0" : ""}
+              trend={1}
+            />
+            <Text
+              as="span"
+              fontSize="6vmin"
+              fontWeight="300"
+              color="var(--theme-fg-dim)"
+              ml="1vmin"
+            >
+              {ampm}
+            </Text>
           </Text>
-        </Text>
+        </VStack>
 
         {/* Weather — right of time */}
         {weather && (
@@ -316,7 +320,7 @@ function Header({
 
       {weather && weather.forecast.length > 0 && (
         <Box width="100%" mt="2vmin">
-          <Divider mb="2vmin" />
+          <SectionTitle>FORECAST</SectionTitle>
           <WeatherForecast forecast={weather.forecast} count={6} />
         </Box>
       )}
@@ -393,7 +397,7 @@ function ClimateModal({
   const isActive = activeAction === mode && !isOff;
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const previousTarget = fmtClimateTemp(unit.targetTemp);
-  const displayedTemp = isOff ? currentTemp ?? previousTarget ?? temp : temp;
+  const displayedTemp = isOff ? (currentTemp ?? previousTarget ?? temp) : temp;
   const displayLabel = isOff
     ? currentTemp != null
       ? "Indoor temperature"
@@ -492,11 +496,7 @@ function ClimateModal({
           <Box className="thermostat-dial__weather" />
           <Box className="thermostat-particles" aria-hidden="true">
             {Array.from({ length: 6 }).map((_, index) => (
-              <Box
-                key={index}
-                as="span"
-                className="thermostat-particle"
-              />
+              <Box key={index} as="span" className="thermostat-particle" />
             ))}
           </Box>
           {!isOff && (
@@ -538,7 +538,11 @@ function ClimateModal({
           {HVAC_MODES.map(({ key, label }) => {
             const active = mode === key;
             const ModeIcon =
-              key === "heat" ? IoFlame : key === "cool" ? IoSnow : IoPowerOutline;
+              key === "heat"
+                ? IoFlame
+                : key === "cool"
+                  ? IoSnow
+                  : IoPowerOutline;
 
             return (
               <Box
@@ -622,14 +626,7 @@ function ClimateSection({ climate }: { climate: HomeClimate[] }) {
 
   return (
     <Box width="100%">
-      <Text
-        fontSize="2.6vmin"
-        color="var(--theme-fg-faint)"
-        letterSpacing="0.14em"
-        mb="1.5vmin"
-      >
-        CLIMATE
-      </Text>
+      <SectionTitle>CLIMATE</SectionTitle>
       <VStack gap="0" align="stretch" width="100%">
         {climate.map((unit) => (
           <ClimateRow
@@ -674,14 +671,7 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
         onClick={() => setShowModal(true)}
         style={{ WebkitTapHighlightColor: "transparent" }}
       >
-        <Text
-          fontSize="2.6vmin"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.14em"
-          mb="1.5vmin"
-        >
-          ENERGY
-        </Text>
+        <SectionTitle>ENERGY</SectionTitle>
         <VStack width="100%" align="stretch" gap="0.4vmin">
           {/* Today totals */}
           <VStack align="flex-start" gap="0.4vmin" width="100%">
@@ -1384,27 +1374,13 @@ function CalendarSection({
     <Box width="100%">
       {today.length > 0 && (
         <>
-          <Text
-            fontSize="2.6vmin"
-            color="var(--theme-fg-faint)"
-            letterSpacing="0.14em"
-            mb="1.5vmin"
-          >
-            TODAY
-          </Text>
+          <SectionTitle>TODAY</SectionTitle>
           <EventList events={today} />
         </>
       )}
       {tomorrow.length > 0 && (
         <Box mt={today.length > 0 ? "2.5vmin" : "0"}>
-          <Text
-            fontSize="2.6vmin"
-            color="var(--theme-fg-faint)"
-            letterSpacing="0.14em"
-            mb="1.5vmin"
-          >
-            TOMORROW
-          </Text>
+          <SectionTitle>TOMORROW</SectionTitle>
           <EventList events={tomorrow} />
         </Box>
       )}
@@ -1490,7 +1466,6 @@ export function HomeOverview() {
             <Header internet={data.internet} weather={data.weather} />
             {printerActive && (
               <>
-                <Divider />
                 <PrinterSection printer={data.printer} />
               </>
             )}
@@ -1506,11 +1481,9 @@ export function HomeOverview() {
             overflowY="auto"
           >
             <ClimateSection climate={data.climate} />
-            <Divider />
             <EnergySection energy={data.energy} />
             {hasCalendar && (
               <>
-                <Divider />
                 <CalendarSection
                   today={data.calendar.today}
                   tomorrow={data.calendar.tomorrow}
@@ -1522,22 +1495,18 @@ export function HomeOverview() {
       ) : (
         <>
           <Header internet={data.internet} weather={data.weather} />
-          <Divider />
           {hasCalendar && (
             <>
               <CalendarSection
                 today={data.calendar.today}
                 tomorrow={data.calendar.tomorrow}
               />
-              <Divider />
             </>
           )}
           <ClimateSection climate={data.climate} />
-          <Divider />
           <EnergySection energy={data.energy} />
           {printerActive && (
             <>
-              <Divider />
               <PrinterSection printer={data.printer} />
             </>
           )}

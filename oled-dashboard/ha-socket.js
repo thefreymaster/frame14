@@ -25,6 +25,7 @@ const GET_STATES_ID = 1;
 const SUBSCRIBE_EVENTS_ID = 2;
 
 const stateCache = new Map();
+const pendingResults = new Map(); // id -> { resolve, reject }
 
 let haWs = null;
 let nextMsgId = 3;
@@ -75,6 +76,25 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
     }),
   );
   return true;
+}
+
+export function sendCommand(type, payload, timeoutMs = 15_000) {
+  return new Promise((resolve, reject) => {
+    if (!haWs || haWs.readyState !== 1) {
+      reject(new Error("HA WebSocket not connected"));
+      return;
+    }
+    const id = nextMsgId++;
+    const timer = setTimeout(() => {
+      pendingResults.delete(id);
+      reject(new Error(`HA WebSocket command timed out (id=${id}, type=${type})`));
+    }, timeoutMs);
+    pendingResults.set(id, {
+      resolve: (r) => { clearTimeout(timer); resolve(r); },
+      reject: (e) => { clearTimeout(timer); reject(e); },
+    });
+    haWs.send(JSON.stringify({ id, type, ...payload }));
+  });
 }
 
 async function getLastRoute() {
@@ -212,6 +232,14 @@ export function startHaSocket(io) {
         console.log(
           `[ha-socket] cache primed with ${stateCache.size} entities`,
         );
+        return;
+      }
+
+      if (msg.type === "result" && pendingResults.has(msg.id)) {
+        const { resolve, reject } = pendingResults.get(msg.id);
+        pendingResults.delete(msg.id);
+        if (msg.success) resolve(msg.result);
+        else reject(new Error(msg.error?.message ?? "HA WebSocket command failed"));
         return;
       }
 

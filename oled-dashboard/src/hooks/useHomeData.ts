@@ -375,15 +375,19 @@ export function useHomeData() {
   const liveEnergyByKey = new Map(
     energyEntities.map(({ key }, index) => [key, energyStates[index]?.data]),
   );
+
+  function liveWatts(key: "currentProduction" | "currentConsumption", fallback: number): number {
+    const s = liveEnergyByKey.get(key);
+    if (!s) return fallback;
+    const val = parseFloatOrNull(s.state);
+    if (val == null) return fallback;
+    const unit = (s.attributes as Record<string, unknown>)?.unit_of_measurement;
+    return unit === "kW" ? val * 1000 : val;
+  }
+
   const homeEnergy: HomeEnergy = {
-    currentProduction:
-      parseFloatOrNull(liveEnergyByKey.get("currentProduction")?.state) ??
-      energyQuery.data?.currentProduction ??
-      0,
-    currentConsumption:
-      parseFloatOrNull(liveEnergyByKey.get("currentConsumption")?.state) ??
-      energyQuery.data?.currentConsumption ??
-      0,
+    currentProduction: liveWatts("currentProduction", energyQuery.data?.currentProduction ?? 0),
+    currentConsumption: liveWatts("currentConsumption", energyQuery.data?.currentConsumption ?? 0),
     productionToday:
       parseFloatOrNull(liveEnergyByKey.get("productionToday")?.state) ??
       energyQuery.data?.production ??

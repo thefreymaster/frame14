@@ -33,6 +33,10 @@ export const openApiDocument = {
       name: "Views",
       description: "Endpoints that broadcast view changes to connected clients.",
     },
+    {
+      name: "Energy",
+      description: "Solar production and consumption data proxied from Home Assistant.",
+    },
   ],
   paths: {
     "/api": {
@@ -151,6 +155,75 @@ export const openApiDocument = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+    "/api/energy": {
+      get: {
+        tags: ["Energy"],
+        operationId: "getEnergy",
+        summary: "Get current energy snapshot",
+        description: "Returns today's production and consumption totals plus current live wattage from Home Assistant.",
+        responses: {
+          200: {
+            description: "Current energy data.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/EnergyResponse" },
+              },
+            },
+          },
+          503: {
+            description: "HA_TOKEN or energy entities not configured.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          500: {
+            description: "Failed to fetch from Home Assistant.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+        },
+      },
+    },
+    "/api/energy/monthly": {
+      get: {
+        tags: ["Energy"],
+        operationId: "getEnergyMonthly",
+        summary: "Get daily energy totals for a month",
+        description:
+          "Returns one entry per day from the 1st through today (current month) or the full month (past months). Each entry includes daily production/consumption and running totals for the month. Uses Home Assistant long-term statistics.",
+        parameters: [
+          {
+            name: "month",
+            in: "query",
+            required: false,
+            description: "Month to query in YYYY-MM format. Defaults to the current month.",
+            schema: { type: "string", example: "2026-04" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Four Nivo line series: production, consumption, runningProduction, runningConsumption. Each point x is YYYY-MM-DD, y is kWh (null if no statistics recorded for that day).",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/NivoSeries" },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid month parameter.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          503: {
+            description: "HA_TOKEN or energy entities not configured.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          500: {
+            description: "Failed to fetch from Home Assistant.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
           },
         },
       },
@@ -283,6 +356,40 @@ export const openApiDocument = {
                 createdAt: { type: "string" },
               },
             },
+          },
+        },
+      },
+      EnergyResponse: {
+        type: "object",
+        properties: {
+          production: { type: "number", example: 18.4 },
+          productionUnit: { type: "string", example: "kWh" },
+          consumption: { type: "number", example: 22.1 },
+          consumptionUnit: { type: "string", example: "kWh" },
+          currentProduction: { type: "number", example: 3200 },
+          currentProductionUnit: { type: "string", example: "W" },
+          currentConsumption: { type: "number", example: 1850 },
+          currentConsumptionUnit: { type: "string", example: "W" },
+        },
+      },
+      NivoPoint: {
+        type: "object",
+        properties: {
+          x: { type: "string", format: "date", example: "2026-04-15" },
+          y: { type: "number", nullable: true, example: 12.34 },
+        },
+      },
+      NivoSeries: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            enum: ["production", "consumption", "runningProduction", "runningConsumption"],
+            example: "production",
+          },
+          data: {
+            type: "array",
+            items: { $ref: "#/components/schemas/NivoPoint" },
           },
         },
       },

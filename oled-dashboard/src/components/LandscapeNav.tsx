@@ -9,9 +9,8 @@ import {
   IoImages,
   IoSettingsOutline,
   IoSettings,
-  IoTimerOutline,
-  IoTimer,
 } from "react-icons/io5";
+
 import {
   RiHome5Line,
   RiHome5Fill,
@@ -21,6 +20,7 @@ import {
 import { MdRadar } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
+import { PiSolarRoof } from "react-icons/pi";
 
 type NavItem = {
   path: string;
@@ -47,6 +47,12 @@ const NAV_ITEMS: NavItem[] = [
     activeIcon: RiLightbulbFill,
   },
   {
+    path: "/solar",
+    label: "Solar",
+    icon: PiSolarRoof,
+    activeIcon: PiSolarRoof,
+  },
+  {
     path: "/radar",
     label: "Radar",
     icon: MdRadar,
@@ -54,14 +60,14 @@ const NAV_ITEMS: NavItem[] = [
     portraitHidden: true,
     frameOnly: true,
   },
-  {
-    path: "/timer",
-    label: "Timer",
-    icon: IoTimerOutline,
-    activeIcon: IoTimer,
-    portraitHidden: true,
-    frameOnly: true,
-  },
+  // {
+  //   path: "/timer",
+  //   label: "Timer",
+  //   icon: IoTimerOutline,
+  //   activeIcon: IoTimer,
+  //   portraitHidden: true,
+  //   frameOnly: true,
+  // },
 ];
 
 const LOCAL_ONLY_PATHS = new Set(["/control", "/lights", "/radar", "/timer"]);

@@ -23,6 +23,7 @@ import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
+import { useImmichAlbums } from "../hooks/useImmichAlbums";
 import type { ThemeModePreference } from "../lib/themeMode";
 
 const VIEWS: {
@@ -70,6 +71,7 @@ export function Control() {
   const { connected } = useSocket();
   const { preference, effectiveMode, setPreference } = useThemeMode();
   const { data: photosConfig } = usePhotosConfig();
+  const { data: albums } = useImmichAlbums();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<string | null>(null);
@@ -410,11 +412,14 @@ export function Control() {
                 onChange={handleAlbumChange}
               >
                 {!photosConfig?.defaultAlbumId && <option value="">—</option>}
-                {photosConfig?.options.map((id) => (
-                  <option key={id} value={id} style={{ background: "#000" }}>
-                    {id}
-                  </option>
-                ))}
+                {photosConfig?.options.map((id) => {
+                  const album = albums?.find((a) => a.id === id);
+                  return (
+                    <option key={id} value={id} style={{ background: "#000" }}>
+                      {album?.albumName ?? id}
+                    </option>
+                  );
+                })}
               </select>
             </Box>
           </Box>

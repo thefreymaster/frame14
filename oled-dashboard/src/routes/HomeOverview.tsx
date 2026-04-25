@@ -7,7 +7,6 @@ import {
   HStack,
   VStack,
   Grid,
-  GridItem,
   Spacer,
   Alert,
 } from "@chakra-ui/react";
@@ -140,8 +139,7 @@ function fmtKwh(n: number) {
 
 function fmtW(watts: number): string {
   if (isNaN(watts)) return "--";
-  if (watts >= 1000) return `${(watts / 1000).toFixed(1)} kW`;
-  return `${Math.round(watts)} W`;
+  return `${(watts / 1000).toFixed(1)} kW`;
 }
 
 // function fmtKw(watts: number) {
@@ -665,119 +663,38 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
         style={{ WebkitTapHighlightColor: "transparent" }}
       >
         <SectionTitle>ENERGY</SectionTitle>
-        <VStack width="100%" align="stretch" gap="0.4vmin">
-          {/* Today totals */}
-          <VStack align="flex-start" gap="0.4vmin" width="100%">
-            <Grid
-              templateColumns="repeat(12, 1fr)"
-              gap="1.5vmin"
-              alignItems="center"
-              width="100%"
-            >
-              <GridItem colSpan={4}>
-                <HStack gap="1.5vmin" align="center">
-                  <Box
-                    fontSize="3.5vmin"
-                    lineHeight="1"
-                    color="yellow.500"
-                    flexShrink={0}
-                  >
-                    <PiSolarRoof size="1.4em" />
-                  </Box>
-                  <Text
-                    fontSize="5.5vmin"
-                    color="yellow.600"
-                    fontWeight="300"
-                    lineHeight="1"
-                    whiteSpace="nowrap"
-                  >
-                    {fmtKwh(productionToday)} kWh
-                  </Text>
-                </HStack>
-              </GridItem>
-              <GridItem colSpan={4}>
-                <HStack gap="1.5vmin" align="center">
-                  <Box fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
-                    <IoFlash size="1em" />
-                  </Box>
-                  <Text
-                    fontSize="5.5vmin"
-                    fontWeight="300"
-                    lineHeight="1"
-                    whiteSpace="nowrap"
-                  >
-                    {fmtKwh(consumptionToday)} kWh
-                  </Text>
-                </HStack>
-              </GridItem>
-              <GridItem colSpan={4} justifySelf="flex-end">
-                <Text fontSize="5.5vmin" color={pctColor} fontWeight="400">
-                  {Math.round(pct)}%
-                </Text>
-              </GridItem>
-            </Grid>
+        <Grid templateColumns="1fr 1fr 1fr" gap="2vmin" width="100%">
+          <VStack align="flex-start" gap="0.5vmin">
+            <HStack gap="1.2vmin" align="baseline">
+              <Box color="yellow.500" fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
+                <PiSolarRoof />
+              </Box>
+              <Text fontSize="5vmin" fontWeight="300" color="yellow.600" lineHeight="1" whiteSpace="nowrap">
+                {fmtKwh(productionToday)} kWh
+              </Text>
+            </HStack>
+            <Text fontSize="2vmin" letterSpacing="0.12em" color="var(--theme-fg-faint)">PRODUCED</Text>
           </VStack>
 
-          {/* Real-time power */}
-          {/* <VStack align="flex-start" gap="0.4vmin" width="100%">
-          <Text
-            fontSize="2.6vmin"
-            color="var(--theme-fg-faint)"
-            letterSpacing="0.1em"
-          >
-            NOW
-          </Text>
-          <Grid
-            templateColumns="repeat(12, 1fr)"
-            gap="1.5vmin"
-            alignItems="center"
-            width="100%"
-          >
-            <GridItem colSpan={4}>
-              <HStack gap="1.5vmin" align="center">
-                <Box
-                  fontSize="3.5vmin"
-                  lineHeight="1"
-                  color="yellow.600"
-                  flexShrink={0}
-                >
-                  <LuMoveDown size="1em" />
-                </Box>
-                <Text
-                  fontSize="5.5vmin"
-                  color="yellow.600"
-                  fontWeight="300"
-                  lineHeight="1"
-                  whiteSpace="nowrap"
-                >
-                  {fmtKw(currentProduction)} kW
-                </Text>
-              </HStack>
-            </GridItem>
-            <GridItem colSpan={4}>
-              <HStack gap="1.5vmin" align="center">
-                <Box
-                  fontSize="3.5vmin"
-                  lineHeight="1"
-                  
-                  flexShrink={0}
-                >
-                  <LuMoveUp size="1em" />
-                </Box>
-                <Text
-                  fontSize="5.5vmin"
-                  
-                  fontWeight="300"
-                  lineHeight="1"
-                  whiteSpace="nowrap"
-                >
-                  {fmtKw(currentConsumption)} kW
-                </Text>
-              </HStack>
-            </GridItem>
-          </Grid>
-        </VStack> */}
-        </VStack>
+          <VStack align="center" gap="0.5vmin">
+            <Text fontSize="5vmin" fontWeight="400" color={pctColor} lineHeight="1">
+              {Math.round(pct)}%
+            </Text>
+            <Text fontSize="2vmin" letterSpacing="0.12em" color="var(--theme-fg-faint)">SOLAR</Text>
+          </VStack>
+
+          <VStack align="flex-end" gap="0.5vmin">
+            <HStack gap="1.2vmin" align="baseline">
+              <Box fontSize="3.5vmin" lineHeight="1" color="var(--theme-fg-dim)" flexShrink={0}>
+                <IoFlash />
+              </Box>
+              <Text fontSize="5vmin" fontWeight="300" color="var(--theme-fg-dim)" lineHeight="1" whiteSpace="nowrap">
+                {fmtKwh(consumptionToday)} kWh
+              </Text>
+            </HStack>
+            <Text fontSize="2vmin" letterSpacing="0.12em" color="var(--theme-fg-faint)" textAlign="right">USED</Text>
+          </VStack>
+        </Grid>
       </Box>
     </>
   );

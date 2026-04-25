@@ -48,15 +48,22 @@ router.get("/", async (_req, res) => {
       fetchState(CURRENT_CONSUMPTION_ENTITY),
     ]);
 
+    function toWatts(state, attrs) {
+      const val = parseFloat(state);
+      if (isNaN(val)) return NaN;
+      const unit = attrs?.unit_of_measurement ?? "W";
+      return unit === "kW" ? val * 1000 : val;
+    }
+
     res.json({
       production: parseFloat(production.state),
       productionUnit: production.attributes?.unit_of_measurement ?? "kWh",
       consumption: parseFloat(consumption.state),
       consumptionUnit: consumption.attributes?.unit_of_measurement ?? "kWh",
-      currentProduction: parseFloat(currentProduction.state),
-      currentProductionUnit: currentProduction.attributes?.unit_of_measurement ?? "W",
-      currentConsumption: parseFloat(currentConsumption.state),
-      currentConsumptionUnit: currentConsumption.attributes?.unit_of_measurement ?? "W",
+      currentProduction: toWatts(currentProduction.state, currentProduction.attributes),
+      currentProductionUnit: "W",
+      currentConsumption: toWatts(currentConsumption.state, currentConsumption.attributes),
+      currentConsumptionUnit: "W",
     });
   } catch (err) {
     console.error("Energy fetch error:", err);

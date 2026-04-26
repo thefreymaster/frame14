@@ -13,14 +13,14 @@ export function StatusBanner() {
       bg="var(--theme-bg)"
       borderBottom="1px solid var(--theme-divider)"
       px={3}
-      py="3px"
+      py="1"
       css={{
         "@media (orientation: landscape)": {
           left: "56px",
         },
       }}
     >
-      <HStack gap={3} justify="flex-end">
+      <HStack gap={3} px="6" justify="flex-start">
         {version && (
           <Text
             fontSize="10px"

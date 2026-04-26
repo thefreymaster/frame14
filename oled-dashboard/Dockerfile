@@ -17,7 +17,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
-COPY index.js config.js entities.js openapi.js ha-socket.js frame14.json ./
+COPY index.js config.js entities.js openapi.js ha-socket.js frame14.json config.yaml ./
 COPY routes ./routes
 
 CMD ["node", "index.js"]

@@ -666,33 +666,79 @@ function EnergySection({ energy }: { energy: HomeEnergy }) {
         <Grid templateColumns="1fr 1fr 1fr" gap="2vmin" width="100%">
           <VStack align="flex-start" gap="0.5vmin">
             <HStack gap="1.2vmin" align="baseline">
-              <Box color="yellow.500" fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
+              <Box
+                color="yellow.500"
+                fontSize="3.5vmin"
+                lineHeight="1"
+                flexShrink={0}
+              >
                 <PiSolarRoof />
               </Box>
-              <Text fontSize="5vmin" fontWeight="300" color="yellow.600" lineHeight="1" whiteSpace="nowrap">
+              <Text
+                fontSize="5vmin"
+                fontWeight="300"
+                color="yellow.600"
+                lineHeight="1"
+                whiteSpace="nowrap"
+              >
                 {fmtKwh(productionToday)} kWh
               </Text>
             </HStack>
-            <Text fontSize="2vmin" letterSpacing="0.12em" color="var(--theme-fg-faint)">PRODUCED</Text>
+            <Text
+              fontSize="2vmin"
+              letterSpacing="0.12em"
+              color="var(--theme-fg-faint)"
+            >
+              PRODUCED
+            </Text>
           </VStack>
 
           <VStack align="center" gap="0.5vmin">
-            <Text fontSize="5vmin" fontWeight="400" color={pctColor} lineHeight="1">
+            <Text
+              fontSize="5vmin"
+              fontWeight="400"
+              color={pctColor}
+              lineHeight="1"
+            >
               {Math.round(pct)}%
             </Text>
-            <Text fontSize="2vmin" letterSpacing="0.12em" color="var(--theme-fg-faint)">SOLAR</Text>
+            <Text
+              fontSize="2vmin"
+              letterSpacing="0.12em"
+              color="var(--theme-fg-faint)"
+            >
+              SOLAR
+            </Text>
           </VStack>
 
           <VStack align="flex-end" gap="0.5vmin">
             <HStack gap="1.2vmin" align="baseline">
-              <Box fontSize="3.5vmin" lineHeight="1" color="var(--theme-fg-dim)" flexShrink={0}>
+              <Box
+                fontSize="3.5vmin"
+                lineHeight="1"
+                color="var(--theme-fg-dim)"
+                flexShrink={0}
+              >
                 <IoFlash />
               </Box>
-              <Text fontSize="5vmin" fontWeight="300" color="var(--theme-fg-dim)" lineHeight="1" whiteSpace="nowrap">
+              <Text
+                fontSize="5vmin"
+                fontWeight="300"
+                color="var(--theme-fg-dim)"
+                lineHeight="1"
+                whiteSpace="nowrap"
+              >
                 {fmtKwh(consumptionToday)} kWh
               </Text>
             </HStack>
-            <Text fontSize="2vmin" letterSpacing="0.12em" color="var(--theme-fg-faint)" textAlign="right">USED</Text>
+            <Text
+              fontSize="2vmin"
+              letterSpacing="0.12em"
+              color="var(--theme-fg-faint)"
+              textAlign="right"
+            >
+              USED
+            </Text>
           </VStack>
         </Grid>
       </Box>
@@ -757,7 +803,7 @@ function EnergyModal({
       ? Math.round((productionToday / consumptionToday) * 100)
       : 0;
   const pctColor =
-    pct >= 100 ? "#22c55e" : pct >= 50 ? "#eab308" : "rgba(255,255,255,0.3)";
+    pct >= 100 ? "#22c55e" : pct >= 50 ? "#eab308" : "var(--theme-fg-faint)";
 
   return (
     <Box
@@ -772,7 +818,6 @@ function EnergyModal({
     >
       <Box
         className="energy-panel"
-        bg="#0a0a0a"
         borderRadius="3.5vmin"
         p="6vmin"
         minW="70vmin"
@@ -911,7 +956,7 @@ function EnergyModal({
         </VStack>
 
         {/* Today summary */}
-        <Box borderTop="1px solid rgba(255,255,255,0.06)" pt="3.5vmin">
+        <Box borderTop="1px solid var(--theme-divider)" pt="3.5vmin">
           <Text
             fontSize="2.2vmin"
             letterSpacing="0.16em"
@@ -973,21 +1018,6 @@ function EnergyModal({
               </Text>
             </VStack>
           </Grid>
-        </Box>
-
-        <Box
-          as="button"
-          alignSelf="center"
-          px="6vmin"
-          py="2vmin"
-          fontSize="2.8vmin"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.1em"
-          cursor="pointer"
-          onClick={requestClose}
-          style={{ WebkitTapHighlightColor: "transparent" }}
-        >
-          DONE
         </Box>
       </Box>
     </Box>

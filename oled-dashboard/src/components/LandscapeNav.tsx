@@ -103,7 +103,7 @@ export function LandscapeNav() {
 
   function handleClick(path: string) {
     navigate(path);
-    if (!LOCAL_ONLY_PATHS.has(path)) {
+    if (isFrame && !LOCAL_ONLY_PATHS.has(path)) {
       socket.emit("change", path.replace("/", ""));
     }
     setActiveView(path);

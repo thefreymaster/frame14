@@ -10,16 +10,19 @@ import {
   IoRemove,
   IoSnow,
 } from "react-icons/io5";
+import { MdAir } from "react-icons/md";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import type { HomeClimate } from "../hooks/useHomeData";
 
-type ClimateVisualMode = "heat" | "cool" | "off";
+type ClimateVisualMode = "heat" | "cool" | "fan_only" | "off";
 
 const HVAC_COLOR: Record<string, string> = {
   cool: "blue.400",
   cooling: "blue.400",
   heat: "orange.400",
   heating: "orange.400",
+  fan_only: "teal.300",
+  fan: "teal.300",
   off: "var(--theme-fg-faint)",
   auto: "green.500",
   unknown: "var(--theme-fg-faint)",
@@ -30,6 +33,8 @@ const HVAC_BADGE_BG: Record<string, string> = {
   cooling: "rgba(96, 165, 250, 0.12)",
   heat: "rgba(251, 146, 60, 0.12)",
   heating: "rgba(251, 146, 60, 0.12)",
+  fan_only: "rgba(94, 234, 212, 0.12)",
+  fan: "rgba(94, 234, 212, 0.12)",
   off: "rgba(255,255,255,0.05)",
   auto: "rgba(34, 197, 94, 0.12)",
   unknown: "rgba(255,255,255,0.05)",
@@ -38,11 +43,13 @@ const HVAC_BADGE_BG: Record<string, string> = {
 const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
   heating: "heat",
   cooling: "cool",
+  fan: "fan_only",
 };
 
 const HVAC_MODES: { key: ClimateVisualMode; label: string }[] = [
   { key: "heat", label: "HEAT" },
   { key: "cool", label: "COOL" },
+  { key: "fan_only", label: "FAN" },
   { key: "off", label: "OFF" },
 ];
 
@@ -51,7 +58,7 @@ const THERMOSTAT_EXIT_MS = 260;
 function normalizeClimateMode(
   mode: string | null | undefined,
 ): ClimateVisualMode {
-  if (mode === "heat" || mode === "cool") return mode;
+  if (mode === "heat" || mode === "cool" || mode === "fan_only") return mode;
   return "off";
 }
 
@@ -69,6 +76,7 @@ function getClimateAction(
     : null;
   if (liveAction) return liveAction;
   if (mode === "off") return null;
+  if (mode === "fan_only") return "fan_only";
 
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   if (currentTemp == null) return null;
@@ -133,44 +141,58 @@ function ClimateModal({
 
   const activeAction = getClimateAction(mode, unit, temp);
   const isOff = mode === "off";
+  const isFanOnly = mode === "fan_only";
+  const hidesTarget = isOff || isFanOnly;
   const isActive = activeAction === mode && !isOff;
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const previousTarget = fmtClimateTemp(unit.targetTemp);
-  const displayedTemp = isOff ? (currentTemp ?? previousTarget ?? temp) : temp;
-  const displayLabel = isOff
+  const displayedTemp = hidesTarget
+    ? (currentTemp ?? previousTarget ?? temp)
+    : temp;
+  const displayLabel = hidesTarget
     ? currentTemp != null
       ? "Indoor temperature"
       : previousTarget != null
         ? "Last target"
         : "Thermostat"
     : "Target temperature";
-  const detailLabel = isOff
-    ? previousTarget != null
-      ? `Last target ${previousTarget}°`
-      : "Choose heat or cool to wake it up"
-    : currentTemp != null
-      ? `Indoor ${currentTemp}°`
-      : "Connected to Home Assistant";
+  const detailLabel = isFanOnly
+    ? "Fan circulating air"
+    : isOff
+      ? previousTarget != null
+        ? `Last target ${previousTarget}°`
+        : "Choose heat or cool to wake it up"
+      : currentTemp != null
+        ? `Indoor ${currentTemp}°`
+        : "Connected to Home Assistant";
   const statusLabel =
     activeAction === "heat"
       ? "Heating now"
       : activeAction === "cool"
         ? "Cooling now"
-        : mode === "heat"
-          ? "Heat standby"
-          : mode === "cool"
-            ? "Cool standby"
-            : "System off";
+        : activeAction === "fan_only"
+          ? "Fan running"
+          : mode === "heat"
+            ? "Heat standby"
+            : mode === "cool"
+              ? "Cool standby"
+              : mode === "fan_only"
+                ? "Fan standby"
+                : "System off";
   const AccentIcon =
     activeAction === "heat"
       ? IoFlame
       : activeAction === "cool"
         ? IoSnow
-        : mode === "heat"
-          ? IoFlame
-          : mode === "cool"
-            ? IoSnow
-            : IoPowerOutline;
+        : activeAction === "fan_only"
+          ? MdAir
+          : mode === "heat"
+            ? IoFlame
+            : mode === "cool"
+              ? IoSnow
+              : mode === "fan_only"
+                ? MdAir
+                : IoPowerOutline;
 
   function applyMode(newMode: ClimateVisualMode) {
     if (newMode === mode) return;
@@ -238,7 +260,7 @@ function ClimateModal({
               <Box key={index} as="span" className="thermostat-particle" />
             ))}
           </Box>
-          {!isOff && (
+          {!hidesTarget && (
             <>
               <Box
                 as="button"
@@ -281,7 +303,9 @@ function ClimateModal({
                 ? IoFlame
                 : key === "cool"
                   ? IoSnow
-                  : IoPowerOutline;
+                  : key === "fan_only"
+                    ? MdAir
+                    : IoPowerOutline;
 
             return (
               <Box
@@ -311,7 +335,7 @@ function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
         ? "cooling"
         : null;
   const badgeKey = activeAction ?? displayMode ?? "unknown";
-  const statusLabel = badgeKey;
+  const statusLabel = badgeKey.replace(/_/g, " ");
   const badgeColor = HVAC_COLOR[badgeKey] ?? "var(--theme-fg-faint)";
   const badgeBg = HVAC_BADGE_BG[badgeKey] ?? "rgba(255,255,255,0.05)";
   const isOff = normalizeClimateMode(displayMode) === "off";

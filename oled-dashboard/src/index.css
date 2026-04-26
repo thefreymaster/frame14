@@ -67,6 +67,20 @@ body {
   --thermostat-text: #f4f7fb;
 }
 
+.thermostat-modal--fan_only {
+  --thermostat-accent: #5eead4;
+  --thermostat-accent-soft: rgba(94, 234, 212, 0.22);
+  --thermostat-accent-faint: rgba(94, 234, 212, 0.12);
+  --thermostat-accent-glow: rgba(94, 234, 212, 0.5);
+  --thermostat-status-bg: rgba(8, 60, 54, 0.4);
+  --thermostat-status-border: rgba(167, 243, 222, 0.18);
+  --thermostat-text: #ecfdf7;
+}
+
+.thermostat-modal--fan_only .thermostat-dial__weather {
+  background: radial-gradient(circle at 50% 100%, rgba(94, 234, 212, 0.28), rgba(20, 184, 166, 0.05) 60%, transparent 80%);
+}
+
 .thermostat-panel {
   position: relative;
   width: min(92vw, 78vmin);

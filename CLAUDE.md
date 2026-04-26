@@ -71,6 +71,12 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/timer` | `Timer` | Timer — frame-only nav item |
 | `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
+## Component Rules
+
+- Every React component lives in its own file under `src/components/<ComponentName>.tsx` (or a subfolder).
+- Route files in `src/routes/` compose components — they must not define multiple sibling components inline. Anti-pattern: `src/routes/HomeOverview.tsx` containing `Header`, `PrinterSection`, `EventList`, `CalendarSection`, etc. Extract each into `src/components/`.
+- Small helpers (formatters, type guards) used by one component stay in that component's file. Shared helpers go in `src/lib/`.
+
 ## Frontend Structure
 
 ```

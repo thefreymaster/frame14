@@ -1,7 +1,7 @@
 import { socket } from "./socket";
 
 export type ServiceName = "toggle" | "turn_on" | "turn_off";
-export type HvacMode = "heat" | "cool" | "off" | "auto";
+export type HvacMode = "heat" | "cool" | "off" | "auto" | "fan_only";
 
 export function callService(entityId: string, service: ServiceName = "toggle") {
   const domain = entityId.split(".")[0];

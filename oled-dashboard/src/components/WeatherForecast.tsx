@@ -90,6 +90,7 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
   return (
     <Box
       width="100%"
+      position="relative"
       display="grid"
       gridTemplateColumns={`repeat(${cols}, 1fr)`}
       gridTemplateRows="auto auto auto auto"
@@ -97,6 +98,19 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
       alignItems="center"
       justifyItems="center"
     >
+      {Array.from({ length: cols - 1 }, (_, i) => (
+        <Box
+          key={`divider-${i}`}
+          position="absolute"
+          top="0"
+          bottom="0"
+          left={`${((i + 1) * 100) / cols}%`}
+          width="1px"
+          bg="var(--theme-fg-dim)"
+          opacity={0.2}
+          pointerEvents="none"
+        />
+      ))}
       {periods.map((period, i) => (
         <Text
           key={`hour-${i}`}

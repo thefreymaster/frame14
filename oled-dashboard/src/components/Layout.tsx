@@ -4,7 +4,6 @@ import { SocketViewListener } from "./SocketViewListener";
 import { PageTransition } from "./PageTransition";
 import { PixelShift } from "./PixelShift";
 import { LandscapeNav } from "./LandscapeNav";
-import { StatusBanner } from "./StatusBanner";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useScreenType } from "../hooks/useScreenType";
 import { useReady } from "../hooks/useReady";
@@ -30,12 +29,11 @@ export function Layout() {
   return (
     <>
       <SocketViewListener />
-      <StatusBanner />
+
       {showNav && <LandscapeNav />}
       <Box
         height="100%"
         overflow={scrollable ? "auto" : "hidden"}
-        paddingTop="22px"
         css={
           showNav
             ? {
@@ -44,7 +42,8 @@ export function Layout() {
                   width: "calc(100vw - 56px)",
                 },
                 "@media (orientation: portrait)": {
-                  paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))",
+                  paddingBottom:
+                    "calc(64px + env(safe-area-inset-bottom, 0px))",
                 },
               }
             : undefined

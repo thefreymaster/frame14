@@ -360,7 +360,7 @@ body {
     transform 180ms ease,
     border-color 180ms ease,
     background 180ms ease;
-  z-index: 2;
+  z-index: 3;
 }
 
 .thermostat-step--down {
@@ -617,6 +617,97 @@ body {
   }
 }
 
+/* ── Thermostat bright-mode overrides ────────────────────────────────────── */
+
+[data-theme-mode="bright"] .thermostat-modal {
+  --thermostat-status-bg: rgba(255, 123, 73, 0.10);
+  --thermostat-status-border: rgba(200, 80, 30, 0.22);
+  --thermostat-text: #3d1a0a;
+  background:
+    radial-gradient(circle at 50% 24%, var(--thermostat-accent-faint) 0%, transparent 34%),
+    rgba(245, 247, 250, 0.96);
+}
+
+[data-theme-mode="bright"] .thermostat-modal--cool {
+  --thermostat-status-bg: rgba(77, 189, 255, 0.10);
+  --thermostat-status-border: rgba(40, 130, 200, 0.22);
+  --thermostat-text: #082944;
+}
+
+[data-theme-mode="bright"] .thermostat-modal--off {
+  --thermostat-status-bg: rgba(100, 110, 130, 0.08);
+  --thermostat-status-border: rgba(80, 90, 110, 0.20);
+  --thermostat-text: #1a202c;
+}
+
+[data-theme-mode="bright"] .thermostat-dial {
+  background: rgba(252, 253, 255, 0.98);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+
+[data-theme-mode="bright"] .thermostat-dial::before {
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+[data-theme-mode="bright"] .thermostat-room {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme-mode="bright"] .thermostat-status {
+  color: rgba(0, 0, 0, 0.72);
+}
+
+[data-theme-mode="bright"] .thermostat-temp-label {
+  color: rgba(0, 0, 0, 0.40);
+}
+
+[data-theme-mode="bright"] .thermostat-detail {
+  color: rgba(0, 0, 0, 0.58);
+}
+
+[data-theme-mode="bright"] .thermostat-dial--cool .thermostat-particle {
+  background: rgba(40, 140, 210, 0.75);
+  box-shadow: 0 0 1.2vmin rgba(30, 110, 190, 0.50);
+}
+
+[data-theme-mode="bright"] .thermostat-close {
+  background: rgba(255, 255, 255, 0.96);
+  color: rgba(0, 0, 0, 0.78);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme-mode="bright"] .thermostat-close:hover {
+  background: rgba(242, 244, 248, 0.98);
+}
+
+[data-theme-mode="bright"] .thermostat-step {
+  background: rgba(255, 255, 255, 0.98);
+  color: rgba(0, 0, 0, 0.78);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme-mode="bright"] .thermostat-step:hover {
+  background: rgba(242, 244, 248, 0.98);
+}
+
+[data-theme-mode="bright"] .thermostat-mode-strip {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+
+[data-theme-mode="bright"] .thermostat-mode-button {
+  color: rgba(0, 0, 0, 0.52);
+}
+
+[data-theme-mode="bright"] .thermostat-mode-button:hover {
+  color: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme-mode="bright"] .thermostat-mode-button--active {
+  color: rgba(0, 0, 0, 0.82);
+}
+
 /* ── Energy Modal ─────────────────────────────────────────────────────────── */
 
 .energy-modal {
@@ -639,6 +730,7 @@ body {
 .energy-panel {
   position: relative;
   transform-origin: 50% 50%;
+  background: #0a0a0a;
   animation: energyPanelIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -739,4 +831,27 @@ body {
   .energy-close {
     animation: none !important;
   }
+}
+
+/* ── Energy Modal bright-mode overrides ─────────────────────────────────── */
+
+[data-theme-mode="bright"] .energy-modal {
+  background:
+    radial-gradient(ellipse at 50% 0%, var(--energy-accent-faint) 0%, transparent 55%),
+    rgba(230, 235, 242, 0.96);
+}
+
+[data-theme-mode="bright"] .energy-panel {
+  background: #f5f7fa;
+}
+
+[data-theme-mode="bright"] .energy-close {
+  background: rgba(255, 255, 255, 0.96);
+  color: rgba(0, 0, 0, 0.78);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme-mode="bright"] .energy-close:hover {
+  background: rgba(242, 244, 248, 0.98);
+  border-color: rgba(251, 191, 36, 0.30);
 }

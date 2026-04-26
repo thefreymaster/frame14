@@ -37,3 +37,18 @@ export const IMMICH_URL = get("immich_url", "IMMICH_URL", "");
 export const IMMICH_API_KEY = get("immich_api_key", "IMMICH_API_KEY", "");
 export const PORT = Number(get("port", "PORT", "4000"));
 export const SCREEN_TYPE = get("screen_type", "SCREEN_TYPE", "oled");
+
+function loadAddonVersion() {
+  try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const yamlPath = path.join(__dirname, "config.yaml");
+    if (!fs.existsSync(yamlPath)) return "";
+    const text = fs.readFileSync(yamlPath, "utf-8");
+    const match = text.match(/^version:\s*["']?([^"'\s]+)["']?/m);
+    return match ? match[1] : "";
+  } catch {
+    return "";
+  }
+}
+
+export const VERSION = loadAddonVersion();

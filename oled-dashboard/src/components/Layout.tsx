@@ -29,6 +29,7 @@ export function Layout() {
   return (
     <>
       <SocketViewListener />
+
       {showNav && <LandscapeNav />}
       <Box
         height="100%"
@@ -41,7 +42,8 @@ export function Layout() {
                   width: "calc(100vw - 56px)",
                 },
                 "@media (orientation: portrait)": {
-                  paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))",
+                  paddingBottom:
+                    "calc(64px + env(safe-area-inset-bottom, 0px))",
                 },
               }
             : undefined

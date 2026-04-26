@@ -54,7 +54,7 @@ const io = new Server(httpServer, {
 // Make io available to route handlers via app.locals
 app.locals.io = io;
 io.currentView = "clock";
-io.themeMode = "auto";
+io.themeMode = "dark";
 
 io.on("connection", (socket) => {
   socket.emit("current_view", io.currentView);

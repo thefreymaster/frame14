@@ -93,10 +93,38 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
                 color={isExporting ? "green.400" : "orange.400"}
                 fontWeight="500"
               >
-                {isExporting ? "EXPORTING" : "IMPORTING"}
+                {isExporting ? "EXPORTING" : "IMPORTING"} {fmtW(gridAbs)}
               </Text>
             </Box>
           )}
+          <HStack gap="1.5vmin" ml="auto">
+            <HStack gap="0.6vmin" align="center">
+              <Box color="yellow.500" fontSize="2.2vmin" lineHeight="1">
+                <PiSolarRoof />
+              </Box>
+              <Text
+                fontSize="1.8vmin"
+                color="yellow.500"
+                letterSpacing="0.06em"
+                fontWeight="500"
+              >
+                {fmtW(currentProduction)}
+              </Text>
+            </HStack>
+            <HStack gap="0.6vmin" align="center">
+              <Box color="var(--theme-fg-dim)" fontSize="2.2vmin" lineHeight="1">
+                <IoFlash />
+              </Box>
+              <Text
+                fontSize="1.8vmin"
+                color="var(--theme-fg-dim)"
+                letterSpacing="0.06em"
+                fontWeight="500"
+              >
+                {fmtW(currentConsumption)}
+              </Text>
+            </HStack>
+          </HStack>
         </HStack>
         <Grid templateColumns="1fr 1fr 1fr" gap="2vmin" width="100%">
           <VStack align="flex-start" gap="0.5vmin">

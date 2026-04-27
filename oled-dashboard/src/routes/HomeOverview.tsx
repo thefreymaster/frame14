@@ -35,10 +35,7 @@ import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { StatusBanner } from "../components/StatusBanner";
 import { EnergySection } from "../components/EnergySection";
 import { ClimateSection } from "../components/ClimateSection";
-import {
-  ForecastSection,
-  getTodayHighLow,
-} from "../components/ForecastSection";
+import { ForecastSection } from "../components/ForecastSection";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
@@ -187,7 +184,7 @@ function Header({
             {weather.humidity != null && (
               <Text
                 fontSize="3.8vmin"
-                color="var(--theme-fg-faint)"
+                color="var(--theme-fg-dim)"
                 fontWeight="400"
               >
                 {weather.humidity}%
@@ -231,42 +228,14 @@ function Header({
         </Text>
         <Spacer />
         {weather && weather.temperature != null && (
-          <VStack gap="0" align="flex-end">
-            <Text
-              fontSize="14vmin"
-              fontWeight="300"
-              letterSpacing="-0.03em"
-              lineHeight="0.9"
-            >
-              <NumberFlow value={Math.round(weather.temperature)} />°
-            </Text>
-            {(() => {
-              const { high, low } = getTodayHighLow(weather.forecast);
-              if (high == null && low == null) return null;
-              return (
-                <HStack gap="2vmin">
-                  {high != null && (
-                    <Text
-                      fontSize="3.2vmin"
-                      fontWeight="400"
-                      color="var(--theme-fg-dim)"
-                    >
-                      H {Math.round(high)}°
-                    </Text>
-                  )}
-                  {low != null && (
-                    <Text
-                      fontSize="3.2vmin"
-                      fontWeight="400"
-                      color="var(--theme-fg-faint)"
-                    >
-                      L {Math.round(low)}°
-                    </Text>
-                  )}
-                </HStack>
-              );
-            })()}
-          </VStack>
+          <Text
+            fontSize="14vmin"
+            fontWeight="300"
+            letterSpacing="-0.03em"
+            lineHeight="0.9"
+          >
+            <NumberFlow value={Math.round(weather.temperature)} />°
+          </Text>
         )}
       </HStack>
 

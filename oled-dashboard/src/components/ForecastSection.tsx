@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, HStack, Text } from "@chakra-ui/react";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { WeatherForecast } from "./WeatherForecast";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
@@ -10,9 +10,34 @@ interface Props {
 
 export function ForecastSection({ forecast, count = 6 }: Props) {
   if (!forecast.length) return null;
+  const { high, low } = getTodayHighLow(forecast);
   return (
     <Box width="100%" mt="2vmin">
-      <SectionTitle>FORECAST</SectionTitle>
+      <HStack justify="space-between" align="baseline" gap="2vmin">
+        <SectionTitle>FORECAST</SectionTitle>
+        {(high != null || low != null) && (
+          <HStack gap="2vmin">
+            {high != null && (
+              <Text
+                fontSize="2.2vmin"
+                color="var(--theme-fg-dim)"
+                letterSpacing="0.1em"
+              >
+                H {Math.round(high)}°
+              </Text>
+            )}
+            {low != null && (
+              <Text
+                fontSize="2.2vmin"
+                color="var(--theme-fg-dim)"
+                letterSpacing="0.1em"
+              >
+                L {Math.round(low)}°
+              </Text>
+            )}
+          </HStack>
+        )}
+      </HStack>
       <WeatherForecast forecast={forecast} count={count} />
     </Box>
   );

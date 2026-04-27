@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.16.0"
+version: "0.17.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame

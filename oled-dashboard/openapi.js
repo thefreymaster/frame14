@@ -85,6 +85,37 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/home/weather": {
+      get: {
+        tags: ["Weather"],
+        operationId: "getHomeWeather",
+        summary: "Get current weather and hourly forecast for HomeOverview",
+        description:
+          "Fetches the configured weather entity from Home Assistant plus an hourly forecast via the weather.get_forecasts service. Returns current state, temperature, humidity, and the next 8 hourly forecast periods.",
+        responses: {
+          200: {
+            description: "Current weather and hourly forecast.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/HomeWeatherResponse" },
+              },
+            },
+          },
+          503: {
+            description: "HA_TOKEN is not configured.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          502: {
+            description: "Home Assistant returned an error.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          500: {
+            description: "Failed to fetch weather from Home Assistant.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+        },
+      },
+    },
     "/api/photos/albums": {
       get: {
         tags: ["Photos"],
@@ -311,6 +342,19 @@ export const openApiDocument = {
           example: "demo.mp4",
         },
       },
+      ForecastPeriod: {
+        type: "object",
+        properties: {
+          datetime: { type: "string", format: "date-time", example: "2026-04-26T15:00:00+00:00" },
+          temperature: { type: "number", example: 68 },
+          templow: { type: "number", nullable: true, example: 54 },
+          condition: { type: "string", example: "partlycloudy" },
+          precipitation: { type: "number", nullable: true, example: 0 },
+          precipitationProbability: { type: "number", nullable: true, example: 20 },
+          windSpeed: { type: "number", nullable: true, example: 10 },
+          windBearing: { type: "number", nullable: true, example: 180 },
+        },
+      },
       WeatherResponse: {
         type: "object",
         properties: {
@@ -318,18 +362,32 @@ export const openApiDocument = {
           temperature: { type: "number", example: 68 },
           temperatureUnit: { type: "string", example: "°F" },
           humidity: { type: "number", example: 55 },
-          windSpeed: { type: "string", example: "10 mph" },
+          windSpeed: { type: "number", example: 10 },
+          windBearing: { type: "number", example: 180 },
+          pressure: { type: "number", example: 30.1 },
+          visibility: { type: "number", example: 10 },
           forecast: {
             type: "array",
-            items: {
-              type: "object",
-              properties: {
-                datetime: { type: "string" },
-                temperature: { type: "number" },
-                condition: { type: "string" },
-                precipitationProbability: { type: "number" },
-              },
-            },
+            description: "Forecast periods from the entity's `forecast` attribute (up to 8).",
+            items: { $ref: "#/components/schemas/ForecastPeriod" },
+          },
+          forecastDaily: {
+            type: "array",
+            description: "Hourly forecast from the weather.get_forecasts service (up to 8).",
+            items: { $ref: "#/components/schemas/ForecastPeriod" },
+          },
+        },
+      },
+      HomeWeatherResponse: {
+        type: "object",
+        properties: {
+          state: { type: "string", example: "partlycloudy" },
+          temperature: { type: "number", example: 68 },
+          humidity: { type: "number", example: 55 },
+          forecast: {
+            type: "array",
+            description: "Hourly forecast (up to 8 periods).",
+            items: { $ref: "#/components/schemas/ForecastPeriod" },
           },
         },
       },

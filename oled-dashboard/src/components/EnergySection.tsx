@@ -17,7 +17,12 @@ const GRID_ACTIVE_THRESHOLD = 5;
 
 export function EnergySection({ energy }: { energy: HomeEnergy }) {
   const [showModal, setShowModal] = useState(false);
-  const { productionToday, consumptionToday, currentProduction, currentConsumption } = energy;
+  const {
+    productionToday,
+    consumptionToday,
+    currentProduction,
+    currentConsumption,
+  } = energy;
   const pct =
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
   const pctColor =
@@ -43,7 +48,13 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
         onClick={() => setShowModal(true)}
         style={{ WebkitTapHighlightColor: "transparent" }}
       >
-        <HStack align="center" gap="1.5vmin" mb="1.5vmin">
+        <HStack
+          align="center"
+          gap="1.5vmin"
+          mb="1.5vmin"
+          pt="1.5vmin"
+          width="100%"
+        >
           <Text
             fontSize="2.2vmin"
             color="var(--theme-fg-faint)"

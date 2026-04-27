@@ -286,14 +286,7 @@ function PrinterSection({ printer }: { printer: HomePrinter }) {
 
   return (
     <Box width="100%">
-      <Text
-        fontSize="2.6vmin"
-        color="var(--theme-fg-faint)"
-        letterSpacing="0.14em"
-        mb="1.5vmin"
-      >
-        3D PRINTER
-      </Text>
+      <SectionTitle>3D PRINTER</SectionTitle>
       <HStack width="100%" justify="space-between" align="baseline">
         <Text
           fontSize="3.8vmin"
@@ -501,7 +494,8 @@ export function HomeOverview() {
         flexDirection={isLandscape ? "row" : "column"}
         alignItems={isLandscape ? "flex-start" : "center"}
         justifyContent={isLandscape ? "flex-start" : "space-between"}
-        p={isLandscape ? "8" : { base: "6", md: "16" }}
+        px={isLandscape ? "8" : { base: "6", md: "16" }}
+        py={isLandscape ? "8" : { base: "3", md: "6" }}
         gap={isLandscape ? "4vmin" : "0"}
       >
         {isLandscape ? (
@@ -515,11 +509,7 @@ export function HomeOverview() {
               gap="3vmin"
             >
               <Header internet={data.internet} weather={data.weather} />
-              {printerActive && (
-                <>
-                  <PrinterSection printer={data.printer} />
-                </>
-              )}
+              {printerActive && <PrinterSection printer={data.printer} />}
             </Box>
 
             {/* Right column — details */}
@@ -534,12 +524,10 @@ export function HomeOverview() {
               <ClimateSection climate={data.climate} />
               <EnergySection energy={data.energy} />
               {hasCalendar && (
-                <>
-                  <CalendarSection
-                    today={data.calendar.today}
-                    tomorrow={data.calendar.tomorrow}
-                  />
-                </>
+                <CalendarSection
+                  today={data.calendar.today}
+                  tomorrow={data.calendar.tomorrow}
+                />
               )}
             </Box>
           </>
@@ -547,20 +535,14 @@ export function HomeOverview() {
           <>
             <Header internet={data.internet} weather={data.weather} />
             {hasCalendar && (
-              <>
-                <CalendarSection
-                  today={data.calendar.today}
-                  tomorrow={data.calendar.tomorrow}
-                />
-              </>
+              <CalendarSection
+                today={data.calendar.today}
+                tomorrow={data.calendar.tomorrow}
+              />
             )}
             <ClimateSection climate={data.climate} />
             <EnergySection energy={data.energy} />
-            {printerActive && (
-              <>
-                <PrinterSection printer={data.printer} />
-              </>
-            )}
+            {printerActive && <PrinterSection printer={data.printer} />}
           </>
         )}
       </Box>

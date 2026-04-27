@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import {
   WiDaySunny,
@@ -19,6 +20,8 @@ import {
   WiStrongWind,
   WiNa,
 } from "react-icons/wi";
+import type { HomeForecastPeriod } from "../hooks/useHomeData";
+import { ForecastDetailModal } from "./ForecastDetailModal";
 
 type IconComponent = React.ComponentType<{
   size?: string | number;
@@ -71,102 +74,123 @@ function formatHour(datetime: string) {
   return `${h - 12}pm`;
 }
 
-interface ForecastItem {
-  datetime: string;
-  temperature: number | null;
-  condition: string | null;
-  precipitationProbability: number | null;
-}
-
 interface Props {
-  forecast: ForecastItem[];
+  forecast: HomeForecastPeriod[];
   count?: number;
 }
 
 export function WeatherForecast({ forecast, count = 5 }: Props) {
   const periods = forecast.slice(0, count);
   const cols = periods.length;
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const selected = selectedIndex != null ? periods[selectedIndex] : null;
 
   return (
-    <Box
-      width="100%"
-      position="relative"
-      display="grid"
-      gridTemplateColumns={`repeat(${cols}, 1fr)`}
-      gridTemplateRows="auto auto auto auto"
-      rowGap="1vmin"
-      alignItems="center"
-      justifyItems="center"
-    >
-      {Array.from({ length: cols - 1 }, (_, i) => (
-        <Box
-          key={`divider-${i}`}
-          position="absolute"
-          top="0"
-          bottom="0"
-          left={`${((i + 1) * 100) / cols}%`}
-          width="1px"
-          bg="var(--theme-fg-dim)"
-          opacity={0.2}
-          pointerEvents="none"
+    <>
+      {selected && (
+        <ForecastDetailModal
+          period={selected}
+          onClose={() => setSelectedIndex(null)}
         />
-      ))}
-      {periods.map((period, i) => (
-        <Text
-          key={`hour-${i}`}
-          gridRow={1}
-          fontSize="2.8vmin"
-          color="var(--theme-fg-dim)"
-          letterSpacing="0.05em"
-          textAlign="center"
-        >
-          {formatHour(period.datetime)}
-        </Text>
-      ))}
-      {periods.map((period, i) => (
-        <Box
-          key={`icon-${i}`}
-          gridRow={2}
-          fontSize="7vmin"
-          lineHeight="1"
-          color="var(--theme-fg-dim)"
-        >
-          {(() => {
-            const Icon = getIcon(period.condition ?? "", period.datetime);
-            return <Icon size="1em" />;
-          })()}
-        </Box>
-      ))}
-      {periods.map((period, i) => (
-        <Text
-          key={`temp-${i}`}
-          gridRow={3}
-          fontSize="4.5vmin"
-          color="var(--theme-fg-dim)"
-          fontWeight="300"
-          textAlign="center"
-          opacity={i === 0 ? 1 : 0.65}
-        >
-          {period.temperature != null
-            ? `${Math.round(period.temperature)}°`
-            : "—"}
-        </Text>
-      ))}
-      {periods.map((period, i) =>
-        period.precipitationProbability != null &&
-        period.precipitationProbability > 0 ? (
+      )}
+      <Box
+        width="100%"
+        position="relative"
+        display="grid"
+        gridTemplateColumns={`repeat(${cols}, 1fr)`}
+        gridTemplateRows="auto auto auto auto"
+        rowGap="1vmin"
+        alignItems="center"
+        justifyItems="center"
+      >
+        {Array.from({ length: cols - 1 }, (_, i) => (
+          <Box
+            key={`divider-${i}`}
+            position="absolute"
+            top="0"
+            bottom="0"
+            left={`${((i + 1) * 100) / cols}%`}
+            width="1px"
+            bg="var(--theme-fg-dim)"
+            opacity={0.2}
+            pointerEvents="none"
+          />
+        ))}
+        {periods.map((period, i) => (
           <Text
-            key={`precip-${i}`}
-            gridRow={4}
+            key={`hour-${i}`}
+            gridRow={1}
             fontSize="2.8vmin"
-            color="blue.400"
+            color="var(--theme-fg-dim)"
+            letterSpacing="0.05em"
+            textAlign="center"
+          >
+            {formatHour(period.datetime)}
+          </Text>
+        ))}
+        {periods.map((period, i) => (
+          <Box
+            key={`icon-${i}`}
+            gridRow={2}
+            fontSize="7vmin"
+            lineHeight="1"
+            color="var(--theme-fg-dim)"
+          >
+            {(() => {
+              const Icon = getIcon(period.condition ?? "", period.datetime);
+              return <Icon size="1em" />;
+            })()}
+          </Box>
+        ))}
+        {periods.map((period, i) => (
+          <Text
+            key={`temp-${i}`}
+            gridRow={3}
+            fontSize="4.5vmin"
+            color="var(--theme-fg-dim)"
+            fontWeight="300"
             textAlign="center"
             opacity={i === 0 ? 1 : 0.65}
           >
-            {period.precipitationProbability}%
+            {period.temperature != null
+              ? `${Math.round(period.temperature)}°`
+              : "—"}
           </Text>
-        ) : null,
-      )}
-    </Box>
+        ))}
+        {periods.map((period, i) =>
+          period.precipitationProbability != null &&
+          period.precipitationProbability > 0 ? (
+            <Text
+              key={`precip-${i}`}
+              gridRow={4}
+              fontSize="2.8vmin"
+              color="blue.400"
+              textAlign="center"
+              opacity={i === 0 ? 1 : 0.65}
+            >
+              {period.precipitationProbability}%
+            </Text>
+          ) : null,
+        )}
+        {periods.map((_, i) => (
+          <Box
+            key={`hit-${i}`}
+            as="button"
+            aria-label={`Show forecast detail for ${formatHour(periods[i].datetime)}`}
+            position="absolute"
+            top="0"
+            bottom="0"
+            left={`${(i * 100) / cols}%`}
+            width={`${100 / cols}%`}
+            bg="transparent"
+            border="none"
+            cursor="pointer"
+            zIndex={1}
+            onClick={() => setSelectedIndex(i)}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+          />
+        ))}
+      </Box>
+    </>
   );
 }

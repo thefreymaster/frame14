@@ -1,4 +1,5 @@
 import { Box, HStack, Text } from "@chakra-ui/react";
+import { MdWifi, MdWifiOff } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
 import { useVersion } from "../hooks/useVersion";
 import { ApplianceIndicators } from "./ApplianceIndicators";
@@ -6,7 +7,8 @@ import { ApplianceIndicators } from "./ApplianceIndicators";
 export function StatusBanner() {
   const { connected } = useSocket();
   const version = useVersion();
-  const dotColor = connected ? "#22c55e" : "#ef4444";
+  const iconColor = connected ? "#22c55e" : "#ef4444";
+  const Icon = connected ? MdWifi : MdWifiOff;
 
   return (
     <Box
@@ -31,25 +33,9 @@ export function StatusBanner() {
             v{version}
           </Text>
         )}
-        <HStack gap="5px">
-          <Box
-            as="span"
-            display="inline-block"
-            w="6px"
-            h="6px"
-            borderRadius="full"
-            bg={dotColor}
-            boxShadow={`0 0 4px ${dotColor}`}
-            flexShrink={0}
-          />
-          <Text
-            fontSize="10px"
-            color="var(--theme-fg-muted)"
-            letterSpacing="0.05em"
-          >
-            {connected ? "connected" : "disconnected"}
-          </Text>
-        </HStack>
+        <Box as="span" display="inline-flex" color={iconColor} flexShrink={0}>
+          <Icon size={12} />
+        </Box>
         <ApplianceIndicators />
       </HStack>
     </Box>

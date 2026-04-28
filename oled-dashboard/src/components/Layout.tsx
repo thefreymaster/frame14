@@ -5,6 +5,7 @@ import { PageTransition } from "./PageTransition";
 import { LandscapeNav } from "./LandscapeNav";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useReady } from "../hooks/useReady";
+import { getDeviceMode } from "../lib/deviceMode";
 
 export function Layout() {
   useThemeMode();
@@ -14,7 +15,8 @@ export function Layout() {
   const isLights = location.pathname === "/lights";
   const isBlank = location.pathname === "/blank";
   const showNav = !isBlank;
-  const scrollable = isControl || isLights;
+  const isController = getDeviceMode() === "controller";
+  const scrollable = isControl || isLights || isController;
 
   const content = (
     <PageTransition key={location.pathname}>
@@ -41,6 +43,8 @@ export function Layout() {
                   },
                   "@media (orientation: portrait)": {
                     minW: "calc(100%)",
+                    paddingBottom:
+                      "calc(64px + env(safe-area-inset-bottom, 0px))",
                   },
                 }
               : undefined

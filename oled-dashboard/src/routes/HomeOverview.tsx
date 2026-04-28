@@ -396,9 +396,10 @@ export function HomeOverview() {
       <StatusBanner />
       <Box
         width="100%"
-        height="100%"
+        height={isLandscape ? "100%" : "auto"}
+        minHeight={isLandscape ? undefined : "100%"}
         bg="var(--theme-bg)"
-        overflow="hidden"
+        overflow={isLandscape ? "hidden" : "visible"}
         display="flex"
         flexDirection={isLandscape ? "row" : "column"}
         alignItems={isLandscape ? "flex-start" : "stretch"}

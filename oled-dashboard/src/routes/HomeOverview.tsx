@@ -455,8 +455,8 @@ export function HomeOverview() {
         overflow="hidden"
         display="flex"
         flexDirection={isLandscape ? "row" : "column"}
-        alignItems={isLandscape ? "flex-start" : "center"}
-        justifyContent={isLandscape ? "flex-start" : "space-between"}
+        alignItems={isLandscape ? "flex-start" : "stretch"}
+        justifyContent="flex-start"
         gap={1}
         padding="1"
       >

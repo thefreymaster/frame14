@@ -24,7 +24,7 @@ export function LightsSection({ title, entries }: Props) {
         gap="min(2.2vmin, 10px)"
         width="100%"
         css={{
-          gridTemplateColumns: "repeat(3, 1fr)",
+          gridTemplateColumns: "repeat(4, 1fr)",
           "@media (orientation: landscape)": {
             gridTemplateColumns: "repeat(6, 1fr)",
           },

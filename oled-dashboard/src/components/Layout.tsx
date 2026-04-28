@@ -26,10 +26,10 @@ export function Layout() {
     <>
       <SocketViewListener />
 
-      <HStack gap="0">
+      <HStack gap="0" align="stretch">
         <LandscapeNav />
         <Box
-          minHeight="100vh"
+          height="100dvh"
           overflow={scrollable ? "auto" : "hidden"}
           css={
             showNav

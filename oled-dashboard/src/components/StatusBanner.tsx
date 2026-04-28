@@ -1,6 +1,7 @@
 import { Box, HStack, Text } from "@chakra-ui/react";
 import { useSocket } from "../hooks/useSocket";
 import { useVersion } from "../hooks/useVersion";
+import { ApplianceIndicators } from "./ApplianceIndicators";
 
 export function StatusBanner() {
   const { connected } = useSocket();
@@ -49,6 +50,7 @@ export function StatusBanner() {
             {connected ? "connected" : "disconnected"}
           </Text>
         </HStack>
+        <ApplianceIndicators />
       </HStack>
     </Box>
   );

@@ -471,7 +471,8 @@ export function HomeOverview() {
               gap="1"
             >
               <Header internet={data.internet} weather={data.weather} />
-              {printerActive && <PrinterSection printer={data.printer} />}
+              <EnergySection energy={data.energy} />
+              <PrinterSection printer={data.printer} />
             </Box>
 
             {/* Right column — details */}
@@ -484,7 +485,6 @@ export function HomeOverview() {
               overflowY="auto"
             >
               <ClimateSection climate={data.climate} />
-              <EnergySection energy={data.energy} />
               {hasCalendar && (
                 <CalendarSection
                   today={data.calendar.today}

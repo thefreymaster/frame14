@@ -31,11 +31,13 @@ export function Layout() {
         <Box
           height="100dvh"
           overflow={scrollable ? "auto" : "hidden"}
+          pt="env(safe-area-inset-top, 0px)"
           css={
             showNav
               ? {
                   "@media (orientation: landscape)": {
                     minW: "calc(100vw - 68px)",
+                    paddingLeft: "env(safe-area-inset-left, 0px)",
                   },
                   "@media (orientation: portrait)": {
                     minW: "calc(100%)",

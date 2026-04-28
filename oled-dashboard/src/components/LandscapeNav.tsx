@@ -198,14 +198,14 @@ export function LandscapeNav() {
         bottom={0}
         left={0}
         right={0}
-        height="calc(64px + env(safe-area-inset-bottom, 0px))"
+        height="calc(52px + env(safe-area-inset-bottom, 0px))"
         pb="env(safe-area-inset-bottom, 0px)"
         bg="var(--theme-bg)"
         borderTop="1px solid"
         borderColor="var(--theme-divider)"
         zIndex={100}
       >
-        <HStack gap="0" align="stretch" height="64px" px="4px">
+        <HStack gap="0" align="stretch" height="52px" px="4px">
           {portraitItems.map(renderItem)}
         </HStack>
       </Box>

@@ -106,6 +106,7 @@ src/
     LightsSection.tsx             — renders a group of LightEntry controls
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
+    PrinterSection.tsx            — 3D printer card + click-to-open detail modal (temps, layers, ETA, filament)
     Divider.tsx                   — thin themed divider line
     ViewButton.tsx                — styled outline/solid toggle button
   hooks/

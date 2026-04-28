@@ -42,6 +42,8 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
 
   if (!isActive) return null;
 
+  const cardProgress = Math.max(0, Math.min(100, printer.progress || 0));
+
   return (
     <>
       {showModal && (
@@ -75,6 +77,21 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
             </Text>
           </HStack>
         </HStack>
+        <Box
+          mt="1.5vmin"
+          height="0.7vmin"
+          borderRadius="999px"
+          bg="rgba(255,255,255,0.08)"
+          overflow="hidden"
+          width="100%"
+        >
+          <Box
+            height="100%"
+            width={`${cardProgress}%`}
+            bg="green.500"
+            transition="width 600ms ease"
+          />
+        </Box>
       </Board>
     </>
   );

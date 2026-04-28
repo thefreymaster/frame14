@@ -33,12 +33,19 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { path: "/home", label: "Home", icon: RiHome5Line, activeIcon: RiHome5Fill },
-  { path: "/clock", label: "Clock", icon: IoTimeOutline, activeIcon: IoTime },
+  {
+    path: "/clock",
+    label: "Clock",
+    icon: IoTimeOutline,
+    activeIcon: IoTime,
+    frameOnly: true,
+  },
   {
     path: "/photos",
     label: "Photos",
     icon: IoImagesOutline,
     activeIcon: IoImages,
+    frameOnly: true,
   },
   {
     path: "/lights",

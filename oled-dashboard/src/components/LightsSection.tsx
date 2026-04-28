@@ -9,7 +9,10 @@ type Props = {
 
 export function LightsSection({ title, entries }: Props) {
   return (
-    <Box width="100%">
+    <Box
+      width="100%"
+      css={{ "&:not(:has([data-light-entry]))": { display: "none" } }}
+    >
       <Text
         fontSize="min(2.8vmin, 12px)"
         color="var(--theme-fg-faint)"
@@ -24,9 +27,9 @@ export function LightsSection({ title, entries }: Props) {
         gap="min(2.2vmin, 10px)"
         width="100%"
         css={{
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
           "@media (orientation: landscape)": {
-            gridTemplateColumns: "repeat(6, 1fr)",
+            gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
           },
         }}
       >

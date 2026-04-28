@@ -32,6 +32,7 @@ export function LightControl({ entity_id, name, Icon }: Props) {
     <Box
       as="button"
       onClick={handleClick}
+      data-light-entry=""
       position="relative"
       aspectRatio="1"
       borderRadius="10px"

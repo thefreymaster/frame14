@@ -42,6 +42,20 @@ export interface HomePrinter {
   remainingTime: number;
   taskName: string | null;
   finishTime: string | null;
+  nozzleTemp: number | null;
+  nozzleTarget: number | null;
+  bedTemp: number | null;
+  bedTarget: number | null;
+  currentLayer: number | null;
+  totalLayers: number | null;
+  currentStage: string | null;
+  endTime: string | null;
+  startTime: string | null;
+  printLength: number | null;
+  printWeight: number | null;
+  activeTray: string | null;
+  speedProfile: string | null;
+  gcodeFilename: string | null;
 }
 
 export interface HomeEnergy {
@@ -106,6 +120,52 @@ const PERSON_ENTITIES = [
   { id: "person.evan", name: "Evan" },
   { id: "person.elizabeth", name: "Elizabeth" },
 ] as const;
+
+const PRINTER_EXTRA_KEYS = [
+  "nozzleTemp",
+  "nozzleTarget",
+  "bedTemp",
+  "bedTarget",
+  "currentLayer",
+  "totalLayers",
+  "currentStage",
+  "endTime",
+  "startTime",
+  "printLength",
+  "printWeight",
+  "activeTray",
+  "speedProfile",
+  "gcodeFilename",
+] as const;
+
+type PrinterExtraKey = (typeof PRINTER_EXTRA_KEYS)[number];
+
+const PRINTER_EXTRA_IDS: Record<PrinterExtraKey, string> = {
+  nozzleTemp: "sensor.a1_03919c442700723_nozzle_temperature",
+  nozzleTarget: "sensor.a1_03919c442700723_nozzle_target_temperature",
+  bedTemp: "sensor.a1_03919c442700723_bed_temperature",
+  bedTarget: "sensor.a1_03919c442700723_bed_target_temperature",
+  currentLayer: "sensor.a1_03919c442700723_current_layer",
+  totalLayers: "sensor.a1_03919c442700723_total_layer_count",
+  currentStage: "sensor.a1_03919c442700723_current_stage",
+  endTime: "sensor.a1_03919c442700723_end_time",
+  startTime: "sensor.a1_03919c442700723_start_time",
+  printLength: "sensor.a1_03919c442700723_print_length",
+  printWeight: "sensor.a1_03919c442700723_print_weight",
+  activeTray: "sensor.a1_03919c442700723_active_tray",
+  speedProfile: "sensor.a1_03919c442700723_speed_profile",
+  gcodeFilename: "sensor.a1_03919c442700723_gcode_filename",
+};
+
+const PRINTER_EXTRA_ID_LIST = PRINTER_EXTRA_KEYS.map(
+  (key) => PRINTER_EXTRA_IDS[key],
+);
+
+function cleanString(value: string | undefined | null): string | null {
+  if (!value) return null;
+  if (value === "unavailable" || value === "unknown") return null;
+  return value;
+}
 
 function parseFloatOrNull(
   value: number | string | undefined | null,
@@ -268,6 +328,7 @@ export function useHomeData() {
   );
   const printerTask = useEntity("sensor.a1_03919c442700723_task_name");
   const printerFinish = useEntity("sensor.a1_finish_time");
+  const printerExtras = useEntities(PRINTER_EXTRA_ID_LIST);
 
   // Internet
   const ping = useEntity("binary_sensor.1_1_1_1");
@@ -355,22 +416,35 @@ export function useHomeData() {
     [personEvan.data, personElizabeth.data],
   );
 
-  const homePrinter = useMemo<HomePrinter>(
-    () => ({
-      status: printerStatus.data?.state ?? "unknown",
-      progress: parseFloatOrZero(printerProgress.data?.state),
-      remainingTime: parseFloatOrZero(printerRemaining.data?.state),
-      taskName: printerTask.data?.state ?? null,
-      finishTime: printerFinish.data?.state ?? null,
-    }),
-    [
-      printerStatus.data,
-      printerProgress.data,
-      printerRemaining.data,
-      printerTask.data,
-      printerFinish.data,
-    ],
-  );
+  const printerExtraStateByKey: Record<PrinterExtraKey, string | undefined> =
+    PRINTER_EXTRA_KEYS.reduce(
+      (acc, key, index) => {
+        acc[key] = printerExtras[index]?.data?.state;
+        return acc;
+      },
+      {} as Record<PrinterExtraKey, string | undefined>,
+    );
+  const homePrinter: HomePrinter = {
+    status: printerStatus.data?.state ?? "unknown",
+    progress: parseFloatOrZero(printerProgress.data?.state),
+    remainingTime: parseFloatOrZero(printerRemaining.data?.state),
+    taskName: cleanString(printerTask.data?.state),
+    finishTime: cleanString(printerFinish.data?.state),
+    nozzleTemp: parseFloatOrNull(printerExtraStateByKey.nozzleTemp),
+    nozzleTarget: parseFloatOrNull(printerExtraStateByKey.nozzleTarget),
+    bedTemp: parseFloatOrNull(printerExtraStateByKey.bedTemp),
+    bedTarget: parseFloatOrNull(printerExtraStateByKey.bedTarget),
+    currentLayer: parseFloatOrNull(printerExtraStateByKey.currentLayer),
+    totalLayers: parseFloatOrNull(printerExtraStateByKey.totalLayers),
+    currentStage: cleanString(printerExtraStateByKey.currentStage),
+    endTime: cleanString(printerExtraStateByKey.endTime),
+    startTime: cleanString(printerExtraStateByKey.startTime),
+    printLength: parseFloatOrNull(printerExtraStateByKey.printLength),
+    printWeight: parseFloatOrNull(printerExtraStateByKey.printWeight),
+    activeTray: cleanString(printerExtraStateByKey.activeTray),
+    speedProfile: cleanString(printerExtraStateByKey.speedProfile),
+    gcodeFilename: cleanString(printerExtraStateByKey.gcodeFilename),
+  };
 
   const liveEnergyByKey = new Map(
     energyEntities.map(({ key }, index) => [key, energyStates[index]?.data]),

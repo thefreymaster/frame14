@@ -54,7 +54,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
         >
           <Text
             fontSize="2.2vmin"
-            color="var(--theme-fg-faint)"
+            color="var(--theme-fg-dim)"
             letterSpacing="0.1em"
           >
             ENERGY

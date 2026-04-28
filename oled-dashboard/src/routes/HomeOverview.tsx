@@ -20,7 +20,6 @@ import NumberFlow from "@number-flow/react";
 import { useHomeData } from "../hooks/useHomeData";
 import type {
   HomeInternet,
-  HomePrinter,
   HomeWeather,
   HomeCalendarEvent,
 } from "../hooks/useHomeData";
@@ -29,6 +28,7 @@ import { StatusBanner } from "../components/StatusBanner";
 import { EnergySection } from "../components/EnergySection";
 import { ClimateSection } from "../components/ClimateSection";
 import { ForecastSection } from "../components/ForecastSection";
+import { PrinterSection } from "../components/PrinterSection";
 import { Board } from "../components/Board";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -99,13 +99,6 @@ const CONDITION_LABEL: Record<string, string> = {
 //   windy: WiStrongWind,
 //   "windy-variant": WiStrongWind,
 // };
-
-function fmtMins(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
 
 // ── Orientation hook ─────────────────────────────────────────────────────────
 
@@ -234,48 +227,6 @@ function Header({
       </HStack>
 
       {weather && <ForecastSection forecast={weather.forecast} count={6} />}
-    </Board>
-  );
-}
-
-// ── Printer ───────────────────────────────────────────────────────────────────
-
-function PrinterSection({ printer }: { printer: HomePrinter }) {
-  const isActive =
-    printer.status === "running" ||
-    printer.status === "printing" ||
-    printer.status === "pause";
-  if (!isActive) return null;
-
-  return (
-    <Board>
-      <SectionTitle>3D PRINTER</SectionTitle>
-      <HStack width="100%" justify="space-between" align="baseline">
-        <Text
-          fontSize="3.8vmin"
-          color="var(--theme-fg-dim)"
-          fontWeight="300"
-          overflow="hidden"
-          whiteSpace="nowrap"
-          textOverflow="ellipsis"
-          maxW="45vmin"
-        >
-          {printer.taskName ?? "—"}
-        </Text>
-        <HStack align="baseline" gap="4vmin">
-          <Text
-            fontSize="5.5vmin"
-            color="green.500"
-            fontWeight="300"
-            lineHeight="1"
-          >
-            <NumberFlow value={printer.progress} />%
-          </Text>
-          <Text fontSize="4vmin" color="var(--theme-fg-dim)" fontWeight="300">
-            {fmtMins(printer.remainingTime)}
-          </Text>
-        </HStack>
-      </HStack>
     </Board>
   );
 }
@@ -437,11 +388,6 @@ export function HomeOverview() {
     );
   }
 
-  const printerActive =
-    data.printer.status === "running" ||
-    data.printer.status === "printing" ||
-    data.printer.status === "pause";
-
   const hasCalendar =
     data.calendar?.today?.length > 0 || data.calendar?.tomorrow?.length > 0;
 
@@ -504,7 +450,7 @@ export function HomeOverview() {
             )}
             <ClimateSection climate={data.climate} />
             <EnergySection energy={data.energy} />
-            {printerActive && <PrinterSection printer={data.printer} />}
+            <PrinterSection printer={data.printer} />
           </>
         )}
       </Box>

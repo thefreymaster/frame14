@@ -150,7 +150,6 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
             color="var(--theme-fg-dim)"
             fontWeight="300"
             textAlign="center"
-            opacity={i === 0 ? 1 : 0.65}
           >
             {period.temperature != null
               ? `${Math.round(period.temperature)}°`

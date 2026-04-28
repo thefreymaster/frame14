@@ -198,8 +198,8 @@ export function LandscapeNav() {
         bottom={0}
         left={0}
         right={0}
-        height="calc(52px + env(safe-area-inset-bottom, 0px))"
-        pb="env(safe-area-inset-bottom, 0px)"
+        height="calc(52px + env(safe-area-inset-bottom, 0px) / 2)"
+        pb="calc(env(safe-area-inset-bottom, 0px) / 2)"
         bg="var(--theme-bg)"
         borderTop="1px solid"
         borderColor="var(--theme-divider)"

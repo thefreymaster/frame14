@@ -13,6 +13,7 @@ import {
 import { MdAir } from "react-icons/md";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import type { HomeClimate } from "../hooks/useHomeData";
+import { Board } from "./Board";
 
 type ClimateVisualMode = "heat" | "cool" | "fan_only" | "off";
 
@@ -353,11 +354,7 @@ function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
       onClick={onTap}
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      <Text
-        fontSize="3.4vmin"
-        color="var(--theme-fg-dim)"
-        fontWeight="400"
-      >
+      <Text fontSize="3.4vmin" color="var(--theme-fg-dim)" fontWeight="400">
         {unit.name}
       </Text>
 
@@ -404,7 +401,7 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
     climate.find((unit) => unit.entity_id === selectedEntityId) ?? null;
 
   return (
-    <Box width="100%">
+    <Board>
       <SectionTitle>CLIMATE</SectionTitle>
       <VStack gap="0" align="stretch" width="100%">
         {climate.map((unit) => (
@@ -421,6 +418,6 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
           onClose={() => setSelectedEntityId(null)}
         />
       )}
-    </Box>
+    </Board>
   );
 }

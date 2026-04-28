@@ -1,4 +1,5 @@
-import { Box, Text } from "@chakra-ui/react";
+import { Box, HStack, Text } from "@chakra-ui/react";
+import { MdOutlineLightbulb } from "react-icons/md";
 import { LightsSection } from "../components/LightsSection";
 import { buildLightSections } from "../lib/lightsConfig";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
@@ -13,31 +14,28 @@ export function Lights() {
       minHeight="100vh"
       bg="var(--theme-bg)"
       display="flex"
-      justifyContent="center"
+      flexDirection="column"
+      px="6vmin"
+      pt="5vmin"
+      pb="3vmin"
     >
-      <Box
-        width="100%"
-        px="min(8vmin, 40px)"
-        py="min(12vmin, 56px)"
-        display="flex"
-        flexDirection="column"
-        gap="min(10vmin, 48px)"
-        css={{
-          maxWidth: "560px",
-          "@media (orientation: landscape)": {
-            maxWidth: "960px",
-          },
-        }}
-      >
-        <Text
-          fontSize="min(5vmin, 28px)"
-          color="var(--theme-fg)"
-          fontWeight="300"
-          letterSpacing="0.02em"
-        >
-          Lights
-        </Text>
+      <HStack justify="space-between" align="center" mb="4vmin">
+        <HStack gap="2vmin" align="center">
+          <Box color="yellow.500" fontSize="5vmin" lineHeight="1">
+            <MdOutlineLightbulb />
+          </Box>
+          <Text
+            fontSize="3vmin"
+            fontWeight="500"
+            letterSpacing="0.14em"
+            color="var(--theme-fg-dim)"
+          >
+            LIGHTS
+          </Text>
+        </HStack>
+      </HStack>
 
+      <Box display="flex" flexDirection="column" gap="min(8vmin, 40px)">
         {sections.map((section) => (
           <LightsSection
             key={section.title}

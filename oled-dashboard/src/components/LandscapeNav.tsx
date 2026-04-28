@@ -33,12 +33,19 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { path: "/home", label: "Home", icon: RiHome5Line, activeIcon: RiHome5Fill },
-  { path: "/clock", label: "Clock", icon: IoTimeOutline, activeIcon: IoTime },
+  {
+    path: "/clock",
+    label: "Clock",
+    icon: IoTimeOutline,
+    activeIcon: IoTime,
+    frameOnly: true,
+  },
   {
     path: "/photos",
     label: "Photos",
     icon: IoImagesOutline,
     activeIcon: IoImages,
+    frameOnly: true,
   },
   {
     path: "/lights",
@@ -209,7 +216,7 @@ export function LandscapeNav() {
           display: "none",
           "@media (orientation: landscape)": { display: "block" },
         }}
-        position="fixed"
+        // position="fixed"
         left={0}
         top={0}
         bottom={0}
@@ -218,6 +225,7 @@ export function LandscapeNav() {
         borderRight="1px solid"
         borderColor="var(--theme-divider)"
         zIndex={100}
+        height="100dvh"
       >
         <Flex direction="column" align="stretch" height="100%" py="12px">
           <VStack gap="4px" align="stretch">

@@ -32,6 +32,7 @@ export function LightControl({ entity_id, name, Icon }: Props) {
     <Box
       as="button"
       onClick={handleClick}
+      data-light-entry=""
       position="relative"
       aspectRatio="1"
       borderRadius="10px"
@@ -76,7 +77,7 @@ export function LightControl({ entity_id, name, Icon }: Props) {
       />
       <Box
         color={isOn ? ON_ACCENT : "var(--theme-fg-faint)"}
-        fontSize="min(6.5vmin, 30px)"
+        fontSize="min(5.5vmin, 28px)"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -86,7 +87,7 @@ export function LightControl({ entity_id, name, Icon }: Props) {
         <Icon />
       </Box>
       <Text
-        fontSize="min(2.3vmin, 10px)"
+        fontSize="min(2vmin, 10px)"
         fontWeight={isOn ? "500" : "300"}
         color={isOn ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
         letterSpacing="0.01em"

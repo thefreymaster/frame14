@@ -3,6 +3,7 @@ import { Box, Text, HStack, VStack, Grid } from "@chakra-ui/react";
 import { PiSolarRoof } from "react-icons/pi";
 import { IoClose, IoFlash } from "react-icons/io5";
 import type { HomeEnergy } from "../hooks/useHomeData";
+import { Board } from "./Board";
 
 function fmtKwh(n: number) {
   return isNaN(n) ? "--" : n.toFixed(0);
@@ -42,17 +43,13 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
       {showModal && (
         <EnergyModal energy={energy} onClose={() => setShowModal(false)} />
       )}
-      <Box
-        width="100%"
-        cursor="pointer"
-        onClick={() => setShowModal(true)}
-        style={{ WebkitTapHighlightColor: "transparent" }}
-      >
+      <Board onClick={() => setShowModal(true)}>
         <HStack
           align="center"
           gap="1.5vmin"
           mb="1.5vmin"
           pt="1.5vmin"
+          cursor="pointer"
           width="100%"
         >
           <Text
@@ -112,7 +109,11 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
               </Text>
             </HStack>
             <HStack gap="0.6vmin" align="center">
-              <Box color="var(--theme-fg-dim)" fontSize="2.2vmin" lineHeight="1">
+              <Box
+                color="var(--theme-fg-dim)"
+                fontSize="2.2vmin"
+                lineHeight="1"
+              >
                 <IoFlash />
               </Box>
               <Text
@@ -204,7 +205,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
             </Text>
           </VStack>
         </Grid>
-      </Box>
+      </Board>
     </>
   );
 }

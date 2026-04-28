@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Text,
-  HStack,
-  VStack,
-  Spacer,
-  Alert,
-} from "@chakra-ui/react";
+import { Box, Text, HStack, VStack, Spacer, Alert } from "@chakra-ui/react";
 // import {
 //   WiMoonAltWaningCrescent4,
 //   WiCloudy,
@@ -36,6 +29,7 @@ import { StatusBanner } from "../components/StatusBanner";
 import { EnergySection } from "../components/EnergySection";
 import { ClimateSection } from "../components/ClimateSection";
 import { ForecastSection } from "../components/ForecastSection";
+import { Board } from "../components/Board";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
@@ -158,7 +152,7 @@ function Header({
   // const Icon = weather ? (CONDITION_ICON[weather.state] ?? WiDaySunny) : null;
 
   return (
-    <Box width="100%">
+    <Board>
       {connected === false && (
         <Alert.Root status="error" variant="solid" p="2">
           <Alert.Indicator />
@@ -240,7 +234,7 @@ function Header({
       </HStack>
 
       {weather && <ForecastSection forecast={weather.forecast} count={6} />}
-    </Box>
+    </Board>
   );
 }
 
@@ -254,7 +248,7 @@ function PrinterSection({ printer }: { printer: HomePrinter }) {
   if (!isActive) return null;
 
   return (
-    <Box width="100%">
+    <Board>
       <SectionTitle>3D PRINTER</SectionTitle>
       <HStack width="100%" justify="space-between" align="baseline">
         <Text
@@ -282,7 +276,7 @@ function PrinterSection({ printer }: { printer: HomePrinter }) {
           </Text>
         </HStack>
       </HStack>
-    </Box>
+    </Board>
   );
 }
 
@@ -382,7 +376,7 @@ function CalendarSection({
   if (today.length === 0 && tomorrow.length === 0) return null;
 
   return (
-    <Box width="100%">
+    <Board>
       {today.length > 0 && (
         <>
           <SectionTitle>TODAY</SectionTitle>
@@ -395,7 +389,7 @@ function CalendarSection({
           <EventList events={tomorrow} />
         </Box>
       )}
-    </Box>
+    </Board>
   );
 }
 
@@ -463,9 +457,8 @@ export function HomeOverview() {
         flexDirection={isLandscape ? "row" : "column"}
         alignItems={isLandscape ? "flex-start" : "center"}
         justifyContent={isLandscape ? "flex-start" : "space-between"}
-        px={isLandscape ? "8" : { base: "6", md: "16" }}
-        py={isLandscape ? "8" : { base: "3", md: "6" }}
-        gap={isLandscape ? "4vmin" : "0"}
+        gap={1}
+        padding="1"
       >
         {isLandscape ? (
           <>
@@ -475,7 +468,7 @@ export function HomeOverview() {
               display="flex"
               flexDirection="column"
               justifyContent="flex-start"
-              gap="3vmin"
+              gap="1"
             >
               <Header internet={data.internet} weather={data.weather} />
               {printerActive && <PrinterSection printer={data.printer} />}
@@ -487,7 +480,7 @@ export function HomeOverview() {
               display="flex"
               flexDirection="column"
               justifyContent="flex-start"
-              gap="2vmin"
+              gap="1"
               overflowY="auto"
             >
               <ClimateSection climate={data.climate} />

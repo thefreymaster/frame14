@@ -209,7 +209,7 @@ export function LandscapeNav() {
           display: "none",
           "@media (orientation: landscape)": { display: "block" },
         }}
-        position="fixed"
+        // position="fixed"
         left={0}
         top={0}
         bottom={0}
@@ -218,6 +218,7 @@ export function LandscapeNav() {
         borderRight="1px solid"
         borderColor="var(--theme-divider)"
         zIndex={100}
+        height="100dvh"
       >
         <Flex direction="column" align="stretch" height="100%" py="12px">
           <VStack gap="4px" align="stretch">

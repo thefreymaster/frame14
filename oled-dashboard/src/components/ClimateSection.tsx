@@ -354,7 +354,7 @@ function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
       onClick={onTap}
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      <Text fontSize="3.4vmin" color="var(--theme-fg-dim)" fontWeight="400">
+      <Text fontSize="3.4vmin" color="var(--theme-fg)" fontWeight="400">
         {unit.name}
       </Text>
 

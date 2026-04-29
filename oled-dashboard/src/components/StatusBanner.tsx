@@ -23,7 +23,11 @@ export function StatusBanner() {
         },
       }}
     >
-      <HStack gap={3} px="6" justify="flex-start">
+      <HStack gap={3} px="2" justify="flex-start">
+        <Box as="span" display="inline-flex" color={iconColor} flexShrink={0}>
+          <Icon size={12} />
+        </Box>
+        <ApplianceIndicators />
         {version && (
           <Text
             fontSize="10px"
@@ -33,10 +37,6 @@ export function StatusBanner() {
             v{version}
           </Text>
         )}
-        <Box as="span" display="inline-flex" color={iconColor} flexShrink={0}>
-          <Icon size={12} />
-        </Box>
-        <ApplianceIndicators />
       </HStack>
     </Box>
   );

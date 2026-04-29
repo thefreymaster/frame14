@@ -27,11 +27,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
   const pct =
     consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
   const pctColor =
-    pct >= 100
-      ? "green.500"
-      : pct >= 50
-        ? "yellow.500"
-        : "var(--theme-fg-faint)";
+    pct >= 100 ? "green.500" : pct >= 50 ? "yellow.500" : "var(--theme-fg-dim)";
 
   const gridDraw = currentConsumption - currentProduction;
   const gridAbs = Math.abs(gridDraw);
@@ -151,7 +147,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
             <Text
               fontSize="2vmin"
               letterSpacing="0.12em"
-              color="var(--theme-fg-faint)"
+              color="var(--theme-fg-dim)"
             >
               PRODUCED
             </Text>
@@ -169,7 +165,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
             <Text
               fontSize="2vmin"
               letterSpacing="0.12em"
-              color="var(--theme-fg-faint)"
+              color="var(--theme-fg-dim)"
             >
               SOLAR
             </Text>
@@ -198,7 +194,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
             <Text
               fontSize="2vmin"
               letterSpacing="0.12em"
-              color="var(--theme-fg-faint)"
+              color="var(--theme-fg-dim)"
               textAlign="right"
             >
               USED

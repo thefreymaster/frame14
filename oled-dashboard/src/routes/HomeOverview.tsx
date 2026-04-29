@@ -303,7 +303,7 @@ function EventList({
             </Text>
             <Text
               fontSize="3.2vmin"
-              color={past ? "var(--theme-fg-faint)" : "var(--theme-fg-muted)"}
+              color={past ? "var(--theme-fg-faint)" : "var(--theme-fg)"}
               fontWeight="300"
               flexShrink={0}
               textDecoration={past ? "line-through" : undefined}

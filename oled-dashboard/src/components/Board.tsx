@@ -9,7 +9,7 @@ export const Board = ({
   onClick?: () => void;
 }) => {
   const bg = useColorModeValue("white", "black");
-  const border = useColorModeValue("gray.100", "#ffffff2a");
+  const border = useColorModeValue("gray.100", "#ffffff12");
   return (
     <Box
       minWidth="100%"

@@ -44,7 +44,7 @@ export function Layout() {
                   "@media (orientation: portrait)": {
                     minW: "calc(100%)",
                     paddingBottom:
-                      "calc(64px + env(safe-area-inset-bottom, 0px))",
+                      "calc(64px + env(safe-area-inset-bottom, 0px) / 2)",
                   },
                 }
               : undefined

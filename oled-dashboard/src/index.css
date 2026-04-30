@@ -17,6 +17,13 @@ body,
   overflow: hidden;
 }
 
+/* iOS PWA: force viewport recalc on initial load so env(safe-area-inset-*) and
+   100dvh report correct values. Without this, position:fixed bottom elements
+   render at the wrong y-offset until the device is rotated. */
+html {
+  min-height: calc(100% + env(safe-area-inset-top));
+}
+
 @keyframes slowZoom {
   from { transform: scale(1); }
   to   { transform: scale(1.2); }

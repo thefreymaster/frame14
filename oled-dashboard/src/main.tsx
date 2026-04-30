@@ -20,11 +20,16 @@ function updateAppHeight() {
   document.documentElement.style.setProperty("--app-height", `${h}px`);
 }
 updateAppHeight();
+requestAnimationFrame(updateAppHeight);
 window.addEventListener("resize", updateAppHeight);
 window.addEventListener("orientationchange", updateAppHeight);
+window.addEventListener("pageshow", updateAppHeight);
+window.addEventListener("load", updateAppHeight);
 window.visualViewport?.addEventListener("resize", updateAppHeight);
 setTimeout(updateAppHeight, 100);
-setTimeout(updateAppHeight, 500);
+setTimeout(updateAppHeight, 300);
+setTimeout(updateAppHeight, 600);
+setTimeout(updateAppHeight, 1200);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

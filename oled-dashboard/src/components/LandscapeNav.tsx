@@ -183,10 +183,7 @@ export function LandscapeNav() {
   }
 
   const visibleNavItems = NAV_ITEMS.filter((i) => isFrame || !i.frameOnly);
-  const bottomNavItems = BOTTOM_NAV_ITEMS.map((item) =>
-    !isFrame && item.path === "/control" ? { ...item, path: "/home" } : item
-  );
-  const allItems = [...visibleNavItems, ...bottomNavItems];
+  const allItems = [...visibleNavItems, ...BOTTOM_NAV_ITEMS];
   const portraitItems = allItems.filter((i) => isFrame || !i.portraitHidden);
 
   return (
@@ -235,7 +232,7 @@ export function LandscapeNav() {
           </VStack>
           <Spacer />
           <VStack gap="4px" align="stretch">
-            {bottomNavItems.map(renderItemVertical)}
+            {BOTTOM_NAV_ITEMS.map(renderItemVertical)}
           </VStack>
         </Flex>
       </Box>

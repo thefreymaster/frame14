@@ -13,6 +13,19 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+function updateAppHeight() {
+  const h =
+    (window.visualViewport && window.visualViewport.height) ||
+    window.innerHeight;
+  document.documentElement.style.setProperty("--app-height", `${h}px`);
+}
+updateAppHeight();
+window.addEventListener("resize", updateAppHeight);
+window.addEventListener("orientationchange", updateAppHeight);
+window.visualViewport?.addEventListener("resize", updateAppHeight);
+setTimeout(updateAppHeight, 100);
+setTimeout(updateAppHeight, 500);
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

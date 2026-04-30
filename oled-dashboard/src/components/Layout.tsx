@@ -31,7 +31,7 @@ export function Layout() {
       <HStack gap="0" align="stretch">
         <LandscapeNav />
         <Box
-          height="100dvh"
+          height="var(--app-height, 100dvh)"
           overflow={scrollable ? "auto" : "hidden"}
           pt="env(safe-area-inset-top, 0px)"
           css={
@@ -43,7 +43,8 @@ export function Layout() {
                   },
                   "@media (orientation: portrait)": {
                     minW: "calc(100%)",
-                    paddingBottom: "64px",
+                    paddingBottom:
+                      "calc(64px + env(safe-area-inset-bottom, 0px))",
                   },
                 }
               : undefined

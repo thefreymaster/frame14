@@ -195,11 +195,10 @@ export function LandscapeNav() {
           "@media (orientation: landscape)": { display: "none" },
         }}
         position="fixed"
-        bottom={0}
+        top="calc(var(--app-height, 100dvh) - 64px - env(safe-area-inset-bottom, 0px))"
         left={0}
         right={0}
         height="64px"
-        pb="0"
         bg="var(--theme-bg)"
         borderTop="1px solid"
         borderColor="var(--theme-divider)"

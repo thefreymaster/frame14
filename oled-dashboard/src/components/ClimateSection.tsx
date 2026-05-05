@@ -426,11 +426,14 @@ function ClimateCard({
         >
           {currentTemp != null ? `${currentTemp}°` : "—"}
         </Text>
-        {showTarget && (
-          <Text fontSize="1.8vmin" color="var(--theme-fg-faint)">
-            {targetVerb} {targetTemp}°
-          </Text>
-        )}
+        <Text
+          fontSize="1.8vmin"
+          color="var(--theme-fg-faint)"
+          visibility={showTarget ? "visible" : "hidden"}
+          aria-hidden={!showTarget}
+        >
+          {showTarget ? `${targetVerb} ${targetTemp}°` : " "}
+        </Text>
       </VStack>
     </Box>
   );

@@ -34,5 +34,6 @@
     "currentConsumption": "sensor.envoy_482518016321_current_power_consumption",
     "productionToday": "sensor.envoy_482518016321_energy_production_today",
     "consumptionToday": "sensor.envoy_482518016321_energy_consumption_today"
-  }
+  },
+  "vacuums": ["vacuum.roborock_q5_pro"]
 }

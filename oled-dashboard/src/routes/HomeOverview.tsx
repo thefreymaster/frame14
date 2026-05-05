@@ -17,6 +17,7 @@ import { Box, Text, HStack, VStack, Spacer, Alert } from "@chakra-ui/react";
 //   WiStrongWind,
 // } from "react-icons/wi";
 import NumberFlow from "@number-flow/react";
+import { IoCalendarOutline, IoSunnyOutline } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
 import type {
   HomeInternet,
@@ -29,6 +30,7 @@ import { EnergySection } from "../components/EnergySection";
 import { ClimateSection } from "../components/ClimateSection";
 import { ForecastSection } from "../components/ForecastSection";
 import { PrinterSection } from "../components/PrinterSection";
+import { VacuumSection } from "../components/VacuumSection";
 import { Board } from "../components/Board";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -330,13 +332,13 @@ function CalendarSection({
     <Board>
       {today.length > 0 && (
         <>
-          <SectionTitle>TODAY</SectionTitle>
+          <SectionTitle icon={<IoSunnyOutline />}>TODAY</SectionTitle>
           <EventList events={today} />
         </>
       )}
       {tomorrow.length > 0 && (
         <Box mt={today.length > 0 ? "2.5vmin" : "0"}>
-          <SectionTitle>TOMORROW</SectionTitle>
+          <SectionTitle icon={<IoCalendarOutline />}>TOMORROW</SectionTitle>
           <EventList events={tomorrow} />
         </Box>
       )}
@@ -420,6 +422,7 @@ export function HomeOverview() {
               <Header internet={data.internet} weather={data.weather} />
               <EnergySection energy={data.energy} />
               <PrinterSection printer={data.printer} />
+              <VacuumSection vacuum={data.vacuum} />
             </Box>
 
             {/* Right column — details */}
@@ -452,6 +455,7 @@ export function HomeOverview() {
             <ClimateSection climate={data.climate} />
             <EnergySection energy={data.energy} />
             <PrinterSection printer={data.printer} />
+            <VacuumSection vacuum={data.vacuum} />
           </>
         )}
       </Box>

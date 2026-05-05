@@ -3,6 +3,7 @@ import { Box, Text, HStack, VStack, Grid } from "@chakra-ui/react";
 import { PiSolarRoof } from "react-icons/pi";
 import { IoClose, IoFlash } from "react-icons/io5";
 import type { HomeEnergy } from "../hooks/useHomeData";
+import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 
 function fmtKwh(n: number) {
@@ -48,13 +49,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
           cursor="pointer"
           width="100%"
         >
-          <Text
-            fontSize="2.2vmin"
-            color="var(--theme-fg-dim)"
-            letterSpacing="0.1em"
-          >
-            ENERGY
-          </Text>
+          <SectionTitle icon={<IoFlash />}>ENERGY</SectionTitle>
           {gridActive && (
             <Box
               display="inline-flex"

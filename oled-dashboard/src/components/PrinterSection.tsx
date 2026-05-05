@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Text, HStack, VStack, Grid } from "@chakra-ui/react";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoPrintOutline } from "react-icons/io5";
 import NumberFlow from "@number-flow/react";
 import type { HomePrinter } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -50,7 +50,7 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
         <PrinterModal printer={printer} onClose={() => setShowModal(false)} />
       )}
       <Board onClick={() => setShowModal(true)}>
-        <SectionTitle>3D PRINTER</SectionTitle>
+        <SectionTitle icon={<IoPrintOutline />}>3D PRINTER</SectionTitle>
         <HStack width="100%" justify="space-between" align="baseline">
           <Text
             fontSize="3.8vmin"

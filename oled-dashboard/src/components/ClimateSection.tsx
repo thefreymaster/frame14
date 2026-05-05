@@ -9,6 +9,7 @@ import {
   IoPowerOutline,
   IoRemove,
   IoSnow,
+  IoThermometerOutline,
 } from "react-icons/io5";
 import { MdAir } from "react-icons/md";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -327,7 +328,13 @@ function ClimateModal({
   );
 }
 
-function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
+function ClimateCard({
+  unit,
+  onTap,
+}: {
+  unit: HomeClimate;
+  onTap: () => void;
+}) {
   const displayMode = unit.hvacMode ?? unit.state;
   const activeAction =
     unit.hvacAction === "heating"
@@ -337,60 +344,94 @@ function ClimateRow({ unit, onTap }: { unit: HomeClimate; onTap: () => void }) {
         : null;
   const badgeKey = activeAction ?? displayMode ?? "unknown";
   const statusLabel = badgeKey.replace(/_/g, " ");
-  const badgeColor = HVAC_COLOR[badgeKey] ?? "var(--theme-fg-faint)";
-  const badgeBg = HVAC_BADGE_BG[badgeKey] ?? "rgba(255,255,255,0.05)";
+  const accentColor = HVAC_COLOR[badgeKey] ?? "var(--theme-fg-faint)";
+  const accentBg = HVAC_BADGE_BG[badgeKey] ?? "rgba(255,255,255,0.05)";
   const isOff = normalizeClimateMode(displayMode) === "off";
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const targetTemp = fmtClimateTemp(unit.targetTemp);
+  const ModeIcon =
+    activeAction === "heating" || displayMode === "heat"
+      ? IoFlame
+      : activeAction === "cooling" || displayMode === "cool"
+        ? IoSnow
+        : displayMode === "fan_only" || displayMode === "fan"
+          ? MdAir
+          : IoPowerOutline;
+  const showTarget = !isOff && targetTemp != null;
+  const targetVerb =
+    activeAction === "heating"
+      ? "heating to"
+      : activeAction === "cooling"
+        ? "cooling to"
+        : "set to";
 
   return (
     <Box
-      display="grid"
-      gridTemplateColumns="1fr auto 1fr"
-      alignItems="center"
-      width="100%"
+      aspectRatio="1"
+      display="flex"
+      flexDirection="column"
+      justifyContent="space-between"
       cursor="pointer"
-      py="0.8vmin"
+      p="2vmin"
+      borderRadius="md"
+      border="1px solid"
+      borderColor="var(--theme-border, #ffffff12)"
+      bg="rgba(255,255,255,0.02)"
       onClick={onTap}
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      <Text fontSize="3.4vmin" color="var(--theme-fg)" fontWeight="400">
+      <Text
+        fontSize="2.4vmin"
+        color="var(--theme-fg)"
+        fontWeight="500"
+        lineHeight="1.1"
+        whiteSpace="nowrap"
+        overflow="hidden"
+        textOverflow="ellipsis"
+      >
         {unit.name}
       </Text>
 
-      <Box
-        display="inline-flex"
-        alignItems="center"
-        justifyContent="center"
-        px="1.8vmin"
-        py="0.4vmin"
-        borderRadius="full"
-        fontSize="2.6vmin"
-        fontWeight="500"
-        letterSpacing="0.1em"
-        color={badgeColor}
-        bg={badgeBg}
-        minW="14vmin"
-        textAlign="center"
-        textTransform="uppercase"
-      >
-        {statusLabel}
-      </Box>
+      <HStack gap="1vmin" align="center">
+        <Box
+          display="inline-flex"
+          alignItems="center"
+          justifyContent="center"
+          w="3.4vmin"
+          h="3.4vmin"
+          borderRadius="full"
+          color={accentColor}
+          bg={accentBg}
+          fontSize="2.2vmin"
+        >
+          <ModeIcon />
+        </Box>
+        <Text
+          fontSize="2vmin"
+          color={accentColor}
+          fontWeight="500"
+          letterSpacing="0.08em"
+          textTransform="uppercase"
+        >
+          {statusLabel}
+        </Text>
+      </HStack>
 
-      {currentTemp != null ? (
-        <HStack align="baseline" gap="1vmin" justify="flex-end">
-          <Text fontSize="3.4vmin" fontWeight="300" lineHeight="1">
-            {currentTemp}°
+      <VStack align="flex-start" gap="0.2vmin">
+        <Text
+          fontSize="6vmin"
+          fontWeight="200"
+          lineHeight="1"
+          color="var(--theme-fg)"
+        >
+          {currentTemp != null ? `${currentTemp}°` : "—"}
+        </Text>
+        {showTarget && (
+          <Text fontSize="1.8vmin" color="var(--theme-fg-faint)">
+            {targetVerb} {targetTemp}°
           </Text>
-          {!isOff && targetTemp != null && (
-            <Text fontSize="3.4vmin" color="var(--theme-fg-faint)">
-              → {targetTemp}°
-            </Text>
-          )}
-        </HStack>
-      ) : (
-        <Box />
-      )}
+        )}
+      </VStack>
     </Box>
   );
 }
@@ -402,16 +443,22 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
 
   return (
     <Board>
-      <SectionTitle>CLIMATE</SectionTitle>
-      <VStack gap="0" align="stretch" width="100%">
+      <SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>
+      <Box
+        display="grid"
+        gridTemplateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"
+        columnGap="1"
+        rowGap="1.4vmin"
+        width="100%"
+      >
         {climate.map((unit) => (
-          <ClimateRow
+          <ClimateCard
             key={unit.entity_id || unit.name}
             unit={unit}
             onTap={() => setSelectedEntityId(unit.entity_id)}
           />
         ))}
-      </VStack>
+      </Box>
       {selectedUnit && (
         <ClimateModal
           unit={selectedUnit}

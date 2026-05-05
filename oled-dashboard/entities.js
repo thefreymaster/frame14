@@ -29,16 +29,25 @@ function loadEntities() {
         productionToday: options.energy_production_today ?? "",
         consumptionToday: options.energy_consumption_today ?? "",
       },
+      vacuums: options.vacuum_entities ?? [],
     };
   }
 
   // Local dev fallback: frame14.json
   const localPath = fileURLToPath(new URL("./frame14.json", import.meta.url));
   const frame14 = fs.existsSync(localPath) ? loadJson(localPath) : null;
-  if (frame14) return frame14;
+  if (frame14) {
+    return {
+      lights: frame14.lights ?? [],
+      weather: frame14.weather ?? {},
+      climate: frame14.climate ?? [],
+      energy: frame14.energy ?? {},
+      vacuums: frame14.vacuums ?? [],
+    };
+  }
 
   console.warn("[entities] no entity config found — using empty defaults");
-  return { lights: [], weather: {}, climate: [], energy: {} };
+  return { lights: [], weather: {}, climate: [], energy: {}, vacuums: [] };
 }
 
 export const ENTITIES = loadEntities();

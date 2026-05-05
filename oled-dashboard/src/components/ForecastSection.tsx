@@ -1,4 +1,5 @@
 import { Box, HStack, Text } from "@chakra-ui/react";
+import { IoPartlySunnyOutline } from "react-icons/io5";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { WeatherForecast } from "./WeatherForecast";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
@@ -14,7 +15,7 @@ export function ForecastSection({ forecast, count = 6 }: Props) {
   return (
     <Box width="100%" mt="2vmin">
       <HStack justify="space-between" align="baseline" gap="2vmin">
-        <SectionTitle>FORECAST</SectionTitle>
+        <SectionTitle icon={<IoPartlySunnyOutline />}>FORECAST</SectionTitle>
         {(high != null || low != null) && (
           <HStack gap="2vmin">
             {high != null && (

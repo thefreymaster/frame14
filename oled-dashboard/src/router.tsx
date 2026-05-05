@@ -9,26 +9,17 @@ import { Lights } from "./routes/Lights";
 import { Radar } from "./routes/Radar";
 import { Timer } from "./routes/Timer";
 import { Solar } from "./routes/Solar";
-import { getDeviceMode } from "./lib/deviceMode";
 
 export const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      {
-        path: "/",
-        element: (
-          <Navigate
-            to={getDeviceMode() === "controller" ? "/control" : "/home"}
-            replace
-          />
-        ),
-      },
+      { path: "/", element: <HomeOverview /> },
       { path: "/clock", element: <Clock /> },
       { path: "/blank", element: <Blank /> },
       { path: "/photos", element: <Photos /> },
       { path: "/control", element: <Control /> },
-      { path: "/home", element: <HomeOverview /> },
+      { path: "/home", element: <Navigate to="/" replace /> },
       { path: "/lights", element: <Lights /> },
       { path: "/radar", element: <Radar /> },
       { path: "/timer", element: <Timer /> },

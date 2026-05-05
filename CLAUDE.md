@@ -51,11 +51,12 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
     "currentConsumption": "sensor.envoy_xxx_current_power_consumption",
     "productionToday": "sensor.envoy_xxx_energy_production_today",
     "consumptionToday": "sensor.envoy_xxx_energy_consumption_today"
-  }
+  },
+  "vacuums": ["vacuum.roborock_q5_pro"]
 }
 ```
 
-In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` fields in `config.yaml`).
+In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` fields in `config.yaml`).
 
 ## Frontend Routes
 
@@ -107,11 +108,12 @@ src/
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
     PrinterSection.tsx            — 3D printer card + click-to-open detail modal (temps, layers, ETA, filament)
+    VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     Divider.tsx                   — thin themed divider line
     ViewButton.tsx                — styled outline/solid toggle button
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
-    useHomeData.ts                — weather+climate+energy+calendar+people+printer; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s
+    useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s
     useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
     useEntity.ts                  — subscribes to a single HA entity via Socket.IO room
     useEnergy.ts                  — fetches /api/energy, refetches every 5min
@@ -148,6 +150,7 @@ routes/
   home.js         — GET /api/home/weather, GET /api/home/calendar
   climate.js      — GET /api/home/climate (fetches HA states for ENTITIES.climate array)
   energy.js       — GET /api/energy (entity IDs from entities.js)
+  vacuum.js       — GET /api/home/vacuum (fetches HA states for ENTITIES.vacuums array)
   entities.js     — GET /api/entities (serves ENTITIES object to frontend)
   photos.js       — GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail
   views.js        — GET /api/change/:view (broadcasts change_view via io from app.locals)
@@ -161,6 +164,7 @@ routes/
 - `GET /api/weather` — current weather + forecast from HA (entity from `ENTITIES.weather`)
 - `GET /api/home/weather` — weather used by HomeOverview
 - `GET /api/home/climate` — climate states for all entities in `ENTITIES.climate`
+- `GET /api/home/vacuum` — vacuum states for all entities in `ENTITIES.vacuums` (state, cleaning_progress, battery_level)
 - `GET /api/home/calendar` — today + tomorrow calendar events from all HA calendars
 - `GET /api/energy` — solar production/consumption from HA (entity IDs from `ENTITIES.energy`)
 - `GET /api/photos/config` — returns `{ defaultAlbumId }` from config

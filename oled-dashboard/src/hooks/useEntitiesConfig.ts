@@ -10,6 +10,7 @@ export interface EntitiesConfig {
     productionToday: string;
     consumptionToday: string;
   };
+  vacuums: string[];
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

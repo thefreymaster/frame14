@@ -33,7 +33,7 @@ const VIEWS: {
   activeIcon: IconType;
 }[] = [
   {
-    path: "/",
+    path: "/home",
     label: "Overview",
     icon: RiHome5Line,
     activeIcon: RiHome5Fill,
@@ -173,7 +173,7 @@ export function Control() {
                 onClick={() => {
                   setDeviceMode(mode);
                   setDeviceModeState(mode);
-                  if (mode === "frame") window.location.href = "/";
+                  if (mode === "frame") window.location.href = "/home";
                 }}
                 flex="1"
                 py="min(3vmin, 13px)"

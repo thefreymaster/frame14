@@ -32,7 +32,7 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { path: "/", label: "Home", icon: RiHome5Line, activeIcon: RiHome5Fill },
+  { path: "/home", label: "Home", icon: RiHome5Line, activeIcon: RiHome5Fill },
   {
     path: "/clock",
     label: "Clock",

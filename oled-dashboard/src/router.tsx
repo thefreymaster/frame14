@@ -14,12 +14,12 @@ export const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <HomeOverview /> },
+      { path: "/", element: <Navigate to="/home" replace /> },
       { path: "/clock", element: <Clock /> },
       { path: "/blank", element: <Blank /> },
       { path: "/photos", element: <Photos /> },
       { path: "/control", element: <Control /> },
-      { path: "/home", element: <Navigate to="/" replace /> },
+      { path: "/home", element: <HomeOverview /> },
       { path: "/lights", element: <Lights /> },
       { path: "/radar", element: <Radar /> },
       { path: "/timer", element: <Timer /> },

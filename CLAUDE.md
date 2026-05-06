@@ -62,7 +62,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 
 | Path | Component | Description |
 |---|---|---|
-| `/` | redirect | → `/clock` |
+| `/` | redirect | → `/home` |
 | `/clock` | `Clock` | Portrait display: clock + NWS weather |
 | `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar |
 | `/lights` | `Lights` | Light + switch controls |

@@ -88,7 +88,11 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export function LandscapeNav() {
+interface LandscapeNavProps {
+  hidden?: boolean;
+}
+
+export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState(location.pathname);
@@ -203,6 +207,9 @@ export function LandscapeNav() {
         borderTop="1px solid"
         borderColor="var(--theme-divider)"
         zIndex={100}
+        transform={hidden ? "translateY(100%)" : "translateY(0)"}
+        transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+        willChange="transform"
       >
         <HStack gap="0" align="stretch" height="64px" px="4px">
           {portraitItems.map(renderItem)}
@@ -215,7 +222,7 @@ export function LandscapeNav() {
           display: "none",
           "@media (orientation: landscape)": { display: "block" },
         }}
-        // position="fixed"
+        position="fixed"
         left={0}
         top={0}
         bottom={0}
@@ -225,6 +232,9 @@ export function LandscapeNav() {
         borderColor="var(--theme-divider)"
         zIndex={100}
         height="100dvh"
+        transform={hidden ? "translateX(-100%)" : "translateX(0)"}
+        transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+        willChange="transform"
       >
         <Flex direction="column" align="stretch" height="100%" py="12px">
           <VStack gap="4px" align="stretch">

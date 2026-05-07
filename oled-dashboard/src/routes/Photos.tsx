@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Text, Spinner } from "@chakra-ui/react";
+import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
 import { PhotoSlide } from "../components/PhotoSlide";
 import { PixelShift } from "../components/PixelShift";
 import { useAlbumPhotos } from "../hooks/useAlbumPhotos";
@@ -8,6 +9,7 @@ import { useWeather } from "../hooks/useWeather";
 import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -99,6 +101,7 @@ export function Photos() {
   const { data: config, isPending: configPending } = usePhotosConfig();
   const activeAlbumId = config?.defaultAlbumId ?? null;
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navVisible = useNavVisible();
 
   const { data: album, isPending: photosPending } =
     useAlbumPhotos(activeAlbumId);
@@ -238,6 +241,32 @@ export function Photos() {
       ))}
 
       <PhotoOverlay assetId={album?.assets[currentIndex]?.id ?? null} />
+
+      <Box
+        as="button"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          toggleNavVisible();
+        }}
+        position="fixed"
+        bottom="calc(16px + env(safe-area-inset-bottom, 0px))"
+        right="calc(16px + env(safe-area-inset-right, 0px))"
+        width="44px"
+        height="44px"
+        borderRadius="full"
+        bg="rgba(0,0,0,0.4)"
+        color="rgba(255,255,255,0.85)"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        backdropFilter="blur(8px)"
+        border="1px solid rgba(255,255,255,0.15)"
+        _active={{ opacity: 0.5 }}
+        zIndex={200}
+        aria-label={navVisible ? "Hide navigation" : "Show navigation"}
+      >
+        {navVisible ? <IoEyeOffOutline size={20} /> : <IoEyeOutline size={20} />}
+      </Box>
     </Box>
   );
 }

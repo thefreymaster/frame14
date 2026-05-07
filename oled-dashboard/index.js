@@ -56,10 +56,12 @@ const io = new Server(httpServer, {
 app.locals.io = io;
 io.currentView = "clock";
 io.themeMode = "dark";
+io.navVisible = true;
 
 io.on("connection", (socket) => {
   socket.emit("current_view", io.currentView);
   socket.emit("current_theme_mode", io.themeMode);
+  socket.emit("nav_visibility", io.navVisible);
 
   socket.on("change", (view) => {
     console.log({ io: "change", view });
@@ -83,6 +85,13 @@ io.on("connection", (socket) => {
     console.log({ io: "theme_mode", pref });
     io.themeMode = pref;
     socket.broadcast.emit("theme_mode", pref);
+  });
+
+  socket.on("nav_visibility", (v) => {
+    if (typeof v !== "boolean") return;
+    console.log({ io: "nav_visibility", v });
+    io.navVisible = v;
+    socket.broadcast.emit("nav_visibility", v);
   });
 
   socket.on("entity:subscribe", (entityId) => {

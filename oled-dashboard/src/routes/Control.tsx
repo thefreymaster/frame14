@@ -8,6 +8,8 @@ import {
   IoImages,
   IoTimerOutline,
   IoTimer,
+  IoEyeOutline,
+  IoEyeOffOutline,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -24,6 +26,7 @@ import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import { useImmichAlbums } from "../hooks/useImmichAlbums";
+import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
 import type { ThemeModePreference } from "../lib/themeMode";
 
 const VIEWS: {
@@ -76,6 +79,7 @@ export function Control() {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<string | null>(null);
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
+  const navVisible = useNavVisible();
 
   async function handleAlbumChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const option = e.target.value;
@@ -382,6 +386,36 @@ export function Control() {
                   letterSpacing="0.02em"
                 >
                   Refresh displays
+                </Text>
+              </Box>
+              {/* Show/hide nav */}
+              <Box
+                as="button"
+                mt="min(2vmin, 10px)"
+                width="100%"
+                py="min(3.5vmin, 16px)"
+                borderRadius="8px"
+                bg="transparent"
+                border="1px solid var(--theme-divider)"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                gap="min(2vmin, 10px)"
+                color="var(--theme-fg-dim)"
+                _active={{ opacity: 0.5 }}
+                onClick={() => toggleNavVisible()}
+              >
+                {navVisible ? (
+                  <IoEyeOffOutline size={18} />
+                ) : (
+                  <IoEyeOutline size={18} />
+                )}
+                <Text
+                  fontSize="min(3.6vmin, 16px)"
+                  fontWeight="300"
+                  letterSpacing="0.02em"
+                >
+                  {navVisible ? "Hide navigation" : "Show navigation"}
                 </Text>
               </Box>
             </Box>

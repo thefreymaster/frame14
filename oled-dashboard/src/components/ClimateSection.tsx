@@ -375,7 +375,7 @@ function ClimateCard({
       p="2vmin"
       borderRadius="md"
       border="1px solid"
-      borderColor="var(--theme-border, #ffffff66)"
+      borderColor="var(--theme-border, #ffffff40)"
       bg="rgba(255,255,255,0.02)"
       onClick={onTap}
       style={{ WebkitTapHighlightColor: "transparent" }}

@@ -406,8 +406,8 @@ export function HomeOverview() {
         flexDirection={isLandscape ? "row" : "column"}
         alignItems={isLandscape ? "flex-start" : "stretch"}
         justifyContent="flex-start"
-        gap={1}
-        padding="1"
+        gap={2}
+        padding="2"
       >
         {isLandscape ? (
           <>

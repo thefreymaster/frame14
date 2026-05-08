@@ -10,6 +10,7 @@ import {
   IoTimer,
   IoEyeOutline,
   IoEyeOffOutline,
+  IoOptionsOutline,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -138,33 +139,43 @@ export function Control() {
         }}
       >
         {/* Header */}
-        {deviceMode !== "frame" && (
-          <HStack
-            justify="space-between"
-            align="baseline"
-            mb="min(8vmin, 36px)"
-          >
-            <Text
-              fontSize="min(5vmin, 28px)"
-              color="var(--theme-fg)"
-              fontWeight="300"
-              letterSpacing="0.02em"
+        <HStack justify="space-between" align="center" mb="min(8vmin, 36px)">
+          <HStack gap="min(2vmin, 10px)" align="center">
+            <Box
+              color="var(--theme-fg-dim)"
+              fontSize="min(5vmin, 26px)"
+              lineHeight="1"
+              display="flex"
+              alignItems="center"
             >
-              Remote
+              <IoOptionsOutline />
+            </Box>
+            <Text
+              fontSize="min(3vmin, 14px)"
+              fontWeight="500"
+              letterSpacing="0.14em"
+              color="var(--theme-fg-dim)"
+            >
+              CONTROL
             </Text>
-            <HStack gap="min(1.5vmin, 8px)" align="center">
-              <Box
-                width="8px"
-                height="8px"
-                borderRadius="full"
-                bg={connected ? "green.400" : "var(--theme-fg-faint)"}
-              />
-              <Text fontSize="min(3vmin, 13px)" color="var(--theme-fg-faint)">
-                {connected ? "connected" : "disconnected"}
-              </Text>
-            </HStack>
           </HStack>
-        )}
+          <HStack gap="min(1.5vmin, 8px)" align="center">
+            <Box
+              width="8px"
+              height="8px"
+              borderRadius="full"
+              bg={connected ? "green.400" : "var(--theme-fg-faint)"}
+            />
+            <Text
+              fontSize="min(2.8vmin, 13px)"
+              fontWeight="300"
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.08em"
+            >
+              {connected ? "CONNECTED" : "DISCONNECTED"}
+            </Text>
+          </HStack>
+        </HStack>
         {/* Device mode buttons */}
         <HStack gap="min(2vmin, 10px)" mb="min(4.5vmin, 20px)">
           {(["frame", "controller"] as const).map((mode) => {

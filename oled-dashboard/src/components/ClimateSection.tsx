@@ -30,16 +30,28 @@ const HVAC_COLOR: Record<string, string> = {
   unknown: "var(--theme-fg-faint)",
 };
 
-const HVAC_BADGE_BG: Record<string, string> = {
-  cool: "rgba(96, 165, 250, 0.12)",
-  cooling: "rgba(96, 165, 250, 0.12)",
-  heat: "rgba(251, 146, 60, 0.12)",
-  heating: "rgba(251, 146, 60, 0.12)",
-  fan_only: "rgba(94, 234, 212, 0.12)",
-  fan: "rgba(94, 234, 212, 0.12)",
-  off: "rgba(255,255,255,0.05)",
-  auto: "rgba(34, 197, 94, 0.12)",
-  unknown: "rgba(255,255,255,0.05)",
+const HVAC_RING: Record<string, string> = {
+  cool: "rgba(96, 165, 250, 0.85)",
+  cooling: "rgba(96, 165, 250, 0.95)",
+  heat: "rgba(251, 146, 60, 0.85)",
+  heating: "rgba(251, 146, 60, 0.95)",
+  fan_only: "rgba(94, 234, 212, 0.85)",
+  fan: "rgba(94, 234, 212, 0.85)",
+  off: "rgba(255,255,255,0.18)",
+  auto: "rgba(34, 197, 94, 0.85)",
+  unknown: "rgba(255,255,255,0.18)",
+};
+
+const HVAC_GLOW: Record<string, string> = {
+  cool: "rgba(96, 165, 250, 0.22)",
+  cooling: "rgba(96, 165, 250, 0.3)",
+  heat: "rgba(251, 146, 60, 0.22)",
+  heating: "rgba(251, 146, 60, 0.32)",
+  fan_only: "rgba(94, 234, 212, 0.22)",
+  fan: "rgba(94, 234, 212, 0.22)",
+  off: "rgba(255,255,255,0.04)",
+  auto: "rgba(34, 197, 94, 0.22)",
+  unknown: "rgba(255,255,255,0.04)",
 };
 
 const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
@@ -343,10 +355,11 @@ function ClimateCard({
         ? "cooling"
         : null;
   const badgeKey = activeAction ?? displayMode ?? "unknown";
-  const statusLabel = badgeKey.replace(/_/g, " ");
   const accentColor = HVAC_COLOR[badgeKey] ?? "var(--theme-fg-faint)";
-  const accentBg = HVAC_BADGE_BG[badgeKey] ?? "rgba(255,255,255,0.05)";
+  const ringColor = HVAC_RING[badgeKey] ?? "rgba(255,255,255,0.18)";
+  const glowColor = HVAC_GLOW[badgeKey] ?? "rgba(255,255,255,0.04)";
   const isOff = normalizeClimateMode(displayMode) === "off";
+  const isActiveLive = activeAction != null;
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const targetTemp = fmtClimateTemp(unit.targetTemp);
   const ModeIcon =
@@ -358,84 +371,76 @@ function ClimateCard({
           ? MdAir
           : IoPowerOutline;
   const showTarget = !isOff && targetTemp != null;
-  const targetVerb =
-    activeAction === "heating"
-      ? "heating to"
-      : activeAction === "cooling"
-        ? "cooling to"
-        : "set to";
+  const subLabel = isOff
+    ? "OFF"
+    : showTarget
+      ? `→ ${targetTemp}°`
+      : displayMode === "fan_only" || displayMode === "fan"
+        ? "FAN"
+        : "";
 
   return (
-    <Box
-      aspectRatio="1"
-      display="flex"
-      flexDirection="column"
-      justifyContent="space-between"
-      cursor="pointer"
-      p="2vmin"
-      borderRadius="md"
-      border="1px solid"
-      borderColor="var(--theme-border, #ffffff40)"
-      bg="rgba(255,255,255,0.02)"
-      onClick={onTap}
-      style={{ WebkitTapHighlightColor: "transparent" }}
-    >
+    <VStack gap="1vmin" align="center">
+      <Box
+        position="relative"
+        aspectRatio="1"
+        width="100%"
+        borderRadius="full"
+        cursor="pointer"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        bg={`radial-gradient(circle at 50% 32%, ${glowColor} 0%, rgba(0,0,0,0.85) 65%, #000 100%)`}
+        boxShadow={`inset 0 0 0 0.35vmin ${ringColor}, inset 0 0 2.5vmin rgba(0,0,0,0.7)${isActiveLive ? `, 0 0 2vmin ${glowColor}` : ""}`}
+        onClick={onTap}
+        style={{ WebkitTapHighlightColor: "transparent" }}
+      >
+        <VStack gap="0.4vmin" align="center" justify="center">
+          <Box
+            color={accentColor}
+            fontSize="2.6vmin"
+            opacity={isOff ? 0.45 : 1}
+            lineHeight="1"
+            display="inline-flex"
+          >
+            <ModeIcon />
+          </Box>
+          <Text
+            fontSize="6.6vmin"
+            fontWeight="200"
+            lineHeight="1"
+            color="var(--theme-fg)"
+            letterSpacing="-0.04em"
+          >
+            {currentTemp != null ? `${currentTemp}°` : "—"}
+          </Text>
+          <Text
+            fontSize="1.5vmin"
+            color={accentColor}
+            fontWeight="600"
+            letterSpacing="0.18em"
+            textTransform="uppercase"
+            opacity={isOff ? 0.55 : 0.95}
+            minHeight="1.6vmin"
+          >
+            {subLabel}
+          </Text>
+        </VStack>
+      </Box>
       <Text
-        fontSize="2.4vmin"
-        color="var(--theme-fg)"
+        fontSize="1.8vmin"
+        color="var(--theme-fg-faint)"
         fontWeight="500"
-        lineHeight="1.1"
+        textAlign="center"
         whiteSpace="nowrap"
         overflow="hidden"
         textOverflow="ellipsis"
+        maxWidth="100%"
+        lineHeight="1.1"
       >
         {unit.name}
       </Text>
-
-      <HStack gap="1vmin" align="center">
-        <Box
-          display="inline-flex"
-          alignItems="center"
-          justifyContent="center"
-          w="3.4vmin"
-          h="3.4vmin"
-          borderRadius="full"
-          color={accentColor}
-          bg={accentBg}
-          fontSize="2.2vmin"
-        >
-          <ModeIcon />
-        </Box>
-        <Text
-          fontSize="2vmin"
-          color={accentColor}
-          fontWeight="500"
-          letterSpacing="0.08em"
-          textTransform="uppercase"
-        >
-          {statusLabel}
-        </Text>
-      </HStack>
-
-      <VStack align="flex-start" gap="0.2vmin">
-        <Text
-          fontSize="6vmin"
-          fontWeight="200"
-          lineHeight="1"
-          color="var(--theme-fg)"
-        >
-          {currentTemp != null ? `${currentTemp}°` : "—"}
-        </Text>
-        <Text
-          fontSize="1.8vmin"
-          color="var(--theme-fg-faint)"
-          visibility={showTarget ? "visible" : "hidden"}
-          aria-hidden={!showTarget}
-        >
-          {showTarget ? `${targetVerb} ${targetTemp}°` : " "}
-        </Text>
-      </VStack>
-    </Box>
+    </VStack>
   );
 }
 
@@ -450,8 +455,8 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
       <Box
         display="grid"
         gridTemplateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"
-        columnGap="1"
-        rowGap="1.4vmin"
+        columnGap="2vmin"
+        rowGap="2vmin"
         width="100%"
       >
         {climate.map((unit) => (

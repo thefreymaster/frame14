@@ -139,7 +139,9 @@ function PrinterModal({
   const etaLabel = fmtTime(printer.endTime ?? printer.finishTime);
   const startLabel = fmtTime(printer.startTime);
   const layerPct =
-    printer.totalLayers && printer.totalLayers > 0 && printer.currentLayer != null
+    printer.totalLayers &&
+    printer.totalLayers > 0 &&
+    printer.currentLayer != null
       ? Math.round((printer.currentLayer / printer.totalLayers) * 100)
       : null;
   const progress = Math.max(0, Math.min(100, printer.progress || 0));

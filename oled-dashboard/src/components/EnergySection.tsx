@@ -45,7 +45,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
           align="center"
           gap="1.5vmin"
           mb="1.5vmin"
-          pt="1.5vmin"
+          pt="2"
           cursor="pointer"
           width="100%"
         >

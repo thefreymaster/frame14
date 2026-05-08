@@ -157,7 +157,6 @@ function ClimateModal({
   const isOff = mode === "off";
   const isFanOnly = mode === "fan_only";
   const hidesTarget = isOff || isFanOnly;
-  const isActive = activeAction === mode && !isOff;
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const previousTarget = fmtClimateTemp(unit.targetTemp);
   const displayedTemp = hidesTarget
@@ -235,9 +234,13 @@ function ClimateModal({
     );
   }
 
+  const ringKey = activeAction ?? mode;
+  const accentColor = HVAC_COLOR[ringKey] ?? "var(--theme-fg-faint)";
+  const ringColor = HVAC_RING[ringKey] ?? "rgba(255,255,255,0.18)";
+  const glowColor = HVAC_GLOW[ringKey] ?? "rgba(255,255,255,0.04)";
+
   return (
     <Box
-      className={`thermostat-modal thermostat-modal--${mode}${isClosing ? " thermostat-modal--closing" : ""}`}
       position="fixed"
       inset="0"
       zIndex={200}
@@ -245,71 +248,188 @@ function ClimateModal({
       alignItems="center"
       justifyContent="center"
       p="4vmin"
+      bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.78) 55%, rgba(0,0,0,0.92) 100%)`}
+      backdropFilter="blur(18px) saturate(140%)"
       onClick={requestClose}
+      style={{
+        opacity: isClosing ? 0 : 1,
+        transition: `opacity ${THERMOSTAT_EXIT_MS}ms ease`,
+        WebkitBackdropFilter: "blur(18px) saturate(140%)",
+      }}
     >
       <Box
-        className="thermostat-panel"
-        display="flex"
-        flexDirection="column"
+        as="button"
+        aria-label="Close thermostat controls"
+        position="absolute"
+        top="3vmin"
+        right="3vmin"
+        width="7vmin"
+        height="7vmin"
+        borderRadius="full"
+        display="inline-flex"
         alignItems="center"
-        gap="3vmin"
-        onClick={(event) => event.stopPropagation()}
+        justifyContent="center"
+        color="var(--theme-fg-faint)"
+        bg="rgba(0,0,0,0.5)"
+        border="1px solid rgba(255,255,255,0.12)"
+        fontSize="3.4vmin"
+        zIndex={300}
+        onClick={(event) => {
+          event.stopPropagation();
+          requestClose();
+        }}
+        style={{
+          WebkitTapHighlightColor: "transparent",
+          backdropFilter: "blur(6px)",
+          WebkitBackdropFilter: "blur(6px)",
+        }}
       >
-        <Box
-          as="button"
-          className="thermostat-close"
-          aria-label="Close thermostat controls"
-          onClick={requestClose}
-        >
-          <IoClose />
-        </Box>
+        <IoClose />
+      </Box>
+      <VStack
+        gap="4vmin"
+        align="center"
+        onClick={(event) => event.stopPropagation()}
+        style={{
+          transform: isClosing ? "scale(0.92)" : "scale(1)",
+          transition: `transform ${THERMOSTAT_EXIT_MS}ms ease`,
+        }}
+      >
 
-        <Box
-          className={`thermostat-dial thermostat-dial--${mode}${isActive ? " thermostat-dial--active" : ""}`}
-        >
-          <Box className="thermostat-dial__edge" />
-          <Box className="thermostat-dial__weather" />
-          <Box className="thermostat-particles" aria-hidden="true">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Box key={index} as="span" className="thermostat-particle" />
-            ))}
-          </Box>
+        <Box position="relative" width="min(70vmin, 70vh)" aspectRatio="1">
           {!hidesTarget && (
             <>
               <Box
                 as="button"
-                className="thermostat-step thermostat-step--down"
                 aria-label="Decrease target temperature"
-                onClick={() => adjustTemp(-1)}
-                style={{ WebkitTapHighlightColor: "transparent" }}
+                position="absolute"
+                left="6%"
+                top="50%"
+                width="9vmin"
+                height="9vmin"
+                borderRadius="full"
+                display="inline-flex"
+                alignItems="center"
+                justifyContent="center"
+                color={accentColor}
+                bg="rgba(0,0,0,0.45)"
+                border="1px solid"
+                borderColor={ringColor}
+                fontSize="4vmin"
+                zIndex={2}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  adjustTemp(-1);
+                }}
+                style={{
+                  transform: "translateY(-50%)",
+                  WebkitTapHighlightColor: "transparent",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                }}
               >
                 <IoRemove />
               </Box>
               <Box
                 as="button"
-                className="thermostat-step thermostat-step--up"
                 aria-label="Increase target temperature"
-                onClick={() => adjustTemp(1)}
-                style={{ WebkitTapHighlightColor: "transparent" }}
+                position="absolute"
+                right="6%"
+                top="50%"
+                width="9vmin"
+                height="9vmin"
+                borderRadius="full"
+                display="inline-flex"
+                alignItems="center"
+                justifyContent="center"
+                color={accentColor}
+                bg="rgba(0,0,0,0.45)"
+                border="1px solid"
+                borderColor={ringColor}
+                fontSize="4vmin"
+                zIndex={2}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  adjustTemp(1);
+                }}
+                style={{
+                  transform: "translateY(-50%)",
+                  WebkitTapHighlightColor: "transparent",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                }}
               >
                 <IoAdd />
               </Box>
             </>
           )}
 
-          <VStack className="thermostat-dial__content" gap="0">
-            <Text className="thermostat-room">{unit.name}</Text>
-            <HStack className="thermostat-status" gap="1.2vmin">
-              <AccentIcon />
-              <Text as="span">{statusLabel}</Text>
-            </HStack>
-            <Text className="thermostat-temp">{displayedTemp}°</Text>
-            <Text className="thermostat-temp-label">{displayLabel}</Text>
-            <Text className="thermostat-detail">{detailLabel}</Text>
-          </VStack>
+          <Box
+            position="relative"
+            width="100%"
+            height="100%"
+            borderRadius="full"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            bg={`radial-gradient(circle at 50% 32%, ${glowColor} 0%, rgba(0,0,0,0.85) 65%, #000 100%)`}
+            boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.7), 0 0 6vmin ${glowColor}`}
+            style={{
+              transition: "box-shadow 400ms ease",
+            }}
+          >
+            <VStack gap="0.6vmin" align="center" justify="center">
+              <Text
+                fontSize="2.4vmin"
+                color="var(--theme-fg-faint)"
+                fontWeight="500"
+                letterSpacing="0.08em"
+              >
+                {unit.name}
+              </Text>
+              <HStack
+                gap="1vmin"
+                color={accentColor}
+                fontSize="2vmin"
+                fontWeight="600"
+                letterSpacing="0.18em"
+                textTransform="uppercase"
+                opacity={isOff ? 0.55 : 0.95}
+              >
+                <AccentIcon />
+                <Text as="span">{statusLabel}</Text>
+              </HStack>
+              <Text
+                fontSize="22vmin"
+                fontWeight="100"
+                lineHeight="1"
+                color="var(--theme-fg)"
+                letterSpacing="-0.05em"
+              >
+                {displayedTemp}°
+              </Text>
+              <Text
+                fontSize="1.8vmin"
+                color="var(--theme-fg-faint)"
+                fontWeight="500"
+                letterSpacing="0.1em"
+                textTransform="uppercase"
+              >
+                {displayLabel}
+              </Text>
+              <Text
+                fontSize="1.6vmin"
+                color="var(--theme-fg-faint)"
+                opacity={0.7}
+                mt="0.6vmin"
+              >
+                {detailLabel}
+              </Text>
+            </VStack>
+          </Box>
         </Box>
 
-        <HStack className="thermostat-mode-strip" gap="1.4vmin">
+        <HStack gap="2vmin">
           {HVAC_MODES.map(({ key, label }) => {
             const active = mode === key;
             const ModeIcon =
@@ -320,22 +440,55 @@ function ClimateModal({
                   : key === "fan_only"
                     ? MdAir
                     : IoPowerOutline;
+            const btnAccent = HVAC_COLOR[key] ?? "var(--theme-fg-faint)";
+            const btnRing = HVAC_RING[key] ?? "rgba(255,255,255,0.18)";
+            const btnGlow = HVAC_GLOW[key] ?? "rgba(255,255,255,0.04)";
 
             return (
-              <Box
-                key={key}
-                as="button"
-                className={`thermostat-mode-button${active ? " thermostat-mode-button--active" : ""}`}
-                onClick={() => applyMode(key)}
-                style={{ WebkitTapHighlightColor: "transparent" }}
-              >
-                <ModeIcon />
-                <Text as="span">{label}</Text>
-              </Box>
+              <VStack key={key} gap="0.8vmin" align="center">
+                <Box
+                  as="button"
+                  width="9vmin"
+                  height="9vmin"
+                  borderRadius="full"
+                  display="inline-flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  color={active ? btnAccent : "var(--theme-fg-faint)"}
+                  bg={
+                    active
+                      ? `radial-gradient(circle at 50% 35%, ${btnGlow} 0%, rgba(0,0,0,0.6) 80%)`
+                      : "rgba(255,255,255,0.02)"
+                  }
+                  fontSize="3.2vmin"
+                  boxShadow={
+                    active
+                      ? `inset 0 0 0 0.3vmin ${btnRing}, 0 0 2vmin ${btnGlow}`
+                      : "inset 0 0 0 1px rgba(255,255,255,0.08)"
+                  }
+                  onClick={() => applyMode(key)}
+                  style={{
+                    transition:
+                      "box-shadow 220ms ease, color 220ms ease, background 220ms ease",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
+                >
+                  <ModeIcon />
+                </Box>
+                <Text
+                  fontSize="1.4vmin"
+                  color={active ? btnAccent : "var(--theme-fg-faint)"}
+                  fontWeight="600"
+                  letterSpacing="0.18em"
+                  opacity={active ? 1 : 0.7}
+                >
+                  {label}
+                </Text>
+              </VStack>
             );
           })}
         </HStack>
-      </Box>
+      </VStack>
     </Box>
   );
 }

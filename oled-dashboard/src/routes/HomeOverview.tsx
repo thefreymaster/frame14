@@ -17,7 +17,7 @@ import { Box, Text, HStack, VStack, Spacer, Alert } from "@chakra-ui/react";
 //   WiStrongWind,
 // } from "react-icons/wi";
 import NumberFlow from "@number-flow/react";
-import { IoCalendarOutline, IoSunnyOutline } from "react-icons/io5";
+import { IoCalendarOutline } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
 import type {
   HomeInternet,
@@ -332,7 +332,7 @@ function CalendarSection({
     <Board>
       {today.length > 0 && (
         <>
-          <SectionTitle icon={<IoSunnyOutline />}>TODAY</SectionTitle>
+          <SectionTitle icon={<IoCalendarOutline />}>TODAY</SectionTitle>
           <EventList events={today} />
         </>
       )}

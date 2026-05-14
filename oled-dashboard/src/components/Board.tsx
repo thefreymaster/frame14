@@ -14,7 +14,7 @@ export const Board = ({
     <Box
       minWidth="100%"
       backgroundColor={bg}
-      border={`3px solid`}
+      border={`1px solid`}
       borderColor={border}
       pl="4"
       pr="4"

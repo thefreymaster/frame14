@@ -569,12 +569,22 @@ body {
 @keyframes thermostatPulse {
   0%,
   100% {
-    opacity: 0.52;
-    transform: scale(0.92);
+    opacity: 0.35;
+    transform: scale(0.7);
   }
   50% {
-    opacity: 0.94;
-    transform: scale(1);
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes thermostatGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
   }
 }
 

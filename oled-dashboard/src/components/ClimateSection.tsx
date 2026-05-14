@@ -295,7 +295,6 @@ function ClimateModal({
           transition: `transform ${THERMOSTAT_EXIT_MS}ms ease`,
         }}
       >
-
         <Box position="relative" width="min(70vmin, 70vh)" aspectRatio="1">
           {!hidesTarget && (
             <>
@@ -372,13 +371,34 @@ function ClimateModal({
             display="flex"
             alignItems="center"
             justifyContent="center"
-            bg={`radial-gradient(circle at 50% 32%, ${glowColor} 0%, rgba(0,0,0,0.85) 65%, #000 100%)`}
-            boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.7), 0 0 6vmin ${glowColor}`}
+            overflow="hidden"
+            bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.6) 55%, #000 100%)`}
+            boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.55), 0 0 8vmin ${ringColor}`}
             style={{
               transition: "box-shadow 400ms ease",
             }}
           >
-            <VStack gap="0.6vmin" align="center" justify="center">
+            {activeAction && (
+              <Box
+                position="absolute"
+                inset="0"
+                borderRadius="full"
+                pointerEvents="none"
+                style={{
+                  background: `radial-gradient(circle at 50% 50%, ${ringColor} 0%, ${glowColor} 32%, transparent 65%)`,
+                  animation: "thermostatPulse 2.6s ease-in-out infinite",
+                  transformOrigin: "center",
+                  mixBlendMode: "screen",
+                }}
+              />
+            )}
+            <VStack
+              gap="0.6vmin"
+              align="center"
+              justify="center"
+              position="relative"
+              zIndex={1}
+            >
               <Text
                 fontSize="2.4vmin"
                 color="var(--theme-fg-faint)"
@@ -543,12 +563,33 @@ function ClimateCard({
         display="flex"
         alignItems="center"
         justifyContent="center"
-        bg={`radial-gradient(circle at 50% 32%, ${glowColor} 0%, rgba(0,0,0,0.85) 65%, #000 100%)`}
-        boxShadow={`inset 0 0 0 0.35vmin ${ringColor}, inset 0 0 2.5vmin rgba(0,0,0,0.7)${isActiveLive ? `, 0 0 2vmin ${glowColor}` : ""}`}
+        overflow="hidden"
+        bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.6) 95%, #000 100%)`}
+        boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.55), 0 0 8vmin ${isActiveLive ? ringColor : glowColor}`}
         onClick={onTap}
         style={{ WebkitTapHighlightColor: "transparent" }}
       >
-        <VStack gap="0.4vmin" align="center" justify="center">
+        {isActiveLive && (
+          <Box
+            position="absolute"
+            inset="0"
+            borderRadius="full"
+            pointerEvents="none"
+            style={{
+              background: `radial-gradient(circle at 50% 50%, ${ringColor} 0%, ${glowColor} 32%, transparent 65%)`,
+              animation: "thermostatPulse 2.6s ease-in-out infinite",
+              transformOrigin: "center",
+              mixBlendMode: "screen",
+            }}
+          />
+        )}
+        <VStack
+          gap="0.4vmin"
+          align="center"
+          justify="center"
+          position="relative"
+          zIndex={1}
+        >
           <Box
             color={accentColor}
             fontSize="2.6vmin"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Text, HStack, VStack, Spacer, Alert } from "@chakra-ui/react";
+import { Box, Text, HStack, Spacer, Alert } from "@chakra-ui/react";
 // import {
 //   WiMoonAltWaningCrescent4,
 //   WiCloudy,
@@ -17,14 +17,8 @@ import { Box, Text, HStack, VStack, Spacer, Alert } from "@chakra-ui/react";
 //   WiStrongWind,
 // } from "react-icons/wi";
 import NumberFlow from "@number-flow/react";
-import { IoCalendarOutline } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
-import type {
-  HomeInternet,
-  HomeWeather,
-  HomeCalendarEvent,
-} from "../hooks/useHomeData";
-import { SectionTitle } from "../components/SectionTitle/SectionTitle";
+import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { StatusBanner } from "../components/StatusBanner";
 import { EnergySection } from "../components/EnergySection";
 import { ClimateSection } from "../components/ClimateSection";
@@ -32,12 +26,9 @@ import { ForecastSection } from "../components/ForecastSection";
 import { PrinterSection } from "../components/PrinterSection";
 import { VacuumSection } from "../components/VacuumSection";
 import { Board } from "../components/Board";
+import { CalendarSection } from "../components/CalendarSection";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
-
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
 
 const DAYS = [
   "Sunday",
@@ -259,93 +250,6 @@ function Header({
 //   );
 // }
 
-// ── Calendar ─────────────────────────────────────────────────────────────────
-
-function formatEventTime(isoStr: string | null) {
-  if (!isoStr) return "";
-  const d = new Date(isoStr);
-  const h = d.getHours() % 12 || 12;
-  const m = pad(d.getMinutes());
-  const ampm = d.getHours() < 12 ? "a" : "p";
-  return `${h}:${m}${ampm}`;
-}
-
-function isPast(event: HomeCalendarEvent): boolean {
-  if (event.allDay) return false;
-  const end = event.end ?? event.start;
-  if (!end) return false;
-  return new Date(end) < new Date();
-}
-
-function EventList({
-  events,
-  max = 5,
-}: {
-  events: HomeCalendarEvent[];
-  max?: number;
-}) {
-  return (
-    <VStack gap="1vmin" align="stretch" width="100%">
-      {events.slice(0, max).map((event, i) => {
-        const past = isPast(event);
-        return (
-          <HStack key={i} justify="space-between" align="baseline" width="100%">
-            <Text
-              fontSize="3.8vmin"
-              fontWeight="300"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
-              flex="1"
-              mr="3vmin"
-              textDecoration={past ? "line-through" : undefined}
-              color={past ? "var(--theme-fg-faint)" : undefined}
-            >
-              {event.summary}
-            </Text>
-            <Text
-              fontSize="3.2vmin"
-              color={past ? "var(--theme-fg-faint)" : "var(--theme-fg)"}
-              fontWeight="300"
-              flexShrink={0}
-              textDecoration={past ? "line-through" : undefined}
-            >
-              {event.allDay ? "all day" : formatEventTime(event.start)}
-            </Text>
-          </HStack>
-        );
-      })}
-    </VStack>
-  );
-}
-
-function CalendarSection({
-  today,
-  tomorrow,
-}: {
-  today: HomeCalendarEvent[];
-  tomorrow: HomeCalendarEvent[];
-}) {
-  if (today.length === 0 && tomorrow.length === 0) return null;
-
-  return (
-    <Board>
-      {today.length > 0 && (
-        <>
-          <SectionTitle icon={<IoCalendarOutline />}>TODAY</SectionTitle>
-          <EventList events={today} />
-        </>
-      )}
-      {tomorrow.length > 0 && (
-        <Box mt={today.length > 0 ? "2.5vmin" : "0"}>
-          <SectionTitle icon={<IoCalendarOutline />}>TOMORROW</SectionTitle>
-          <EventList events={tomorrow} />
-        </Box>
-      )}
-    </Board>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function HomeOverview() {
@@ -390,9 +294,6 @@ export function HomeOverview() {
     );
   }
 
-  const hasCalendar =
-    data.calendar?.today?.length > 0 || data.calendar?.tomorrow?.length > 0;
-
   return (
     <>
       <StatusBanner />
@@ -435,23 +336,19 @@ export function HomeOverview() {
               overflowY="auto"
             >
               <ClimateSection climate={data.climate} />
-              {hasCalendar && (
-                <CalendarSection
-                  today={data.calendar.today}
-                  tomorrow={data.calendar.tomorrow}
-                />
-              )}
+              <CalendarSection
+                today={data.calendar?.today ?? []}
+                tomorrow={data.calendar?.tomorrow ?? []}
+              />
             </Box>
           </>
         ) : (
           <>
             <Header internet={data.internet} weather={data.weather} />
-            {hasCalendar && (
-              <CalendarSection
-                today={data.calendar.today}
-                tomorrow={data.calendar.tomorrow}
-              />
-            )}
+            <CalendarSection
+              today={data.calendar?.today ?? []}
+              tomorrow={data.calendar?.tomorrow ?? []}
+            />
             <ClimateSection climate={data.climate} />
             <EnergySection energy={data.energy} />
             <PrinterSection printer={data.printer} />

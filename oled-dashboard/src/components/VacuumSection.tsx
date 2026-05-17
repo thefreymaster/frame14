@@ -17,8 +17,11 @@ export function VacuumSection({ vacuum }: { vacuum: HomeVacuum[] }) {
   if (active.length === 0) return null;
 
   return (
-    <Board>
-      <SectionTitle icon={<TbVacuumCleaner />}>VACUUM</SectionTitle>
+    <Board
+      collapsible
+      storageKey="vacuum"
+      title={<SectionTitle icon={<TbVacuumCleaner />}>VACUUM</SectionTitle>}
+    >
       <VStack gap="2vmin" align="stretch" width="100%">
         {active.map((v) => {
           const progress = Math.max(0, Math.min(100, v.progress ?? 0));

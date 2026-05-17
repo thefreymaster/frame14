@@ -49,8 +49,33 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
       {showModal && (
         <PrinterModal printer={printer} onClose={() => setShowModal(false)} />
       )}
-      <Board onClick={() => setShowModal(true)}>
-        <SectionTitle icon={<IoPrintOutline />}>3D PRINTER</SectionTitle>
+      <Board
+        collapsible
+        storageKey="printer"
+        title={
+          <HStack width="100%" align="center" gap="1.5vmin">
+            <SectionTitle icon={<IoPrintOutline />}>3D PRINTER</SectionTitle>
+            <Box flex="1" minW="0" />
+            <Text
+              fontSize="1.8vmin"
+              color="green.500"
+              letterSpacing="0.06em"
+              fontWeight="500"
+            >
+              <NumberFlow value={printer.progress} />%
+            </Text>
+            <Text
+              fontSize="1.8vmin"
+              color="var(--theme-fg-dim)"
+              letterSpacing="0.06em"
+              fontWeight="500"
+            >
+              {fmtMins(printer.remainingTime)}
+            </Text>
+          </HStack>
+        }
+      >
+        <Box onClick={() => setShowModal(true)} cursor="pointer" width="100%">
         <HStack width="100%" justify="space-between" align="baseline">
           <Text
             fontSize="3.8vmin"
@@ -91,6 +116,7 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
             bg="green.500"
             transition="width 600ms ease"
           />
+        </Box>
         </Box>
       </Board>
     </>

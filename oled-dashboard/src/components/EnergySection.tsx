@@ -40,15 +40,11 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
       {showModal && (
         <EnergyModal energy={energy} onClose={() => setShowModal(false)} />
       )}
-      <Board onClick={() => setShowModal(true)}>
-        <HStack
-          align="center"
-          gap="1.5vmin"
-          mb="1.5vmin"
-          pt="2"
-          cursor="pointer"
-          width="100%"
-        >
+      <Board
+        collapsible
+        storageKey="energy"
+        title={
+          <HStack align="center" gap="1.5vmin" width="100%">
           <SectionTitle icon={<IoFlash />}>ENERGY</SectionTitle>
           {gridActive && (
             <Box
@@ -118,6 +114,9 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
             </HStack>
           </HStack>
         </HStack>
+        }
+      >
+        <Box onClick={() => setShowModal(true)} cursor="pointer" width="100%">
         <Grid templateColumns="1fr 1fr 1fr" gap="2vmin" width="100%">
           <VStack align="flex-start" gap="0.5vmin">
             <HStack gap="1.2vmin" align="baseline">
@@ -196,6 +195,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
             </Text>
           </VStack>
         </Grid>
+        </Box>
       </Board>
     </>
   );

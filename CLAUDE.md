@@ -111,6 +111,7 @@ src/
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     Divider.tsx                   — thin themed divider line
     ViewButton.tsx                — styled outline/solid toggle button
+    Board.tsx                     — themed panel with optional collapsible header (touch-friendly 48px min); collapse state persists in localStorage under `board-collapsed:<key>`; animated open/close via grid-template-rows; chevron rotates on toggle; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
     useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s

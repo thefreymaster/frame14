@@ -138,7 +138,37 @@ function Header({
   // const Icon = weather ? (CONDITION_ICON[weather.state] ?? WiDaySunny) : null;
 
   return (
-    <Board>
+    <Board
+      storageKey="time-weather"
+      title={
+        <HStack width="100%" align="baseline" mb="0">
+          <Text fontSize="3.8vmin" fontWeight="400" letterSpacing="0.02em">
+            {day}, {month} {date}
+          </Text>
+          <Spacer />
+          {weather && (
+            <HStack gap="1vmin" align="baseline">
+              <Text
+                fontSize="3.8vmin"
+                color="var(--theme-fg-dim)"
+                fontWeight="400"
+              >
+                {label}
+              </Text>
+              {weather.humidity != null && (
+                <Text
+                  fontSize="3.8vmin"
+                  color="var(--theme-fg-dim)"
+                  fontWeight="400"
+                >
+                  {weather.humidity}%
+                </Text>
+              )}
+            </HStack>
+          )}
+        </HStack>
+      }
+    >
       {connected === false && (
         <Alert.Root status="error" variant="solid" p="2">
           <Alert.Indicator />
@@ -146,33 +176,6 @@ function Header({
           <Alert.Description>Internet outage detected.</Alert.Description>
         </Alert.Root>
       )}
-      {/* Row 1: date — condition/humidity */}
-      <HStack width="100%" align="baseline" mb="0">
-        <Text fontSize="3.8vmin" fontWeight="400" letterSpacing="0.02em">
-          {day}, {month} {date}
-        </Text>
-        <Spacer />
-        {weather && (
-          <HStack gap="1vmin" align="baseline">
-            <Text
-              fontSize="3.8vmin"
-              color="var(--theme-fg-dim)"
-              fontWeight="400"
-            >
-              {label}
-            </Text>
-            {weather.humidity != null && (
-              <Text
-                fontSize="3.8vmin"
-                color="var(--theme-fg-dim)"
-                fontWeight="400"
-              >
-                {weather.humidity}%
-              </Text>
-            )}
-          </HStack>
-        )}
-      </HStack>
 
       {/* Row 2: time — temp */}
       <HStack width="100%" align="baseline">

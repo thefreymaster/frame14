@@ -644,8 +644,11 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
     climate.find((unit) => unit.entity_id === selectedEntityId) ?? null;
 
   return (
-    <Board>
-      <SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>
+    <Board
+      collapsible
+      storageKey="climate"
+      title={<SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>}
+    >
       <Box
         display="grid"
         gridTemplateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"

@@ -565,7 +565,7 @@ function ClimateCard({
         justifyContent="center"
         overflow="hidden"
         bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.6) 95%, #000 100%)`}
-        boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.55), 0 0 8vmin ${isActiveLive ? ringColor : glowColor}`}
+        boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.55)`}
         onClick={onTap}
         style={{ WebkitTapHighlightColor: "transparent" }}
       >

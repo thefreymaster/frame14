@@ -119,6 +119,35 @@ function arcPath(t0: number, t1: number) {
   return `M ${p0.x} ${p0.y} A ${ARC_RADIUS} ${ARC_RADIUS} 0 0 1 ${p1.x} ${p1.y}`;
 }
 
+type TickLine = {
+  temp: number;
+  active: boolean;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+
+function buildTicks(activeTemp: number | null | undefined): TickLine[] {
+  const lines: TickLine[] = [];
+  for (let temp = ARC_MIN_TEMP; temp <= ARC_MAX_TEMP; temp += 1) {
+    const tt = tempToT(temp);
+    const angle = ARC_ANGLE_START + tt * ARC_ANGLE_SPAN;
+    const active = temp === activeTemp;
+    const rInner = active ? 35 : 37;
+    const rOuter = active ? 43 : 41;
+    lines.push({
+      temp,
+      active,
+      x1: ARC_CENTER + rInner * Math.cos(angle),
+      y1: ARC_CENTER + rInner * Math.sin(angle),
+      x2: ARC_CENTER + rOuter * Math.cos(angle),
+      y2: ARC_CENTER + rOuter * Math.sin(angle),
+    });
+  }
+  return lines;
+}
+
 function ArcSlider({
   value,
   min,
@@ -147,24 +176,8 @@ function ArcSlider({
     currentValueRef.current = value;
   }, [value]);
 
-  const t = tempToT(value);
   const trackD = arcPath(0, 1);
-  const ticks: { temp: number; active: boolean; x1: number; y1: number; x2: number; y2: number }[] = [];
-  for (let temp = ARC_MIN_TEMP; temp <= ARC_MAX_TEMP; temp += 1) {
-    const tt = tempToT(temp);
-    const angle = ARC_ANGLE_START + tt * ARC_ANGLE_SPAN;
-    const active = temp === value;
-    const rInner = active ? 39.5 : 41.5;
-    const rOuter = active ? 47.5 : 45.5;
-    ticks.push({
-      temp,
-      active,
-      x1: ARC_CENTER + rInner * Math.cos(angle),
-      y1: ARC_CENTER + rInner * Math.sin(angle),
-      x2: ARC_CENTER + rOuter * Math.cos(angle),
-      y2: ARC_CENTER + rOuter * Math.sin(angle),
-    });
-  }
+  const ticks = buildTicks(value);
 
   function updateFromEvent(e: React.PointerEvent<SVGElement>) {
     const svg = svgRef.current;
@@ -705,12 +718,15 @@ function ClimateCard({
         : null;
   const badgeKey = activeAction ?? displayMode ?? "unknown";
   const accentColor = HVAC_COLOR[badgeKey] ?? "var(--theme-fg-faint)";
+  const accentCssColor = HVAC_ACCENT_CSS[badgeKey] ?? "rgba(255,255,255,0.45)";
   const ringColor = HVAC_RING[badgeKey] ?? "rgba(255,255,255,0.18)";
   const glowColor = HVAC_GLOW[badgeKey] ?? "rgba(255,255,255,0.04)";
   const isOff = normalizeClimateMode(displayMode) === "off";
   const isActiveLive = activeAction != null;
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const targetTemp = fmtClimateTemp(unit.targetTemp);
+  const showTickArc = !isOff && targetTemp != null;
+  const tickArc = showTickArc ? buildTicks(targetTemp) : null;
   const ModeIcon =
     activeAction === "heating" || displayMode === "heat"
       ? IoFlame
@@ -758,6 +774,35 @@ function ClimateCard({
               mixBlendMode: "screen",
             }}
           />
+        )}
+        {tickArc && (
+          <Box position="absolute" inset="0" pointerEvents="none">
+            <svg
+              viewBox="0 0 100 100"
+              width="100%"
+              height="100%"
+              style={{ overflow: "visible" }}
+            >
+              {tickArc.map((tick) => (
+                <line
+                  key={tick.temp}
+                  x1={tick.x1}
+                  y1={tick.y1}
+                  x2={tick.x2}
+                  y2={tick.y2}
+                  stroke={tick.active ? accentCssColor : ringColor}
+                  strokeWidth={tick.active ? 1.4 : 0.7}
+                  strokeLinecap="round"
+                  opacity={tick.active ? 1 : 0.55}
+                  style={
+                    tick.active
+                      ? { filter: `drop-shadow(0 0 1.5px ${accentCssColor})` }
+                      : undefined
+                  }
+                />
+              ))}
+            </svg>
+          </Box>
         )}
         <VStack
           gap="0.4vmin"

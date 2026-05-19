@@ -3,11 +3,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { callClimateService, type HvacMode } from "../lib/callService";
 import { Box, Text, HStack, VStack } from "@chakra-ui/react";
 import {
-  IoAdd,
   IoClose,
   IoFlame,
   IoPowerOutline,
-  IoRemove,
   IoSnow,
   IoThermometerOutline,
 } from "react-icons/io5";
@@ -54,6 +52,18 @@ const HVAC_GLOW: Record<string, string> = {
   unknown: "rgba(255,255,255,0.04)",
 };
 
+const HVAC_ACCENT_CSS: Record<string, string> = {
+  cool: "rgb(96, 165, 250)",
+  cooling: "rgb(96, 165, 250)",
+  heat: "rgb(251, 146, 60)",
+  heating: "rgb(251, 146, 60)",
+  fan_only: "rgb(94, 234, 212)",
+  fan: "rgb(94, 234, 212)",
+  off: "rgba(255,255,255,0.45)",
+  auto: "rgb(34, 197, 94)",
+  unknown: "rgba(255,255,255,0.45)",
+};
+
 const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
   heating: "heat",
   cooling: "cool",
@@ -68,6 +78,188 @@ const HVAC_MODES: { key: ClimateVisualMode; label: string }[] = [
 ];
 
 const THERMOSTAT_EXIT_MS = 260;
+
+const ARC_MIN_TEMP = 60;
+const ARC_MAX_TEMP = 85;
+const ARC_RADIUS = 44;
+const ARC_CENTER = 50;
+const ARC_ANGLE_START = (-Math.PI * 5) / 6;
+const ARC_ANGLE_END = -Math.PI / 6;
+const ARC_ANGLE_SPAN = ARC_ANGLE_END - ARC_ANGLE_START;
+
+function polar(t: number) {
+  const angle = ARC_ANGLE_START + t * ARC_ANGLE_SPAN;
+  return {
+    x: ARC_CENTER + ARC_RADIUS * Math.cos(angle),
+    y: ARC_CENTER + ARC_RADIUS * Math.sin(angle),
+  };
+}
+
+function tFromPoint(px: number, py: number) {
+  const dx = px - ARC_CENTER;
+  const dy = py - ARC_CENTER;
+  if (dy > 0) return px < ARC_CENTER ? 0 : 1;
+  const angle = Math.atan2(dy, dx);
+  const t = (angle - ARC_ANGLE_START) / ARC_ANGLE_SPAN;
+  return Math.max(0, Math.min(1, t));
+}
+
+function tToTemp(t: number) {
+  return Math.round(ARC_MIN_TEMP + t * (ARC_MAX_TEMP - ARC_MIN_TEMP));
+}
+
+function tempToT(v: number) {
+  const clamped = Math.max(ARC_MIN_TEMP, Math.min(ARC_MAX_TEMP, v));
+  return (clamped - ARC_MIN_TEMP) / (ARC_MAX_TEMP - ARC_MIN_TEMP);
+}
+
+function arcPath(t0: number, t1: number) {
+  const p0 = polar(t0);
+  const p1 = polar(t1);
+  return `M ${p0.x} ${p0.y} A ${ARC_RADIUS} ${ARC_RADIUS} 0 0 1 ${p1.x} ${p1.y}`;
+}
+
+function ArcSlider({
+  value,
+  min,
+  max,
+  accentCss,
+  trackCss,
+  onChange,
+  onCommit,
+  onDragStart,
+  onDragEnd,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  accentCss: string;
+  trackCss: string;
+  onChange: (temp: number) => void;
+  onCommit: (temp: number) => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const draggingRef = useRef(false);
+  const currentValueRef = useRef(value);
+  useEffect(() => {
+    currentValueRef.current = value;
+  }, [value]);
+
+  const t = tempToT(value);
+  const trackD = arcPath(0, 1);
+  const ticks: { temp: number; active: boolean; x1: number; y1: number; x2: number; y2: number }[] = [];
+  for (let temp = ARC_MIN_TEMP; temp <= ARC_MAX_TEMP; temp += 1) {
+    const tt = tempToT(temp);
+    const angle = ARC_ANGLE_START + tt * ARC_ANGLE_SPAN;
+    const active = temp === value;
+    const rInner = active ? 39.5 : 41.5;
+    const rOuter = active ? 47.5 : 45.5;
+    ticks.push({
+      temp,
+      active,
+      x1: ARC_CENTER + rInner * Math.cos(angle),
+      y1: ARC_CENTER + rInner * Math.sin(angle),
+      x2: ARC_CENTER + rOuter * Math.cos(angle),
+      y2: ARC_CENTER + rOuter * Math.sin(angle),
+    });
+  }
+
+  function updateFromEvent(e: React.PointerEvent<SVGElement>) {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const px = ((e.clientX - rect.left) * 100) / rect.width;
+    const py = ((e.clientY - rect.top) * 100) / rect.height;
+    const newTemp = tToTemp(tFromPoint(px, py));
+    const clamped = Math.max(min, Math.min(max, newTemp));
+    if (clamped !== currentValueRef.current) {
+      currentValueRef.current = clamped;
+      onChange(clamped);
+    }
+  }
+
+  function handlePointerDown(e: React.PointerEvent<SVGElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    draggingRef.current = true;
+    onDragStart();
+    updateFromEvent(e);
+  }
+
+  function handlePointerMove(e: React.PointerEvent<SVGElement>) {
+    if (!draggingRef.current) return;
+    updateFromEvent(e);
+  }
+
+  function handlePointerEnd(e: React.PointerEvent<SVGElement>) {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    try {
+      (e.currentTarget as Element).releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    onDragEnd();
+    onCommit(currentValueRef.current);
+  }
+
+  return (
+    <Box position="absolute" inset="0" zIndex={2} pointerEvents="none">
+      <svg
+        ref={svgRef}
+        viewBox="0 0 100 100"
+        width="100%"
+        height="100%"
+        style={{ touchAction: "none", overflow: "visible" }}
+      >
+        {ticks.map((tick) => (
+          <line
+            key={tick.temp}
+            x1={tick.x1}
+            y1={tick.y1}
+            x2={tick.x2}
+            y2={tick.y2}
+            stroke={tick.active ? accentCss : trackCss}
+            strokeWidth={tick.active ? 1.4 : 0.7}
+            strokeLinecap="round"
+            opacity={tick.active ? 1 : 0.55}
+            pointerEvents="none"
+            style={
+              tick.active
+                ? { filter: `drop-shadow(0 0 1.5px ${accentCss})` }
+                : undefined
+            }
+          />
+        ))}
+        <path
+          d={trackD}
+          stroke="rgba(0,0,0,0.001)"
+          strokeWidth="14"
+          strokeLinecap="round"
+          fill="none"
+          role="slider"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
+          tabIndex={0}
+          style={{ pointerEvents: "stroke", cursor: "pointer" }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+        />
+      </svg>
+    </Box>
+  );
+}
 
 function normalizeClimateMode(
   mode: string | null | undefined,
@@ -108,6 +300,7 @@ function ClimateModal({
 }) {
   const queryClient = useQueryClient();
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDraggingRef = useRef(false);
   const [mode, setMode] = useState<ClimateVisualMode>(
     normalizeClimateMode(unit.hvacMode ?? unit.state),
   );
@@ -121,7 +314,9 @@ function ClimateModal({
     }
     setIsClosing(false);
     setMode(normalizeClimateMode(unit.hvacMode ?? unit.state));
-    setTemp(fmtClimateTemp(unit.targetTemp) ?? 72);
+    if (!isDraggingRef.current) {
+      setTemp(fmtClimateTemp(unit.targetTemp) ?? 72);
+    }
   }, [unit.entity_id, unit.hvacMode, unit.state, unit.targetTemp]);
 
   function requestClose() {
@@ -220,10 +415,7 @@ function ClimateModal({
     );
   }
 
-  function adjustTemp(delta: number) {
-    const newTemp = Math.min(85, Math.max(60, temp + delta));
-    if (newTemp === temp) return;
-    setTemp(newTemp);
+  function commitTemp(newTemp: number) {
     callClimateService(unit.entity_id, "set_temperature", {
       temperature: newTemp,
     });
@@ -236,6 +428,7 @@ function ClimateModal({
 
   const ringKey = activeAction ?? mode;
   const accentColor = HVAC_COLOR[ringKey] ?? "var(--theme-fg-faint)";
+  const accentCssColor = HVAC_ACCENT_CSS[ringKey] ?? "rgba(255,255,255,0.45)";
   const ringColor = HVAC_RING[ringKey] ?? "rgba(255,255,255,0.18)";
   const glowColor = HVAC_GLOW[ringKey] ?? "rgba(255,255,255,0.04)";
 
@@ -247,7 +440,7 @@ function ClimateModal({
       display="flex"
       alignItems="center"
       justifyContent="center"
-      p="4vmin"
+      p={{ base: "4vw", md: "4vmin" }}
       bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.78) 55%, rgba(0,0,0,0.92) 100%)`}
       backdropFilter="blur(18px) saturate(140%)"
       onClick={requestClose}
@@ -261,10 +454,10 @@ function ClimateModal({
         as="button"
         aria-label="Close thermostat controls"
         position="absolute"
-        top="3vmin"
-        right="3vmin"
-        width="7vmin"
-        height="7vmin"
+        top={{ base: "4vw", md: "3vmin" }}
+        right={{ base: "4vw", md: "3vmin" }}
+        width={{ base: "12vw", md: "7vmin" }}
+        height={{ base: "12vw", md: "7vmin" }}
         borderRadius="full"
         display="inline-flex"
         alignItems="center"
@@ -272,7 +465,7 @@ function ClimateModal({
         color="var(--theme-fg-faint)"
         bg="rgba(0,0,0,0.5)"
         border="1px solid rgba(255,255,255,0.12)"
-        fontSize="3.4vmin"
+        fontSize={{ base: "5.5vw", md: "3.4vmin" }}
         zIndex={300}
         onClick={(event) => {
           event.stopPropagation();
@@ -287,7 +480,7 @@ function ClimateModal({
         <IoClose />
       </Box>
       <VStack
-        gap="4vmin"
+        gap={{ base: "6vw", md: "4vmin" }}
         align="center"
         onClick={(event) => event.stopPropagation()}
         style={{
@@ -295,72 +488,27 @@ function ClimateModal({
           transition: `transform ${THERMOSTAT_EXIT_MS}ms ease`,
         }}
       >
-        <Box position="relative" width="min(70vmin, 70vh)" aspectRatio="1">
+        <Box
+          position="relative"
+          width={{ base: "min(92vw, 70vh)", md: "min(70vmin, 70vh)" }}
+          aspectRatio="1"
+        >
           {!hidesTarget && (
-            <>
-              <Box
-                as="button"
-                aria-label="Decrease target temperature"
-                position="absolute"
-                left="6%"
-                top="50%"
-                width="9vmin"
-                height="9vmin"
-                borderRadius="full"
-                display="inline-flex"
-                alignItems="center"
-                justifyContent="center"
-                color={accentColor}
-                bg="rgba(0,0,0,0.45)"
-                border="1px solid"
-                borderColor={ringColor}
-                fontSize="4vmin"
-                zIndex={2}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  adjustTemp(-1);
-                }}
-                style={{
-                  transform: "translateY(-50%)",
-                  WebkitTapHighlightColor: "transparent",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
-                }}
-              >
-                <IoRemove />
-              </Box>
-              <Box
-                as="button"
-                aria-label="Increase target temperature"
-                position="absolute"
-                right="6%"
-                top="50%"
-                width="9vmin"
-                height="9vmin"
-                borderRadius="full"
-                display="inline-flex"
-                alignItems="center"
-                justifyContent="center"
-                color={accentColor}
-                bg="rgba(0,0,0,0.45)"
-                border="1px solid"
-                borderColor={ringColor}
-                fontSize="4vmin"
-                zIndex={2}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  adjustTemp(1);
-                }}
-                style={{
-                  transform: "translateY(-50%)",
-                  WebkitTapHighlightColor: "transparent",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
-                }}
-              >
-                <IoAdd />
-              </Box>
-            </>
+            <ArcSlider
+              value={temp}
+              min={ARC_MIN_TEMP}
+              max={ARC_MAX_TEMP}
+              accentCss={accentCssColor}
+              trackCss={ringColor}
+              onChange={setTemp}
+              onCommit={commitTemp}
+              onDragStart={() => {
+                isDraggingRef.current = true;
+              }}
+              onDragEnd={() => {
+                isDraggingRef.current = false;
+              }}
+            />
           )}
 
           <Box
@@ -400,7 +548,7 @@ function ClimateModal({
               zIndex={1}
             >
               <Text
-                fontSize="2.4vmin"
+                fontSize={{ base: "3.4vw", md: "2.4vmin" }}
                 color="var(--theme-fg-faint)"
                 fontWeight="500"
                 letterSpacing="0.08em"
@@ -408,9 +556,9 @@ function ClimateModal({
                 {unit.name}
               </Text>
               <HStack
-                gap="1vmin"
+                gap={{ base: "1.4vw", md: "1vmin" }}
                 color={accentColor}
-                fontSize="2vmin"
+                fontSize={{ base: "3vw", md: "2vmin" }}
                 fontWeight="600"
                 letterSpacing="0.18em"
                 textTransform="uppercase"
@@ -420,7 +568,7 @@ function ClimateModal({
                 <Text as="span">{statusLabel}</Text>
               </HStack>
               <Text
-                fontSize="22vmin"
+                fontSize={{ base: "28vw", md: "22vmin" }}
                 fontWeight="100"
                 lineHeight="1"
                 color="var(--theme-fg)"
@@ -429,7 +577,7 @@ function ClimateModal({
                 {displayedTemp}°
               </Text>
               <Text
-                fontSize="1.8vmin"
+                fontSize={{ base: "2.8vw", md: "1.8vmin" }}
                 color="var(--theme-fg-faint)"
                 fontWeight="500"
                 letterSpacing="0.1em"
@@ -438,10 +586,10 @@ function ClimateModal({
                 {displayLabel}
               </Text>
               <Text
-                fontSize="1.6vmin"
+                fontSize={{ base: "2.6vw", md: "1.6vmin" }}
                 color="var(--theme-fg-faint)"
                 opacity={0.7}
-                mt="0.6vmin"
+                mt={{ base: "1vw", md: "0.6vmin" }}
               >
                 {detailLabel}
               </Text>
@@ -449,65 +597,93 @@ function ClimateModal({
           </Box>
         </Box>
 
-        <HStack gap="2vmin">
-          {HVAC_MODES.map(({ key, label }) => {
-            const active = mode === key;
-            const ModeIcon =
-              key === "heat"
-                ? IoFlame
-                : key === "cool"
-                  ? IoSnow
-                  : key === "fan_only"
-                    ? MdAir
-                    : IoPowerOutline;
-            const btnAccent = HVAC_COLOR[key] ?? "var(--theme-fg-faint)";
-            const btnRing = HVAC_RING[key] ?? "rgba(255,255,255,0.18)";
-            const btnGlow = HVAC_GLOW[key] ?? "rgba(255,255,255,0.04)";
-
-            return (
-              <VStack key={key} gap="0.8vmin" align="center">
+        {(() => {
+          const activeIndex = HVAC_MODES.findIndex((m) => m.key === mode);
+          const segCount = HVAC_MODES.length;
+          const activeKey = HVAC_MODES[activeIndex]?.key ?? mode;
+          const indicatorAccent =
+            HVAC_RING[activeKey] ?? "rgba(255,255,255,0.18)";
+          const indicatorGlow =
+            HVAC_GLOW[activeKey] ?? "rgba(255,255,255,0.04)";
+          return (
+            <Box
+              position="relative"
+              bg="rgba(0,0,0,0.55)"
+              borderRadius="full"
+              border="1px solid rgba(255,255,255,0.08)"
+              p="3px"
+              width={{ base: "85vw", md: "44vmin" }}
+              maxWidth="420px"
+            >
+              {activeIndex >= 0 && (
                 <Box
-                  as="button"
-                  width="9vmin"
-                  height="9vmin"
+                  position="absolute"
+                  top="3px"
+                  bottom="3px"
+                  left="3px"
+                  width={`calc((100% - 6px) / ${segCount})`}
                   borderRadius="full"
-                  display="inline-flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  color={active ? btnAccent : "var(--theme-fg-faint)"}
-                  bg={
-                    active
-                      ? `radial-gradient(circle at 50% 35%, ${btnGlow} 0%, rgba(0,0,0,0.6) 80%)`
-                      : "rgba(255,255,255,0.02)"
-                  }
-                  fontSize="3.2vmin"
-                  boxShadow={
-                    active
-                      ? `inset 0 0 0 0.3vmin ${btnRing}, 0 0 2vmin ${btnGlow}`
-                      : "inset 0 0 0 1px rgba(255,255,255,0.08)"
-                  }
-                  onClick={() => applyMode(key)}
+                  pointerEvents="none"
+                  bg={`radial-gradient(circle at 50% 35%, ${indicatorGlow} 0%, rgba(0,0,0,0.6) 90%)`}
+                  boxShadow={`inset 0 0 0 1px ${indicatorAccent}, 0 0 1.2vmin ${indicatorGlow}`}
                   style={{
+                    transform: `translateX(${activeIndex * 100}%)`,
                     transition:
-                      "box-shadow 220ms ease, color 220ms ease, background 220ms ease",
-                    WebkitTapHighlightColor: "transparent",
+                      "transform 320ms cubic-bezier(0.32, 0.72, 0.2, 1), box-shadow 280ms ease, background 280ms ease",
                   }}
-                >
-                  <ModeIcon />
-                </Box>
-                <Text
-                  fontSize="1.4vmin"
-                  color={active ? btnAccent : "var(--theme-fg-faint)"}
-                  fontWeight="600"
-                  letterSpacing="0.18em"
-                  opacity={active ? 1 : 0.7}
-                >
-                  {label}
-                </Text>
-              </VStack>
-            );
-          })}
-        </HStack>
+                />
+              )}
+              <HStack gap="0" position="relative" zIndex={1}>
+                {HVAC_MODES.map(({ key, label }) => {
+                  const active = mode === key;
+                  const ModeIcon =
+                    key === "heat"
+                      ? IoFlame
+                      : key === "cool"
+                        ? IoSnow
+                        : key === "fan_only"
+                          ? MdAir
+                          : IoPowerOutline;
+                  const btnAccent =
+                    HVAC_COLOR[key] ?? "var(--theme-fg-faint)";
+                  return (
+                    <Box
+                      key={key}
+                      as="button"
+                      flex="1"
+                      display="inline-flex"
+                      flexDirection="column"
+                      alignItems="center"
+                      justifyContent="center"
+                      gap="2px"
+                      py="8px"
+                      borderRadius="full"
+                      bg="transparent"
+                      color={active ? btnAccent : "var(--theme-fg-faint)"}
+                      fontSize="22px"
+                      onClick={() => applyMode(key)}
+                      style={{
+                        transition: "color 260ms ease",
+                        WebkitTapHighlightColor: "transparent",
+                      }}
+                    >
+                      <ModeIcon />
+                      <Text
+                        fontSize="10px"
+                        lineHeight="1"
+                        fontWeight="600"
+                        letterSpacing="0.12em"
+                        opacity={active ? 1 : 0.75}
+                      >
+                        {label}
+                      </Text>
+                    </Box>
+                  );
+                })}
+              </HStack>
+            </Box>
+          );
+        })()}
       </VStack>
     </Box>
   );

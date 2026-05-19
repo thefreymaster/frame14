@@ -109,6 +109,7 @@ src/
     EnergyPanel.tsx               — solar production/consumption display
     PrinterSection.tsx            — 3D printer card + click-to-open detail modal (temps, layers, ETA, filament)
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
+    ClimateSection.tsx            — thermostat cards + modal; modal has Nest-style 120° tick arc slider (drag/tap, commits on pointerup), animated sliding segmented mode pill (HEAT/COOL/FAN/OFF); responsive sizing (vw on phone, vmin on landscape)
     Divider.tsx                   — thin themed divider line
     ViewButton.tsx                — styled outline/solid toggle button
     Board.tsx                     — themed panel with optional collapsible header (touch-friendly 48px min); collapse state persists in localStorage under `board-collapsed:<key>`; animated open/close via grid-template-rows; chevron rotates on toggle; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed

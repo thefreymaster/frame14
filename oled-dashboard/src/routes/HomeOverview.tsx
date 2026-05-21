@@ -25,6 +25,7 @@ import { ClimateSection } from "../components/ClimateSection";
 import { ForecastSection } from "../components/ForecastSection";
 import { PrinterSection } from "../components/PrinterSection";
 import { VacuumSection } from "../components/VacuumSection";
+import { FanSection } from "../components/FanSection";
 import { Board } from "../components/Board";
 import { CalendarSection } from "../components/CalendarSection";
 
@@ -138,37 +139,34 @@ function Header({
   // const Icon = weather ? (CONDITION_ICON[weather.state] ?? WiDaySunny) : null;
 
   return (
-    <Board
-      storageKey="time-weather"
-      title={
-        <HStack width="100%" align="baseline" mb="0">
-          <Text fontSize="3.8vmin" fontWeight="400" letterSpacing="0.02em">
-            {day}, {month} {date}
-          </Text>
-          <Spacer />
-          {weather && (
-            <HStack gap="1vmin" align="baseline">
+    <Board storageKey="time-weather">
+      <HStack width="100%" align="baseline" mb="0.5vmin">
+        <Text fontSize="3.8vmin" fontWeight="400" letterSpacing="0.02em">
+          {day}, {month} {date}
+        </Text>
+        <Spacer />
+        {weather && (
+          <HStack gap="1vmin" align="baseline">
+            <Text
+              fontSize="3.8vmin"
+              color="var(--theme-fg-dim)"
+              fontWeight="400"
+            >
+              {label}
+            </Text>
+            {weather.humidity != null && (
               <Text
                 fontSize="3.8vmin"
                 color="var(--theme-fg-dim)"
                 fontWeight="400"
               >
-                {label}
+                {weather.humidity}%
               </Text>
-              {weather.humidity != null && (
-                <Text
-                  fontSize="3.8vmin"
-                  color="var(--theme-fg-dim)"
-                  fontWeight="400"
-                >
-                  {weather.humidity}%
-                </Text>
-              )}
-            </HStack>
-          )}
-        </HStack>
-      }
-    >
+            )}
+          </HStack>
+        )}
+      </HStack>
+
       {connected === false && (
         <Alert.Root status="error" variant="solid" p="2">
           <Alert.Indicator />
@@ -325,6 +323,7 @@ export function HomeOverview() {
             >
               <Header internet={data.internet} weather={data.weather} />
               <EnergySection energy={data.energy} />
+              <FanSection fan={data.fan} />
               <PrinterSection printer={data.printer} />
               <VacuumSection vacuum={data.vacuum} />
             </Box>
@@ -354,6 +353,7 @@ export function HomeOverview() {
             />
             <ClimateSection climate={data.climate} />
             <EnergySection energy={data.energy} />
+            <FanSection fan={data.fan} />
             <PrinterSection printer={data.printer} />
             <VacuumSection vacuum={data.vacuum} />
           </>

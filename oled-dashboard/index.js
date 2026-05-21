@@ -36,6 +36,7 @@ import homeRouter from "./routes/home.js";
 import entitiesRouter from "./routes/entities.js";
 import climateRouter from "./routes/climate.js";
 import vacuumRouter from "./routes/vacuum.js";
+import fanRouter from "./routes/fan.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -109,7 +110,8 @@ io.on("connection", (socket) => {
   socket.on("entity:call", (payload) => {
     if (!payload || typeof payload !== "object") return;
     const ok = callService(payload);
-    if (!ok) console.warn("[entity:call] rejected", payload);
+    if (ok) console.log("[entity:call] sent", payload);
+    else console.warn("[entity:call] rejected", payload);
   });
 });
 
@@ -126,6 +128,7 @@ app.use("/api/energy", energyRouter);
 app.use("/api/entities", entitiesRouter);
 app.use("/api/home/climate", climateRouter);
 app.use("/api/home/vacuum", vacuumRouter);
+app.use("/api/home/fan", fanRouter);
 app.use("/api/home", homeRouter);
 app.use("/api/videos", videosRouter);
 app.use("/videos", videosRouter);

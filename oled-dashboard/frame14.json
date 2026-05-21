@@ -35,5 +35,6 @@
     "productionToday": "sensor.envoy_482518016321_energy_production_today",
     "consumptionToday": "sensor.envoy_482518016321_energy_consumption_today"
   },
-  "vacuums": ["vacuum.roborock_q5_pro"]
+  "vacuums": ["vacuum.roborock_q5_pro"],
+  "fans": ["fan.living_room_ceiling_fan", "fan.aidens_fan"]
 }

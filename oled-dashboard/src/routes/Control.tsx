@@ -180,7 +180,7 @@ export function Control() {
         <HStack gap="min(2vmin, 10px)" mb="min(4.5vmin, 20px)">
           {(["frame", "controller"] as const).map((mode) => {
             const isActive = deviceMode === mode;
-            const label = mode === "frame" ? "Use as display" : "Use as remote";
+            const label = mode === "frame" ? "Use as frame" : "Use as remote";
             return (
               <Box
                 key={mode}

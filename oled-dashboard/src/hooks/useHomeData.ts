@@ -66,6 +66,14 @@ export interface HomeVacuum {
   battery: number | null;
 }
 
+export interface HomeFan {
+  entity_id: string;
+  name: string;
+  state: string;
+  percentage: number | null;
+  presetMode: string | null;
+}
+
 export interface HomeEnergy {
   currentProduction: number;
   currentConsumption: number;
@@ -91,6 +99,7 @@ export interface HomeData {
   people: HomePerson[];
   printer: HomePrinter;
   vacuum: HomeVacuum[];
+  fan: HomeFan[];
   energy: HomeEnergy;
   calendar: {
     today: HomeCalendarEvent[];
@@ -124,6 +133,12 @@ interface VacuumAttributes {
   friendly_name?: string;
   cleaning_progress?: number | string | null;
   battery_level?: number | string | null;
+}
+
+interface FanAttributes {
+  friendly_name?: string;
+  percentage?: number | string | null;
+  preset_mode?: string | null;
 }
 
 interface WeatherAttributes {
@@ -212,6 +227,14 @@ interface VacuumResponse {
   battery: number | null;
 }
 
+interface FanResponse {
+  entity_id: string;
+  name: string;
+  state: string;
+  percentage: number | null;
+  presetMode: string | null;
+}
+
 interface EnergyResponse {
   production: number;
   consumption: number;
@@ -251,6 +274,26 @@ function mapVacuumState(state: HAState<VacuumAttributes>): HomeVacuum {
   };
 }
 
+function mapFanResponse(fan: FanResponse): HomeFan {
+  return {
+    entity_id: fan.entity_id,
+    name: fan.name,
+    state: fan.state,
+    percentage: fan.percentage,
+    presetMode: fan.presetMode,
+  };
+}
+
+function mapFanState(state: HAState<FanAttributes>): HomeFan {
+  return {
+    entity_id: state.entity_id,
+    name: state.attributes?.friendly_name ?? state.entity_id,
+    state: state.state,
+    percentage: parseFloatOrNull(state.attributes?.percentage),
+    presetMode: state.attributes?.preset_mode ?? null,
+  };
+}
+
 function mapClimateState(state: HAState<ClimateAttributes>): HomeClimate {
   return {
     entity_id: state.entity_id,
@@ -273,6 +316,12 @@ async function fetchVacuum(): Promise<VacuumResponse[]> {
   const res = await fetch("/api/home/vacuum");
   if (!res.ok) throw new Error(`Vacuum fetch failed: ${res.status}`);
   return res.json() as Promise<VacuumResponse[]>;
+}
+
+async function fetchFan(): Promise<FanResponse[]> {
+  const res = await fetch("/api/home/fan");
+  if (!res.ok) throw new Error(`Fan fetch failed: ${res.status}`);
+  return res.json() as Promise<FanResponse[]>;
 }
 
 async function fetchEnergy(): Promise<EnergyResponse> {
@@ -303,6 +352,10 @@ export function useHomeData() {
   const vacuumEntityIds = useMemo(
     () => [...new Set(entitiesQuery.data?.vacuums ?? [])],
     [entitiesQuery.data?.vacuums],
+  );
+  const fanEntityIds = useMemo(
+    () => [...new Set(entitiesQuery.data?.fans ?? [])],
+    [entitiesQuery.data?.fans],
   );
   const weatherEntities = useMemo(
     () =>
@@ -367,6 +420,15 @@ export function useHomeData() {
     staleTime: Infinity,
   });
   const vacuumStates = useEntities<VacuumAttributes>(vacuumEntityIds);
+
+  // Fan
+  const fanQuery = useQuery<FanResponse[]>({
+    queryKey: ["home", "fan"],
+    queryFn: fetchFan,
+    refetchInterval: 1000 * 30,
+    staleTime: 1000 * 30,
+  });
+  const fanStates = useEntities<FanAttributes>(fanEntityIds);
 
   // Energy
   const energyQuery = useQuery<EnergyResponse>({
@@ -481,6 +543,24 @@ export function useHomeData() {
             .filter((vacuum): vacuum is HomeVacuum => vacuum != null);
         })();
 
+  const fallbackFan = (fanQuery.data ?? []).map(mapFanResponse);
+  const homeFan: HomeFan[] =
+    fanEntityIds.length === 0
+      ? fallbackFan
+      : (() => {
+          const fallbackById = new Map(
+            fallbackFan.map((fan) => [fan.entity_id, fan]),
+          );
+          return fanEntityIds
+            .map((entityId, index) => {
+              const liveState = fanStates[index]?.data;
+              return liveState
+                ? mapFanState(liveState)
+                : (fallbackById.get(entityId) ?? null);
+            })
+            .filter((fan): fan is HomeFan => fan != null);
+        })();
+
   const homePeople = useMemo<HomePerson[]>(
     () => [
       {
@@ -563,6 +643,7 @@ export function useHomeData() {
       people: homePeople,
       printer: homePrinter,
       vacuum: homeVacuum,
+      fan: homeFan,
       energy: homeEnergy,
       internet: homeInternet,
       calendar: calendarQuery.data ?? { today: [], tomorrow: [] },
@@ -573,6 +654,7 @@ export function useHomeData() {
       homePeople,
       homePrinter,
       homeVacuum,
+      homeFan,
       homeEnergy,
       homeInternet,
       calendarQuery.data,

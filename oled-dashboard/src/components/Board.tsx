@@ -95,13 +95,13 @@ export const Board = ({
           role={collapsible ? "button" : undefined}
           aria-expanded={collapsible ? open : undefined}
           style={{
-            marginBottom: collapsible && !open ? 0 : "0.5rem",
+            marginBottom: 0,
             transition: `margin-bottom ${ANIM_MS}ms ease`,
           }}
         >
           <Box flex="1" minW="0" color={headerColor}>
             {typeof title === "string" ? (
-              <Text fontSize="sm" fontWeight="500">
+              <Text fontSize="sm" fontWeight="500" mb="0">
                 {title}
               </Text>
             ) : (

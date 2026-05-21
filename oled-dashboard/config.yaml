@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.25.0"
+version: "0.26.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -53,6 +53,9 @@ options:
   energy_consumption_today: "sensor.envoy_482518016321_energy_consumption_today"
   vacuum_entities:
     - "vacuum.roborock_q5_pro"
+  fan_entities:
+    - "fan.living_room_ceiling_fan"
+    - "fan.aidens_fan"
 schema:
   ha_url: str
   ha_token: str
@@ -71,4 +74,6 @@ schema:
   energy_production_today: str
   energy_consumption_today: str
   vacuum_entities:
+    - str
+  fan_entities:
     - str

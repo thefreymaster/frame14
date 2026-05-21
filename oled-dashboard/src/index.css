@@ -29,6 +29,11 @@ html {
   to   { transform: scale(1.2); }
 }
 
+@keyframes fanSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* Prevent text selection on display views */
 body {
   user-select: none;

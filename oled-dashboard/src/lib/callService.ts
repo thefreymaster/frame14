@@ -5,7 +5,7 @@ export type HvacMode = "heat" | "cool" | "off" | "auto" | "fan_only";
 
 export function callService(entityId: string, service: ServiceName = "toggle") {
   const domain = entityId.split(".")[0];
-  if (domain !== "light" && domain !== "switch") return;
+  if (domain !== "light" && domain !== "switch" && domain !== "fan") return;
   socket.emit("entity:call", { domain, service, entity_id: entityId });
 }
 
@@ -30,4 +30,18 @@ export function callClimateService(
     entity_id: entityId,
     ...params,
   });
+}
+
+export function callFanService(
+  entityId: string,
+  service: "turn_on" | "turn_off" | "set_percentage",
+  params?: { percentage?: number },
+) {
+  const payload: Record<string, unknown> = {
+    domain: "fan",
+    service,
+    entity_id: entityId,
+  };
+  if (params?.percentage != null) payload.percentage = params.percentage;
+  socket.emit("entity:call", payload);
 }

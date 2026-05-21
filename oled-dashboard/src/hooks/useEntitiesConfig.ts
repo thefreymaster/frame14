@@ -11,6 +11,7 @@ export interface EntitiesConfig {
     consumptionToday: string;
   };
   vacuums: string[];
+  fans: string[];
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

@@ -1,8 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Box, HStack, VStack, Text } from "@chakra-ui/react";
 import { ResponsiveLine } from "@nivo/line";
 import { PiSolarRoof } from "react-icons/pi";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useEnergyMonthly } from "../hooks/useEnergyMonthly";
+import { useEnergyYearly } from "../hooks/useEnergyYearly";
 import { useThemeMode } from "../hooks/useThemeMode";
 
 const MONTHS = [
@@ -26,11 +28,56 @@ function fmtKwh(n: number) {
   return n.toFixed(0);
 }
 
+type View = "month" | "year";
+
 export function Solar() {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const monthLabel = `${MONTHS[month].slice(0, 3).toUpperCase()} ${year}`;
+  const [view, setView] = useState<View>("month");
+  // Cursor: which month/year is being viewed.
+  const [cursor, setCursor] = useState({
+    year: now.getFullYear(),
+    month: now.getMonth(),
+  });
+
+  const isCurrentMonth =
+    cursor.year === now.getFullYear() && cursor.month === now.getMonth();
+  const isCurrentYear = cursor.year === now.getFullYear();
+  const atNow = view === "month" ? isCurrentMonth : isCurrentYear;
+
+  function shiftBack() {
+    setCursor((c) => {
+      if (view === "year") return { ...c, year: c.year - 1 };
+      const month = c.month - 1;
+      return month < 0
+        ? { year: c.year - 1, month: 11 }
+        : { ...c, month };
+    });
+  }
+
+  function shiftForward() {
+    if (atNow) return;
+    setCursor((c) => {
+      if (view === "year") return { ...c, year: c.year + 1 };
+      const month = c.month + 1;
+      return month > 11
+        ? { year: c.year + 1, month: 0 }
+        : { ...c, month };
+    });
+  }
+
+  function switchView(next: View) {
+    setView(next);
+    // Year went out of range never happens; just snap month into current year
+    if (next === "year" && cursor.year > now.getFullYear()) {
+      setCursor((c) => ({ ...c, year: now.getFullYear() }));
+    }
+  }
+
+  const monthParam = `${cursor.year}-${String(cursor.month + 1).padStart(2, "0")}`;
+  const label =
+    view === "month"
+      ? `${MONTHS[cursor.month].slice(0, 3).toUpperCase()} ${cursor.year}`
+      : `${cursor.year}`;
 
   const { effectiveMode } = useThemeMode();
   const isDark = effectiveMode === "dark";
@@ -54,7 +101,10 @@ export function Solar() {
     crosshair: { line: { stroke: crosshairColor, strokeWidth: 1 } },
   }), [isDark, tickColor, crosshairColor]);
 
-  const { data, isPending, isError } = useEnergyMonthly();
+  const monthly = useEnergyMonthly(view === "month" ? monthParam : undefined);
+  const yearly = useEnergyYearly(view === "year" ? cursor.year : undefined);
+  const { data, isPending, isError } =
+    view === "month" ? monthly : yearly;
 
   const chartData = useMemo(() => {
     if (!data) return [];
@@ -101,14 +151,67 @@ export function Solar() {
             SOLAR
           </Text>
         </HStack>
-        <Text
-          fontSize="2.8vmin"
-          fontWeight="300"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.08em"
-        >
-          {monthLabel}
-        </Text>
+
+        <HStack gap="2vmin" align="center">
+          {/* month / year toggle */}
+          <HStack
+            gap="0"
+            borderRadius="full"
+            overflow="hidden"
+            border="1px solid var(--theme-fg-faint)"
+          >
+            {(["month", "year"] as View[]).map((v) => (
+              <Box
+                key={v}
+                as="button"
+                px="2.4vmin"
+                py="0.9vmin"
+                fontSize="2vmin"
+                letterSpacing="0.08em"
+                onClick={() => switchView(v)}
+                bg={view === v ? "var(--theme-fg-dim)" : "transparent"}
+                color={view === v ? "var(--theme-bg)" : "var(--theme-fg-faint)"}
+              >
+                {v === "month" ? "MONTH" : "YEAR"}
+              </Box>
+            ))}
+          </HStack>
+
+          {/* prev / label / next */}
+          <HStack gap="1.5vmin" align="center">
+            <Box
+              as="button"
+              onClick={shiftBack}
+              fontSize="3.4vmin"
+              lineHeight="1"
+              color="var(--theme-fg-faint)"
+              display="flex"
+            >
+              <FiChevronLeft />
+            </Box>
+            <Text
+              fontSize="2.8vmin"
+              fontWeight="300"
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.08em"
+              minW="11vmin"
+              textAlign="center"
+            >
+              {label}
+            </Text>
+            <Box
+              as="button"
+              onClick={shiftForward}
+              fontSize="3.4vmin"
+              lineHeight="1"
+              color={atNow ? "var(--theme-fg-ghost, rgba(255,255,255,0.12))" : "var(--theme-fg-faint)"}
+              display="flex"
+              pointerEvents={atNow ? "none" : "auto"}
+            >
+              <FiChevronRight />
+            </Box>
+          </HStack>
+        </HStack>
       </HStack>
 
       {/* Stats */}
@@ -229,6 +332,10 @@ export function Solar() {
               tickSize: 0,
               tickPadding: 10,
               format: (v) => {
+                if (view === "year") {
+                  const m = parseInt(String(v).slice(5, 7), 10) - 1;
+                  return MONTHS[m]?.slice(0, 3) ?? "";
+                }
                 const day = parseInt(String(v).slice(-2), 10);
                 return day % 7 === 1 ? String(day) : "";
               },
@@ -240,36 +347,43 @@ export function Solar() {
             enableCrosshair={true}
             crosshairType="x"
             useMesh={true}
-            tooltip={({ point }) => (
-              <Box
-                px="2.5vmin"
-                py="1.5vmin"
-                borderRadius="1vmin"
-                style={{ pointerEvents: "none", background: tooltipBg }}
-              >
-                <Text
-                  fontSize="2.2vmin"
-                  mb="0.5vmin"
-                  style={{ color: tooltipFg, opacity: 0.5 }}
+            tooltip={({ point }) => {
+              const x = String(point.data.x);
+              const xLabel =
+                view === "year"
+                  ? MONTHS[parseInt(x.slice(5, 7), 10) - 1] ?? x
+                  : x.slice(5);
+              return (
+                <Box
+                  px="2.5vmin"
+                  py="1.5vmin"
+                  borderRadius="1vmin"
+                  style={{ pointerEvents: "none", background: tooltipBg }}
                 >
-                  {String(point.data.x).slice(5)}
-                </Text>
-                <Text
-                  fontSize="3vmin"
-                  fontWeight="500"
-                  style={{ color: point.seriesColor }}
-                >
-                  {(point.data.y as number).toFixed(1)} kWh
-                </Text>
-                <Text
-                  fontSize="2vmin"
-                  letterSpacing="0.08em"
-                  style={{ color: tooltipFg, opacity: 0.4 }}
-                >
-                  {point.seriesId === "runningProduction" ? "PRODUCED" : "CONSUMED"}
-                </Text>
-              </Box>
-            )}
+                  <Text
+                    fontSize="2.2vmin"
+                    mb="0.5vmin"
+                    style={{ color: tooltipFg, opacity: 0.5 }}
+                  >
+                    {xLabel}
+                  </Text>
+                  <Text
+                    fontSize="3vmin"
+                    fontWeight="500"
+                    style={{ color: point.seriesColor }}
+                  >
+                    {(point.data.y as number).toFixed(1)} kWh
+                  </Text>
+                  <Text
+                    fontSize="2vmin"
+                    letterSpacing="0.08em"
+                    style={{ color: tooltipFg, opacity: 0.4 }}
+                  >
+                    {point.seriesId === "runningProduction" ? "PRODUCED" : "CONSUMED"}
+                  </Text>
+                </Box>
+              );
+            }}
           />
         )}
       </Box>

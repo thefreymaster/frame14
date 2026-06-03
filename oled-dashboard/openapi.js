@@ -259,6 +259,49 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/energy/yearly": {
+      get: {
+        tags: ["Energy"],
+        operationId: "getEnergyYearly",
+        summary: "Get monthly energy totals for a year",
+        description:
+          "Returns one entry per month from January through the current month (current year) or the full year (past years). Daily long-term statistics are summed per month; each entry includes monthly production/consumption and running totals for the year. Uses Home Assistant long-term statistics.",
+        parameters: [
+          {
+            name: "year",
+            in: "query",
+            required: false,
+            description: "Year to query in YYYY format. Defaults to the current year.",
+            schema: { type: "integer", example: 2026 },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Four Nivo line series: production, consumption, runningProduction, runningConsumption. Each point x is YYYY-MM, y is kWh (null if no statistics recorded for that month).",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/NivoSeries" },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid year parameter.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          503: {
+            description: "HA_TOKEN or energy entities not configured.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          500: {
+            description: "Failed to fetch from Home Assistant.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+        },
+      },
+    },
     "/api/change/{view}": {
       get: {
         tags: ["Views"],

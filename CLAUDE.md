@@ -151,7 +151,7 @@ routes/
   weather.js      — GET /api/weather (entity IDs from entities.js)
   home.js         — GET /api/home/weather, GET /api/home/calendar
   climate.js      — GET /api/home/climate (fetches HA states for ENTITIES.climate array)
-  energy.js       — GET /api/energy (entity IDs from entities.js)
+  energy.js       — GET /api/energy, /api/energy/monthly, /api/energy/yearly (entity IDs from entities.js)
   vacuum.js       — GET /api/home/vacuum (fetches HA states for ENTITIES.vacuums array)
   entities.js     — GET /api/entities (serves ENTITIES object to frontend)
   photos.js       — GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail
@@ -169,6 +169,8 @@ routes/
 - `GET /api/home/vacuum` — vacuum states for all entities in `ENTITIES.vacuums` (state, cleaning_progress, battery_level)
 - `GET /api/home/calendar` — today + tomorrow calendar events from all HA calendars
 - `GET /api/energy` — solar production/consumption from HA (entity IDs from `ENTITIES.energy`)
+- `GET /api/energy/monthly?month=YYYY-MM` — daily production/consumption + running totals for a month (HA long-term statistics); defaults to current month
+- `GET /api/energy/yearly?year=YYYY` — monthly production/consumption + running totals for a year (daily stats summed per month); defaults to current year
 - `GET /api/photos/config` — returns `{ defaultAlbumId }` from config
 - `GET /api/photos/albums` — Immich album list
 - `GET /api/photos/albums/:albumId` — assets in an album (images only)

@@ -160,4 +160,89 @@ router.get("/monthly", async (req, res) => {
   }
 });
 
+router.get("/yearly", async (req, res) => {
+  if (!HA_TOKEN) {
+    res.status(503).json({ error: "HA_TOKEN not configured" });
+    return;
+  }
+  if (!PRODUCTION_ENTITY || !CONSUMPTION_ENTITY) {
+    res.status(503).json({ error: "Energy entities not configured" });
+    return;
+  }
+
+  let year;
+  if (req.query.year) {
+    year = parseInt(req.query.year, 10);
+    if (isNaN(year)) {
+      res.status(400).json({ error: "year param must be YYYY" });
+      return;
+    }
+  } else {
+    year = new Date().getFullYear();
+  }
+
+  const now = new Date();
+  const isCurrentYear = now.getFullYear() === year;
+  const lastMonth = isCurrentYear ? now.getMonth() : 11;
+
+  const fetchStart = new Date(year, 0, 1, 0, 0, 0);
+  const fetchEnd = isCurrentYear ? now : new Date(year, 11, 31, 23, 59, 59);
+
+  try {
+    // Daily long-term statistics, summed per month. The "production_today"
+    // sensors reset at midnight, so each day's "state" stat is that day's total.
+    const stats = await sendCommand("recorder/statistics_during_period", {
+      start_time: fetchStart.toISOString(),
+      end_time: fetchEnd.toISOString(),
+      statistic_ids: [PRODUCTION_ENTITY, CONSUMPTION_ENTITY],
+      period: "day",
+      types: ["state"],
+    });
+
+    function sumByMonth(arr) {
+      const map = {};
+      for (const s of arr ?? []) {
+        if (s.state == null) continue;
+        const m = new Date(s.start).getMonth();
+        map[m] = (map[m] ?? 0) + Number(s.state);
+      }
+      return map;
+    }
+
+    const prodByMonth = sumByMonth(stats[PRODUCTION_ENTITY]);
+    const consByMonth = sumByMonth(stats[CONSUMPTION_ENTITY]);
+
+    const production = [];
+    const consumption = [];
+    const runningProduction = [];
+    const runningConsumption = [];
+    let runProd = 0;
+    let runCons = 0;
+
+    for (let m = 0; m <= lastMonth; m++) {
+      const x = `${year}-${String(m + 1).padStart(2, "0")}`;
+      const prod = prodByMonth[m] != null ? round2(prodByMonth[m]) : null;
+      const cons = consByMonth[m] != null ? round2(consByMonth[m]) : null;
+
+      if (prod != null) runProd = round2(runProd + prod);
+      if (cons != null) runCons = round2(runCons + cons);
+
+      production.push({ x, y: prod });
+      consumption.push({ x, y: cons });
+      runningProduction.push({ x, y: runProd });
+      runningConsumption.push({ x, y: runCons });
+    }
+
+    res.json([
+      { id: "production", data: production },
+      { id: "consumption", data: consumption },
+      { id: "runningProduction", data: runningProduction },
+      { id: "runningConsumption", data: runningConsumption },
+    ]);
+  } catch (err) {
+    console.error("Yearly energy fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch yearly energy data from HA" });
+  }
+});
+
 export default router;

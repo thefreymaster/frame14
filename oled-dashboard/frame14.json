@@ -21,7 +21,8 @@
   ],
   "weather": {
     "current": "weather.openweathermap",
-    "forecast": "weather.openweathermap_2"
+    "forecast": "weather.openweathermap_2",
+    "temperature": "sensor.openweathermap_temperature"
   },
   "climate": [
     "climate.1st_floor_ac",

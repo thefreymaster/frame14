@@ -9,6 +9,7 @@ const PRODUCTION_ENTITY = ENTITIES.energy?.productionToday ?? "";
 const CONSUMPTION_ENTITY = ENTITIES.energy?.consumptionToday ?? "";
 const CURRENT_PRODUCTION_ENTITY = ENTITIES.energy?.currentProduction ?? "";
 const CURRENT_CONSUMPTION_ENTITY = ENTITIES.energy?.currentConsumption ?? "";
+const TEMPERATURE_ENTITY = ENTITIES.weather?.temperature ?? "";
 
 function round2(n) {
   return Math.round(n * 100) / 100;
@@ -107,30 +108,34 @@ router.get("/monthly", async (req, res) => {
     // Long-term statistics via WebSocket — survives the 10-day history purge.
     // "state" type = last sensor value during each day period.
     // For "production_today" sensors that reset at midnight, last value = daily total.
+    const statisticIds = [PRODUCTION_ENTITY, CONSUMPTION_ENTITY];
+    if (TEMPERATURE_ENTITY) statisticIds.push(TEMPERATURE_ENTITY);
     const stats = await sendCommand("recorder/statistics_during_period", {
       start_time: fetchStart.toISOString(),
       end_time: fetchEnd.toISOString(),
-      statistic_ids: [PRODUCTION_ENTITY, CONSUMPTION_ENTITY],
+      statistic_ids: statisticIds,
       period: "day",
-      types: ["state"],
+      types: ["state", "mean"],
     });
 
-    function buildMap(arr) {
+    function buildMap(arr, key = "state") {
       const map = {};
       for (const s of arr ?? []) {
-        if (s.state == null) continue;
-        map[localDateStr(new Date(s.start))] = s.state;
+        if (s[key] == null) continue;
+        map[localDateStr(new Date(s.start))] = s[key];
       }
       return map;
     }
 
     const prodByDay = buildMap(stats[PRODUCTION_ENTITY]);
     const consByDay = buildMap(stats[CONSUMPTION_ENTITY]);
+    const tempByDay = buildMap(stats[TEMPERATURE_ENTITY], "mean");
 
     const production = [];
     const consumption = [];
     const runningProduction = [];
     const runningConsumption = [];
+    const temperature = [];
     let runProd = 0;
     let runCons = 0;
 
@@ -146,14 +151,17 @@ router.get("/monthly", async (req, res) => {
       consumption.push({ x, y: cons });
       runningProduction.push({ x, y: runProd });
       runningConsumption.push({ x, y: runCons });
+      temperature.push({ x, y: tempByDay[x] != null ? round2(tempByDay[x]) : null });
     }
 
-    res.json([
+    const series = [
       { id: "production", data: production },
       { id: "consumption", data: consumption },
       { id: "runningProduction", data: runningProduction },
       { id: "runningConsumption", data: runningConsumption },
-    ]);
+    ];
+    if (TEMPERATURE_ENTITY) series.push({ id: "temperature", data: temperature });
+    res.json(series);
   } catch (err) {
     console.error("Monthly energy fetch error:", err);
     res.status(500).json({ error: "Failed to fetch monthly energy data from HA" });
@@ -191,12 +199,14 @@ router.get("/yearly", async (req, res) => {
   try {
     // Daily long-term statistics, summed per month. The "production_today"
     // sensors reset at midnight, so each day's "state" stat is that day's total.
+    const statisticIds = [PRODUCTION_ENTITY, CONSUMPTION_ENTITY];
+    if (TEMPERATURE_ENTITY) statisticIds.push(TEMPERATURE_ENTITY);
     const stats = await sendCommand("recorder/statistics_during_period", {
       start_time: fetchStart.toISOString(),
       end_time: fetchEnd.toISOString(),
-      statistic_ids: [PRODUCTION_ENTITY, CONSUMPTION_ENTITY],
+      statistic_ids: statisticIds,
       period: "day",
-      types: ["state"],
+      types: ["state", "mean"],
     });
 
     function sumByMonth(arr) {
@@ -209,13 +219,30 @@ router.get("/yearly", async (req, res) => {
       return map;
     }
 
+    // Average of daily mean temps per month
+    function avgMeanByMonth(arr) {
+      const sums = {};
+      const counts = {};
+      for (const s of arr ?? []) {
+        if (s.mean == null) continue;
+        const m = new Date(s.start).getMonth();
+        sums[m] = (sums[m] ?? 0) + Number(s.mean);
+        counts[m] = (counts[m] ?? 0) + 1;
+      }
+      const map = {};
+      for (const m of Object.keys(sums)) map[m] = sums[m] / counts[m];
+      return map;
+    }
+
     const prodByMonth = sumByMonth(stats[PRODUCTION_ENTITY]);
     const consByMonth = sumByMonth(stats[CONSUMPTION_ENTITY]);
+    const tempByMonth = avgMeanByMonth(stats[TEMPERATURE_ENTITY]);
 
     const production = [];
     const consumption = [];
     const runningProduction = [];
     const runningConsumption = [];
+    const temperature = [];
     let runProd = 0;
     let runCons = 0;
 
@@ -231,14 +258,17 @@ router.get("/yearly", async (req, res) => {
       consumption.push({ x, y: cons });
       runningProduction.push({ x, y: runProd });
       runningConsumption.push({ x, y: runCons });
+      temperature.push({ x, y: tempByMonth[m] != null ? round2(tempByMonth[m]) : null });
     }
 
-    res.json([
+    const series = [
       { id: "production", data: production },
       { id: "consumption", data: consumption },
       { id: "runningProduction", data: runningProduction },
       { id: "runningConsumption", data: runningConsumption },
-    ]);
+    ];
+    if (TEMPERATURE_ENTITY) series.push({ id: "temperature", data: temperature });
+    res.json(series);
   } catch (err) {
     console.error("Yearly energy fetch error:", err);
     res.status(500).json({ error: "Failed to fetch yearly energy data from HA" });

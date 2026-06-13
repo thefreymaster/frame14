@@ -21,6 +21,7 @@ function loadEntities() {
       weather: {
         current: options.weather_entity ?? "",
         forecast: options.weather_forecast_entity ?? options.weather_entity ?? "",
+        temperature: options.weather_temperature_entity ?? "",
       },
       climate: options.climate_entities ?? [],
       energy: {

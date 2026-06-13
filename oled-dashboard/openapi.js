@@ -234,7 +234,7 @@ export const openApiDocument = {
         ],
         responses: {
           200: {
-            description: "Four Nivo line series: production, consumption, runningProduction, runningConsumption. Each point x is YYYY-MM-DD, y is kWh (null if no statistics recorded for that day).",
+            description: "Nivo line series: production, consumption, runningProduction, runningConsumption (kWh), plus temperature (daily mean outdoor temp) when a temperature entity is configured. Each point x is YYYY-MM-DD, y is null if no statistics recorded for that day.",
             content: {
               "application/json": {
                 schema: {
@@ -277,7 +277,7 @@ export const openApiDocument = {
         ],
         responses: {
           200: {
-            description: "Four Nivo line series: production, consumption, runningProduction, runningConsumption. Each point x is YYYY-MM, y is kWh (null if no statistics recorded for that month).",
+            description: "Nivo line series: production, consumption, runningProduction, runningConsumption (kWh), plus temperature (monthly average of daily mean outdoor temps) when a temperature entity is configured. Each point x is YYYY-MM, y is null if no statistics recorded for that month.",
             content: {
               "application/json": {
                 schema: {
@@ -485,7 +485,7 @@ export const openApiDocument = {
         properties: {
           id: {
             type: "string",
-            enum: ["production", "consumption", "runningProduction", "runningConsumption"],
+            enum: ["production", "consumption", "runningProduction", "runningConsumption", "temperature"],
             example: "production",
           },
           data: {

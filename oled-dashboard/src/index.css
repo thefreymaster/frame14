@@ -978,3 +978,21 @@ body {
   background: rgba(242, 244, 248, 0.98);
   border-color: rgba(34, 197, 94, 0.30);
 }
+
+/* Solar chart left-to-right reveal on load / data change */
+@keyframes solarChartReveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.3;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+.solar-chart-reveal {
+  width: 100%;
+  height: 100%;
+  animation: solarChartReveal 0.9s cubic-bezier(0.4, 0, 0.2, 1) both;
+}

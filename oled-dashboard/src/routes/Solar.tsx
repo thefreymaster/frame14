@@ -25,14 +25,16 @@ const MONTHS = [
 // Built per-render inside component — must react to theme changes
 
 function fmtKwh(n: number) {
-  return n.toFixed(0);
+  return n.toFixed(1);
 }
 
 type View = "month" | "year";
+type ChartMode = "total" | "daily";
 
 export function Solar() {
   const now = new Date();
   const [view, setView] = useState<View>("month");
+  const [chartMode, setChartMode] = useState<ChartMode>("total");
   // Cursor: which month/year is being viewed.
   const [cursor, setCursor] = useState({
     year: now.getFullYear(),
@@ -83,6 +85,7 @@ export function Solar() {
   const isDark = effectiveMode === "dark";
 
   const consumptionColor = isDark ? "rgba(255,255,255,0.55)" : "#4A5568";
+  const temperatureColor = isDark ? "rgba(56,189,248,0.6)" : "#0284c7";
   const tooltipBg = isDark ? "#111111" : "#f0f4f8";
   const tooltipFg = isDark ? "rgba(255,255,255,0.8)" : "#1A202C";
   const crosshairColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
@@ -106,15 +109,51 @@ export function Solar() {
   const { data, isPending, isError } =
     view === "month" ? monthly : yearly;
 
-  const chartData = useMemo(() => {
-    if (!data) return [];
-    return data
-      .filter((s) => s.id === "runningProduction" || s.id === "runningConsumption")
+  // Temperature is on a different scale (°F vs kWh) — normalize it into the
+  // upper band of the energy y-range and keep actual values for the tooltip.
+  const { chartData, tempByX } = useMemo(() => {
+    if (!data) return { chartData: [], tempByX: new Map<string, number>() };
+
+    const wanted =
+      chartMode === "total"
+        ? ["runningProduction", "runningConsumption"]
+        : ["production", "consumption"];
+    const energySeries = data
+      .filter((s) => wanted.includes(s.id))
       .map((s) => ({
         id: s.id,
         data: s.data.filter((d): d is { x: string; y: number } => d.y != null),
       }));
-  }, [data]);
+
+    const tempByX = new Map<string, number>();
+    if (chartMode === "daily") {
+      const tempPoints =
+        data
+          .find((s) => s.id === "temperature")
+          ?.data.filter((d): d is { x: string; y: number } => d.y != null) ?? [];
+      for (const p of tempPoints) tempByX.set(p.x, p.y);
+
+      const energyMax = Math.max(
+        0,
+        ...energySeries.flatMap((s) => s.data.map((d) => d.y))
+      );
+      if (tempPoints.length > 0 && energyMax > 0) {
+        const temps = tempPoints.map((p) => p.y);
+        const tMin = Math.min(...temps);
+        const tMax = Math.max(...temps);
+        const lo = energyMax * 0.55;
+        const hi = energyMax * 0.95;
+        const scale = (t: number) =>
+          tMax === tMin ? (lo + hi) / 2 : lo + ((t - tMin) / (tMax - tMin)) * (hi - lo);
+        energySeries.push({
+          id: "temperature",
+          data: tempPoints.map((p) => ({ x: p.x, y: scale(p.y) })),
+        });
+      }
+    }
+
+    return { chartData: energySeries, tempByX };
+  }, [data, chartMode]);
 
   const prodTotal =
     data?.find((s) => s.id === "runningProduction")?.data.at(-1)?.y ?? 0;
@@ -153,6 +192,30 @@ export function Solar() {
         </HStack>
 
         <HStack gap="2vmin" align="center">
+          {/* total / daily toggle */}
+          <HStack
+            gap="0"
+            borderRadius="full"
+            overflow="hidden"
+            border="1px solid var(--theme-fg-faint)"
+          >
+            {(["total", "daily"] as ChartMode[]).map((m) => (
+              <Box
+                key={m}
+                as="button"
+                px="2.4vmin"
+                py="0.9vmin"
+                fontSize="2vmin"
+                letterSpacing="0.08em"
+                onClick={() => setChartMode(m)}
+                bg={chartMode === m ? "var(--theme-fg-dim)" : "transparent"}
+                color={chartMode === m ? "var(--theme-bg)" : "var(--theme-fg-faint)"}
+              >
+                {m === "total" ? "TOTAL" : "DAILY"}
+              </Box>
+            ))}
+          </HStack>
+
           {/* month / year toggle */}
           <HStack
             gap="0"
@@ -313,18 +376,55 @@ export function Solar() {
           </Box>
         )}
         {!isPending && !isError && chartData.length > 0 && (
+          <Box
+            key={`${view}-${chartMode}-${label}`}
+            className="solar-chart-reveal"
+          >
           <ResponsiveLine
             data={chartData}
             theme={nivoTheme}
-            colors={["#fbbf24", consumptionColor]}
+            colors={[ "#fbbf24", consumptionColor, temperatureColor ]}
             curve="monotoneX"
             lineWidth={1.5}
             enablePoints={false}
             enableGridX={false}
             enableGridY={false}
             enableArea={true}
-            areaOpacity={0.07}
+            areaOpacity={1}
             areaBlendMode="normal"
+            defs={[
+              {
+                id: "solarProdArea",
+                type: "linearGradient",
+                colors: [
+                  { offset: 0, color: "#fbbf24", opacity: 0.22 },
+                  { offset: 100, color: "#fbbf24", opacity: 0 },
+                ],
+              },
+              {
+                id: "solarConsArea",
+                type: "linearGradient",
+                colors: [
+                  { offset: 0, color: consumptionColor, opacity: 0.18 },
+                  { offset: 100, color: consumptionColor, opacity: 0 },
+                ],
+              },
+              {
+                id: "solarNoArea",
+                type: "linearGradient",
+                colors: [
+                  { offset: 0, color: "#000000", opacity: 0 },
+                  { offset: 100, color: "#000000", opacity: 0 },
+                ],
+              },
+            ]}
+            fill={[
+              { match: { id: "runningProduction" }, id: "solarProdArea" },
+              { match: { id: "production" }, id: "solarProdArea" },
+              { match: { id: "runningConsumption" }, id: "solarConsArea" },
+              { match: { id: "consumption" }, id: "solarConsArea" },
+              { match: { id: "temperature" }, id: "solarNoArea" },
+            ]}
             axisLeft={null}
             axisRight={null}
             axisTop={null}
@@ -353,6 +453,15 @@ export function Solar() {
                 view === "year"
                   ? MONTHS[parseInt(x.slice(5, 7), 10) - 1] ?? x
                   : x.slice(5);
+              const isTemp = point.seriesId === "temperature";
+              const valueLabel = isTemp
+                ? `${Math.round(tempByX.get(x) ?? 0)}°F`
+                : `${(point.data.y as number).toFixed(1)} kWh`;
+              const seriesLabel = isTemp
+                ? "AVG TEMP"
+                : String(point.seriesId).toLowerCase().includes("production")
+                  ? "PRODUCED"
+                  : "CONSUMED";
               return (
                 <Box
                   px="2.5vmin"
@@ -372,19 +481,20 @@ export function Solar() {
                     fontWeight="500"
                     style={{ color: point.seriesColor }}
                   >
-                    {(point.data.y as number).toFixed(1)} kWh
+                    {valueLabel}
                   </Text>
                   <Text
                     fontSize="2vmin"
                     letterSpacing="0.08em"
                     style={{ color: tooltipFg, opacity: 0.4 }}
                   >
-                    {point.seriesId === "runningProduction" ? "PRODUCED" : "CONSUMED"}
+                    {seriesLabel}
                   </Text>
                 </Box>
               );
             }}
           />
+          </Box>
         )}
       </Box>
 
@@ -415,6 +525,18 @@ export function Solar() {
             CONSUMPTION
           </Text>
         </HStack>
+        {chartMode === "daily" && (
+          <HStack gap="1.5vmin" align="center">
+            <Box w="4vmin" h="1.5px" borderRadius="full" style={{ background: temperatureColor }} />
+            <Text
+              fontSize="2.2vmin"
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.1em"
+            >
+              TEMP
+            </Text>
+          </HStack>
+        )}
       </HStack>
     </Box>
   );

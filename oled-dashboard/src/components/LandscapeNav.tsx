@@ -17,7 +17,7 @@ import {
   RiLightbulbLine,
   RiLightbulbFill,
 } from "react-icons/ri";
-import { MdRadar } from "react-icons/md";
+import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { PiSolarRoof } from "react-icons/pi";
@@ -58,6 +58,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Solar",
     icon: PiSolarRoof,
     activeIcon: PiSolarRoof,
+  },
+  {
+    path: "/power",
+    label: "Power",
+    icon: MdElectricBolt,
+    activeIcon: MdElectricBolt,
   },
   {
     path: "/radar",

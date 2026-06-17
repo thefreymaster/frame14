@@ -30,6 +30,11 @@ function loadEntities() {
         productionToday: options.energy_production_today ?? "",
         consumptionToday: options.energy_consumption_today ?? "",
       },
+      circuits: {
+        main: options.circuit_main_entity ?? "",
+        balance: options.circuit_balance_entity ?? "",
+        items: options.circuit_entities ?? [],
+      },
       vacuums: options.vacuum_entities ?? [],
       fans: options.fan_entities ?? [],
     };
@@ -44,13 +49,22 @@ function loadEntities() {
       weather: frame14.weather ?? {},
       climate: frame14.climate ?? [],
       energy: frame14.energy ?? {},
+      circuits: frame14.circuits ?? { main: "", balance: "", items: [] },
       vacuums: frame14.vacuums ?? [],
       fans: frame14.fans ?? [],
     };
   }
 
   console.warn("[entities] no entity config found — using empty defaults");
-  return { lights: [], weather: {}, climate: [], energy: {}, vacuums: [], fans: [] };
+  return {
+    lights: [],
+    weather: {},
+    climate: [],
+    energy: {},
+    circuits: { main: "", balance: "", items: [] },
+    vacuums: [],
+    fans: [],
+  };
 }
 
 export const ENTITIES = loadEntities();

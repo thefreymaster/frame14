@@ -36,6 +36,28 @@
     "productionToday": "sensor.envoy_482518016321_energy_production_today",
     "consumptionToday": "sensor.envoy_482518016321_energy_consumption_today"
   },
+  "circuits": {
+    "main": "sensor.vueenergymonitor_power_minute_average",
+    "balance": "sensor.balance_power_minute_average",
+    "items": [
+      { "name": "Heat Pump 1", "power": "sensor.ac1_power_minute_average" },
+      { "name": "Heat Pump 2", "power": "sensor.ac2_power_minute_average" },
+      { "name": "Kitchen", "power": "sensor.ac3_power_minute_average" },
+      { "name": "Fridge", "power": "sensor.ac4_power_minute_average" },
+      { "name": "Electric Car", "power": "sensor.electric_car_power_minute_average" },
+      { "name": "Oven", "power": "sensor.oven_power_minute_average" },
+      { "name": "Living Room", "power": "sensor.living_room_power_minute_average" },
+      { "name": "Upstairs Bedroom", "power": "sensor.upstairs_bedroom_power_minute_average" },
+      { "name": "Drier", "power": "sensor.drier_power_minute_average" },
+      { "name": "Dishwasher", "power": "sensor.dishwasher_power_minute_average" },
+      { "name": "Hot Water Heater", "power": "sensor.hot_water_heater_power_minute_average_2" },
+      { "name": "Water Heater", "power": "sensor.hot_water_heater_power_minute_average" },
+      { "name": "Microwave", "power": "sensor.mocrowave_power_minute_average" },
+      { "name": "Cloths Washer", "power": "sensor.cloths_washer_power_minute_average" },
+      { "name": "Workshop/Basement", "power": "sensor.workshop_basement_power_minute_average" },
+      { "name": "Network Gear", "power": "sensor.stove_power_minute_average" }
+    ]
+  },
   "vacuums": ["vacuum.roborock_q5_pro"],
   "fans": ["fan.living_room_ceiling_fan", "fan.aidens_fan"]
 }

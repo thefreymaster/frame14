@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Box, Text, HStack } from "@chakra-ui/react";
-import { MdSkipNext, MdRefresh, MdRadar } from "react-icons/md";
+import { MdSkipNext, MdRefresh, MdRadar, MdElectricBolt } from "react-icons/md";
 import {
   IoTimeOutline,
   IoTime,
@@ -54,6 +54,12 @@ const VIEWS: {
     label: "Lights",
     icon: RiLightbulbLine,
     activeIcon: RiLightbulbFill,
+  },
+  {
+    path: "/power",
+    label: "Power",
+    icon: MdElectricBolt,
+    activeIcon: MdElectricBolt,
   },
   { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar },
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },

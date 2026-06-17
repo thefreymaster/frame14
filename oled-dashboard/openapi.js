@@ -302,6 +302,29 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/circuits": {
+      get: {
+        tags: ["Energy"],
+        operationId: "getCircuits",
+        summary: "Get live per-circuit power breakdown",
+        description:
+          "Returns whole-home (main) and unmonitored (balance) live wattage plus a per-circuit breakdown from the Emporia Vue monitor, sorted by current watts descending. Read from the live Home Assistant state cache.",
+        responses: {
+          200: {
+            description: "Live circuit power data.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CircuitsResponse" },
+              },
+            },
+          },
+          503: {
+            description: "HA_TOKEN or circuit entities not configured.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+        },
+      },
+    },
     "/api/change/{view}": {
       get: {
         tags: ["Views"],
@@ -471,6 +494,25 @@ export const openApiDocument = {
           currentProductionUnit: { type: "string", example: "W" },
           currentConsumption: { type: "number", example: 1850 },
           currentConsumptionUnit: { type: "string", example: "W" },
+        },
+      },
+      Circuit: {
+        type: "object",
+        properties: {
+          name: { type: "string", example: "Heat Pump 1" },
+          watts: { type: "number", nullable: true, example: 712.2 },
+          kwhToday: { type: "number", nullable: true, example: 4.3 },
+        },
+      },
+      CircuitsResponse: {
+        type: "object",
+        properties: {
+          totalWatts: { type: "number", nullable: true, example: 2181.3 },
+          balanceWatts: { type: "number", nullable: true, example: 866.9 },
+          circuits: {
+            type: "array",
+            items: { $ref: "#/components/schemas/Circuit" },
+          },
         },
       },
       NivoPoint: {

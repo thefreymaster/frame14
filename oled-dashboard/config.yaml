@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.28.1"
+version: "0.29.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -52,6 +52,41 @@ options:
   energy_current_consumption: "sensor.envoy_482518016321_current_power_consumption"
   energy_production_today: "sensor.envoy_482518016321_energy_production_today"
   energy_consumption_today: "sensor.envoy_482518016321_energy_consumption_today"
+  circuit_main_entity: "sensor.vueenergymonitor_power_minute_average"
+  circuit_balance_entity: "sensor.balance_power_minute_average"
+  circuit_entities:
+    - name: "Heat Pump 1"
+      power: "sensor.ac1_power_minute_average"
+    - name: "Heat Pump 2"
+      power: "sensor.ac2_power_minute_average"
+    - name: "Kitchen"
+      power: "sensor.ac3_power_minute_average"
+    - name: "Fridge"
+      power: "sensor.ac4_power_minute_average"
+    - name: "Electric Car"
+      power: "sensor.electric_car_power_minute_average"
+    - name: "Oven"
+      power: "sensor.oven_power_minute_average"
+    - name: "Living Room"
+      power: "sensor.living_room_power_minute_average"
+    - name: "Upstairs Bedroom"
+      power: "sensor.upstairs_bedroom_power_minute_average"
+    - name: "Drier"
+      power: "sensor.drier_power_minute_average"
+    - name: "Dishwasher"
+      power: "sensor.dishwasher_power_minute_average"
+    - name: "Hot Water Heater"
+      power: "sensor.hot_water_heater_power_minute_average_2"
+    - name: "Water Heater"
+      power: "sensor.hot_water_heater_power_minute_average"
+    - name: "Microwave"
+      power: "sensor.mocrowave_power_minute_average"
+    - name: "Cloths Washer"
+      power: "sensor.cloths_washer_power_minute_average"
+    - name: "Workshop/Basement"
+      power: "sensor.workshop_basement_power_minute_average"
+    - name: "Network Gear"
+      power: "sensor.stove_power_minute_average"
   vacuum_entities:
     - "vacuum.roborock_q5_pro"
   fan_entities:
@@ -75,6 +110,11 @@ schema:
   energy_current_consumption: str
   energy_production_today: str
   energy_consumption_today: str
+  circuit_main_entity: str
+  circuit_balance_entity: str?
+  circuit_entities:
+    - name: str
+      power: str
   vacuum_entities:
     - str
   fan_entities:

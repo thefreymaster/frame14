@@ -59,6 +59,8 @@ export function useEntity<A = Record<string, unknown>>(entityId: string) {
   const qc = useQueryClient();
 
   useEffect(() => {
+    if (!entityId) return;
+
     function onUpdate(data: HAState<A>) {
       qc.setQueryData<HAState<A>>(["entity", entityId], data);
     }

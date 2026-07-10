@@ -59,5 +59,6 @@
     ]
   },
   "vacuums": ["vacuum.roborock_q5_pro"],
-  "fans": ["fan.living_room_ceiling_fan", "fan.aidens_fan"]
+  "fans": ["fan.living_room_ceiling_fan", "fan.aidens_fan"],
+  "printer": "sensor.a1_03919c442700723_print_status"
 }

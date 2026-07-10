@@ -6,6 +6,8 @@ import {
 } from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useEntities, useEntity } from "../hooks/useEntity";
+import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
+import { printerBaseId, printerEntityId } from "../lib/printerEntities";
 
 function PrinterNozzleIcon() {
   return (
@@ -42,13 +44,15 @@ const APPLIANCES: { id: string; Icon: IconType; label: string }[] = [
   },
 ];
 
-const PRINTER_STATUS_ID = "sensor.a1_03919c442700723_print_status";
 const PRINTER_ACTIVE_STATES = new Set(["running", "printing", "pause"]);
 
 export function ApplianceIndicators() {
   const queries = useEntities(APPLIANCES.map((a) => a.id));
   const running = APPLIANCES.filter((_, i) => queries[i].data?.state === "on");
-  const printer = useEntity(PRINTER_STATUS_ID);
+  const entitiesQuery = useEntitiesConfig();
+  const printer = useEntity(
+    printerEntityId(printerBaseId(entitiesQuery.data?.printer), "print_status"),
+  );
   const printerActive = PRINTER_ACTIVE_STATES.has(printer.data?.state ?? "");
 
   if (running.length === 0 && !printerActive) return null;

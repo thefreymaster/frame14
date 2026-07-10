@@ -52,11 +52,14 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
     "productionToday": "sensor.envoy_xxx_energy_production_today",
     "consumptionToday": "sensor.envoy_xxx_energy_consumption_today"
   },
-  "vacuums": ["vacuum.roborock_q5_pro"]
+  "vacuums": ["vacuum.roborock_q5_pro"],
+  "printer": "sensor.a1_xxx_print_status"
 }
 ```
 
-In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` fields in `config.yaml`).
+The `printer` field is the printer's `print_status` sensor entity ID; all sibling printer sensors (progress, temps, layers, …) are derived from its prefix in `src/lib/printerEntities.ts`. Empty string disables the printer card.
+
+In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*`, `printer_status_entity` fields in `config.yaml`).
 
 ## Frontend Routes
 

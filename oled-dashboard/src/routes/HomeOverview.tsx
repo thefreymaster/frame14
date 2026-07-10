@@ -219,8 +219,6 @@ function Header({
           </Text>
         )}
       </HStack>
-
-      {weather && <ForecastSection forecast={weather.forecast} count={6} />}
     </Board>
   );
 }
@@ -322,6 +320,9 @@ export function HomeOverview() {
               gap="1"
             >
               <Header internet={data.internet} weather={data.weather} />
+              {data.weather && (
+                <ForecastSection forecast={data.weather.forecast} count={6} />
+              )}
               <EnergySection energy={data.energy} />
               <FanSection fan={data.fan} />
               <PrinterSection printer={data.printer} />
@@ -347,6 +348,9 @@ export function HomeOverview() {
         ) : (
           <>
             <Header internet={data.internet} weather={data.weather} />
+            {data.weather && (
+              <ForecastSection forecast={data.weather.forecast} count={6} />
+            )}
             <CalendarSection
               today={data.calendar?.today ?? []}
               tomorrow={data.calendar?.tomorrow ?? []}

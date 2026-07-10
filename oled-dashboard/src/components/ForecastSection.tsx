@@ -1,7 +1,8 @@
-import { Box, HStack, Text } from "@chakra-ui/react";
+import { HStack, Text } from "@chakra-ui/react";
 import { IoPartlySunnyOutline } from "react-icons/io5";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { WeatherForecast } from "./WeatherForecast";
+import { Board } from "./Board";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
 
 interface Props {
@@ -13,34 +14,39 @@ export function ForecastSection({ forecast, count = 6 }: Props) {
   if (!forecast.length) return null;
   const { high, low } = getTodayHighLow(forecast);
   return (
-    <Box width="100%" mt="2vmin">
-      <HStack justify="space-between" align="baseline" gap="2vmin">
-        <SectionTitle icon={<IoPartlySunnyOutline />}>FORECAST</SectionTitle>
-        {(high != null || low != null) && (
-          <HStack gap="2vmin">
-            {high != null && (
-              <Text
-                fontSize="2.2vmin"
-                color="var(--theme-fg-dim)"
-                letterSpacing="0.1em"
-              >
-                H {Math.round(high)}°
-              </Text>
-            )}
-            {low != null && (
-              <Text
-                fontSize="2.2vmin"
-                color="var(--theme-fg-dim)"
-                letterSpacing="0.1em"
-              >
-                L {Math.round(low)}°
-              </Text>
-            )}
-          </HStack>
-        )}
-      </HStack>
+    <Board
+      collapsible
+      storageKey="forecast"
+      title={
+        <HStack justify="space-between" align="baseline" gap="2vmin" width="100%">
+          <SectionTitle icon={<IoPartlySunnyOutline />}>FORECAST</SectionTitle>
+          {(high != null || low != null) && (
+            <HStack gap="2vmin">
+              {high != null && (
+                <Text
+                  fontSize="2.2vmin"
+                  color="var(--theme-fg-dim)"
+                  letterSpacing="0.1em"
+                >
+                  H {Math.round(high)}°
+                </Text>
+              )}
+              {low != null && (
+                <Text
+                  fontSize="2.2vmin"
+                  color="var(--theme-fg-dim)"
+                  letterSpacing="0.1em"
+                >
+                  L {Math.round(low)}°
+                </Text>
+              )}
+            </HStack>
+          )}
+        </HStack>
+      }
+    >
       <WeatherForecast forecast={forecast} count={count} />
-    </Box>
+    </Board>
   );
 }
 

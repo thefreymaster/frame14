@@ -37,6 +37,7 @@ function loadEntities() {
       },
       vacuums: options.vacuum_entities ?? [],
       fans: options.fan_entities ?? [],
+      printer: options.printer_status_entity ?? "",
     };
   }
 
@@ -52,6 +53,7 @@ function loadEntities() {
       circuits: frame14.circuits ?? { main: "", balance: "", items: [] },
       vacuums: frame14.vacuums ?? [],
       fans: frame14.fans ?? [],
+      printer: frame14.printer ?? "",
     };
   }
 
@@ -64,6 +66,7 @@ function loadEntities() {
     circuits: { main: "", balance: "", items: [] },
     vacuums: [],
     fans: [],
+    printer: "",
   };
 }
 

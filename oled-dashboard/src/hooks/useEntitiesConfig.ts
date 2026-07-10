@@ -12,6 +12,7 @@ export interface EntitiesConfig {
   };
   vacuums: string[];
   fans: string[];
+  printer: string;
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEntitiesConfig } from "./useEntitiesConfig";
 import { useEntities, useEntity, type HAState } from "./useEntity";
+import { printerBaseId, printerEntityId } from "../lib/printerEntities";
 
 export interface HomeForecastPeriod {
   datetime: string;
@@ -41,7 +42,6 @@ export interface HomePrinter {
   progress: number;
   remainingTime: number;
   taskName: string | null;
-  finishTime: string | null;
   nozzleTemp: number | null;
   nozzleTarget: number | null;
   bedTemp: number | null;
@@ -170,26 +170,22 @@ const PRINTER_EXTRA_KEYS = [
 
 type PrinterExtraKey = (typeof PRINTER_EXTRA_KEYS)[number];
 
-const PRINTER_EXTRA_IDS: Record<PrinterExtraKey, string> = {
-  nozzleTemp: "sensor.a1_03919c442700723_nozzle_temperature",
-  nozzleTarget: "sensor.a1_03919c442700723_nozzle_target_temperature",
-  bedTemp: "sensor.a1_03919c442700723_bed_temperature",
-  bedTarget: "sensor.a1_03919c442700723_bed_target_temperature",
-  currentLayer: "sensor.a1_03919c442700723_current_layer",
-  totalLayers: "sensor.a1_03919c442700723_total_layer_count",
-  currentStage: "sensor.a1_03919c442700723_current_stage",
-  endTime: "sensor.a1_03919c442700723_end_time",
-  startTime: "sensor.a1_03919c442700723_start_time",
-  printLength: "sensor.a1_03919c442700723_print_length",
-  printWeight: "sensor.a1_03919c442700723_print_weight",
-  activeTray: "sensor.a1_03919c442700723_active_tray",
-  speedProfile: "sensor.a1_03919c442700723_speed_profile",
-  gcodeFilename: "sensor.a1_03919c442700723_gcode_filename",
+const PRINTER_EXTRA_SUFFIXES: Record<PrinterExtraKey, string> = {
+  nozzleTemp: "nozzle_temperature",
+  nozzleTarget: "nozzle_target_temperature",
+  bedTemp: "bed_temperature",
+  bedTarget: "bed_target_temperature",
+  currentLayer: "current_layer",
+  totalLayers: "total_layer_count",
+  currentStage: "current_stage",
+  endTime: "end_time",
+  startTime: "start_time",
+  printLength: "print_length",
+  printWeight: "print_weight",
+  activeTray: "active_tray",
+  speedProfile: "speed_profile",
+  gcodeFilename: "gcode_filename",
 };
-
-const PRINTER_EXTRA_ID_LIST = PRINTER_EXTRA_KEYS.map(
-  (key) => PRINTER_EXTRA_IDS[key],
-);
 
 function cleanString(value: string | undefined | null): string | null {
   if (!value) return null;
@@ -443,15 +439,24 @@ export function useHomeData() {
   const personEvan = useEntity(PERSON_ENTITIES[0].id);
   const personElizabeth = useEntity(PERSON_ENTITIES[1].id);
 
-  // Printer
-  const printerStatus = useEntity("sensor.a1_03919c442700723_print_status");
-  const printerProgress = useEntity("sensor.a1_03919c442700723_print_progress");
-  const printerRemaining = useEntity(
-    "sensor.a1_03919c442700723_remaining_time",
+  // Printer — entity IDs derived from the configured print_status sensor
+  const printerBase = printerBaseId(entitiesQuery.data?.printer);
+  const printerExtraIds = useMemo(
+    () =>
+      PRINTER_EXTRA_KEYS.map((key) =>
+        printerEntityId(printerBase, PRINTER_EXTRA_SUFFIXES[key]),
+      ),
+    [printerBase],
   );
-  const printerTask = useEntity("sensor.a1_03919c442700723_task_name");
-  const printerFinish = useEntity("sensor.a1_finish_time");
-  const printerExtras = useEntities(PRINTER_EXTRA_ID_LIST);
+  const printerStatus = useEntity(printerEntityId(printerBase, "print_status"));
+  const printerProgress = useEntity(
+    printerEntityId(printerBase, "print_progress"),
+  );
+  const printerRemaining = useEntity(
+    printerEntityId(printerBase, "remaining_time"),
+  );
+  const printerTask = useEntity(printerEntityId(printerBase, "task_name"));
+  const printerExtras = useEntities(printerExtraIds);
 
   // Internet
   const ping = useEntity("binary_sensor.1_1_1_1");
@@ -588,7 +593,6 @@ export function useHomeData() {
     progress: parseFloatOrZero(printerProgress.data?.state),
     remainingTime: parseFloatOrZero(printerRemaining.data?.state),
     taskName: cleanString(printerTask.data?.state),
-    finishTime: cleanString(printerFinish.data?.state),
     nozzleTemp: parseFloatOrNull(printerExtraStateByKey.nozzleTemp),
     nozzleTarget: parseFloatOrNull(printerExtraStateByKey.nozzleTarget),
     bedTemp: parseFloatOrNull(printerExtraStateByKey.bedTemp),

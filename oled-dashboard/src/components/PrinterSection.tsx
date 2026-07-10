@@ -162,7 +162,7 @@ function PrinterModal({
     [],
   );
 
-  const etaLabel = fmtTime(printer.endTime ?? printer.finishTime);
+  const etaLabel = fmtTime(printer.endTime);
   const startLabel = fmtTime(printer.startTime);
   const layerPct =
     printer.totalLayers &&

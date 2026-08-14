@@ -48,10 +48,22 @@ export function WeatherCurrent({ weather }: Props) {
     <VStack gap="2vmin" align="center" width="100%">
       {/* Emoji + temperature on the same row */}
       <HStack gap="4vmin" align="center" justify="center">
-        <Text fontSize="16vmin" lineHeight="1" role="img" aria-label={weather.state} opacity={0.35}>
+        <Text
+          fontSize="16vmin"
+          lineHeight="1"
+          role="img"
+          aria-label={weather.state}
+          opacity={0.35}
+        >
           {conditionEmoji(weather.state)}
         </Text>
-        <Text fontSize="16vmin" color="gray.300" fontWeight="200" lineHeight="1">
+        <Text
+          className="display-numeral"
+          fontSize="16vmin"
+          color="gray.300"
+          fontWeight="200"
+          lineHeight="1"
+        >
           {weather.temperature}°
         </Text>
       </HStack>

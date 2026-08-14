@@ -57,6 +57,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           width="100%"
         >
           <Text
+            className="display-numeral"
             fontSize="14vmin"
             fontWeight="300"
             letterSpacing="-0.03em"
@@ -67,6 +68,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
             {hours}:{minutes}
             <Text
               as="span"
+              className="display-numeral"
               fontSize="5.5vmin"
               fontWeight="300"
               color={color}
@@ -78,6 +80,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           </Text>
           {weather && (
             <Text
+              className="display-numeral"
               fontSize="14vmin"
               fontWeight="300"
               letterSpacing="-0.03em"
@@ -265,7 +268,11 @@ export function Photos() {
         zIndex={200}
         aria-label={navVisible ? "Hide navigation" : "Show navigation"}
       >
-        {navVisible ? <IoEyeOffOutline size={20} /> : <IoEyeOutline size={20} />}
+        {navVisible ? (
+          <IoEyeOffOutline size={20} />
+        ) : (
+          <IoEyeOutline size={20} />
+        )}
       </Box>
     </Box>
   );

@@ -22,6 +22,7 @@ import {
   WiNa,
 } from "react-icons/wi";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
+import { MODAL_RADIUS } from "../lib/surfaces";
 
 const FORECAST_EXIT_MS = 260;
 
@@ -109,7 +110,7 @@ function bearingToCardinal(deg: number) {
     "NW",
     "NNW",
   ];
-  return dirs[Math.round(((deg % 360) / 22.5)) % 16];
+  return dirs[Math.round((deg % 360) / 22.5) % 16];
 }
 
 interface Props {
@@ -163,7 +164,7 @@ export function ForecastDetailModal({ period, onClose }: Props) {
     >
       <Box
         className="energy-panel"
-        borderRadius="3.5vmin"
+        borderRadius={MODAL_RADIUS}
         p="6vmin"
         minW="70vmin"
         maxW="90vmin"
@@ -199,6 +200,7 @@ export function ForecastDetailModal({ period, onClose }: Props) {
         <HStack gap="3vmin" align="center">
           <Box
             color="var(--theme-fg-dim)"
+            className="display-numeral"
             fontSize="14vmin"
             lineHeight="1"
             flexShrink={0}
@@ -207,6 +209,7 @@ export function ForecastDetailModal({ period, onClose }: Props) {
           </Box>
           <VStack align="flex-start" gap="0.5vmin">
             <Text
+              className="display-numeral"
               fontSize="11vmin"
               fontWeight="300"
               letterSpacing="-0.04em"

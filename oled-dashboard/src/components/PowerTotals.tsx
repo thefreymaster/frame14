@@ -29,17 +29,32 @@ export function PowerTotals({ production, homeWatts }: Props) {
       {/* Solar production */}
       <VStack align="flex-start" gap="0.4vmin">
         <HStack gap="1.5vmin" align="baseline">
-          <Box color="yellow.500" fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
+          <Box
+            color="yellow.500"
+            fontSize="3.5vmin"
+            lineHeight="1"
+            flexShrink={0}
+          >
             <PiSolarRoof />
           </Box>
-          <Text fontSize="7vmin" fontWeight="300" lineHeight="1" color="yellow.500">
+          <Text
+            className="display-numeral"
+            fontSize="7vmin"
+            fontWeight="300"
+            lineHeight="1"
+            color="yellow.500"
+          >
             {fmtKw(production)}
             <Text as="span" fontSize="3vmin" color="yellow.700" ml="1vmin">
               kW
             </Text>
           </Text>
         </HStack>
-        <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.1em">
+        <Text
+          fontSize="2.2vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.1em"
+        >
           SOLAR
         </Text>
       </VStack>
@@ -49,6 +64,7 @@ export function PowerTotals({ production, homeWatts }: Props) {
         {gridActive ? (
           <>
             <Text
+              className="display-numeral"
               fontSize="7vmin"
               fontWeight="300"
               lineHeight="1"
@@ -56,17 +72,28 @@ export function PowerTotals({ production, homeWatts }: Props) {
             >
               {isExporting ? "↑" : "↓"}
               {fmtKw(gridAbs)}
-              <Text as="span" fontSize="3vmin" color={gridColor} opacity={0.6} ml="1vmin">
+              <Text
+                as="span"
+                fontSize="3vmin"
+                color={gridColor}
+                opacity={0.6}
+                ml="1vmin"
+              >
                 kW
               </Text>
             </Text>
-            <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.1em">
+            <Text
+              fontSize="2.2vmin"
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.1em"
+            >
               {isExporting ? "EXPORTING" : "FROM GRID"}
             </Text>
           </>
         ) : (
           <>
             <Text
+              className="display-numeral"
               fontSize="7vmin"
               fontWeight="300"
               lineHeight="1"
@@ -74,7 +101,11 @@ export function PowerTotals({ production, homeWatts }: Props) {
             >
               —
             </Text>
-            <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.1em">
+            <Text
+              fontSize="2.2vmin"
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.1em"
+            >
               GRID IDLE
             </Text>
           </>
@@ -84,17 +115,37 @@ export function PowerTotals({ production, homeWatts }: Props) {
       {/* Home usage */}
       <VStack align="flex-end" gap="0.4vmin">
         <HStack gap="1.5vmin" align="baseline">
-          <Box color="var(--theme-fg-dim)" fontSize="3.5vmin" lineHeight="1" flexShrink={0}>
+          <Box
+            color="var(--theme-fg-dim)"
+            fontSize="3.5vmin"
+            lineHeight="1"
+            flexShrink={0}
+          >
             <IoFlash />
           </Box>
-          <Text fontSize="7vmin" fontWeight="300" lineHeight="1" color="var(--theme-fg-dim)">
+          <Text
+            className="display-numeral"
+            fontSize="7vmin"
+            fontWeight="300"
+            lineHeight="1"
+            color="var(--theme-fg-dim)"
+          >
             {fmtKw(homeWatts)}
-            <Text as="span" fontSize="3vmin" color="var(--theme-fg-faint)" ml="1vmin">
+            <Text
+              as="span"
+              fontSize="3vmin"
+              color="var(--theme-fg-faint)"
+              ml="1vmin"
+            >
               kW
             </Text>
           </Text>
         </HStack>
-        <Text fontSize="2.2vmin" color="var(--theme-fg-faint)" letterSpacing="0.1em">
+        <Text
+          fontSize="2.2vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.1em"
+        >
           HOME
         </Text>
       </VStack>

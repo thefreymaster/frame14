@@ -145,7 +145,11 @@ export function HomeOverview() {
         <HomeHeader span={2} internet={data.internet} weather={data.weather} />
 
         {data.weather && (
-          <ForecastSection span={2} forecast={data.weather.forecast} count={6} />
+          <ForecastSection
+            span={2}
+            forecast={data.weather.forecast}
+            count={6}
+          />
         )}
 
         <ClimateSection climate={data.climate} />

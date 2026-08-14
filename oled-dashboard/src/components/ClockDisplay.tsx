@@ -5,10 +5,28 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 export function ClockDisplay() {
@@ -31,6 +49,7 @@ export function ClockDisplay() {
   return (
     <Box textAlign="center" width="100%">
       <Text
+        className="display-numeral"
         fontSize="21vmin"
         fontWeight="200"
         letterSpacing="-0.02em"
@@ -38,12 +57,20 @@ export function ClockDisplay() {
         lineHeight="1"
       >
         {hours}:{minutes}
-        <Text as="span" fontSize="8vmin" fontWeight="300" color="gray.300" ml="2vmin">
+        <Text
+          as="span"
+          className="display-numeral"
+          fontSize="8vmin"
+          fontWeight="300"
+          color="gray.300"
+          ml="2vmin"
+        >
           {ampm}
         </Text>
       </Text>
 
       <Text
+        className="display-numeral"
         fontSize="5.5vmin"
         color="gray.200"
         mt="3vmin"
@@ -51,11 +78,7 @@ export function ClockDisplay() {
       >
         {day}
       </Text>
-      <Text
-        fontSize="4.5vmin"
-        color="gray.400"
-        letterSpacing="0.06em"
-      >
+      <Text fontSize="4.5vmin" color="gray.400" letterSpacing="0.06em">
         {month} {date}, {year}
       </Text>
     </Box>

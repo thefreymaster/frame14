@@ -1,9 +1,5 @@
 import { HStack, Box } from "@chakra-ui/react";
-import {
-  TbWashMachine,
-  TbWashTumbleDry,
-  TbBowlSpoon,
-} from "react-icons/tb";
+import { TbWashMachine, TbWashTumbleDry, TbBowlSpoon } from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useEntities, useEntity } from "../hooks/useEntity";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";

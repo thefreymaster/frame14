@@ -1,9 +1,5 @@
 import { Box, HStack } from "@chakra-ui/react";
-import {
-  CHIP_PADDING_X,
-  CHIP_PADDING_Y,
-  CHIP_RADIUS,
-} from "../lib/surfaces";
+import { CHIP_PADDING_X, CHIP_PADDING_Y, CHIP_RADIUS } from "../lib/surfaces";
 
 /**
  * A single raised chip — the second elevation step, nested inside a Board.

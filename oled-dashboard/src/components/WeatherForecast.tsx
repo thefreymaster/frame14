@@ -117,9 +117,7 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
               gap="1vmin"
               minW="0"
               bg={
-                soonest
-                  ? "var(--theme-surface-2-on)"
-                  : "var(--theme-surface-2)"
+                soonest ? "var(--theme-surface-2-on)" : "var(--theme-surface-2)"
               }
               borderRadius={CHIP_RADIUS}
               px="0.6vmin"
@@ -136,11 +134,7 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
               >
                 {formatHour(period.datetime)}
               </Text>
-              <Box
-                fontSize="6vmin"
-                lineHeight="1"
-                color="var(--theme-fg-dim)"
-              >
+              <Box fontSize="6vmin" lineHeight="1" color="var(--theme-fg-dim)">
                 <Icon size="1em" />
               </Box>
               <Text fontSize="3.6vmin" fontWeight="300">

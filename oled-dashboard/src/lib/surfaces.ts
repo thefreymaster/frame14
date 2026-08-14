@@ -7,11 +7,14 @@
 // Sizes are vmin so they scale with the panel instead of the browser's rem —
 // on a 1600×2400 frame a fixed 16px pad reads as cramped.
 
-export const CARD_RADIUS = "3.2vmin";
+export const CARD_RADIUS = "0.8vmin";
 export const CARD_PADDING_X = "2.6vmin";
 export const CARD_PADDING_Y = "2.4vmin";
 
-export const CHIP_RADIUS = "2vmin";
+/** Modals — a card floating over the page, so one step rounder than a card. */
+export const MODAL_RADIUS = "0.9vmin";
+
+export const CHIP_RADIUS = "0.5vmin";
 export const CHIP_PADDING_X = "1.6vmin";
 export const CHIP_PADDING_Y = "1.2vmin";
 

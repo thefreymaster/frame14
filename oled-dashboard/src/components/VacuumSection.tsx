@@ -56,6 +56,7 @@ export function VacuumSection({
                   </Text>
                 </VStack>
                 <Text
+                  className="display-numeral"
                   fontSize="5.5vmin"
                   color="green.500"
                   fontWeight="300"

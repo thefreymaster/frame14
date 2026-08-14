@@ -26,7 +26,13 @@ export function EnergyPanel({ energy, isError }: Props) {
         <Text fontSize="3vmin" color="gray.400" letterSpacing="0.08em">
           SOLAR TODAY
         </Text>
-        <Text fontSize="6vmin" color="yellow.400" fontWeight="200" lineHeight="1.2">
+        <Text
+          className="display-numeral"
+          fontSize="6vmin"
+          color="yellow.400"
+          fontWeight="200"
+          lineHeight="1.2"
+        >
           {fmt(energy?.production)}
           <Text as="span" fontSize="3vmin" color="gray.400" ml="1vmin">
             {unit(energy?.productionUnit)}
@@ -38,7 +44,13 @@ export function EnergyPanel({ energy, isError }: Props) {
         <Text fontSize="3vmin" color="gray.400" letterSpacing="0.08em">
           USAGE TODAY
         </Text>
-        <Text fontSize="6vmin" color="gray.200" fontWeight="200" lineHeight="1.2">
+        <Text
+          className="display-numeral"
+          fontSize="6vmin"
+          color="gray.200"
+          fontWeight="200"
+          lineHeight="1.2"
+        >
           {fmt(energy?.consumption)}
           <Text as="span" fontSize="3vmin" color="gray.400" ml="1vmin">
             {unit(energy?.consumptionUnit)}

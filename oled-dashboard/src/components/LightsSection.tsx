@@ -1,47 +1,33 @@
-import { Box, Text } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { LightControl } from "./LightControl";
+import { CHIP_GAP } from "../lib/surfaces";
 import type { LightEntry } from "../lib/lightsConfig";
 
 type Props = {
-  title: string;
   entries: LightEntry[];
 };
 
-export function LightsSection({ title, entries }: Props) {
+export function LightsSection({ entries }: Props) {
   return (
     <Box
+      display="grid"
+      gap={CHIP_GAP}
       width="100%"
-      css={{ "&:not(:has([data-light-entry]))": { display: "none" } }}
+      css={{
+        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+        "@media (orientation: landscape)": {
+          gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+        },
+      }}
     >
-      <Text
-        fontSize="min(2.8vmin, 12px)"
-        color="var(--theme-fg-faint)"
-        letterSpacing="0.14em"
-        textTransform="uppercase"
-        mb="min(3vmin, 14px)"
-      >
-        {title}
-      </Text>
-      <Box
-        display="grid"
-        gap="min(2.2vmin, 10px)"
-        width="100%"
-        css={{
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          "@media (orientation: landscape)": {
-            gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-          },
-        }}
-      >
-        {entries.map((entry) => (
-          <LightControl
-            key={entry.entity_id}
-            entity_id={entry.entity_id}
-            name={entry.name}
-            Icon={entry.Icon}
-          />
-        ))}
-      </Box>
+      {entries.map((entry) => (
+        <LightControl
+          key={entry.entity_id}
+          entity_id={entry.entity_id}
+          name={entry.name}
+          Icon={entry.Icon}
+        />
+      ))}
     </Box>
   );
 }

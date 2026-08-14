@@ -54,7 +54,11 @@ export function BirdSection() {
   const seen = relativeTime(species.data?.last_changed, now);
 
   return (
-    <StatusChip icon={<PiBirdFill />} grow label={`Last bird detection: ${name}`}>
+    <StatusChip
+      icon={<PiBirdFill />}
+      grow
+      label={`Last bird detection: ${name}`}
+    >
       <Text
         fontSize="2.4vmin"
         color="var(--theme-fg-dim)"

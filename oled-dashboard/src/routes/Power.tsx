@@ -1,51 +1,46 @@
-import { Box, HStack, Text } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { MdElectricBolt } from "react-icons/md";
 import { useCircuits } from "../hooks/useCircuits";
 import { useEnergy } from "../hooks/useEnergy";
 import { PowerTotals } from "../components/PowerTotals";
 import { CircuitBreakdown } from "../components/CircuitBreakdown";
+import { Board } from "../components/Board";
+import { PageShell } from "../components/PageShell";
+import { PageHeader } from "../components/PageHeader";
+import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 
 export function Power() {
   const { data, isPending, isError } = useCircuits();
   const { data: energy } = useEnergy();
 
-  return (
-    <Box
-      width="100%"
-      height="100%"
-      bg="var(--theme-bg)"
-      display="flex"
-      flexDirection="column"
-      px="6vmin"
-      pt="5vmin"
-      pb="3vmin"
-      overflow="hidden"
-    >
-      {/* Header */}
-      <HStack gap="2vmin" align="center" mb="4vmin">
-        <Box color="cyan.400" fontSize="5vmin" lineHeight="1">
-          <MdElectricBolt />
-        </Box>
-        <Text
-          fontSize="3vmin"
-          fontWeight="500"
-          letterSpacing="0.14em"
-          color="var(--theme-fg-dim)"
-        >
-          POWER
-        </Text>
-      </HStack>
+  const totalWatts = data?.totalWatts ?? null;
 
-      {/* Totals */}
-      <Box mb="5vmin">
+  return (
+    <PageShell fill>
+      <PageHeader
+        icon={<MdElectricBolt />}
+        iconColor="cyan.400"
+        title="POWER"
+      />
+
+      <Board>
         <PowerTotals
           production={energy?.currentProduction ?? null}
-          homeWatts={data?.totalWatts ?? null}
+          homeWatts={totalWatts}
         />
-      </Box>
+      </Board>
 
-      {/* Breakdown */}
-      <Box flex="1" minH="0">
+      <Board
+        fill
+        title={
+          <SectionTitle>
+            CIRCUITS
+            {totalWatts != null
+              ? ` · ${(totalWatts / 1000).toFixed(1)} kW`
+              : ""}
+          </SectionTitle>
+        }
+      >
         {(isPending || isError) && (
           <Box
             height="100%"
@@ -66,10 +61,9 @@ export function Power() {
           <CircuitBreakdown
             circuits={data.circuits}
             balanceWatts={data.balanceWatts}
-            totalWatts={data.totalWatts}
           />
         )}
-      </Box>
-    </Box>
+      </Board>
+    </PageShell>
   );
 }

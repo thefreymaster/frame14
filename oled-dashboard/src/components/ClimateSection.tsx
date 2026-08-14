@@ -13,56 +13,54 @@ import { MdAir } from "react-icons/md";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { Board } from "./Board";
+import { useColorModeValue } from "./ui/color-mode";
 
 type ClimateVisualMode = "heat" | "cool" | "fan_only" | "off";
 
-const HVAC_COLOR: Record<string, string> = {
-  cool: "blue.400",
-  cooling: "blue.400",
-  heat: "orange.400",
-  heating: "orange.400",
-  fan_only: "teal.300",
-  fan: "teal.300",
-  off: "var(--theme-fg-faint)",
-  auto: "green.500",
-  unknown: "var(--theme-fg-faint)",
+// Per-mode hue as bare RGB channels: [dark mode, bright mode].
+// Bright mode uses darker shades so they read against a white background.
+const HVAC_RGB: Record<string, [string, string]> = {
+  cool: ["96, 165, 250", "29, 78, 216"],
+  cooling: ["96, 165, 250", "29, 78, 216"],
+  heat: ["249, 115, 22", "194, 65, 12"],
+  heating: ["249, 115, 22", "194, 65, 12"],
+  fan_only: ["94, 234, 212", "13, 148, 136"],
+  fan: ["94, 234, 212", "13, 148, 136"],
+  auto: ["34, 197, 94", "21, 128, 61"],
 };
 
-const HVAC_RING: Record<string, string> = {
-  cool: "rgba(96, 165, 250, 0.85)",
-  cooling: "rgba(96, 165, 250, 0.95)",
-  heat: "rgba(251, 146, 60, 0.85)",
-  heating: "rgba(251, 146, 60, 0.95)",
-  fan_only: "rgba(94, 234, 212, 0.85)",
-  fan: "rgba(94, 234, 212, 0.85)",
-  off: "rgba(255,255,255,0.18)",
-  auto: "rgba(34, 197, 94, 0.85)",
-  unknown: "rgba(255,255,255,0.18)",
-};
+const LIVE_HVAC_KEYS = new Set(["heating", "cooling", "fan"]);
 
-const HVAC_GLOW: Record<string, string> = {
-  cool: "rgba(96, 165, 250, 0.22)",
-  cooling: "rgba(96, 165, 250, 0.3)",
-  heat: "rgba(251, 146, 60, 0.22)",
-  heating: "rgba(251, 146, 60, 0.32)",
-  fan_only: "rgba(94, 234, 212, 0.22)",
-  fan: "rgba(94, 234, 212, 0.22)",
-  off: "rgba(255,255,255,0.04)",
-  auto: "rgba(34, 197, 94, 0.22)",
-  unknown: "rgba(255,255,255,0.04)",
-};
+type HvacPalette = { accent: string; ring: string };
 
-const HVAC_ACCENT_CSS: Record<string, string> = {
-  cool: "rgb(96, 165, 250)",
-  cooling: "rgb(96, 165, 250)",
-  heat: "rgb(251, 146, 60)",
-  heating: "rgb(251, 146, 60)",
-  fan_only: "rgb(94, 234, 212)",
-  fan: "rgb(94, 234, 212)",
-  off: "rgba(255,255,255,0.45)",
-  auto: "rgb(34, 197, 94)",
-  unknown: "rgba(255,255,255,0.45)",
-};
+/** Accent + ring colors for an hvac key, resolved for the active theme. */
+function useHvacPalette(): (key: string) => HvacPalette {
+  const isDark = useColorModeValue(false, true);
+  return (key: string) => {
+    const rgb = HVAC_RGB[key]?.[isDark ? 0 : 1];
+    if (!rgb) {
+      return {
+        accent: "var(--theme-fg-faint)",
+        ring: "var(--theme-fg-faint)",
+      };
+    }
+    const ringAlpha = LIVE_HVAC_KEYS.has(key) ? 1 : isDark ? 0.85 : 0.9;
+    return { accent: `rgb(${rgb})`, ring: `rgba(${rgb}, ${ringAlpha})` };
+  };
+}
+
+/** Neutral surfaces (scrim, chrome, hairlines) for the active theme. */
+function useNeutrals() {
+  // Translucent — the page behind stays visible through the backdrop blur.
+  const scrim = useColorModeValue("rgba(255,255,255,0.35)", "rgba(0,0,0,0.4)");
+  const chrome = useColorModeValue("rgba(255,255,255,0.8)", "rgba(0,0,0,0.5)");
+  const track = useColorModeValue("rgba(0,0,0,0.05)", "rgba(0,0,0,0.55)");
+  const hairline = useColorModeValue(
+    "rgba(0,0,0,0.12)",
+    "rgba(255,255,255,0.08)",
+  );
+  return { scrim, chrome, track, hairline };
+}
 
 const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
   heating: "heat",
@@ -312,6 +310,8 @@ function ClimateModal({
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
+  const palette = useHvacPalette();
+  const neutrals = useNeutrals();
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDraggingRef = useRef(false);
   const [mode, setMode] = useState<ClimateVisualMode>(
@@ -440,10 +440,18 @@ function ClimateModal({
   }
 
   const ringKey = activeAction ?? mode;
-  const accentColor = HVAC_COLOR[ringKey] ?? "var(--theme-fg-faint)";
-  const accentCssColor = HVAC_ACCENT_CSS[ringKey] ?? "rgba(255,255,255,0.45)";
-  const ringColor = HVAC_RING[ringKey] ?? "rgba(255,255,255,0.18)";
-  const glowColor = HVAC_GLOW[ringKey] ?? "rgba(255,255,255,0.04)";
+  const { accent: accentCssColor, ring: ringColor } = palette(ringKey);
+  const accentColor = accentCssColor;
+
+  // Staggered enter on mount, matching exit once closing starts.
+  const anim = (
+    inName: string,
+    outName: string,
+    { ms = 380, delay = 0 }: { ms?: number; delay?: number } = {},
+  ) =>
+    isClosing
+      ? `${outName} ${THERMOSTAT_EXIT_MS}ms ease forwards`
+      : `${inName} ${ms}ms cubic-bezier(0.32, 0.72, 0.2, 1) ${delay}ms both`;
 
   return (
     <Box
@@ -454,13 +462,14 @@ function ClimateModal({
       alignItems="center"
       justifyContent="center"
       p={{ base: "4vw", md: "4vmin" }}
-      bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.78) 55%, rgba(0,0,0,0.92) 100%)`}
-      backdropFilter="blur(18px) saturate(140%)"
+      bg={neutrals.scrim}
+      backdropFilter="blur(22px) saturate(140%)"
       onClick={requestClose}
       style={{
-        opacity: isClosing ? 0 : 1,
-        transition: `opacity ${THERMOSTAT_EXIT_MS}ms ease`,
-        WebkitBackdropFilter: "blur(18px) saturate(140%)",
+        animation: anim("thermostatModalFadeIn", "thermostatModalFadeOut", {
+          ms: 240,
+        }),
+        WebkitBackdropFilter: "blur(22px) saturate(140%)",
       }}
     >
       <Box
@@ -476,8 +485,8 @@ function ClimateModal({
         alignItems="center"
         justifyContent="center"
         color="var(--theme-fg-faint)"
-        bg="rgba(0,0,0,0.5)"
-        border="1px solid rgba(255,255,255,0.12)"
+        bg={neutrals.chrome}
+        border={`1px solid ${neutrals.hairline}`}
         fontSize={{ base: "5.5vw", md: "3.4vmin" }}
         zIndex={300}
         onClick={(event) => {
@@ -488,6 +497,10 @@ function ClimateModal({
           WebkitTapHighlightColor: "transparent",
           backdropFilter: "blur(6px)",
           WebkitBackdropFilter: "blur(6px)",
+          animation: anim("thermostatControlIn", "thermostatControlOut", {
+            ms: 300,
+            delay: 140,
+          }),
         }}
       >
         <IoClose />
@@ -496,15 +509,16 @@ function ClimateModal({
         gap={{ base: "6vw", md: "4vmin" }}
         align="center"
         onClick={(event) => event.stopPropagation()}
-        style={{
-          transform: isClosing ? "scale(0.92)" : "scale(1)",
-          transition: `transform ${THERMOSTAT_EXIT_MS}ms ease`,
-        }}
       >
         <Box
           position="relative"
-          width={{ base: "min(92vw, 70vh)", md: "min(70vmin, 70vh)" }}
+          width={{ base: "min(64vw, 44vh)", md: "min(44vmin, 48vh)" }}
           aspectRatio="1"
+          style={{
+            animation: anim("thermostatDialIn", "thermostatDialOut", {
+              ms: 420,
+            }),
+          }}
         >
           {!hidesTarget && (
             <ArcSlider
@@ -533,8 +547,8 @@ function ClimateModal({
             alignItems="center"
             justifyContent="center"
             overflow="hidden"
-            bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.6) 55%, #000 100%)`}
-            boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.55), 0 0 8vmin ${ringColor}`}
+            bg="var(--theme-bg)"
+            boxShadow={`inset 0 0 0 0.4vmin ${ringColor}`}
             style={{
               transition: "box-shadow 400ms ease",
             }}
@@ -545,11 +559,9 @@ function ClimateModal({
                 inset="0"
                 borderRadius="full"
                 pointerEvents="none"
+                boxShadow={`inset 0 0 0 0.4vmin ${accentCssColor}`}
                 style={{
-                  background: `radial-gradient(circle at 50% 50%, ${ringColor} 0%, ${glowColor} 32%, transparent 65%)`,
-                  animation: "thermostatPulse 2.6s ease-in-out infinite",
-                  transformOrigin: "center",
-                  mixBlendMode: "screen",
+                  animation: "thermostatFlatPulse 2.6s ease-in-out infinite",
                 }}
               />
             )}
@@ -559,9 +571,15 @@ function ClimateModal({
               justify="center"
               position="relative"
               zIndex={1}
+              style={{
+                animation: anim("thermostatControlIn", "thermostatControlOut", {
+                  ms: 320,
+                  delay: 120,
+                }),
+              }}
             >
               <Text
-                fontSize={{ base: "3.4vw", md: "2.4vmin" }}
+                fontSize={{ base: "2.6vw", md: "1.8vmin" }}
                 color="var(--theme-fg-faint)"
                 fontWeight="500"
                 letterSpacing="0.08em"
@@ -569,9 +587,9 @@ function ClimateModal({
                 {unit.name}
               </Text>
               <HStack
-                gap={{ base: "1.4vw", md: "1vmin" }}
+                gap={{ base: "1.2vw", md: "0.8vmin" }}
                 color={accentColor}
-                fontSize={{ base: "3vw", md: "2vmin" }}
+                fontSize={{ base: "2.2vw", md: "1.5vmin" }}
                 fontWeight="600"
                 letterSpacing="0.18em"
                 textTransform="uppercase"
@@ -581,7 +599,7 @@ function ClimateModal({
                 <Text as="span">{statusLabel}</Text>
               </HStack>
               <Text
-                fontSize={{ base: "28vw", md: "22vmin" }}
+                fontSize={{ base: "19vw", md: "13.5vmin" }}
                 fontWeight="100"
                 lineHeight="1"
                 color="var(--theme-fg)"
@@ -590,7 +608,7 @@ function ClimateModal({
                 {displayedTemp}°
               </Text>
               <Text
-                fontSize={{ base: "2.8vw", md: "1.8vmin" }}
+                fontSize={{ base: "2.1vw", md: "1.4vmin" }}
                 color="var(--theme-fg-faint)"
                 fontWeight="500"
                 letterSpacing="0.1em"
@@ -599,7 +617,7 @@ function ClimateModal({
                 {displayLabel}
               </Text>
               <Text
-                fontSize={{ base: "2.6vw", md: "1.6vmin" }}
+                fontSize={{ base: "2vw", md: "1.3vmin" }}
                 color="var(--theme-fg-faint)"
                 opacity={0.7}
                 mt={{ base: "1vw", md: "0.6vmin" }}
@@ -614,19 +632,22 @@ function ClimateModal({
           const activeIndex = HVAC_MODES.findIndex((m) => m.key === mode);
           const segCount = HVAC_MODES.length;
           const activeKey = HVAC_MODES[activeIndex]?.key ?? mode;
-          const indicatorAccent =
-            HVAC_RING[activeKey] ?? "rgba(255,255,255,0.18)";
-          const indicatorGlow =
-            HVAC_GLOW[activeKey] ?? "rgba(255,255,255,0.04)";
+          const indicatorAccent = palette(activeKey).ring;
           return (
             <Box
               position="relative"
-              bg="rgba(0,0,0,0.55)"
+              bg={neutrals.track}
               borderRadius="full"
-              border="1px solid rgba(255,255,255,0.08)"
+              border={`1px solid ${neutrals.hairline}`}
               p="3px"
-              width={{ base: "85vw", md: "44vmin" }}
-              maxWidth="420px"
+              width={{ base: "72vw", md: "38vmin" }}
+              maxWidth="380px"
+              style={{
+                animation: anim("thermostatFooterIn", "thermostatFooterOut", {
+                  ms: 380,
+                  delay: 90,
+                }),
+              }}
             >
               {activeIndex >= 0 && (
                 <Box
@@ -637,12 +658,12 @@ function ClimateModal({
                   width={`calc((100% - 6px) / ${segCount})`}
                   borderRadius="full"
                   pointerEvents="none"
-                  bg={`radial-gradient(circle at 50% 35%, ${indicatorGlow} 0%, rgba(0,0,0,0.6) 90%)`}
-                  boxShadow={`inset 0 0 0 1px ${indicatorAccent}, 0 0 1.2vmin ${indicatorGlow}`}
+                  bg="transparent"
+                  boxShadow={`inset 0 0 0 1px ${indicatorAccent}`}
                   style={{
                     transform: `translateX(${activeIndex * 100}%)`,
                     transition:
-                      "transform 320ms cubic-bezier(0.32, 0.72, 0.2, 1), box-shadow 280ms ease, background 280ms ease",
+                      "transform 320ms cubic-bezier(0.32, 0.72, 0.2, 1), box-shadow 280ms ease",
                   }}
                 />
               )}
@@ -657,8 +678,7 @@ function ClimateModal({
                         : key === "fan_only"
                           ? MdAir
                           : IoPowerOutline;
-                  const btnAccent =
-                    HVAC_COLOR[key] ?? "var(--theme-fg-faint)";
+                  const btnAccent = palette(key).accent;
                   return (
                     <Box
                       key={key}
@@ -709,6 +729,7 @@ function ClimateCard({
   unit: HomeClimate;
   onTap: () => void;
 }) {
+  const palette = useHvacPalette();
   const displayMode = unit.hvacMode ?? unit.state;
   const activeAction =
     unit.hvacAction === "heating"
@@ -717,10 +738,8 @@ function ClimateCard({
         ? "cooling"
         : null;
   const badgeKey = activeAction ?? displayMode ?? "unknown";
-  const accentColor = HVAC_COLOR[badgeKey] ?? "var(--theme-fg-faint)";
-  const accentCssColor = HVAC_ACCENT_CSS[badgeKey] ?? "rgba(255,255,255,0.45)";
-  const ringColor = HVAC_RING[badgeKey] ?? "rgba(255,255,255,0.18)";
-  const glowColor = HVAC_GLOW[badgeKey] ?? "rgba(255,255,255,0.04)";
+  const { accent: accentCssColor, ring: ringColor } = palette(badgeKey);
+  const accentColor = accentCssColor;
   const isOff = normalizeClimateMode(displayMode) === "off";
   const isActiveLive = activeAction != null;
   const currentTemp = fmtClimateTemp(unit.currentTemp);
@@ -756,8 +775,8 @@ function ClimateCard({
         alignItems="center"
         justifyContent="center"
         overflow="hidden"
-        bg={`radial-gradient(circle at 50% 50%, ${glowColor} 0%, rgba(0,0,0,0.6) 95%, #000 100%)`}
-        boxShadow={`inset 0 0 0 0.5vmin ${ringColor}, inset 0 0 6vmin rgba(0,0,0,0.55)`}
+        bg="var(--theme-bg)"
+        boxShadow={`inset 0 0 0 0.4vmin ${ringColor}`}
         onClick={onTap}
         style={{ WebkitTapHighlightColor: "transparent" }}
       >
@@ -767,11 +786,9 @@ function ClimateCard({
             inset="0"
             borderRadius="full"
             pointerEvents="none"
+            boxShadow={`inset 0 0 0 0.4vmin ${accentCssColor}`}
             style={{
-              background: `radial-gradient(circle at 50% 50%, ${ringColor} 0%, ${glowColor} 32%, transparent 65%)`,
-              animation: "thermostatPulse 2.6s ease-in-out infinite",
-              transformOrigin: "center",
-              mixBlendMode: "screen",
+              animation: "thermostatFlatPulse 2.6s ease-in-out infinite",
             }}
           />
         )}

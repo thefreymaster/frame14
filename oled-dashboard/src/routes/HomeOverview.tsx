@@ -26,6 +26,7 @@ import { ForecastSection } from "../components/ForecastSection";
 import { PrinterSection } from "../components/PrinterSection";
 import { VacuumSection } from "../components/VacuumSection";
 import { FanSection } from "../components/FanSection";
+import { BirdSection } from "../components/BirdSection";
 import { Board } from "../components/Board";
 import { CalendarSection } from "../components/CalendarSection";
 
@@ -343,6 +344,7 @@ export function HomeOverview() {
                 today={data.calendar?.today ?? []}
                 tomorrow={data.calendar?.tomorrow ?? []}
               />
+              <BirdSection />
             </Box>
           </>
         ) : (
@@ -355,6 +357,7 @@ export function HomeOverview() {
               today={data.calendar?.today ?? []}
               tomorrow={data.calendar?.tomorrow ?? []}
             />
+            <BirdSection />
             <ClimateSection climate={data.climate} />
             <EnergySection energy={data.energy} />
             <FanSection fan={data.fan} />

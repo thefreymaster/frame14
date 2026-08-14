@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.30.1"
+version: "0.31.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -93,6 +93,7 @@ options:
     - "fan.living_room_ceiling_fan"
     - "fan.aidens_fan"
   printer_status_entity: "sensor.a1_03919c442700723_print_status"
+  bird_species_entity: "sensor.birdnet_go_front_porch_camera_last_species"
 schema:
   ha_url: str
   ha_token: str
@@ -121,3 +122,4 @@ schema:
   fan_entities:
     - str
   printer_status_entity: str?
+  bird_species_entity: str?

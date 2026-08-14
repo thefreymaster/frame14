@@ -11,7 +11,7 @@ export const SectionTitle = ({
 }) => {
   if (!icon) {
     return (
-      <Text fontSize="2.2vmin" color="var(--theme-fg-dim)" letterSpacing="0.1em">
+      <Text fontSize="2.2vmin" color="var(--theme-fg)" letterSpacing="0.1em">
         {children}
       </Text>
     );
@@ -19,14 +19,14 @@ export const SectionTitle = ({
   return (
     <HStack gap="1vmin" align="center">
       <Box
-        color={iconColor ?? "var(--theme-fg-dim)"}
+        color={iconColor ?? "var(--theme-fg)"}
         fontSize="2.4vmin"
         lineHeight="1"
         display="inline-flex"
       >
         {icon}
       </Box>
-      <Text fontSize="2.2vmin" color="var(--theme-fg-dim)" letterSpacing="0.1em">
+      <Text fontSize="2.2vmin" color="var(--theme-fg)" letterSpacing="0.1em">
         {children}
       </Text>
     </HStack>

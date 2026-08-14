@@ -13,7 +13,7 @@ type ThemeVars = Record<string, string>;
 
 const DARK_VARS: ThemeVars = {
   "--theme-bg": "#000000",
-  "--theme-fg": "#E2E8F0", // gray.200
+  "--theme-fg": "#FFFFFF",
   "--theme-fg-dim": "#A0AEC0", // gray.400
   "--theme-fg-muted": "#718096", // gray.500
   "--theme-fg-faint": "#4A5568", // gray.600

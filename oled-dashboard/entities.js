@@ -38,6 +38,7 @@ function loadEntities() {
       vacuums: options.vacuum_entities ?? [],
       fans: options.fan_entities ?? [],
       printer: options.printer_status_entity ?? "",
+      bird: options.bird_species_entity ?? "",
     };
   }
 
@@ -54,6 +55,7 @@ function loadEntities() {
       vacuums: frame14.vacuums ?? [],
       fans: frame14.fans ?? [],
       printer: frame14.printer ?? "",
+      bird: frame14.bird ?? "",
     };
   }
 
@@ -67,6 +69,7 @@ function loadEntities() {
     vacuums: [],
     fans: [],
     printer: "",
+    bird: "",
   };
 }
 

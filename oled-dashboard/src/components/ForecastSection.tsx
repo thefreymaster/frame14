@@ -25,7 +25,7 @@ export function ForecastSection({ forecast, count = 6 }: Props) {
               {high != null && (
                 <Text
                   fontSize="2.2vmin"
-                  color="var(--theme-fg-dim)"
+                  color="var(--theme-fg)"
                   letterSpacing="0.1em"
                 >
                   H {Math.round(high)}°
@@ -34,7 +34,7 @@ export function ForecastSection({ forecast, count = 6 }: Props) {
               {low != null && (
                 <Text
                   fontSize="2.2vmin"
-                  color="var(--theme-fg-dim)"
+                  color="var(--theme-fg)"
                   letterSpacing="0.1em"
                 >
                   L {Math.round(low)}°

@@ -13,6 +13,7 @@ export interface EntitiesConfig {
   vacuums: string[];
   fans: string[];
   printer: string;
+  bird: string;
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

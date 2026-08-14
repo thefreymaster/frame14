@@ -220,6 +220,8 @@ function Header({
           </Text>
         )}
       </HStack>
+
+      <BirdSection />
     </Board>
   );
 }
@@ -344,7 +346,6 @@ export function HomeOverview() {
                 today={data.calendar?.today ?? []}
                 tomorrow={data.calendar?.tomorrow ?? []}
               />
-              <BirdSection />
             </Box>
           </>
         ) : (
@@ -357,7 +358,6 @@ export function HomeOverview() {
               today={data.calendar?.today ?? []}
               tomorrow={data.calendar?.tomorrow ?? []}
             />
-            <BirdSection />
             <ClimateSection climate={data.climate} />
             <EnergySection energy={data.energy} />
             <FanSection fan={data.fan} />

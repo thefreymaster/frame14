@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { HStack, Spacer, Text } from "@chakra-ui/react";
 import { PiBirdFill } from "react-icons/pi";
-import { SectionTitle } from "./SectionTitle/SectionTitle";
-import { Board } from "./Board";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity } from "../hooks/useEntity";
 import { birdBaseId, birdEntityId } from "../lib/birdEntities";
@@ -55,78 +53,53 @@ export function BirdSection() {
   const seen = relativeTime(species.data?.last_changed, now);
 
   return (
-    <Board
-      collapsible
-      storageKey="bird"
-      title={
-        <HStack width="100%" align="center" gap="1.5vmin">
-          <SectionTitle icon={<PiBirdFill />}>BIRDS</SectionTitle>
-          <Box flex="1" minW="0" />
-          <Text
-            fontSize="1.8vmin"
-            color="var(--theme-fg-dim)"
-            letterSpacing="0.06em"
-            fontWeight="500"
-            overflow="hidden"
-            whiteSpace="nowrap"
-            textOverflow="ellipsis"
-            maxW="40vmin"
-          >
-            {name}
-          </Text>
-        </HStack>
-      }
+    <HStack
+      width="100%"
+      align="baseline"
+      gap="1.2vmin"
+      mt="1vmin"
+      color="var(--theme-fg-faint)"
     >
-      <HStack width="100%" justify="space-between" align="baseline" gap="2vmin">
-        <VStack align="flex-start" gap="0.2vmin" flex="1" minW="0">
-          <Text
-            fontSize="3.8vmin"
-            color="var(--theme-fg-dim)"
-            fontWeight="300"
-            overflow="hidden"
-            whiteSpace="nowrap"
-            textOverflow="ellipsis"
-            maxW="100%"
-          >
-            {name}
-          </Text>
-          {scientificName && (
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              fontStyle="italic"
-              letterSpacing="0.04em"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
-              maxW="100%"
-            >
-              {scientificName}
-            </Text>
-          )}
-        </VStack>
-        <VStack align="flex-end" gap="0.2vmin" flexShrink={0}>
-          {confidencePct != null && (
-            <Text
-              fontSize="3.4vmin"
-              color="var(--theme-fg-dim)"
-              fontWeight="300"
-              lineHeight="1"
-            >
-              {confidencePct}%
-            </Text>
-          )}
-          {seen && (
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.08em"
-            >
-              {seen}
-            </Text>
-          )}
-        </VStack>
-      </HStack>
-    </Board>
+      <Text as="span" fontSize="2.4vmin" lineHeight="1" alignSelf="center">
+        <PiBirdFill />
+      </Text>
+      <Text
+        fontSize="2.4vmin"
+        color="var(--theme-fg-dim)"
+        fontWeight="300"
+        overflow="hidden"
+        whiteSpace="nowrap"
+        textOverflow="ellipsis"
+        flexShrink={1}
+        minW="0"
+      >
+        {name}
+      </Text>
+      {scientificName && (
+        <Text
+          fontSize="2vmin"
+          fontStyle="italic"
+          letterSpacing="0.04em"
+          overflow="hidden"
+          whiteSpace="nowrap"
+          textOverflow="ellipsis"
+          flexShrink={1}
+          minW="0"
+        >
+          {scientificName}
+        </Text>
+      )}
+      <Spacer />
+      {confidencePct != null && (
+        <Text fontSize="2.2vmin" fontWeight="300" flexShrink={0}>
+          {confidencePct}%
+        </Text>
+      )}
+      {seen && (
+        <Text fontSize="2vmin" letterSpacing="0.08em" flexShrink={0}>
+          {seen}
+        </Text>
+      )}
+    </HStack>
   );
 }

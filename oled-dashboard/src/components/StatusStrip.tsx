@@ -2,7 +2,6 @@ import { Flex, Text } from "@chakra-ui/react";
 import { IoPrintOutline } from "react-icons/io5";
 import { TbVacuumCleaner } from "react-icons/tb";
 import type { HomePrinter, HomeVacuum } from "../hooks/useHomeData";
-import { BirdSection } from "./BirdSection";
 import { StatusChip } from "./StatusChip";
 import { CHIP_GAP } from "../lib/surfaces";
 
@@ -68,9 +67,6 @@ export function StatusStrip({
       wrap="wrap"
       align="center"
     >
-      {/* BirdNET-Go detection — ambient, so it lives with the quiet things. */}
-      <BirdSection />
-
       {showPrinterChip && (
         <StatusChip icon={<IoPrintOutline />}>
           <ChipText>Printer idle</ChipText>

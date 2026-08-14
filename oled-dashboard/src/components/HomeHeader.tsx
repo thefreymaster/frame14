@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Text, HStack, Spacer, Alert } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
+import { BirdSection } from "./BirdSection";
 import { Board } from "./Board";
 
 const DAYS = [
@@ -154,6 +155,17 @@ export function HomeHeader({
             <NumberFlow value={Math.round(weather.temperature)} />°
           </Text>
         )}
+      </HStack>
+
+      {/* Row 3: latest BirdNET-Go detection — renders nothing when there
+          hasn't been one, so the header keeps its old height. */}
+      <HStack
+        width="100%"
+        minW="0"
+        mt="1.5vmin"
+        _empty={{ display: "none" }}
+      >
+        <BirdSection />
       </HStack>
     </Board>
   );

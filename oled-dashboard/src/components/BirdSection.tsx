@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { HStack, Spacer, Text } from "@chakra-ui/react";
+import { Text } from "@chakra-ui/react";
 import { PiBirdFill } from "react-icons/pi";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity } from "../hooks/useEntity";
 import { birdBaseId, birdEntityId } from "../lib/birdEntities";
+import { StatusChip } from "./StatusChip";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", "none", ""]);
 
@@ -53,16 +54,7 @@ export function BirdSection() {
   const seen = relativeTime(species.data?.last_changed, now);
 
   return (
-    <HStack
-      width="100%"
-      align="baseline"
-      gap="1.2vmin"
-      mt="1vmin"
-      color="var(--theme-fg-faint)"
-    >
-      <Text as="span" fontSize="2.4vmin" lineHeight="1" alignSelf="center">
-        <PiBirdFill />
-      </Text>
+    <StatusChip icon={<PiBirdFill />} grow label={`Last bird detection: ${name}`}>
       <Text
         fontSize="2.4vmin"
         color="var(--theme-fg-dim)"
@@ -70,7 +62,6 @@ export function BirdSection() {
         overflow="hidden"
         whiteSpace="nowrap"
         textOverflow="ellipsis"
-        flexShrink={1}
         minW="0"
       >
         {name}
@@ -78,28 +69,38 @@ export function BirdSection() {
       {scientificName && (
         <Text
           fontSize="2vmin"
+          color="var(--theme-fg-faint)"
           fontStyle="italic"
           letterSpacing="0.04em"
           overflow="hidden"
           whiteSpace="nowrap"
           textOverflow="ellipsis"
-          flexShrink={1}
           minW="0"
         >
           {scientificName}
         </Text>
       )}
-      <Spacer />
       {confidencePct != null && (
-        <Text fontSize="2.2vmin" fontWeight="300" flexShrink={0}>
+        <Text
+          fontSize="2.2vmin"
+          color="var(--theme-fg-faint)"
+          fontWeight="300"
+          flexShrink={0}
+          ml="auto"
+        >
           {confidencePct}%
         </Text>
       )}
       {seen && (
-        <Text fontSize="2vmin" letterSpacing="0.08em" flexShrink={0}>
+        <Text
+          fontSize="2vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.08em"
+          flexShrink={0}
+        >
           {seen}
         </Text>
       )}
-    </HStack>
+    </StatusChip>
   );
 }

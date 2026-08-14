@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { FiChevronDown } from "react-icons/fi";
-import { useColorModeValue } from "./ui/color-mode";
+import { CARD_PADDING_X, CARD_PADDING_Y, CARD_RADIUS } from "../lib/surfaces";
 
 const STORAGE_PREFIX = "board-collapsed:";
 const ANIM_MS = 280;
@@ -19,6 +19,7 @@ export const Board = ({
   collapsible = false,
   defaultOpen = true,
   storageKey,
+  span,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
@@ -26,12 +27,9 @@ export const Board = ({
   collapsible?: boolean;
   defaultOpen?: boolean;
   storageKey?: string;
+  /** Span both columns of the home bento grid. Ignored outside a grid. */
+  span?: 1 | 2;
 }) => {
-  const bg = useColorModeValue("white", "black");
-  const border = useColorModeValue("gray.100", "#ffffff24");
-  const headerColor = useColorModeValue("gray.700", "gray.200");
-  const iconColor = useColorModeValue("gray.500", "gray.400");
-
   const persistKey = collapsible
     ? storageKey || (typeof title === "string" ? slugify(title) : undefined)
     : undefined;
@@ -62,20 +60,18 @@ export const Board = ({
 
   return (
     <Box
-      minWidth="100%"
-      backgroundColor={bg}
-      border={`1px solid`}
-      borderColor={border}
-      pl="4"
-      pr="4"
-      pt="2"
+      width="100%"
+      minW="0"
+      gridColumn={span === 2 ? "1 / -1" : undefined}
+      // Elevation by fill, not outline — see themeMode.ts for why this is the
+      // dimmer option on an OLED panel as well as the better-looking one.
+      backgroundColor="var(--theme-surface-1)"
+      px={CARD_PADDING_X}
+      pt={CARD_PADDING_Y}
+      pb={CARD_PADDING_Y}
       onClick={!collapsible ? onClick : undefined}
       cursor={onClick && !collapsible ? "pointer" : undefined}
-      borderRadius="sm"
-      style={{
-        paddingBottom: collapsible && !open ? "0.5rem" : "1rem",
-        transition: `padding-bottom ${ANIM_MS}ms ease`,
-      }}
+      borderRadius={CARD_RADIUS}
     >
       {showHeader && (
         <Flex
@@ -99,7 +95,7 @@ export const Board = ({
             transition: `margin-bottom ${ANIM_MS}ms ease`,
           }}
         >
-          <Box flex="1" minW="0" color={headerColor}>
+          <Box flex="1" minW="0" color="var(--theme-fg-dim)">
             {typeof title === "string" ? (
               <Text fontSize="sm" fontWeight="500" mb="0">
                 {title}
@@ -110,7 +106,7 @@ export const Board = ({
           </Box>
           {collapsible && (
             <Box
-              color={iconColor}
+              color="var(--theme-fg-faint)"
               fontSize="20px"
               display="flex"
               alignItems="center"

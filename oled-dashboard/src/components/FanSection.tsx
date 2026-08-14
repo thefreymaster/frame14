@@ -6,6 +6,7 @@ import type { HomeFan } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 import { callFanService } from "../lib/callService";
+import { CHIP_GAP, CHIP_PADDING_X, CHIP_PADDING_Y, CHIP_RADIUS } from "../lib/surfaces";
 
 const FAN_EXIT_MS = 240;
 const STEP = 25;
@@ -356,13 +357,14 @@ function FanRow({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
     <HStack
       as="button"
       width="100%"
+      minW="0"
       justify="space-between"
       align="center"
       onClick={onTap}
-      bg="transparent"
-      px="0"
-      py="0.4vmin"
-      borderRadius="md"
+      bg={on ? "var(--theme-surface-2-on)" : "var(--theme-surface-2)"}
+      px={CHIP_PADDING_X}
+      py={CHIP_PADDING_Y}
+      borderRadius={CHIP_RADIUS}
       style={{ WebkitTapHighlightColor: "transparent", textAlign: "left" }}
     >
       <HStack gap="1.2vmin" align="center" flex="1" minW="0">
@@ -385,15 +387,12 @@ function FanRow({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
           {fan.name}
         </Text>
       </HStack>
+      {/* The chip supplies the surface now, so the value is plain text. */}
       <Box
         display="inline-flex"
         alignItems="center"
         justifyContent="center"
-        px="1.2vmin"
-        py="0.3vmin"
-        borderRadius="full"
-        border={`1px solid ${on ? "rgba(94, 234, 212, 0.6)" : "rgba(255,255,255,0.14)"}`}
-        bg={on ? "rgba(94, 234, 212, 0.12)" : "rgba(255,255,255,0.04)"}
+        flexShrink={0}
         color={on ? "rgb(94, 234, 212)" : "var(--theme-fg-faint)"}
         fontSize="1.8vmin"
         fontWeight="600"
@@ -410,7 +409,7 @@ function FanRow({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
   );
 }
 
-export function FanSection({ fan }: { fan: HomeFan[] }) {
+export function FanSection({ fan, span }: { fan: HomeFan[]; span?: 1 | 2 }) {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   if (fan.length === 0) return null;
   const onCount = fan.filter((f) => f.state === "on").length;
@@ -419,6 +418,7 @@ export function FanSection({ fan }: { fan: HomeFan[] }) {
 
   return (
     <Board
+      span={span}
       collapsible
       storageKey="fan"
       title={
@@ -449,7 +449,13 @@ export function FanSection({ fan }: { fan: HomeFan[] }) {
         </HStack>
       }
     >
-      <VStack gap="0.4vmin" align="stretch" width="100%">
+      {/* Chips wrap into columns so a wide card isn't one fan per band. */}
+      <Box
+        display="grid"
+        gridTemplateColumns="repeat(auto-fill, minmax(34vmin, 1fr))"
+        gap={CHIP_GAP}
+        width="100%"
+      >
         {fan.map((f) => (
           <FanRow
             key={f.entity_id}
@@ -457,7 +463,7 @@ export function FanSection({ fan }: { fan: HomeFan[] }) {
             onTap={() => setSelectedEntityId(f.entity_id)}
           />
         ))}
-      </VStack>
+      </Box>
       {selected && (
         <FanModal
           fan={selected}

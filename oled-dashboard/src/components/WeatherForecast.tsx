@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Text, VStack } from "@chakra-ui/react";
 import {
   WiDaySunny,
   WiNightClear,
@@ -22,6 +22,7 @@ import {
 } from "react-icons/wi";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
 import { ForecastDetailModal } from "./ForecastDetailModal";
+import { CHIP_GAP, CHIP_PADDING_Y, CHIP_RADIUS } from "../lib/surfaces";
 
 type IconComponent = React.ComponentType<{
   size?: string | number;
@@ -93,102 +94,71 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
           onClose={() => setSelectedIndex(null)}
         />
       )}
+      {/* Each period is its own chip: the surface replaces the divider rules,
+          and the soonest period can carry state instead of looking identical
+          to the other five. */}
       <Box
         width="100%"
-        position="relative"
         display="grid"
         gridTemplateColumns={`repeat(${cols}, 1fr)`}
-        gridTemplateRows="auto auto auto auto"
-        rowGap="1vmin"
-        alignItems="center"
-        justifyItems="center"
+        gap={CHIP_GAP}
+        alignItems="stretch"
       >
-        {Array.from({ length: cols - 1 }, (_, i) => (
-          <Box
-            key={`divider-${i}`}
-            position="absolute"
-            top="0"
-            bottom="0"
-            left={`${((i + 1) * 100) / cols}%`}
-            width="1px"
-            bg="var(--theme-fg-dim)"
-            opacity={0.2}
-            pointerEvents="none"
-          />
-        ))}
-        {periods.map((period, i) => (
-          <Text
-            key={`hour-${i}`}
-            gridRow={1}
-            fontSize="2.8vmin"
-            color="var(--theme-fg-dim)"
-            letterSpacing="0.05em"
-            textAlign="center"
-          >
-            {formatHour(period.datetime)}
-          </Text>
-        ))}
-        {periods.map((period, i) => (
-          <Box
-            key={`icon-${i}`}
-            gridRow={2}
-            fontSize="7vmin"
-            lineHeight="1"
-            color="var(--theme-fg-dim)"
-          >
-            {(() => {
-              const Icon = getIcon(period.condition ?? "", period.datetime);
-              return <Icon size="1em" />;
-            })()}
-          </Box>
-        ))}
-        {periods.map((period, i) => (
-          <Text
-            key={`temp-${i}`}
-            gridRow={3}
-            fontSize="4.5vmin"
-            color="var(--theme-fg-dim)"
-            fontWeight="300"
-            textAlign="center"
-          >
-            {period.temperature != null
-              ? `${Math.round(period.temperature)}°`
-              : "—"}
-          </Text>
-        ))}
-        {periods.map((period, i) =>
-          period.precipitationProbability != null &&
-          period.precipitationProbability > 0 ? (
-            <Text
-              key={`precip-${i}`}
-              gridRow={4}
-              fontSize="2.8vmin"
-              color="blue.400"
-              textAlign="center"
-              opacity={i === 0 ? 1 : 0.65}
+        {periods.map((period, i) => {
+          const Icon = getIcon(period.condition ?? "", period.datetime);
+          const soonest = i === 0;
+          const precip = period.precipitationProbability;
+          return (
+            <VStack
+              key={period.datetime ?? i}
+              as="button"
+              aria-label={`Show forecast detail for ${formatHour(period.datetime)}`}
+              onClick={() => setSelectedIndex(i)}
+              gap="1vmin"
+              minW="0"
+              bg={
+                soonest
+                  ? "var(--theme-surface-2-on)"
+                  : "var(--theme-surface-2)"
+              }
+              borderRadius={CHIP_RADIUS}
+              px="0.6vmin"
+              py={CHIP_PADDING_Y}
+              cursor="pointer"
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              {period.precipitationProbability}%
-            </Text>
-          ) : null,
-        )}
-        {periods.map((_, i) => (
-          <Box
-            key={`hit-${i}`}
-            as="button"
-            aria-label={`Show forecast detail for ${formatHour(periods[i].datetime)}`}
-            position="absolute"
-            top="0"
-            bottom="0"
-            left={`${(i * 100) / cols}%`}
-            width={`${100 / cols}%`}
-            bg="transparent"
-            border="none"
-            cursor="pointer"
-            zIndex={1}
-            onClick={() => setSelectedIndex(i)}
-            style={{ WebkitTapHighlightColor: "transparent" }}
-          />
-        ))}
+              <Text
+                fontSize="2.4vmin"
+                color={
+                  soonest ? "var(--theme-fg-dim)" : "var(--theme-fg-faint)"
+                }
+                letterSpacing="0.05em"
+              >
+                {formatHour(period.datetime)}
+              </Text>
+              <Box
+                fontSize="6vmin"
+                lineHeight="1"
+                color="var(--theme-fg-dim)"
+              >
+                <Icon size="1em" />
+              </Box>
+              <Text fontSize="3.6vmin" fontWeight="300">
+                {period.temperature != null
+                  ? `${Math.round(period.temperature)}°`
+                  : "—"}
+              </Text>
+              {/* Always rendered so temps stay on one baseline across chips. */}
+              <Text
+                fontSize="2.2vmin"
+                color="blue.400"
+                opacity={precip != null && precip > 0 ? 1 : 0}
+              >
+                {precip != null && precip > 0 ? `${precip}%` : " "}
+              </Text>
+            </VStack>
+          );
+        })}
       </Box>
     </>
   );

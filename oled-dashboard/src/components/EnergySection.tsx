@@ -17,7 +17,13 @@ function fmtW(watts: number): string {
 
 const GRID_ACTIVE_THRESHOLD = 5;
 
-export function EnergySection({ energy }: { energy: HomeEnergy }) {
+export function EnergySection({
+  energy,
+  span,
+}: {
+  energy: HomeEnergy;
+  span?: 1 | 2;
+}) {
   const [showModal, setShowModal] = useState(false);
   const {
     productionToday,
@@ -41,6 +47,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
         <EnergyModal energy={energy} onClose={() => setShowModal(false)} />
       )}
       <Board
+        span={span}
         collapsible
         storageKey="energy"
         title={

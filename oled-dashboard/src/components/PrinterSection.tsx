@@ -33,7 +33,13 @@ function titleCase(s: string): string {
   return s.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function PrinterSection({ printer }: { printer: HomePrinter }) {
+export function PrinterSection({
+  printer,
+  span,
+}: {
+  printer: HomePrinter;
+  span?: 1 | 2;
+}) {
   const [showModal, setShowModal] = useState(false);
   const isActive =
     printer.status === "running" ||
@@ -50,6 +56,7 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
         <PrinterModal printer={printer} onClose={() => setShowModal(false)} />
       )}
       <Board
+        span={span}
         collapsible
         storageKey="printer"
         title={

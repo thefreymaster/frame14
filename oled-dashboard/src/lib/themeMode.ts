@@ -13,6 +13,13 @@ type ThemeVars = Record<string, string>;
 
 const DARK_VARS: ThemeVars = {
   "--theme-bg": "#000000",
+  // Elevation: cards lift off the ground with fill, not an outline. A 1px
+  // #ffffff24 border is a static line at ~14% luminance; a #0D0D0F fill is a
+  // field at ~5%, so this is the dimmer option for burn-in as well as the
+  // better-looking one. The page ground itself never lifts.
+  "--theme-surface-1": "#0D0D0F",
+  "--theme-surface-2": "#161619",
+  "--theme-surface-2-on": "#1E2A28",
   "--theme-fg": "#FFFFFF",
   "--theme-fg-dim": "#A0AEC0", // gray.400
   "--theme-fg-muted": "#718096", // gray.500
@@ -27,6 +34,10 @@ const DARK_VARS: ThemeVars = {
 // Bright mode is a true inverse: white background, dark text.
 const BRIGHT_VARS: ThemeVars = {
   "--theme-bg": "#FFFFFF",
+  // Elevation inverts with the palette: surfaces step down from white.
+  "--theme-surface-1": "#F4F6F7",
+  "--theme-surface-2": "#EAEFF1",
+  "--theme-surface-2-on": "#D8EFEA",
   "--theme-fg": "#1A202C", // gray.800
   "--theme-fg-dim": "#2D3748", // gray.700
   "--theme-fg-muted": "#4A5568", // gray.600

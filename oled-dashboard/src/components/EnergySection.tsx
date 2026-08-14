@@ -54,10 +54,13 @@ export function EnergySection({
           <Flex align="center" gap="1.5vmin" rowGap="0.8vmin" wrap="wrap" width="100%" minW="0">
           <SectionTitle icon={<IoFlash />}>ENERGY</SectionTitle>
           {gridActive && (
+            // Arrow and colour carry the direction, so the badge keeps only
+            // the figure and stays on the header's first line in the rail.
             <Box
               display="inline-flex"
               alignItems="center"
-              gap="0.6vmin"
+              gap="0.5vmin"
+              flexShrink={0}
               px="1.2vmin"
               py="0.3vmin"
               borderRadius="999px"
@@ -68,23 +71,26 @@ export function EnergySection({
               bg={
                 isExporting ? "rgba(34,197,94,0.08)" : "rgba(249,115,22,0.08)"
               }
+              aria-label={`${isExporting ? "Exporting" : "Importing"} ${fmtW(gridAbs)}`}
             >
               <Text
                 as="span"
                 fontSize="1.8vmin"
                 color={isExporting ? "green.400" : "orange.400"}
                 fontWeight="500"
+                aria-hidden="true"
               >
                 {isExporting ? "↑" : "↓"}
               </Text>
               <Text
                 as="span"
                 fontSize="1.7vmin"
-                letterSpacing="0.12em"
+                letterSpacing="0.06em"
                 color={isExporting ? "green.400" : "orange.400"}
                 fontWeight="500"
+                whiteSpace="nowrap"
               >
-                {isExporting ? "EXPORTING" : "IMPORTING"} {fmtW(gridAbs)}
+                {fmtW(gridAbs)}
               </Text>
             </Box>
           )}

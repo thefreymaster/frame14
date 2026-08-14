@@ -61,6 +61,7 @@ export function EnergySection({
               alignItems="center"
               gap="0.5vmin"
               flexShrink={0}
+              ml="auto"
               px="1.2vmin"
               py="0.3vmin"
               borderRadius="999px"
@@ -94,38 +95,6 @@ export function EnergySection({
               </Text>
             </Box>
           )}
-          <HStack gap="1.5vmin" ml="auto">
-            <HStack gap="0.6vmin" align="center">
-              <Box color="yellow.500" fontSize="2.2vmin" lineHeight="1">
-                <PiSolarRoof />
-              </Box>
-              <Text
-                fontSize="1.8vmin"
-                color="yellow.500"
-                letterSpacing="0.06em"
-                fontWeight="500"
-              >
-                {fmtW(currentProduction)}
-              </Text>
-            </HStack>
-            <HStack gap="0.6vmin" align="center">
-              <Box
-                color="var(--theme-fg-dim)"
-                fontSize="2.2vmin"
-                lineHeight="1"
-              >
-                <IoFlash />
-              </Box>
-              <Text
-                fontSize="1.8vmin"
-                color="var(--theme-fg-dim)"
-                letterSpacing="0.06em"
-                fontWeight="500"
-              >
-                {fmtW(currentConsumption)}
-              </Text>
-            </HStack>
-          </HStack>
         </Flex>
         }
       >

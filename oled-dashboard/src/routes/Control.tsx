@@ -29,6 +29,19 @@ import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import { useImmichAlbums } from "../hooks/useImmichAlbums";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
 import type { ThemeModePreference } from "../lib/themeMode";
+import { Board } from "../components/Board";
+import { PageShell } from "../components/PageShell";
+import { PageHeader } from "../components/PageHeader";
+import { ControlButton } from "../components/ControlButton";
+import { SectionTitle } from "../components/SectionTitle/SectionTitle";
+import {
+  CARD_RADIUS,
+  CHIP_GAP,
+  CHIP_PADDING_X,
+  CHIP_PADDING_Y,
+  CHIP_RADIUS,
+  GRID_GAP,
+} from "../lib/surfaces";
 
 const VIEWS: {
   path: string;
@@ -124,122 +137,82 @@ export function Control() {
   }
 
   return (
-    <Box
-      width="100%"
-      minHeight="100vh"
-      bg="var(--theme-bg)"
-      display="flex"
-      justifyContent="center"
-    >
-      <Box
-        width="100%"
-        px="min(8vmin, 40px)"
-        py="min(12vmin, 56px)"
-        display="flex"
-        flexDirection="column"
-        css={{
-          maxWidth: "560px",
-          "@media (orientation: landscape)": {
-            maxWidth: "960px",
-          },
-        }}
-      >
-        {/* Header */}
-        <HStack justify="space-between" align="center" mb="min(8vmin, 36px)">
-          <HStack gap="min(2vmin, 10px)" align="center">
+    <PageShell center maxW={{ portrait: "560px", landscape: "960px" }}>
+      <PageHeader
+        icon={<IoOptionsOutline />}
+        title="CONTROL"
+        actions={
+          <HStack gap="1vmin" align="center">
             <Box
-              color="var(--theme-fg-dim)"
-              fontSize="min(5vmin, 26px)"
-              lineHeight="1"
-              display="flex"
-              alignItems="center"
-            >
-              <IoOptionsOutline />
-            </Box>
-            <Text
-              fontSize="min(3vmin, 14px)"
-              fontWeight="500"
-              letterSpacing="0.14em"
-              color="var(--theme-fg-dim)"
-            >
-              CONTROL
-            </Text>
-          </HStack>
-          <HStack gap="min(1.5vmin, 8px)" align="center">
-            <Box
-              width="8px"
-              height="8px"
+              width="1vmin"
+              minWidth="6px"
+              height="1vmin"
+              minHeight="6px"
               borderRadius="full"
               bg={connected ? "green.400" : "var(--theme-fg-faint)"}
             />
             <Text
-              fontSize="min(2.8vmin, 13px)"
-              fontWeight="300"
+              fontSize="1.8vmin"
+              fontWeight="400"
               color="var(--theme-fg-faint)"
               letterSpacing="0.08em"
+              whiteSpace="nowrap"
             >
               {connected ? "CONNECTED" : "DISCONNECTED"}
             </Text>
           </HStack>
-        </HStack>
+        }
+      >
         {/* Device mode buttons */}
-        <HStack gap="min(2vmin, 10px)" mb="min(4.5vmin, 20px)">
+        <HStack gap={CHIP_GAP} mt="1.5vmin">
           {(["frame", "controller"] as const).map((mode) => {
             const isActive = deviceMode === mode;
             const label = mode === "frame" ? "Use as frame" : "Use as remote";
             return (
-              <Box
+              <ControlButton
                 key={mode}
-                as="button"
+                grow
+                active={isActive}
                 onClick={() => {
                   setDeviceMode(mode);
                   setDeviceModeState(mode);
                   if (mode === "frame") window.location.href = "/home";
                 }}
-                flex="1"
-                py="min(3vmin, 13px)"
-                px="min(4vmin, 18px)"
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={
-                  isActive ? "var(--theme-fg-dim)" : "var(--theme-divider)"
-                }
-                bg="transparent"
-                cursor="pointer"
-                _active={{ opacity: 0.5 }}
-                transition="border-color 0.15s"
               >
                 <Text
-                  fontSize="min(3.2vmin, 14px)"
-                  color={isActive ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
-                  fontWeight={isActive ? "400" : "300"}
+                  fontSize="2.2vmin"
+                  fontWeight={isActive ? "500" : "300"}
                   letterSpacing="0.02em"
+                  whiteSpace="nowrap"
                 >
                   {label}
                 </Text>
-              </Box>
+              </ControlButton>
             );
           })}
         </HStack>
-        {/* Body: stacked portrait, side-by-side landscape */}
-        <Box
-          css={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "min(10vmin, 48px)",
-            "@media (orientation: landscape)": {
-              flexDirection: "row",
-              alignItems: "flex-start",
-            },
-          }}
-        >
-          {deviceMode !== "frame" && (
-            <Box flex="1" minWidth="0">
+      </PageHeader>
+
+      {/* Body: stacked portrait, side-by-side landscape */}
+      <Box
+        css={{
+          display: "flex",
+          flexDirection: "column",
+          gap: GRID_GAP,
+          "@media (orientation: landscape)": {
+            flexDirection: "row",
+            alignItems: "flex-start",
+          },
+        }}
+      >
+        {deviceMode !== "frame" && (
+          <Box flex="1" minWidth="0">
+            <Board title={<SectionTitle>VIEWS</SectionTitle>}>
               {/* View grid */}
               <Box
                 display="grid"
                 gridTemplateColumns="1fr 1fr 1fr"
-                gap="min(3vmin, 14px)"
+                gap={CHIP_GAP}
                 width="100%"
               >
                 {VIEWS.map((v) => {
@@ -248,31 +221,19 @@ export function Control() {
                   const Icon = isActive ? v.activeIcon : v.icon;
 
                   return (
-                    <Box
+                    <ControlButton
                       key={v.path}
-                      position="relative"
+                      square
+                      radius={CARD_RADIUS}
+                      active={isActive}
                       onClick={() => changeView(v.path)}
-                      cursor="pointer"
-                      aspectRatio="1"
-                      borderRadius="12px"
-                      border="1px solid"
-                      borderColor={
-                        isActive
-                          ? "var(--theme-fg-dim)"
-                          : "var(--theme-divider)"
-                      }
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      gap="min(2vmin, 10px)"
-                      _active={{ opacity: 0.5 }}
+                      label={v.label}
                     >
                       <Box
                         color={
                           isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"
                         }
-                        fontSize="min(7vmin, 24px)"
+                        fontSize="5vmin"
                         display="flex"
                         alignItems="center"
                         justifyContent="center"
@@ -280,21 +241,20 @@ export function Control() {
                         <Icon />
                       </Box>
                       <Text
-                        fontSize="min(3.6vmin, 16px)"
-                        fontWeight={isActive ? "400" : "300"}
-                        color={
-                          isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"
-                        }
+                        fontSize="2.2vmin"
+                        fontWeight={isActive ? "500" : "300"}
                         letterSpacing="0.01em"
                       >
                         {v.label}
                       </Text>
                       {isPhotos && (
                         <Box
-                          as="button"
+                          as="span"
+                          role="button"
+                          aria-label="Next photo"
                           position="absolute"
-                          top="min(2vmin, 10px)"
-                          right="min(2vmin, 10px)"
+                          top="1.2vmin"
+                          right="1.2vmin"
                           onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             nextPhoto();
@@ -303,179 +263,131 @@ export function Control() {
                           _hover={{ color: "var(--theme-fg)" }}
                           display="flex"
                           alignItems="center"
-                          p="min(1vmin, 6px)"
+                          fontSize="2.8vmin"
                         >
-                          <MdSkipNext size={18} />
+                          <MdSkipNext />
                         </Box>
                       )}
-                    </Box>
+                    </ControlButton>
                   );
                 })}
               </Box>
-            </Box>
-          )}
-          <Box
-            flex="1"
-            minWidth="0"
-            display="flex"
-            flexDirection="column"
-            gap="min(10vmin, 48px)"
-          >
-            {/* Display mode */}
-            <Box>
-              <HStack
-                justify="space-between"
-                align="baseline"
-                mb="min(3vmin, 14px)"
-              >
-                <Text
-                  fontSize="min(3.2vmin, 14px)"
-                  color="var(--theme-fg-muted)"
-                  letterSpacing="0.12em"
-                  textTransform="uppercase"
-                >
-                  Display mode
-                </Text>
+            </Board>
+          </Box>
+        )}
+        <Box
+          flex="1"
+          minWidth="0"
+          display="flex"
+          flexDirection="column"
+          gap={GRID_GAP}
+        >
+          {/* Display mode */}
+          <Board
+            title={
+              <HStack justify="space-between" align="baseline" width="100%">
+                <SectionTitle>DISPLAY</SectionTitle>
                 {preference === "auto" && (
-                  <Text
-                    fontSize="min(2.8vmin, 13px)"
-                    color="var(--theme-fg-faint)"
-                  >
+                  <Text fontSize="1.8vmin" color="var(--theme-fg-faint)">
                     auto · {effectiveMode}
                   </Text>
                 )}
               </HStack>
-              <HStack gap="min(2vmin, 10px)" width="100%">
-                {THEME_MODES.map((m) => {
-                  const isActive = preference === m.value;
-                  return (
-                    <Box
-                      key={m.value}
-                      as="button"
-                      flex="1"
-                      py="min(3.5vmin, 16px)"
-                      borderRadius="8px"
-                      bg="transparent"
-                      border="1px solid"
-                      borderColor={
-                        isActive
-                          ? "var(--theme-fg-dim)"
-                          : "var(--theme-divider)"
-                      }
-                      onClick={() => setPreference(m.value)}
-                      _active={{ opacity: 0.5 }}
+            }
+          >
+            <HStack gap={CHIP_GAP} width="100%">
+              {THEME_MODES.map((m) => {
+                const isActive = preference === m.value;
+                return (
+                  <ControlButton
+                    key={m.value}
+                    grow
+                    active={isActive}
+                    onClick={() => setPreference(m.value)}
+                  >
+                    <Text
+                      fontSize="2.4vmin"
+                      fontWeight={isActive ? "500" : "300"}
+                      letterSpacing="0.02em"
                     >
-                      <Text
-                        fontSize="min(3.6vmin, 16px)"
-                        fontWeight={isActive ? "400" : "300"}
-                        color={
-                          isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"
-                        }
-                        letterSpacing="0.02em"
-                      >
-                        {m.label}
-                      </Text>
-                    </Box>
-                  );
-                })}
-              </HStack>
-              {/* Refresh all frames */}
-              <Box
-                as="button"
-                mt="min(3vmin, 14px)"
-                width="100%"
-                py="min(3.5vmin, 16px)"
-                borderRadius="8px"
-                bg="transparent"
-                border="1px solid var(--theme-divider)"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap="min(2vmin, 10px)"
-                color="var(--theme-fg-dim)"
-                _active={{ opacity: 0.5 }}
-                onClick={() => socket.emit("refresh")}
-              >
-                <MdRefresh size={18} />
+                      {m.label}
+                    </Text>
+                  </ControlButton>
+                );
+              })}
+            </HStack>
+
+            {/* Refresh all frames */}
+            <HStack mt={CHIP_GAP} width="100%">
+              <ControlButton grow onClick={() => socket.emit("refresh")}>
+                <Box fontSize="2.8vmin" display="flex">
+                  <MdRefresh />
+                </Box>
                 <Text
-                  fontSize="min(3.6vmin, 16px)"
+                  fontSize="2.4vmin"
                   fontWeight="300"
                   letterSpacing="0.02em"
                 >
                   Refresh displays
                 </Text>
-              </Box>
-              {/* Show/hide nav */}
-              <Box
-                as="button"
-                mt="min(2vmin, 10px)"
-                width="100%"
-                py="min(3.5vmin, 16px)"
-                borderRadius="8px"
-                bg="transparent"
-                border="1px solid var(--theme-divider)"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap="min(2vmin, 10px)"
-                color="var(--theme-fg-dim)"
-                _active={{ opacity: 0.5 }}
-                onClick={() => toggleNavVisible()}
-              >
-                {navVisible ? (
-                  <IoEyeOffOutline size={18} />
-                ) : (
-                  <IoEyeOutline size={18} />
-                )}
+              </ControlButton>
+            </HStack>
+
+            {/* Show/hide nav */}
+            <HStack mt={CHIP_GAP} width="100%">
+              <ControlButton grow onClick={() => toggleNavVisible()}>
+                <Box fontSize="2.8vmin" display="flex">
+                  {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
+                </Box>
                 <Text
-                  fontSize="min(3.6vmin, 16px)"
+                  fontSize="2.4vmin"
                   fontWeight="300"
                   letterSpacing="0.02em"
                 >
                   {navVisible ? "Hide navigation" : "Show navigation"}
                 </Text>
-              </Box>
-            </Box>
+              </ControlButton>
+            </HStack>
+          </Board>
 
-            {/* Album */}
-            <Box>
-              <Text
-                fontSize="min(3.2vmin, 14px)"
-                color="var(--theme-fg-muted)"
-                letterSpacing="0.12em"
-                textTransform="uppercase"
-                mb="min(3vmin, 14px)"
-              >
-                Album
-              </Text>
-              <select
-                style={{
-                  width: "100%",
-                  padding: "min(3.5vmin, 16px) min(3vmin, 14px)",
-                  borderRadius: "8px",
-                  background: "transparent",
-                  border: "1px solid var(--theme-divider)",
-                  color: "var(--theme-fg)",
-                  fontSize: "min(3.6vmin, 16px)",
-                  fontWeight: 300,
-                }}
-                value={photosConfig?.defaultAlbumId ?? ""}
-                onChange={handleAlbumChange}
-              >
-                {!photosConfig?.defaultAlbumId && <option value="">—</option>}
-                {photosConfig?.options.map((id) => {
-                  const album = albums?.find((a) => a.id === id);
-                  return (
-                    <option key={id} value={id} style={{ background: "#000" }}>
-                      {album?.albumName ?? id}
-                    </option>
-                  );
-                })}
-              </select>
-            </Box>
-          </Box>
+          {/* Album */}
+          <Board title={<SectionTitle>ALBUM</SectionTitle>}>
+            <select
+              style={{
+                width: "100%",
+                padding: `${CHIP_PADDING_Y} ${CHIP_PADDING_X}`,
+                borderRadius: CHIP_RADIUS,
+                // Fill, not outline — matches every other control on the page
+                // and stays visible when the palette flips to bright.
+                background: "var(--theme-surface-2)",
+                border: "none",
+                color: "var(--theme-fg)",
+                fontSize: "2.4vmin",
+                fontWeight: 300,
+              }}
+              value={photosConfig?.defaultAlbumId ?? ""}
+              onChange={handleAlbumChange}
+            >
+              {!photosConfig?.defaultAlbumId && <option value="">—</option>}
+              {photosConfig?.options.map((id) => {
+                const album = albums?.find((a) => a.id === id);
+                return (
+                  <option
+                    key={id}
+                    value={id}
+                    style={{
+                      background: "var(--theme-surface-2)",
+                      color: "var(--theme-fg)",
+                    }}
+                  >
+                    {album?.albumName ?? id}
+                  </option>
+                );
+              })}
+            </select>
+          </Board>
         </Box>
       </Box>
-    </Box>
+    </PageShell>
   );
 }

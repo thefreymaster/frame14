@@ -203,9 +203,27 @@ routes/
 ## Home Assistant Addon
 
 - `config.yaml` — addon manifest (arch, ports, options schema including all entity ID fields)
+- `CHANGELOG.md` — addon changelog, rendered in the Home Assistant addon UI
 - `run.sh` — entry point; exports scalar env vars via bashio (arrays read directly from options.json by entities.js)
 - `Dockerfile` — multi-stage build; copies `entities.js` and `frame14.json` into image
 - `ha-automation.yaml` — example motion sensor automation
+
+## Changelog (required for every user-visible change)
+
+Home Assistant renders `oled-dashboard/CHANGELOG.md` in the addon's Changelog tab, so **always** update it — never leave a version bump undocumented.
+
+1. Bump `version` in `oled-dashboard/config.yaml` (semver; patch for fixes, minor for features).
+2. Add a new section at the **top** of `oled-dashboard/CHANGELOG.md`:
+   ```markdown
+   ## 0.33.0
+
+   - Added: <what the user now sees or can do>
+   - Fixed: <what was broken>
+   - Changed: <behaviour that moved>
+   ```
+3. Heading must be `## <version>` matching `config.yaml` exactly — HA matches sections by version string.
+4. Write entries user-facing: what changed on screen or in config, not which file was edited. Skip internal refactors that change nothing for the user.
+5. If a change adds or renames a `config.yaml` option, say so explicitly — users must re-configure the addon.
 
 ## Adding API Endpoints
 

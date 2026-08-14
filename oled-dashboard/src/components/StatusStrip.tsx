@@ -75,7 +75,9 @@ export function StatusStrip({
 
       {idleVacuums.map((v) => (
         <StatusChip key={v.entity_id} icon={<TbVacuumCleaner />}>
-          <ChipText>{VACUUM_IDLE_LABEL[v.state] ?? `Vacuum ${v.state}`}</ChipText>
+          <ChipText>
+            {VACUUM_IDLE_LABEL[v.state] ?? `Vacuum ${v.state}`}
+          </ChipText>
         </StatusChip>
       ))}
     </Flex>

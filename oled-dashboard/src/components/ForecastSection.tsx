@@ -20,7 +20,12 @@ export function ForecastSection({ forecast, count = 6, span }: Props) {
       collapsible
       storageKey="forecast"
       title={
-        <HStack justify="space-between" align="baseline" gap="2vmin" width="100%">
+        <HStack
+          justify="space-between"
+          align="baseline"
+          gap="2vmin"
+          width="100%"
+        >
           <SectionTitle icon={<IoPartlySunnyOutline />}>FORECAST</SectionTitle>
           {(high != null || low != null) && (
             <HStack gap="2vmin">

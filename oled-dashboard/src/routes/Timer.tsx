@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { Box, HStack, Text } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import NumberFlow from "@number-flow/react";
-import { IoPlayOutline, IoPauseOutline, IoRefreshOutline } from "react-icons/io5";
+import {
+  IoPlayOutline,
+  IoPauseOutline,
+  IoRefreshOutline,
+} from "react-icons/io5";
+import { Board } from "../components/Board";
+import { PageShell } from "../components/PageShell";
+import { ControlButton } from "../components/ControlButton";
 
 const PRESETS = [5, 10, 15, 25, 30];
 const R = 88;
@@ -70,169 +77,181 @@ export function Timer() {
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
 
+  // Idle uses the neutral face-marker gray rather than fg-faint: the ring is a
+  // large static element, so it wants the dimmest token that still reads, and
+  // fg-faint is both brighter and noticeably blue at this size.
   const ringColor = finished
     ? "#c53030"
     : running
       ? "var(--theme-fg)"
-      : "rgba(255,255,255,0.35)";
+      : "var(--theme-marker-hour)";
 
   const isPaused = !running && remaining < totalSeconds && remaining > 0;
   const isReady = !running && remaining === totalSeconds && remaining > 0;
 
   return (
-    <Box
-      width="100%"
-      height="100vh"
-      bg="var(--theme-bg)"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      gap="8"
-    >
-      {/* Ring + time display */}
-      <Box
-        position="relative"
-        width="70vmin"
-        height="70vmin"
-        cursor="pointer"
-        onClick={toggle}
-        _active={{ opacity: 0.7 }}
-        transition="opacity 0.1s"
-        animation={finished ? `${pulse} 1s ease-in-out infinite` : undefined}
-      >
-        <svg viewBox="0 0 200 200" width="100%" height="100%">
-          {/* Track */}
-          <circle
-            cx={CX}
-            cy={CY}
-            r={R}
-            fill="none"
-            stroke="rgba(255,255,255,0.07)"
-            strokeWidth={7}
-          />
-          {/* Progress arc */}
-          <circle
-            cx={CX}
-            cy={CY}
-            r={R}
-            fill="none"
-            stroke={ringColor}
-            strokeWidth={7}
-            strokeLinecap="round"
-            strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={offset}
-            transform={`rotate(-90 ${CX} ${CY})`}
-            style={{
-              transition: running
-                ? "stroke-dashoffset 1s linear, stroke 0.4s ease"
-                : "stroke 0.4s ease",
-            }}
-          />
-        </svg>
-
-        {/* Centered time */}
+    <PageShell fill>
+      <Board fill>
         <Box
-          position="absolute"
-          inset="0"
+          height="100%"
           display="flex"
           flexDirection="column"
           alignItems="center"
           justifyContent="center"
-          pointerEvents="none"
+          gap="4vmin"
         >
-          <Text
-            fontSize="16vmin"
-            fontWeight="200"
-            letterSpacing="-0.02em"
-            color={finished ? "#c53030" : "var(--theme-fg)"}
-            lineHeight="1"
-            fontVariantNumeric="tabular-nums"
-            style={{ transition: "color 0.4s ease" }}
+          {/* Ring + time display */}
+          <Box
+            position="relative"
+            width="62vmin"
+            height="62vmin"
+            cursor="pointer"
+            onClick={toggle}
+            _active={{ opacity: 0.7 }}
+            transition="opacity 0.1s"
+            animation={
+              finished ? `${pulse} 1s ease-in-out infinite` : undefined
+            }
           >
-            <NumberFlow value={minutes} prefix={minutes < 10 ? "0" : ""} />
-            <Text
-              as="span"
-              color={finished ? "#c53030" : "var(--theme-fg-dim)"}
-              style={{ transition: "color 0.4s ease" }}
-            >
-              :
-            </Text>
-            <NumberFlow value={seconds} prefix={seconds < 10 ? "0" : ""} />
-          </Text>
+            <svg viewBox="0 0 200 200" width="100%" height="100%">
+              {/* Track */}
+              <circle
+                cx={CX}
+                cy={CY}
+                r={R}
+                fill="none"
+                stroke="var(--theme-surface-2)"
+                strokeWidth={7}
+              />
+              {/* Progress arc */}
+              <circle
+                cx={CX}
+                cy={CY}
+                r={R}
+                fill="none"
+                stroke={ringColor}
+                strokeWidth={7}
+                strokeLinecap="round"
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={offset}
+                transform={`rotate(-90 ${CX} ${CY})`}
+                style={{
+                  transition: running
+                    ? "stroke-dashoffset 1s linear, stroke 0.4s ease"
+                    : "stroke 0.4s ease",
+                }}
+              />
+            </svg>
 
-          <Text
-            fontSize="2.8vmin"
-            color="var(--theme-fg-muted)"
-            fontWeight="300"
-            letterSpacing="0.12em"
-            mt="2.5vmin"
-            textTransform="uppercase"
-            opacity={finished ? 0 : 1}
-            style={{ transition: "opacity 0.3s ease" }}
-          >
-            {finished ? "\u00a0" : isPaused ? "paused" : isReady ? "tap to start" : "tap to pause"}
-          </Text>
-        </Box>
-      </Box>
-
-      {/* Controls */}
-      <HStack gap="8" align="center">
-        <Box
-          as="button"
-          onClick={reset}
-          color="var(--theme-fg-muted)"
-          _active={{ opacity: 0.4 }}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          p="2"
-          transition="opacity 0.1s"
-        >
-          <IoRefreshOutline size={26} />
-        </Box>
-        <Box
-          as="button"
-          onClick={toggle}
-          color={remaining === 0 ? "var(--theme-fg-muted)" : "var(--theme-fg)"}
-          _active={{ opacity: 0.4 }}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          p="2"
-          transition="opacity 0.1s"
-        >
-          {running ? <IoPauseOutline size={40} /> : <IoPlayOutline size={40} />}
-        </Box>
-      </HStack>
-
-      {/* Preset pills */}
-      <HStack gap="3">
-        {PRESETS.map((min) => {
-          const isSelected = totalSeconds === min * 60;
-          return (
+            {/* Centered time */}
             <Box
-              key={min}
-              as="button"
-              onClick={() => selectPreset(min)}
-              px="4"
-              py="1.5"
-              borderRadius="full"
-              border="1px solid"
-              borderColor={isSelected ? "var(--theme-fg)" : "var(--theme-divider)"}
-              color={isSelected ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
-              fontSize="13px"
-              fontWeight={isSelected ? "600" : "400"}
-              letterSpacing="0.02em"
-              _active={{ opacity: 0.4 }}
-              transition="all 0.15s"
-              bg="transparent"
+              position="absolute"
+              inset="0"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              pointerEvents="none"
             >
-              {min}m
+              <Text
+                className="display-numeral"
+                fontSize="16vmin"
+                fontWeight="200"
+                letterSpacing="-0.02em"
+                color={finished ? "#c53030" : "var(--theme-fg)"}
+                lineHeight="1"
+                fontVariantNumeric="tabular-nums"
+                style={{ transition: "color 0.4s ease" }}
+              >
+                <NumberFlow value={minutes} prefix={minutes < 10 ? "0" : ""} />
+                <Text
+                  as="span"
+                  color={finished ? "#c53030" : "var(--theme-fg-dim)"}
+                  style={{ transition: "color 0.4s ease" }}
+                >
+                  :
+                </Text>
+                <NumberFlow value={seconds} prefix={seconds < 10 ? "0" : ""} />
+              </Text>
+
+              <Text
+                fontSize="2.8vmin"
+                color="var(--theme-fg-muted)"
+                fontWeight="300"
+                letterSpacing="0.12em"
+                mt="2.5vmin"
+                textTransform="uppercase"
+                opacity={finished ? 0 : 1}
+                style={{ transition: "opacity 0.3s ease" }}
+              >
+                {finished
+                  ? "\u00a0"
+                  : isPaused
+                    ? "paused"
+                    : isReady
+                      ? "tap to start"
+                      : "tap to pause"}
+              </Text>
             </Box>
-          );
-        })}
-      </HStack>
-    </Box>
+          </Box>
+
+          {/* Controls */}
+          <HStack gap="2vmin" align="center">
+            <ControlButton
+              onClick={reset}
+              label="Reset timer"
+              px="3vmin"
+              py="2vmin"
+            >
+              <Box
+                fontSize="3.4vmin"
+                display="flex"
+                color="var(--theme-fg-muted)"
+              >
+                <IoRefreshOutline />
+              </Box>
+            </ControlButton>
+            <ControlButton
+              onClick={toggle}
+              active={running}
+              label={running ? "Pause timer" : "Start timer"}
+              px="4vmin"
+              py="2vmin"
+            >
+              <Box
+                fontSize="5vmin"
+                display="flex"
+                color={
+                  remaining === 0 ? "var(--theme-fg-muted)" : "var(--theme-fg)"
+                }
+              >
+                {running ? <IoPauseOutline /> : <IoPlayOutline />}
+              </Box>
+            </ControlButton>
+          </HStack>
+
+          {/* Preset pills */}
+          <HStack gap="1.2vmin">
+            {PRESETS.map((min) => (
+              <ControlButton
+                key={min}
+                active={totalSeconds === min * 60}
+                onClick={() => selectPreset(min)}
+                px="3vmin"
+                py="1.2vmin"
+              >
+                <Text
+                  fontSize="2.2vmin"
+                  fontWeight={totalSeconds === min * 60 ? "600" : "400"}
+                  letterSpacing="0.02em"
+                >
+                  {min}m
+                </Text>
+              </ControlButton>
+            ))}
+          </HStack>
+        </Box>
+      </Board>
+    </PageShell>
   );
 }

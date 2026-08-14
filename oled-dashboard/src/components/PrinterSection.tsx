@@ -5,6 +5,7 @@ import NumberFlow from "@number-flow/react";
 import type { HomePrinter } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
+import { MODAL_RADIUS } from "../lib/surfaces";
 
 function fmtMins(minutes: number) {
   if (!isFinite(minutes) || minutes <= 0) return "—";
@@ -83,47 +84,52 @@ export function PrinterSection({
         }
       >
         <Box onClick={() => setShowModal(true)} cursor="pointer" width="100%">
-        <HStack width="100%" justify="space-between" align="baseline">
-          <Text
-            fontSize="3.8vmin"
-            color="var(--theme-fg-dim)"
-            fontWeight="300"
-            overflow="hidden"
-            whiteSpace="nowrap"
-            textOverflow="ellipsis"
-            maxW="45vmin"
-          >
-            {printer.taskName ?? "—"}
-          </Text>
-          <HStack align="baseline" gap="4vmin">
+          <HStack width="100%" justify="space-between" align="baseline">
             <Text
-              fontSize="5.5vmin"
-              color="green.500"
+              fontSize="3.8vmin"
+              color="var(--theme-fg-dim)"
               fontWeight="300"
-              lineHeight="1"
+              overflow="hidden"
+              whiteSpace="nowrap"
+              textOverflow="ellipsis"
+              maxW="45vmin"
             >
-              <NumberFlow value={printer.progress} />%
+              {printer.taskName ?? "—"}
             </Text>
-            <Text fontSize="4vmin" color="var(--theme-fg-dim)" fontWeight="300">
-              {fmtMins(printer.remainingTime)}
-            </Text>
+            <HStack align="baseline" gap="4vmin">
+              <Text
+                className="display-numeral"
+                fontSize="5.5vmin"
+                color="green.500"
+                fontWeight="300"
+                lineHeight="1"
+              >
+                <NumberFlow value={printer.progress} />%
+              </Text>
+              <Text
+                fontSize="4vmin"
+                color="var(--theme-fg-dim)"
+                fontWeight="300"
+              >
+                {fmtMins(printer.remainingTime)}
+              </Text>
+            </HStack>
           </HStack>
-        </HStack>
-        <Box
-          mt="1.5vmin"
-          height="0.7vmin"
-          borderRadius="999px"
-          bg="rgba(255,255,255,0.08)"
-          overflow="hidden"
-          width="100%"
-        >
           <Box
-            height="100%"
-            width={`${cardProgress}%`}
-            bg="green.500"
-            transition="width 600ms ease"
-          />
-        </Box>
+            mt="1.5vmin"
+            height="0.7vmin"
+            borderRadius="999px"
+            bg="rgba(255,255,255,0.16)"
+            overflow="hidden"
+            width="100%"
+          >
+            <Box
+              height="100%"
+              width={`${cardProgress}%`}
+              bg="green.500"
+              transition="width 600ms ease"
+            />
+          </Box>
         </Box>
       </Board>
     </>
@@ -195,7 +201,7 @@ function PrinterModal({
     >
       <Box
         className="printer-panel"
-        borderRadius="3.5vmin"
+        borderRadius={MODAL_RADIUS}
         p="6vmin"
         minW="70vmin"
         maxW="92vmin"
@@ -246,6 +252,7 @@ function PrinterModal({
         <VStack gap="1.5vmin" align="stretch">
           <HStack justify="space-between" align="baseline">
             <Text
+              className="display-numeral"
               fontSize="11vmin"
               fontWeight="300"
               color="green.400"
@@ -270,7 +277,7 @@ function PrinterModal({
           <Box
             height="0.9vmin"
             borderRadius="999px"
-            bg="rgba(255,255,255,0.08)"
+            bg="rgba(255,255,255,0.16)"
             overflow="hidden"
           >
             <Box

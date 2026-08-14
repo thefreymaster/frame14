@@ -14,20 +14,28 @@ type ThemeVars = Record<string, string>;
 const DARK_VARS: ThemeVars = {
   "--theme-bg": "#000000",
   // Elevation: cards lift off the ground with fill, not an outline. A 1px
-  // #ffffff24 border is a static line at ~14% luminance; a #0D0D0F fill is a
-  // field at ~5%, so this is the dimmer option for burn-in as well as the
-  // better-looking one. The page ground itself never lifts.
-  "--theme-surface-1": "#0D0D0F",
-  "--theme-surface-2": "#161619",
-  "--theme-surface-2-on": "#1E2A28",
+  // #ffffff24 border is a static line at ~14% luminance; a fill is a field at
+  // ~10%, so this is the dimmer option for burn-in as well as the better-looking
+  // one. The page ground itself never lifts.
+  //
+  // Levels are pitched for a cheap tablet panel, not a reference display: on the
+  // wall-mounted frame the old ~5% surface-1 was indistinguishable from black,
+  // so card edges disappeared. Each step is roughly double the previous fill.
+  "--theme-surface-1": "#1A1A1F",
+  "--theme-surface-2": "#26262C",
+  "--theme-surface-2-on": "#2B3B37",
   "--theme-fg": "#FFFFFF",
-  "--theme-fg-dim": "#A0AEC0", // gray.400
-  "--theme-fg-muted": "#718096", // gray.500
-  "--theme-fg-faint": "#4A5568", // gray.600
-  "--theme-divider": "#171923", // gray.900
-  "--theme-marker-cardinal": "#666666",
-  "--theme-marker-hour": "#444444",
-  "--theme-marker-minor": "#222222",
+  "--theme-fg-dim": "#CBD5E0", // gray.300
+  "--theme-fg-muted": "#A0AEC0", // gray.400
+  "--theme-fg-faint": "#718096", // gray.500
+  "--theme-divider": "#2D3240",
+  // Accent for "this thing is on" — a lit light, a running fan. Amber is only
+  // legible on black; the bright palette has to darken it or the icon vanishes
+  // into the card. See BRIGHT_VARS.
+  "--theme-accent-warm": "#FFC857",
+  "--theme-marker-cardinal": "#8A8A8A",
+  "--theme-marker-hour": "#5E5E5E",
+  "--theme-marker-minor": "#333333",
   "--theme-icon-opacity": "0.35",
 };
 
@@ -43,6 +51,7 @@ const BRIGHT_VARS: ThemeVars = {
   "--theme-fg-muted": "#4A5568", // gray.600
   "--theme-fg-faint": "#718096", // gray.500
   "--theme-divider": "#CBD5E0", // gray.300
+  "--theme-accent-warm": "#B45309", // amber.700 — readable on a near-white card
   "--theme-marker-cardinal": "#2D3748",
   "--theme-marker-hour": "#718096",
   "--theme-marker-minor": "#CBD5E0",

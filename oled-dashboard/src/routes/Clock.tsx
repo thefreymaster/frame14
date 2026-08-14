@@ -219,6 +219,7 @@ function DigitalClock() {
       justifyContent="center"
     >
       <Text
+        className="display-numeral"
         fontSize="24vmin"
         fontWeight="200"
         letterSpacing="-0.03em"
@@ -241,6 +242,7 @@ function DigitalClock() {
         />
         <Text
           as="span"
+          className="display-numeral"
           fontSize="10vmin"
           fontWeight="200"
           color="var(--theme-fg-dim)"
@@ -255,6 +257,7 @@ function DigitalClock() {
         </Text>
         <Text
           as="span"
+          className="display-numeral"
           fontSize="8vmin"
           fontWeight="300"
           color="var(--theme-fg-dim)"

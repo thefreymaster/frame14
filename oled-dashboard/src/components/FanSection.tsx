@@ -6,7 +6,12 @@ import type { HomeFan } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 import { callFanService } from "../lib/callService";
-import { CHIP_GAP, CHIP_PADDING_X, CHIP_PADDING_Y, CHIP_RADIUS } from "../lib/surfaces";
+import {
+  CHIP_GAP,
+  CHIP_PADDING_X,
+  CHIP_PADDING_Y,
+  CHIP_RADIUS,
+} from "../lib/surfaces";
 
 const FAN_EXIT_MS = 240;
 const STEP = 25;
@@ -57,11 +62,7 @@ function FanModal({ fan, onClose }: { fan: HomeFan; onClose: () => void }) {
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pct, setPct] = useState<number>(
     snap(
-      fan.percentage != null
-        ? fan.percentage
-        : fan.state === "on"
-          ? 100
-          : 0,
+      fan.percentage != null ? fan.percentage : fan.state === "on" ? 100 : 0,
     ),
   );
   const [optimisticOn, setOptimisticOn] = useState<boolean | null>(null);
@@ -298,54 +299,52 @@ function FanModal({ fan, onClose }: { fan: HomeFan; onClose: () => void }) {
           </Box>
         </VStack>
 
+        <Box
+          ref={trackRef}
+          position="relative"
+          width={{ base: "16vw", md: "10vmin" }}
+          height={{ base: "60vh", md: "50vmin" }}
+          maxHeight="440px"
+          borderRadius="full"
+          bg="rgba(255,255,255,0.12)"
+          border="1px solid rgba(255,255,255,0.18)"
+          overflow="hidden"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          style={{
+            touchAction: "none",
+            cursor: "pointer",
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
           <Box
-            ref={trackRef}
-            position="relative"
-            width={{ base: "16vw", md: "10vmin" }}
-            height={{ base: "60vh", md: "50vmin" }}
-            maxHeight="440px"
-            borderRadius="full"
-            bg="rgba(255,255,255,0.06)"
-            border="1px solid rgba(255,255,255,0.1)"
-            overflow="hidden"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerEnd}
-            onPointerCancel={handlePointerEnd}
+            position="absolute"
+            left="0"
+            right="0"
+            bottom="0"
+            height={`${pct}%`}
+            bg={`linear-gradient(180deg, ${accent} 0%, rgba(94,234,212,0.4) 100%)`}
             style={{
-              touchAction: "none",
-              cursor: "pointer",
-              WebkitTapHighlightColor: "transparent",
+              transition: isDraggingRef.current ? "none" : "height 200ms ease",
+              boxShadow: `0 0 4vmin ${glow}`,
             }}
-          >
+            pointerEvents="none"
+          />
+          {STEPS.slice(1, -1).map((step) => (
             <Box
+              key={step}
               position="absolute"
-              left="0"
-              right="0"
-              bottom="0"
-              height={`${pct}%`}
-              bg={`linear-gradient(180deg, ${accent} 0%, rgba(94,234,212,0.4) 100%)`}
-              style={{
-                transition: isDraggingRef.current
-                  ? "none"
-                  : "height 200ms ease",
-                boxShadow: `0 0 4vmin ${glow}`,
-              }}
+              left="20%"
+              right="20%"
+              bottom={`${step}%`}
+              height="1px"
+              bg="rgba(255,255,255,0.15)"
               pointerEvents="none"
             />
-            {STEPS.slice(1, -1).map((step) => (
-              <Box
-                key={step}
-                position="absolute"
-                left="20%"
-                right="20%"
-                bottom={`${step}%`}
-                height="1px"
-                bg="rgba(255,255,255,0.15)"
-                pointerEvents="none"
-              />
-            ))}
-          </Box>
+          ))}
+        </Box>
       </HStack>
     </Box>
   );
@@ -465,10 +464,7 @@ export function FanSection({ fan, span }: { fan: HomeFan[]; span?: 1 | 2 }) {
         ))}
       </Box>
       {selected && (
-        <FanModal
-          fan={selected}
-          onClose={() => setSelectedEntityId(null)}
-        />
+        <FanModal fan={selected} onClose={() => setSelectedEntityId(null)} />
       )}
     </Board>
   );

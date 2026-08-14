@@ -57,7 +57,7 @@ function useNeutrals() {
   const track = useColorModeValue("rgba(0,0,0,0.05)", "rgba(0,0,0,0.55)");
   const hairline = useColorModeValue(
     "rgba(0,0,0,0.12)",
-    "rgba(255,255,255,0.08)",
+    "rgba(255,255,255,0.16)",
   );
   return { scrim, chrome, track, hairline };
 }
@@ -838,6 +838,7 @@ function ClimateCard({
             <ModeIcon />
           </Box>
           <Text
+            className="display-numeral"
             fontSize="6.6vmin"
             fontWeight="200"
             lineHeight="1"
@@ -892,7 +893,9 @@ export function ClimateSection({
       span={span}
       collapsible
       storageKey="climate"
-      title={<SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>}
+      title={
+        <SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>
+      }
     >
       <Box
         display="grid"

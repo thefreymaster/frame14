@@ -20,6 +20,7 @@ export const Board = ({
   defaultOpen = true,
   storageKey,
   span,
+  fill = false,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
@@ -29,6 +30,11 @@ export const Board = ({
   storageKey?: string;
   /** Span both columns of the home bento grid. Ignored outside a grid. */
   span?: 1 | 2;
+  /**
+   * Take the remaining height of a flex-column page and let the content scroll
+   * or size inside it — used by the pages built around a chart or a long list.
+   */
+  fill?: boolean;
 }) => {
   const persistKey = collapsible
     ? storageKey || (typeof title === "string" ? slugify(title) : undefined)
@@ -62,6 +68,10 @@ export const Board = ({
     <Box
       width="100%"
       minW="0"
+      flex={fill ? "1" : undefined}
+      minH={fill ? "0" : undefined}
+      display={fill ? "flex" : undefined}
+      flexDirection={fill ? "column" : undefined}
       gridColumn={span === 2 ? "1 / -1" : undefined}
       // Elevation by fill, not outline — see themeMode.ts for why this is the
       // dimmer option on an OLED panel as well as the better-looking one.
@@ -129,6 +139,10 @@ export const Board = ({
           }}
         >
           <Box style={{ overflow: "hidden", minHeight: 0 }}>{children}</Box>
+        </Box>
+      ) : fill ? (
+        <Box flex="1" minH="0" minW="0">
+          {children}
         </Box>
       ) : (
         children

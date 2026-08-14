@@ -3,7 +3,12 @@ import { IoCalendarOutline } from "react-icons/io5";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
-import { CHIP_GAP, CHIP_PADDING_X, CHIP_PADDING_Y, CHIP_RADIUS } from "../lib/surfaces";
+import {
+  CHIP_GAP,
+  CHIP_PADDING_X,
+  CHIP_PADDING_Y,
+  CHIP_RADIUS,
+} from "../lib/surfaces";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");

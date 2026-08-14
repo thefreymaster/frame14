@@ -5,6 +5,7 @@ import { IoClose, IoFlash } from "react-icons/io5";
 import type { HomeEnergy } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
+import { MODAL_RADIUS } from "../lib/surfaces";
 
 function fmtKwh(n: number) {
   return isNaN(n) ? "--" : n.toFixed(0);
@@ -116,6 +117,7 @@ export function EnergySection({
           <VStack align="stretch" gap="1.4vmin" width="100%" minW="0">
             <HStack align="baseline" gap="1.4vmin" minW="0">
               <Text
+                className="display-numeral"
                 fontSize="7vmin"
                 fontWeight="300"
                 color={pctColor}
@@ -274,7 +276,7 @@ function EnergyModal({
     >
       <Box
         className="energy-panel"
-        borderRadius="3.5vmin"
+        borderRadius={MODAL_RADIUS}
         p="6vmin"
         minW="70vmin"
         maxW="90vmin"
@@ -313,6 +315,7 @@ function EnergyModal({
               <PiSolarRoof />
             </Box>
             <Text
+              className="display-numeral"
               fontSize="11vmin"
               fontWeight="300"
               letterSpacing="-0.04em"
@@ -346,6 +349,7 @@ function EnergyModal({
               <IoFlash />
             </Box>
             <Text
+              className="display-numeral"
               fontSize="7.5vmin"
               fontWeight="300"
               letterSpacing="-0.03em"
@@ -419,6 +423,7 @@ function EnergyModal({
           <Grid templateColumns="1fr 1fr 1fr" gap="2vmin">
             <VStack align="flex-start" gap="0.5vmin">
               <Text
+                className="display-numeral"
                 fontSize="5vmin"
                 fontWeight="300"
                 color="yellow.600"
@@ -436,6 +441,7 @@ function EnergyModal({
             </VStack>
             <VStack align="center" gap="0.5vmin">
               <Text
+                className="display-numeral"
                 fontSize="5vmin"
                 fontWeight="400"
                 color={pctColor}
@@ -453,6 +459,7 @@ function EnergyModal({
             </VStack>
             <VStack align="flex-end" gap="0.5vmin">
               <Text
+                className="display-numeral"
                 fontSize="5vmin"
                 fontWeight="300"
                 color="var(--theme-fg-dim)"

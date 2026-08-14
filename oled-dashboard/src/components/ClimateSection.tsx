@@ -876,13 +876,20 @@ function ClimateCard({
   );
 }
 
-export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
+export function ClimateSection({
+  climate,
+  span,
+}: {
+  climate: HomeClimate[];
+  span?: 1 | 2;
+}) {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const selectedUnit =
     climate.find((unit) => unit.entity_id === selectedEntityId) ?? null;
 
   return (
     <Board
+      span={span}
       collapsible
       storageKey="climate"
       title={<SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>}

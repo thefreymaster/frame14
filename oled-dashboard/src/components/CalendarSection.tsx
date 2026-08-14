@@ -3,6 +3,7 @@ import { IoCalendarOutline } from "react-icons/io5";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
+import { CHIP_GAP, CHIP_PADDING_X, CHIP_PADDING_Y, CHIP_RADIUS } from "../lib/surfaces";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -58,26 +59,38 @@ function EventList({
   max?: number;
 }) {
   return (
-    <VStack gap="1vmin" align="stretch" width="100%">
+    <VStack gap={CHIP_GAP} align="stretch" width="100%">
       {events.slice(0, max).map((event, i) => {
         const past = isPast(event);
         return (
-          <HStack key={i} justify="space-between" align="baseline" width="100%">
+          <HStack
+            key={i}
+            justify="space-between"
+            align="baseline"
+            width="100%"
+            minW="0"
+            bg="var(--theme-surface-2)"
+            borderRadius={CHIP_RADIUS}
+            px={CHIP_PADDING_X}
+            py={CHIP_PADDING_Y}
+            opacity={past ? 0.55 : 1}
+          >
             <Text
-              fontSize="3.8vmin"
+              fontSize="3.2vmin"
               fontWeight="300"
               overflow="hidden"
               whiteSpace="nowrap"
               textOverflow="ellipsis"
               flex="1"
-              mr="3vmin"
+              minW="0"
+              mr="1.5vmin"
               textDecoration={past ? "line-through" : undefined}
               color={past ? "var(--theme-fg-faint)" : undefined}
             >
               {event.summary}
             </Text>
             <Text
-              fontSize="3.2vmin"
+              fontSize="2.6vmin"
               color={past ? "var(--theme-fg-faint)" : "var(--theme-fg)"}
               fontWeight="300"
               flexShrink={0}
@@ -95,12 +108,15 @@ function EventList({
 export function CalendarSection({
   today,
   tomorrow,
+  span,
 }: {
   today: HomeCalendarEvent[];
   tomorrow: HomeCalendarEvent[];
+  span?: 1 | 2;
 }) {
   return (
     <Board
+      span={span}
       collapsible
       storageKey="calendar"
       title={

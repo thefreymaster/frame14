@@ -8,13 +8,15 @@ import type { HomeForecastPeriod } from "../hooks/useHomeData";
 interface Props {
   forecast: HomeForecastPeriod[];
   count?: number;
+  span?: 1 | 2;
 }
 
-export function ForecastSection({ forecast, count = 6 }: Props) {
+export function ForecastSection({ forecast, count = 6, span }: Props) {
   if (!forecast.length) return null;
   const { high, low } = getTodayHighLow(forecast);
   return (
     <Board
+      span={span}
       collapsible
       storageKey="forecast"
       title={

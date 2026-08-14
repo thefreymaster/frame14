@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Text, HStack, VStack, Grid } from "@chakra-ui/react";
+import { Box, Text, HStack, VStack, Flex, Grid } from "@chakra-ui/react";
 import { PiSolarRoof } from "react-icons/pi";
 import { IoClose, IoFlash } from "react-icons/io5";
 import type { HomeEnergy } from "../hooks/useHomeData";
@@ -51,7 +51,7 @@ export function EnergySection({
         collapsible
         storageKey="energy"
         title={
-          <HStack align="center" gap="1.5vmin" width="100%">
+          <Flex align="center" gap="1.5vmin" rowGap="0.8vmin" wrap="wrap" width="100%" minW="0">
           <SectionTitle icon={<IoFlash />}>ENERGY</SectionTitle>
           {gridActive && (
             <Box
@@ -120,88 +120,87 @@ export function EnergySection({
               </Text>
             </HStack>
           </HStack>
-        </HStack>
+        </Flex>
         }
       >
-        <Box onClick={() => setShowModal(true)} cursor="pointer" width="100%">
-        <Grid templateColumns="1fr 1fr 1fr" gap="2vmin" width="100%">
-          <VStack align="flex-start" gap="0.5vmin">
-            <HStack gap="1.2vmin" align="baseline">
-              <Box
-                color="yellow.500"
-                fontSize="3.5vmin"
-                lineHeight="1"
-                flexShrink={0}
-              >
-                <PiSolarRoof />
-              </Box>
-              <Text
-                fontSize="5vmin"
-                fontWeight="300"
-                color="yellow.600"
-                lineHeight="1"
-                whiteSpace="nowrap"
-              >
-                {fmtKwh(productionToday)} kWh
-              </Text>
-            </HStack>
+        <Box
+          onClick={() => setShowModal(true)}
+          cursor="pointer"
+          width="100%"
+          minW="0"
+        >
+        {/* Coverage leads; the two totals sit under it as a wrapping row, so
+            this reads the same in the narrow bento rail and at full width. */}
+        <VStack align="stretch" gap="1.4vmin" width="100%" minW="0">
+          <HStack align="baseline" gap="1.4vmin" minW="0">
             <Text
-              fontSize="2vmin"
-              letterSpacing="0.12em"
-              color="var(--theme-fg-dim)"
-            >
-              PRODUCED
-            </Text>
-          </VStack>
-
-          <VStack align="center" gap="0.5vmin">
-            <Text
-              fontSize="5vmin"
-              fontWeight="400"
+              fontSize="7vmin"
+              fontWeight="300"
               color={pctColor}
               lineHeight="1"
+              flexShrink={0}
             >
               {Math.round(pct)}%
             </Text>
             <Text
               fontSize="2vmin"
-              letterSpacing="0.12em"
+              letterSpacing="0.06em"
               color="var(--theme-fg-dim)"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+              minW="0"
             >
-              SOLAR
+              solar coverage today
             </Text>
-          </VStack>
+          </HStack>
 
-          <VStack align="flex-end" gap="0.5vmin">
-            <HStack gap="1.2vmin" align="baseline">
-              <Box
-                fontSize="3.5vmin"
-                lineHeight="1"
-                color="var(--theme-fg-dim)"
-                flexShrink={0}
-              >
+          <Box
+            height="1.2vmin"
+            borderRadius="999px"
+            bg="var(--theme-surface-2)"
+            overflow="hidden"
+          >
+            <Box
+              height="100%"
+              width={`${Math.min(100, Math.max(0, pct))}%`}
+              bg="yellow.500"
+              borderRadius="999px"
+              transition="width 600ms ease"
+            />
+          </Box>
+
+          <Flex gap="1.5vmin" rowGap="0.8vmin" wrap="wrap" width="100%">
+            <HStack gap="1vmin" align="baseline" minW="0">
+              <Box color="yellow.500" fontSize="2.4vmin" lineHeight="1" flexShrink={0}>
+                <PiSolarRoof />
+              </Box>
+              <Text fontSize="3vmin" fontWeight="300" color="yellow.600" whiteSpace="nowrap">
+                {fmtKwh(productionToday)} kWh
+              </Text>
+              <Text fontSize="2vmin" color="var(--theme-fg-faint)">
+                made
+              </Text>
+            </HStack>
+
+            <HStack gap="1vmin" align="baseline" minW="0" ml="auto">
+              <Box color="var(--theme-fg-dim)" fontSize="2.4vmin" lineHeight="1" flexShrink={0}>
                 <IoFlash />
               </Box>
               <Text
-                fontSize="5vmin"
+                fontSize="3vmin"
                 fontWeight="300"
                 color="var(--theme-fg-dim)"
-                lineHeight="1"
                 whiteSpace="nowrap"
               >
                 {fmtKwh(consumptionToday)} kWh
               </Text>
+              <Text fontSize="2vmin" color="var(--theme-fg-faint)">
+                used
+              </Text>
             </HStack>
-            <Text
-              fontSize="2vmin"
-              letterSpacing="0.12em"
-              color="var(--theme-fg-dim)"
-              textAlign="right"
-            >
-              USED
-            </Text>
-          </VStack>
-        </Grid>
+          </Flex>
+        </VStack>
         </Box>
       </Board>
     </>

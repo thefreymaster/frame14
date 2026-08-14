@@ -15,13 +15,14 @@ export function Layout() {
   const isControl = location.pathname === "/control";
   const isLights = location.pathname === "/lights";
   const isBlank = location.pathname === "/blank";
+  const isHome = location.pathname === "/home";
   const navVisible = useNavVisible();
   const showNav = !isBlank && navVisible;
   const isController = getDeviceMode() === "controller";
-  const scrollable = isControl || isLights || isController;
+  const scrollable = isControl || isLights || isHome || isController;
 
   const content = (
-    <PageTransition key={location.pathname}>
+    <PageTransition key={location.pathname} grow={scrollable}>
       <Outlet />
     </PageTransition>
   );

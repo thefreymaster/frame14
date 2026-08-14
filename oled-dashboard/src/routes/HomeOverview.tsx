@@ -80,9 +80,8 @@ export function HomeOverview() {
         <StatusBanner />
         <Box
           width="100%"
-          height="100%"
+          minHeight="100%"
           bg="var(--theme-bg)"
-          overflow="hidden"
           display="flex"
           flexDirection="row"
           alignItems="flex-start"
@@ -114,7 +113,6 @@ export function HomeOverview() {
             display="flex"
             flexDirection="column"
             gap={GRID_GAP}
-            overflowY="auto"
           >
             <ClimateSection climate={data.climate} />
             <CalendarSection

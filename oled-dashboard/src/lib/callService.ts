@@ -21,8 +21,13 @@ export function callClimateService(
 ): void;
 export function callClimateService(
   entityId: string,
-  service: "set_hvac_mode" | "set_temperature",
-  params: { hvac_mode?: HvacMode; temperature?: number },
+  service: "set_fan_mode",
+  params: { fan_mode: string },
+): void;
+export function callClimateService(
+  entityId: string,
+  service: "set_hvac_mode" | "set_temperature" | "set_fan_mode",
+  params: { hvac_mode?: HvacMode; temperature?: number; fan_mode?: string },
 ) {
   socket.emit("entity:call", {
     domain: "climate",

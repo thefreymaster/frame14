@@ -13,6 +13,7 @@ import { MdAir } from "react-icons/md";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { Board } from "./Board";
+import { FanSpeedSlider } from "./FanSpeedSlider";
 import { useColorModeValue } from "./ui/color-mode";
 
 type ClimateVisualMode = "heat" | "cool" | "fan_only" | "off";
@@ -314,10 +315,12 @@ function ClimateModal({
   const neutrals = useNeutrals();
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDraggingRef = useRef(false);
+  const isFanDraggingRef = useRef(false);
   const [mode, setMode] = useState<ClimateVisualMode>(
     normalizeClimateMode(unit.hvacMode ?? unit.state),
   );
   const [temp, setTemp] = useState(fmtClimateTemp(unit.targetTemp) ?? 72);
+  const [fanMode, setFanMode] = useState<string | null>(unit.fanMode);
   const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
@@ -330,7 +333,16 @@ function ClimateModal({
     if (!isDraggingRef.current) {
       setTemp(fmtClimateTemp(unit.targetTemp) ?? 72);
     }
-  }, [unit.entity_id, unit.hvacMode, unit.state, unit.targetTemp]);
+    if (!isFanDraggingRef.current) {
+      setFanMode(unit.fanMode);
+    }
+  }, [
+    unit.entity_id,
+    unit.hvacMode,
+    unit.state,
+    unit.targetTemp,
+    unit.fanMode,
+  ]);
 
   function requestClose() {
     if (isClosing) return;
@@ -431,6 +443,18 @@ function ClimateModal({
   function commitTemp(newTemp: number) {
     callClimateService(unit.entity_id, "set_temperature", {
       temperature: newTemp,
+    });
+    setTimeout(
+      () =>
+        void queryClient.invalidateQueries({ queryKey: ["home", "climate"] }),
+      2500,
+    );
+  }
+
+  function commitFanMode(newFanMode: string) {
+    if (newFanMode === unit.fanMode) return;
+    callClimateService(unit.entity_id, "set_fan_mode", {
+      fan_mode: newFanMode,
     });
     setTimeout(
       () =>
@@ -717,6 +741,36 @@ function ClimateModal({
             </Box>
           );
         })()}
+
+        {unit.fanModes.length > 0 && (
+          <Box
+            width={{ base: "72vw", md: "38vmin" }}
+            maxWidth="380px"
+            style={{
+              animation: anim("thermostatFooterIn", "thermostatFooterOut", {
+                ms: 380,
+                delay: 140,
+              }),
+            }}
+          >
+            <FanSpeedSlider
+              modes={unit.fanModes}
+              value={fanMode}
+              accent={accentCssColor}
+              trackCss={neutrals.track}
+              hairline={neutrals.hairline}
+              disabled={isOff}
+              onChange={setFanMode}
+              onCommit={commitFanMode}
+              onDragStart={() => {
+                isFanDraggingRef.current = true;
+              }}
+              onDragEnd={() => {
+                isFanDraggingRef.current = false;
+              }}
+            />
+          </Box>
+        )}
       </VStack>
     </Box>
   );

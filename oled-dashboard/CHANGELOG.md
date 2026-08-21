@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.35.0
+
+- Added: fan speed slider in the thermostat pop-up — drag or tap the bars under the mode buttons to set the AC's fan mode (auto, low, medium, high, turbo, or whatever your unit reports); the command is sent when you let go
+- Changed: the slider dims while the system is off, and is hidden entirely for thermostats that report no fan modes
+
 ## 0.34.0
 
 - Changed: the lights, power, solar, timer, and control pages now use the same raised-card layout as the home overview — matching page padding, card corners, and section headers

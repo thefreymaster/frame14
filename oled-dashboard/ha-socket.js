@@ -33,11 +33,13 @@ let nextMsgId = 3;
 const ALLOWED_DOMAINS = new Set(["light", "switch", "climate", "fan"]);
 const ALLOWED_SERVICES = new Set([
   "toggle", "turn_on", "turn_off",
-  "set_hvac_mode", "set_temperature",
+  "set_hvac_mode", "set_temperature", "set_fan_mode",
   "set_percentage",
 ]);
 const ALLOWED_HVAC_MODES = new Set(["heat", "cool", "off", "auto", "heat_cool", "fan_only", "dry"]);
 const ENTITY_ID_RE = /^[a-z_]+\.[a-z0-9_]+$/;
+// Fan mode names vary per device ("auto", "Low", "wind free"), so validate shape not value.
+const FAN_MODE_RE = /^[A-Za-z0-9 _-]{1,32}$/;
 
 export function getState(entityId) {
   return stateCache.get(entityId);
@@ -47,7 +49,7 @@ export function getAllStates() {
   return stateCache;
 }
 
-export function callService({ domain, service, entity_id, hvac_mode, temperature, percentage }) {
+export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, percentage }) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
   if (!ALLOWED_DOMAINS.has(domain)) return false;
   if (!ALLOWED_SERVICES.has(service)) return false;
@@ -65,6 +67,11 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
     const temp = Number(temperature);
     if (!Number.isFinite(temp) || temp < 40 || temp > 95) return false;
     service_data.temperature = temp;
+  }
+
+  if (service === "set_fan_mode") {
+    if (typeof fan_mode !== "string" || !FAN_MODE_RE.test(fan_mode)) return false;
+    service_data.fan_mode = fan_mode;
   }
 
   if (service === "set_percentage") {

@@ -30,6 +30,8 @@ export interface HomeClimate {
   targetTemp: number | null;
   hvacMode: string | null;
   hvacAction: string | null;
+  fanMode: string | null;
+  fanModes: string[];
 }
 
 export interface HomePerson {
@@ -127,6 +129,8 @@ interface ClimateAttributes {
   temperature?: number | string | null;
   hvac_mode?: string | null;
   hvac_action?: string | null;
+  fan_mode?: string | null;
+  fan_modes?: string[] | null;
 }
 
 interface VacuumAttributes {
@@ -213,6 +217,8 @@ interface ClimateResponse {
   targetTemp: number | null;
   hvacMode: string | null;
   hvacAction: string | null;
+  fanMode: string | null;
+  fanModes: string[] | null;
 }
 
 interface VacuumResponse {
@@ -247,6 +253,8 @@ function mapClimateResponse(climate: ClimateResponse): HomeClimate {
     targetTemp: climate.targetTemp,
     hvacMode: climate.hvacMode,
     hvacAction: climate.hvacAction,
+    fanMode: climate.fanMode ?? null,
+    fanModes: climate.fanModes ?? [],
   };
 }
 
@@ -299,6 +307,8 @@ function mapClimateState(state: HAState<ClimateAttributes>): HomeClimate {
     targetTemp: parseFloatOrNull(state.attributes?.temperature),
     hvacMode: state.attributes?.hvac_mode ?? state.state ?? null,
     hvacAction: state.attributes?.hvac_action ?? null,
+    fanMode: state.attributes?.fan_mode ?? null,
+    fanModes: state.attributes?.fan_modes ?? [],
   };
 }
 

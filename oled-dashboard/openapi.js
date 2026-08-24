@@ -171,7 +171,7 @@ export const openApiDocument = {
         operationId: "getMarqueeArt",
         summary: "Proxy the poster art of the currently playing media",
         description:
-          "Reads entity_picture from the configured media player's cached Home Assistant state and proxies the image, so clients never need an HA token. The v parameter is ignored by the server and exists only for client-side cache busting.",
+          "When PLEX_URL and PLEX_TOKEN are configured, renders the poster at 1280x1920 through Plex's transcoder using the media_content_id (Plex ratingKey) from the cached Home Assistant state. Otherwise — or if that fetch fails — it falls back to proxying entity_picture from the same cached state. Either way clients never need an HA or Plex token. The v parameter is ignored by the server and exists only for client-side cache busting.",
         parameters: [
           {
             name: "v",

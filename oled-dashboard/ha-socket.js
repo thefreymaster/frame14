@@ -15,31 +15,11 @@
 
 import WebSocket from "ws";
 import { HA_URL, HA_TOKEN } from "./config.js";
-import { ENTITIES } from "./entities.js";
 
 const MOTION_ENTITY = "binary_sensor.kitchen_motion_sensor_motion";
 const ROUTE_ENTITY = "input_select.oledos_route";
 const ALBUM_ENTITY = "input_select.smart_frame_album";
 const RECONNECT_DELAY_MS = 5_000;
-
-// Plex marquee: route the frame to /marquee while something is playing.
-const MEDIA_ENTITY = ENTITIES.mediaPlayer;
-const MEDIA_PLAY_STATES = new Set(["playing"]);
-const MEDIA_STOP_STATES = new Set([
-  "idle", "unavailable", "off", "standby", "unknown",
-]);
-// The Apple TV flaps idle -> unavailable -> idle when the Plex client drops,
-// so wait before giving up on playback and going back home.
-const MEDIA_STOP_GRACE_MS = 10_000;
-
-/**
- * Views that must never be persisted as the "last route".
- *
- * setLastRoute() writes ROUTE_ENTITY, which the motion watcher reads back on
- * wake. Persisting a transient view would strand the frame there long after the
- * reason for showing it is gone.
- */
-export const TRANSIENT_VIEWS = new Set(["blank", "marquee"]);
 
 const GET_STATES_ID = 1;
 const SUBSCRIBE_EVENTS_ID = 2;
@@ -198,43 +178,6 @@ export function startHaSocket(io) {
     broadcastView(lastRoute);
   }
 
-  let mediaStopTimer = null;
-
-  function clearMediaStopTimer() {
-    if (mediaStopTimer) {
-      clearTimeout(mediaStopTimer);
-      mediaStopTimer = null;
-    }
-  }
-
-  function onMediaState(state) {
-    if (MEDIA_PLAY_STATES.has(state)) {
-      clearMediaStopTimer();
-      if (io.currentView !== "marquee") {
-        console.log(`[ha-socket] media playing (${state}) → marquee`);
-        broadcastView("marquee");
-      }
-      return;
-    }
-
-    // Paused keeps the marquee up — only a real stop sends the frame home.
-    if (state === "paused") {
-      clearMediaStopTimer();
-      return;
-    }
-
-    if (MEDIA_STOP_STATES.has(state) && io.currentView === "marquee") {
-      clearMediaStopTimer();
-      mediaStopTimer = setTimeout(() => {
-        mediaStopTimer = null;
-        // Re-check: the frame may have been navigated away in the meantime.
-        if (io.currentView !== "marquee") return;
-        console.log(`[ha-socket] media stopped (${state}) → home`);
-        broadcastView("home");
-      }, MEDIA_STOP_GRACE_MS);
-    }
-  }
-
   // Dispatch cache updates to Socket.IO rooms + run local side effects.
   function publishState(entityId, newState, prevState) {
     if (!newState) return;
@@ -245,13 +188,6 @@ export function startHaSocket(io) {
       onMotionOn().catch((err) =>
         console.error("[ha-socket] onMotionOn error:", err.message),
       );
-      return;
-    }
-
-    if (MEDIA_ENTITY && entityId === MEDIA_ENTITY) {
-      const prev = prevState?.state;
-      const next = newState.state;
-      if (prev !== next) onMediaState(next);
       return;
     }
 

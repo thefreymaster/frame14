@@ -10,7 +10,6 @@ import { Radar } from "./routes/Radar";
 import { Timer } from "./routes/Timer";
 import { Solar } from "./routes/Solar";
 import { Power } from "./routes/Power";
-import { Marquee } from "./routes/Marquee";
 
 export const router = createBrowserRouter([
   {
@@ -27,7 +26,6 @@ export const router = createBrowserRouter([
       { path: "/timer", element: <Timer /> },
       { path: "/solar", element: <Solar /> },
       { path: "/power", element: <Power /> },
-      { path: "/marquee", element: <Marquee /> },
     ],
   },
 ]);

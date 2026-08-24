@@ -37,7 +37,6 @@ function loadEntities() {
       },
       vacuums: options.vacuum_entities ?? [],
       fans: options.fan_entities ?? [],
-      mediaPlayer: options.media_player_entity ?? "",
       printer: options.printer_status_entity ?? "",
       bird: options.bird_species_entity ?? "",
     };
@@ -55,7 +54,6 @@ function loadEntities() {
       circuits: frame14.circuits ?? { main: "", balance: "", items: [] },
       vacuums: frame14.vacuums ?? [],
       fans: frame14.fans ?? [],
-      mediaPlayer: frame14.mediaPlayer ?? "",
       printer: frame14.printer ?? "",
       bird: frame14.bird ?? "",
     };
@@ -70,7 +68,6 @@ function loadEntities() {
     circuits: { main: "", balance: "", items: [] },
     vacuums: [],
     fans: [],
-    mediaPlayer: "",
     printer: "",
     bird: "",
   };

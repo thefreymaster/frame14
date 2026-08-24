@@ -12,6 +12,7 @@ export interface EntitiesConfig {
   };
   vacuums: string[];
   fans: string[];
+  mediaPlayer: string;
   printer: string;
   bird: string;
 }

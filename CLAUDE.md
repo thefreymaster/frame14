@@ -53,13 +53,14 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
     "consumptionToday": "sensor.envoy_xxx_energy_consumption_today"
   },
   "vacuums": ["vacuum.roborock_q5_pro"],
+  "mediaPlayer": "media_player.plex_xxx",
   "printer": "sensor.a1_xxx_print_status"
 }
 ```
 
 The `printer` field is the printer's `print_status` sensor entity ID; all sibling printer sensors (progress, temps, layers, …) are derived from its prefix in `src/lib/printerEntities.ts`. Empty string disables the printer card.
 
-In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*`, `printer_status_entity` fields in `config.yaml`).
+In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*`, `media_player_entity`, `printer_status_entity` fields in `config.yaml`).
 
 ## Frontend Routes
 
@@ -73,6 +74,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/photos` | `Photos` | Immich photo slideshow |
 | `/radar` | `Radar` | Radar view — frame-only nav item |
 | `/timer` | `Timer` | Timer — frame-only nav item |
+| `/marquee` | `Marquee` | Plex now-playing: full-screen poster art + title/progress; auto-routed |
 | `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
 ## Component Rules
@@ -96,6 +98,7 @@ src/
     Photos.tsx                    — Immich slideshow
     Radar.tsx                     — radar view (frame-only)
     Timer.tsx                     — timer (frame-only)
+    Marquee.tsx                   — Plex now-playing poster; hides nav on mount (local only), eye button restores it
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
@@ -107,6 +110,8 @@ src/
     WeatherCurrent.tsx            — current conditions (emoji, temp, humidity, wind)
     WeatherForecast.tsx           — 5-period hourly forecast strip
     PhotoSlide.tsx                — full-bleed crossfade image slide
+    MarqueeArt.tsx                — blurred poster backdrop + contained poster (absolute, not fixed — PageTransition leaves a transform on an ancestor)
+    MarqueeMeta.tsx               — marquee title/subtitle/progress overlay; ticks only while playing
     LightsSection.tsx             — renders a group of LightEntry controls
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
@@ -135,7 +140,9 @@ src/
     socket.ts                     — socket.io-client singleton (connects to window.location.origin)
     lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icon (domain-based) from entity IDs; no static registry
     deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
+    navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — theme CSS vars, preference storage, socket sync; "auto" uses daylight window 07:00–19:00
+    plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
 ```
 
@@ -147,7 +154,7 @@ config.js         — reads credentials from /data/options.json or .env
 entities.js       — reads entity IDs from /data/options.json (HA addon) or frame14.json (local dev)
 frame14.json      — local dev entity ID config (not used in HA addon)
 openapi.js        — OpenAPI document + Swagger UI renderer
-ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album watchers
+ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album/media watchers; exports TRANSIENT_VIEWS (views never persisted as the last route)
 routes/
   health.js       — GET /api
   docs.js         — GET /api/docs, GET /api/docs/openapi.json
@@ -158,6 +165,7 @@ routes/
   vacuum.js       — GET /api/home/vacuum (fetches HA states for ENTITIES.vacuums array)
   entities.js     — GET /api/entities (serves ENTITIES object to frontend)
   photos.js       — GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail
+  marquee.js      — GET /api/marquee/art (proxies the media player's entity_picture from the HA state cache)
   views.js        — GET /api/change/:view (broadcasts change_view via io from app.locals)
   videos.js       — GET /api/videos/list, GET /videos/:file
 ```
@@ -178,6 +186,7 @@ routes/
 - `GET /api/photos/albums` — Immich album list
 - `GET /api/photos/albums/:albumId` — assets in an album (images only)
 - `GET /api/photos/asset/:assetId/thumbnail` — proxies Immich thumbnail (hides API key)
+- `GET /api/marquee/art?v=<cachekey>` — proxies the poster art of the configured media player; the path is read server-side from the HA state cache (the client never supplies a URL), `v` is ignored and exists only for cache busting
 - `GET /api/change/:view` — broadcasts `change_view` to all Socket.IO clients
 - `GET /api/videos/list` — lists `./videos/`
 - `GET /api/docs` — Swagger UI

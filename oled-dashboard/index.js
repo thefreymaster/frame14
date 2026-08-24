@@ -24,6 +24,7 @@ import {
   getState,
   setLastRoute,
   callService,
+  TRANSIENT_VIEWS,
 } from "./ha-socket.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
@@ -38,6 +39,7 @@ import entitiesRouter from "./routes/entities.js";
 import climateRouter from "./routes/climate.js";
 import vacuumRouter from "./routes/vacuum.js";
 import fanRouter from "./routes/fan.js";
+import marqueeRouter from "./routes/marquee.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,7 +71,7 @@ io.on("connection", (socket) => {
     console.log({ io: "change", view });
     io.currentView = view;
     socket.broadcast.emit("change_view", view);
-    if (view !== "blank") setLastRoute(view);
+    if (!TRANSIENT_VIEWS.has(view)) setLastRoute(view);
   });
 
   socket.on("next_photo", () => {
@@ -131,6 +133,7 @@ app.use("/api/entities", entitiesRouter);
 app.use("/api/home/climate", climateRouter);
 app.use("/api/home/vacuum", vacuumRouter);
 app.use("/api/home/fan", fanRouter);
+app.use("/api/marquee", marqueeRouter);
 app.use("/api/home", homeRouter);
 app.use("/api/videos", videosRouter);
 app.use("/videos", videosRouter);

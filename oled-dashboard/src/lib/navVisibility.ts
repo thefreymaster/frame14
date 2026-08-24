@@ -26,6 +26,21 @@ export function setNavVisible(v: boolean) {
   socket.emit("nav_visibility", v);
 }
 
+/**
+ * Hide/show the nav on this device only.
+ *
+ * Used by routes that auto-hide the nav on mount: broadcasting that would blank
+ * the nav on the phone remote too, which nobody asked for. The eye button still
+ * uses setNavVisible so a deliberate press syncs everywhere.
+ */
+export function setNavVisibleLocal(v: boolean) {
+  applyLocal(v);
+}
+
+export function getNavVisible() {
+  return visible;
+}
+
 export function toggleNavVisible() {
   setNavVisible(!visible);
 }

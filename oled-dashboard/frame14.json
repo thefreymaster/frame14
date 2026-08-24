@@ -60,6 +60,7 @@
   },
   "vacuums": ["vacuum.roborock_q5_pro"],
   "fans": ["fan.living_room_ceiling_fan", "fan.aidens_fan"],
+  "mediaPlayer": "media_player.plex_plex_for_apple_tv_apple_tv",
   "printer": "sensor.a1_03919c442700723_print_status",
   "bird": "sensor.birdnet_go_front_porch_camera_last_species"
 }

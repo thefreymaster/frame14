@@ -26,6 +26,10 @@ export const openApiDocument = {
       description: "Immich photo library proxy endpoints.",
     },
     {
+      name: "Marquee",
+      description: "Now-playing artwork for the configured media player.",
+    },
+    {
       name: "Videos",
       description: "Video listing and delivery endpoints.",
     },
@@ -158,6 +162,30 @@ export const openApiDocument = {
         responses: {
           200: { description: "JPEG thumbnail image.", content: { "image/jpeg": {} } },
           503: { description: "Immich not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/marquee/art": {
+      get: {
+        tags: ["Marquee"],
+        operationId: "getMarqueeArt",
+        summary: "Proxy the poster art of the currently playing media",
+        description:
+          "Reads entity_picture from the configured media player's cached Home Assistant state and proxies the image, so clients never need an HA token. The v parameter is ignored by the server and exists only for client-side cache busting.",
+        parameters: [
+          {
+            name: "v",
+            in: "query",
+            required: false,
+            description: "Cache-busting token; changes when the media changes.",
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Poster image.", content: { "image/jpeg": {} } },
+          404: { description: "Nothing playing, or the media has no artwork.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "Home Assistant or the media player entity is not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },

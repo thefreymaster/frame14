@@ -35,6 +35,8 @@ Priority: `/data/options.json` (HA addon) → `.env` file (local dev). See `.env
 | `IMMICH_URL` | Immich server base URL |
 | `IMMICH_API_KEY` | Immich API key |
 | `IMMICH_ALBUM_ID` | (Optional) Pin a specific album for the photo slideshow |
+| `PLEX_URL` | (Optional) Plex server URL for full-res marquee posters; must be the `plex.direct` hostname (a bare IP fails TLS verification) |
+| `PLEX_TOKEN` | (Optional) Plex token; without it marquee art falls back to HA's 200x300 thumbnail |
 | `PORT` | Express server port (default 4000) |
 
 ### Entity IDs (`entities.js`)
@@ -74,7 +76,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/photos` | `Photos` | Immich photo slideshow |
 | `/radar` | `Radar` | Radar view — frame-only nav item |
 | `/timer` | `Timer` | Timer — frame-only nav item |
-| `/marquee` | `Marquee` | Plex now-playing: full-screen poster art + title/progress; auto-routed |
+| `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed |
 | `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
 ## Component Rules
@@ -98,7 +100,7 @@ src/
     Photos.tsx                    — Immich slideshow
     Radar.tsx                     — radar view (frame-only)
     Timer.tsx                     — timer (frame-only)
-    Marquee.tsx                   — Plex now-playing poster; hides nav on mount (local only), eye button restores it
+    Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; hides nav on mount (local only), eye button restores it
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
@@ -110,8 +112,7 @@ src/
     WeatherCurrent.tsx            — current conditions (emoji, temp, humidity, wind)
     WeatherForecast.tsx           — 5-period hourly forecast strip
     PhotoSlide.tsx                — full-bleed crossfade image slide
-    MarqueeArt.tsx                — blurred poster backdrop + contained poster (absolute, not fixed — PageTransition leaves a transform on an ancestor)
-    MarqueeMeta.tsx               — marquee title/subtitle/progress overlay; ticks only while playing
+    MarqueeArt.tsx                — full-bleed poster, backgroundSize cover (absolute, not fixed — PageTransition leaves a transform on an ancestor)
     LightsSection.tsx             — renders a group of LightEntry controls
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
@@ -165,7 +166,7 @@ routes/
   vacuum.js       — GET /api/home/vacuum (fetches HA states for ENTITIES.vacuums array)
   entities.js     — GET /api/entities (serves ENTITIES object to frontend)
   photos.js       — GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail
-  marquee.js      — GET /api/marquee/art (proxies the media player's entity_picture from the HA state cache)
+  marquee.js      — GET /api/marquee/art (full-res poster from Plex via media_content_id when PLEX_URL/PLEX_TOKEN are set; falls back to proxying the media player's entity_picture from the HA state cache)
   views.js        — GET /api/change/:view (broadcasts change_view via io from app.locals)
   videos.js       — GET /api/videos/list, GET /videos/:file
 ```
@@ -186,7 +187,7 @@ routes/
 - `GET /api/photos/albums` — Immich album list
 - `GET /api/photos/albums/:albumId` — assets in an album (images only)
 - `GET /api/photos/asset/:assetId/thumbnail` — proxies Immich thumbnail (hides API key)
-- `GET /api/marquee/art?v=<cachekey>` — proxies the poster art of the configured media player; the path is read server-side from the HA state cache (the client never supplies a URL), `v` is ignored and exists only for cache busting
+- `GET /api/marquee/art?v=<cachekey>` — poster art of the configured media player. With `PLEX_URL`/`PLEX_TOKEN` set it renders the poster at 1280x1920 through Plex's transcoder, keyed on the `media_content_id` (Plex ratingKey) from the HA state cache; otherwise it proxies the entity's `entity_picture`. The client never supplies a URL; `v` is ignored and exists only for cache busting
 - `GET /api/change/:view` — broadcasts `change_view` to all Socket.IO clients
 - `GET /api/videos/list` — lists `./videos/`
 - `GET /api/docs` — Swagger UI

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
 import { MarqueeArt } from "../components/MarqueeArt";
-import { MarqueeMeta } from "../components/MarqueeMeta";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity } from "../hooks/useEntity";
 import { artUrl, isActive, type PlexAttrs } from "../lib/plexMedia";
@@ -26,9 +25,8 @@ export function Marquee() {
     return () => setNavVisibleLocal(previous);
   }, []);
 
-  const attrs = media?.attributes;
   const state = media?.state;
-  const src = isActive(state) ? artUrl(attrs) : null;
+  const src = isActive(state) ? artUrl(media?.attributes) : null;
 
   return (
     <Box
@@ -40,10 +38,7 @@ export function Marquee() {
       overflow="hidden"
     >
       {src ? (
-        <>
-          <MarqueeArt src={src} />
-          <MarqueeMeta attrs={attrs} state={state} />
-        </>
+        <MarqueeArt src={src} />
       ) : (
         <Box
           position="absolute"

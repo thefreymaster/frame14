@@ -34,7 +34,9 @@
     "currentProduction": "sensor.envoy_482518016321_current_power_production",
     "currentConsumption": "sensor.envoy_482518016321_current_power_consumption",
     "productionToday": "sensor.envoy_482518016321_energy_production_today",
-    "consumptionToday": "sensor.envoy_482518016321_energy_consumption_today"
+    "consumptionToday": "sensor.envoy_482518016321_energy_consumption_today",
+    "lifetimeProduction": "sensor.envoy_482518016321_lifetime_energy_production",
+    "lifetimeConsumption": "sensor.envoy_482518016321_lifetime_energy_consumption"
   },
   "circuits": {
     "main": "sensor.vueenergymonitor_power_minute_average",

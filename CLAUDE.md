@@ -52,7 +52,9 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
     "currentProduction": "sensor.envoy_xxx_current_power_production",
     "currentConsumption": "sensor.envoy_xxx_current_power_consumption",
     "productionToday": "sensor.envoy_xxx_energy_production_today",
-    "consumptionToday": "sensor.envoy_xxx_energy_consumption_today"
+    "consumptionToday": "sensor.envoy_xxx_energy_consumption_today",
+    "lifetimeProduction": "sensor.envoy_xxx_lifetime_energy_production",
+    "lifetimeConsumption": "sensor.envoy_xxx_lifetime_energy_consumption"
   },
   "vacuums": ["vacuum.roborock_q5_pro"],
   "mediaPlayer": "media_player.plex_xxx",
@@ -62,7 +64,7 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
 
 The `printer` field is the printer's `print_status` sensor entity ID; all sibling printer sensors (progress, temps, layers, …) are derived from its prefix in `src/lib/printerEntities.ts`. Empty string disables the printer card.
 
-In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*`, `media_player_entity`, `printer_status_entity` fields in `config.yaml`).
+In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` including the optional `energy_lifetime_production`/`energy_lifetime_consumption`, `media_player_entity`, `printer_status_entity` fields in `config.yaml`).
 
 ## Frontend Routes
 
@@ -180,8 +182,8 @@ routes/
 - `GET /api/home/climate` — climate states for all entities in `ENTITIES.climate`
 - `GET /api/home/vacuum` — vacuum states for all entities in `ENTITIES.vacuums` (state, cleaning_progress, battery_level)
 - `GET /api/home/calendar` — today + tomorrow calendar events from all HA calendars
-- `GET /api/energy` — solar production/consumption from HA (entity IDs from `ENTITIES.energy`)
-- `GET /api/energy/monthly?month=YYYY-MM` — daily production/consumption + running totals for a month (HA long-term statistics); defaults to current month
+- `GET /api/energy` — solar production/consumption from HA (entity IDs from `ENTITIES.energy`). Today's kWh totals are the change in the lifetime meters since the end of yesterday when `lifetimeProduction`/`lifetimeConsumption` are set — the inverter's own "today" sensors drift and reset on the inverter's clock, so they are only the fallback
+- `GET /api/energy/monthly?month=YYYY-MM` — daily production/consumption + running totals for a month (HA long-term statistics; each day is the difference between end-of-day lifetime readings, which the statistics `change` type cannot be used for — counter resets corrupt it); defaults to current month
 - `GET /api/energy/yearly?year=YYYY` — monthly production/consumption + running totals for a year (daily stats summed per month); defaults to current year
 - `GET /api/photos/config` — returns `{ defaultAlbumId }` from config
 - `GET /api/photos/albums` — Immich album list

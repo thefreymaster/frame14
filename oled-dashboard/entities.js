@@ -29,6 +29,8 @@ function loadEntities() {
         currentConsumption: options.energy_current_consumption ?? "",
         productionToday: options.energy_production_today ?? "",
         consumptionToday: options.energy_consumption_today ?? "",
+        lifetimeProduction: options.energy_lifetime_production ?? "",
+        lifetimeConsumption: options.energy_lifetime_consumption ?? "",
       },
       circuits: {
         main: options.circuit_main_entity ?? "",

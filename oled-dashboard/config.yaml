@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.37.0"
+version: "0.38.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -54,6 +54,8 @@ options:
   energy_current_consumption: "sensor.envoy_482518016321_current_power_consumption"
   energy_production_today: "sensor.envoy_482518016321_energy_production_today"
   energy_consumption_today: "sensor.envoy_482518016321_energy_consumption_today"
+  energy_lifetime_production: "sensor.envoy_482518016321_lifetime_energy_production"
+  energy_lifetime_consumption: "sensor.envoy_482518016321_lifetime_energy_consumption"
   circuit_main_entity: "sensor.vueenergymonitor_power_minute_average"
   circuit_balance_entity: "sensor.balance_power_minute_average"
   circuit_entities:
@@ -117,6 +119,8 @@ schema:
   energy_current_consumption: str
   energy_production_today: str
   energy_consumption_today: str
+  energy_lifetime_production: str?
+  energy_lifetime_consumption: str?
   circuit_main_entity: str
   circuit_balance_entity: str?
   circuit_entities:

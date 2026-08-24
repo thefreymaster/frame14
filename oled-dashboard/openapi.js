@@ -223,7 +223,7 @@ export const openApiDocument = {
         tags: ["Energy"],
         operationId: "getEnergy",
         summary: "Get current energy snapshot",
-        description: "Returns today's production and consumption totals plus current live wattage from Home Assistant.",
+        description: "Returns today's production and consumption totals plus current live wattage from Home Assistant. Totals are measured from the lifetime energy counters when energy_lifetime_production/energy_lifetime_consumption are configured, otherwise from the 'today' sensors.",
         responses: {
           200: {
             description: "Current energy data.",

@@ -9,6 +9,8 @@ export interface EntitiesConfig {
     currentConsumption: string;
     productionToday: string;
     consumptionToday: string;
+    lifetimeProduction?: string;
+    lifetimeConsumption?: string;
   };
   vacuums: string[];
   fans: string[];

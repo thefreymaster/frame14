@@ -635,13 +635,16 @@ export function useHomeData() {
   const homeEnergy: HomeEnergy = {
     currentProduction: liveWatts("currentProduction", energyQuery.data?.currentProduction ?? 0),
     currentConsumption: liveWatts("currentConsumption", energyQuery.data?.currentConsumption ?? 0),
+    // /api/energy is the authority for the daily totals — it derives them from
+    // the lifetime counters' statistics. The raw "today" sensors are only a
+    // fallback for when that request has not landed yet.
     productionToday:
-      parseFloatOrNull(liveEnergyByKey.get("productionToday")?.state) ??
       energyQuery.data?.production ??
+      parseFloatOrNull(liveEnergyByKey.get("productionToday")?.state) ??
       0,
     consumptionToday:
-      parseFloatOrNull(liveEnergyByKey.get("consumptionToday")?.state) ??
       energyQuery.data?.consumption ??
+      parseFloatOrNull(liveEnergyByKey.get("consumptionToday")?.state) ??
       0,
   };
 

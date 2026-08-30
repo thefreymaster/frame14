@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import NumberFlow from "@number-flow/react";
 import { IoTrophyOutline } from "react-icons/io5";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, type HAState } from "../hooks/useEntity";
@@ -13,9 +14,10 @@ import { CHIP_GAP } from "../lib/surfaces";
  * keys even when the integration has nothing to report, so every field is
  * nullable.
  *
- * The card is drawn as a broadcast score bug: colour-blocked logo caps at the
- * ends, each team's name and score facing the middle, and the game state in a
- * dark centre block, the way the network cuts it into the bottom of the frame.
+ * The card is drawn as a college broadcast score bug: helmet-striped colour
+ * caps at the ends, AP rank ahead of each name, both scores facing a dark
+ * centre block holding the period and clock, and — while the game is live —
+ * ESPN's win probability as a tug-of-war rule along the bottom.
  */
 export interface TeamTrackerAttributes {
   sport?: string | null;
@@ -25,24 +27,31 @@ export interface TeamTrackerAttributes {
   team_long_name?: string | null;
   team_score?: string | null;
   team_record?: string | null;
+  team_rank?: string | number | null;
   team_homeaway?: string | null;
   team_logo?: string | null;
   team_colors?: string[] | null;
   team_timeouts?: number | null;
+  team_win_probability?: number | null;
+  team_winner?: boolean | null;
   team_id?: string | null;
   opponent_abbr?: string | null;
   opponent_name?: string | null;
   opponent_long_name?: string | null;
   opponent_score?: string | null;
   opponent_record?: string | null;
+  opponent_rank?: string | number | null;
   opponent_homeaway?: string | null;
   opponent_logo?: string | null;
   opponent_colors?: string[] | null;
   opponent_timeouts?: number | null;
+  opponent_win_probability?: number | null;
+  opponent_winner?: boolean | null;
   opponent_id?: string | null;
   date?: string | null;
   kickoff_in?: string | null;
   venue?: string | null;
+  location?: string | null;
   quarter?: string | number | null;
   clock?: string | null;
   possession?: string | null;
@@ -71,10 +80,17 @@ const NO_DATA = new Set(["", "unknown", "unavailable", "none"]);
 
 const EMPTY: string[] = [];
 
-/** Fallback cap colour when ESPN gives no team colours. */
+/** Fallback colours when ESPN gives a school no palette. */
 const NEUTRAL = "#3A3A42";
+const NEUTRAL_TRIM = "#5A5A66";
 
 const ORDINALS = ["", "1ST", "2ND", "3RD", "4TH"];
+
+function text(value: unknown): string | null {
+  if (value == null) return null;
+  const trimmed = String(value).trim();
+  return NO_DATA.has(trimmed.toLowerCase()) ? null : trimmed;
+}
 
 function timestamp(value: string | null | undefined): number | null {
   if (!value) return null;
@@ -97,12 +113,6 @@ function inWindow(game: Game, now: number): boolean {
 
   const final = timestamp(game.last_changed);
   return final == null || now - final <= POST_WINDOW_MS;
-}
-
-function text(value: unknown): string | null {
-  if (value == null) return null;
-  const trimmed = String(value).trim();
-  return NO_DATA.has(trimmed.toLowerCase()) ? null : trimmed;
 }
 
 /** Football counts quarters; anything past regulation is overtime. */
@@ -139,12 +149,16 @@ function downLabel(raw: string | null): string | null {
 interface Side {
   name: string;
   abbr: string;
+  rank: string | null;
   score: string | null;
   record: string | null;
   logo: string | null;
   color: string;
+  trim: string;
   timeouts: number | null;
   down: string | null;
+  winProb: number | null;
+  lost: boolean;
 }
 
 /** Split the sensor into away/home, since a score bug always reads away-first. */
@@ -153,38 +167,67 @@ function sides(game: Game): [Side, Side] {
   const scored = SCORED.has(game.state);
   const down = downLabel(text(a.down_distance_text));
   const possession = text(a.possession);
+  const final = game.state === "POST";
+
+  // ESPN only fills team_winner once it's official; before that the scoreboard
+  // is the honest answer, and a tie leaves both sides at full strength.
+  const teamScore = Number(a.team_score);
+  const oppScore = Number(a.opponent_score);
+  const decided = Number.isFinite(teamScore) && Number.isFinite(oppScore);
+  const teamLost = final
+    ? (a.opponent_winner ?? (decided && oppScore > teamScore)) === true
+    : false;
+  const oppLost = final
+    ? (a.team_winner ?? (decided && teamScore > oppScore)) === true
+    : false;
 
   const team: Side = {
     name: (text(a.team_name) ?? text(a.team_abbr) ?? "—").toUpperCase(),
     abbr: text(a.team_abbr) ?? "—",
+    rank: text(a.team_rank),
     score: scored ? (text(a.team_score) ?? "0") : null,
     record: text(a.team_record),
     logo: text(a.team_logo),
     color: text(a.team_colors?.[0]) ?? NEUTRAL,
+    trim: text(a.team_colors?.[1]) ?? NEUTRAL_TRIM,
     timeouts: typeof a.team_timeouts === "number" ? a.team_timeouts : null,
     down: possession && possession === text(a.team_id) ? down : null,
+    winProb:
+      typeof a.team_win_probability === "number"
+        ? a.team_win_probability
+        : null,
+    lost: teamLost,
   };
 
   const opponent: Side = {
     name: (text(a.opponent_name) ?? text(a.opponent_abbr) ?? "—").toUpperCase(),
     abbr: text(a.opponent_abbr) ?? "—",
+    rank: text(a.opponent_rank),
     score: scored ? (text(a.opponent_score) ?? "0") : null,
     record: text(a.opponent_record),
     logo: text(a.opponent_logo),
     color: text(a.opponent_colors?.[0]) ?? NEUTRAL,
+    trim: text(a.opponent_colors?.[1]) ?? NEUTRAL_TRIM,
     timeouts:
       typeof a.opponent_timeouts === "number" ? a.opponent_timeouts : null,
     down: possession && possession === text(a.opponent_id) ? down : null,
+    winProb:
+      typeof a.opponent_win_probability === "number"
+        ? a.opponent_win_probability
+        : null,
+    lost: oppLost,
   };
 
   return a.team_homeaway === "away" ? [team, opponent] : [opponent, team];
 }
 
-function LogoCap({ side }: { side: Side }) {
+/** Colour cap with a helmet stripe of the school's second colour. */
+function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
   const [broken, setBroken] = useState(false);
 
   return (
     <Box
+      position="relative"
       flexShrink={0}
       width="8vmin"
       alignSelf="stretch"
@@ -193,6 +236,8 @@ function LogoCap({ side }: { side: Side }) {
       alignItems="center"
       justifyContent="center"
       px="1vmin"
+      opacity={side.lost ? 0.45 : 1}
+      transition="opacity 400ms ease"
     >
       {side.logo && !broken ? (
         <Box
@@ -214,7 +259,32 @@ function LogoCap({ side }: { side: Side }) {
           {side.abbr}
         </Text>
       )}
+      <Box
+        position="absolute"
+        top="0"
+        bottom="0"
+        width="0.5vmin"
+        bg={side.trim}
+        {...(edge === "left" ? { right: 0 } : { left: 0 })}
+      />
     </Box>
+  );
+}
+
+/** AP poll rank, the number college broadcasts put ahead of the name. */
+function Rank({ side }: { side: Side }) {
+  return (
+    <Text
+      as="span"
+      fontSize="1.6vmin"
+      fontWeight="700"
+      color={side.trim}
+      letterSpacing="0.02em"
+      mr="0.6vmin"
+      verticalAlign="0.3vmin"
+    >
+      #{side.rank}
+    </Text>
   );
 }
 
@@ -260,6 +330,26 @@ function StatusBar({ side }: { side: Side }) {
   return <Box height="0.8vmin" borderRadius="0.2vmin" bg={side.color} />;
 }
 
+function Score({ side }: { side: Side }) {
+  const n = Number(side.score);
+
+  return (
+    <Text
+      className="display-numeral"
+      fontSize="4.4vmin"
+      fontWeight="500"
+      lineHeight="1"
+      color="var(--theme-fg)"
+      opacity={side.lost ? 0.5 : 1}
+      transition="opacity 400ms ease"
+      flexShrink={0}
+    >
+      {/* Digits roll the way a stadium scoreboard flips them. */}
+      {Number.isFinite(n) ? <NumberFlow value={n} /> : side.score}
+    </Text>
+  );
+}
+
 function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
   const right = align === "right";
 
@@ -282,26 +372,20 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
           color="var(--theme-fg)"
           letterSpacing="0.03em"
           textAlign={align}
+          opacity={side.lost ? 0.5 : 1}
+          transition="opacity 400ms ease"
           overflow="hidden"
           whiteSpace="nowrap"
           textOverflow="ellipsis"
         >
+          {side.rank && <Rank side={side} />}
           {side.name}
         </Text>
         <StatusBar side={side} />
       </VStack>
 
       {side.score != null ? (
-        <Text
-          className="display-numeral"
-          fontSize="4.4vmin"
-          fontWeight="500"
-          lineHeight="1"
-          color="var(--theme-fg)"
-          flexShrink={0}
-        >
-          {side.score}
-        </Text>
+        <Score side={side} />
       ) : (
         side.record && (
           <Text
@@ -333,8 +417,6 @@ function CenterBlock({ game }: { game: Game }) {
         ?.split(/\s+-\s+/)[0]
         .trim() ?? null;
     const period = periodLabel(text(a.quarter));
-    // A clock without a colon is a break in play ("Halftime", "End of 1st"),
-    // which the period would only repeat.
     state =
       clock && !clock.includes(":")
         ? clock.toUpperCase()
@@ -368,24 +450,67 @@ function CenterBlock({ game }: { game: Game }) {
   );
 }
 
+/**
+ * Win probability as a tug-of-war: the rope sits where ESPN thinks the game
+ * is, and slides as it swings. Live games only — before kickoff it's noise,
+ * and after the final it's decided.
+ */
+function WinBar({ away, home }: { away: Side; home: Side }) {
+  const awayProb = away.winProb;
+  const homeProb = home.winProb;
+  if (awayProb == null || homeProb == null) return null;
+
+  const total = awayProb + homeProb;
+  if (!(total > 0)) return null;
+  const awayPct = Math.round((awayProb / total) * 100);
+
+  return (
+    <Box position="relative" height="0.7vmin" width="100%">
+      <HStack gap="0" height="100%" width="100%">
+        <Box
+          width={`${awayPct}%`}
+          height="100%"
+          bg={away.color}
+          transition="width 900ms ease"
+        />
+        <Box flex="1" height="100%" bg={home.color} />
+      </HStack>
+      {/* Two schools can wear nearly the same red, so mark the split itself. */}
+      <Box
+        position="absolute"
+        top="0"
+        bottom="0"
+        left={`${awayPct}%`}
+        width="0.4vmin"
+        ml="-0.2vmin"
+        bg="var(--theme-bg)"
+        transition="left 900ms ease"
+      />
+    </Box>
+  );
+}
+
 function ScoreBug({ game }: { game: Game }) {
   const [away, home] = sides(game);
 
   return (
-    <HStack
-      gap="0"
+    <VStack
       align="stretch"
+      gap="0"
       minW="0"
       width="100%"
       borderRadius="1.2vmin"
       overflow="hidden"
     >
-      <LogoCap side={away} />
-      <TeamPanel side={away} align="left" />
-      <CenterBlock game={game} />
-      <TeamPanel side={home} align="right" />
-      <LogoCap side={home} />
-    </HStack>
+      <HStack gap="0" align="stretch" minW="0">
+        <LogoCap side={away} edge="left" />
+        <TeamPanel side={away} align="left" />
+        <CenterBlock game={game} />
+        <TeamPanel side={home} align="right" />
+        <LogoCap side={home} edge="right" />
+      </HStack>
+      {game.state === "IN" && <WinBar away={away} home={home} />}
+    </VStack>
   );
 }
 
@@ -419,7 +544,7 @@ export function TeamTracker({ span }: { span?: 1 | 2 }) {
       collapsible
       storageKey="teamtracker"
       title={
-        <HStack width="100%" align="center" gap="1.5vmin" pb="1">
+        <HStack width="100%" align="center" gap="1.5vmin">
           <SectionTitle icon={<IoTrophyOutline />}>TEAMS</SectionTitle>
           <Box flex="1" minW="0" />
           {anyLive && (

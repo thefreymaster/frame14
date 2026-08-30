@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { keyframes } from "@emotion/react";
 import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { IoClose } from "react-icons/io5";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity, type HAState } from "../hooks/useEntity";
 import { socket } from "../lib/socket";
@@ -139,7 +140,32 @@ export function DoorbellCard() {
       cursor="pointer"
       onClick={hide}
     >
-      <Box aspectRatio={16 / 9} bg="#000000">
+      <Box aspectRatio={16 / 9} bg="#000000" position="relative">
+        <Box
+          as="button"
+          aria-label="Dismiss"
+          position="absolute"
+          top="1vmin"
+          right="1vmin"
+          width="4.4vmin"
+          height="4.4vmin"
+          minWidth="32px"
+          minHeight="32px"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          borderRadius="full"
+          color="#FFFFFF"
+          bg="rgba(0, 0, 0, 0.45)"
+          backdropFilter="blur(4px)"
+          fontSize="2.6vmin"
+          onClick={(e) => {
+            e.stopPropagation();
+            hide();
+          }}
+        >
+          <IoClose />
+        </Box>
         <img
           key={src}
           src={src}

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.41.0
+
+- Changed: on the frame and on phones the thermostats now wrap two across — four units read as 2x2 and the dials get the full width of the climate card instead of being squeezed into one row at the top of it. A wide desktop window, where the card is genuinely wide, still puts them all on one row.
+- Changed: the home screen no longer flashes the word "loading" while it waits for Home Assistant. It now draws the real layout in placeholder form — clock and weather, thermostat dials (one per configured thermostat), energy, calendar, fans and status chips — that fades into the live data, so nothing jumps around when it arrives.
+
 ## 0.40.1
 
 - Fixed: closing the thermostat dialog after changing the temperature sometimes bounced it back open, forcing a second close. It now stays closed.

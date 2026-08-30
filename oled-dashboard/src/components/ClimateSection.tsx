@@ -940,6 +940,12 @@ function ClimateCard({
   );
 }
 
+/**
+ * Card width at which every thermostat fits on one row. Below it the dials
+ * wrap — four units read as 2x2 on the frame and on a phone.
+ */
+export const SINGLE_ROW_MIN_PX = 900;
+
 export function ClimateSection({
   climate,
   span,
@@ -960,25 +966,35 @@ export function ClimateSection({
         <SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>
       }
     >
-      <Box
-        display="grid"
-        gridTemplateColumns={{
-          // A wide desktop window has room for every thermostat on one row;
-          // the frame's own panels stay on the wrapping auto-fill track.
-          base: "repeat(auto-fill, minmax(20vmin, 1fr))",
-          xl: `repeat(${climate.length}, minmax(0, 1fr))`,
-        }}
-        columnGap="2vmin"
-        rowGap="2vmin"
-        width="100%"
-      >
-        {climate.map((unit) => (
-          <ClimateCard
-            key={unit.entity_id || unit.name}
-            unit={unit}
-            onTap={() => setSelectedEntityId(unit.entity_id)}
-          />
-        ))}
+      {/* Measure this card, not the viewport.
+       *
+       * A viewport breakpoint gets the frame wrong: Frame14 is 1600px wide, so
+       * it clears Chakra's xl and took the one-row track — but the card itself
+       * is only the 1.15fr cell of the bento, so four dials landed in a row
+       * squeezed against the top of a half-empty card. The container query asks
+       * how wide this card actually is, which is right on the frame, on a phone
+       * and in a wide desktop window alike. */}
+      <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
+        <Box
+          display="grid"
+          gridTemplateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"
+          css={{
+            [`@container (min-width: ${SINGLE_ROW_MIN_PX}px)`]: {
+              gridTemplateColumns: `repeat(${climate.length}, minmax(0, 1fr))`,
+            },
+          }}
+          columnGap="2vmin"
+          rowGap="2vmin"
+          width="100%"
+        >
+          {climate.map((unit) => (
+            <ClimateCard
+              key={unit.entity_id || unit.name}
+              unit={unit}
+              onTap={() => setSelectedEntityId(unit.entity_id)}
+            />
+          ))}
+        </Box>
       </Box>
       {selectedUnit && (
         <ClimateModal

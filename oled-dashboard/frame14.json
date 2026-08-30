@@ -65,5 +65,7 @@
   "mediaPlayer": "media_player.plex_plex_for_apple_tv_apple_tv",
   "printer": "sensor.a1_03919c442700723_print_status",
   "bird": "sensor.birdnet_go_front_porch_camera_last_species",
-  "teamTracker": ["sensor.teamtracker_fsu"]
+  "teamTracker": ["sensor.teamtracker_fsu"],
+  "person": "binary_sensor.front_porch_person_detected",
+  "camera": "camera.front_porch_high"
 }

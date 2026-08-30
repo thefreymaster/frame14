@@ -97,11 +97,10 @@ export function HomeOverview() {
             gap={GRID_GAP}
           >
             <HomeHeader internet={data.internet} weather={data.weather} />
+            <TeamTracker />
             <EnergySection energy={data.energy} />
-            <FanSection fan={data.fan} />
             <PrinterSection printer={data.printer} />
             <VacuumSection vacuum={data.vacuum} />
-            <TeamTracker />
           </Box>
 
           {/* Right column — details */}
@@ -113,6 +112,7 @@ export function HomeOverview() {
             gap={GRID_GAP}
           >
             <ClimateSection climate={data.climate} />
+            <FanSection fan={data.fan} />
             <CalendarSection
               today={data.calendar?.today ?? []}
               tomorrow={data.calendar?.tomorrow ?? []}

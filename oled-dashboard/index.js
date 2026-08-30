@@ -40,6 +40,7 @@ import climateRouter from "./routes/climate.js";
 import vacuumRouter from "./routes/vacuum.js";
 import fanRouter from "./routes/fan.js";
 import marqueeRouter from "./routes/marquee.js";
+import cameraRouter from "./routes/camera.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,6 +135,7 @@ app.use("/api/home/climate", climateRouter);
 app.use("/api/home/vacuum", vacuumRouter);
 app.use("/api/home/fan", fanRouter);
 app.use("/api/marquee", marqueeRouter);
+app.use("/api/camera", cameraRouter);
 app.use("/api/home", homeRouter);
 app.use("/api/videos", videosRouter);
 app.use("/videos", videosRouter);

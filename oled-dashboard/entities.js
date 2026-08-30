@@ -43,6 +43,8 @@ function loadEntities() {
       printer: options.printer_status_entity ?? "",
       bird: options.bird_species_entity ?? "",
       teamTracker: options.team_tracker_entities ?? [],
+      person: options.person_entity ?? "",
+      camera: options.camera_entity ?? "",
     };
   }
 
@@ -62,6 +64,8 @@ function loadEntities() {
       printer: frame14.printer ?? "",
       bird: frame14.bird ?? "",
       teamTracker: frame14.teamTracker ?? [],
+      person: frame14.person ?? "",
+      camera: frame14.camera ?? "",
     };
   }
 
@@ -78,6 +82,8 @@ function loadEntities() {
     printer: "",
     bird: "",
     teamTracker: [],
+    person: "",
+    camera: "",
   };
 }
 

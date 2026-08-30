@@ -953,7 +953,12 @@ export function ClimateSection({
     >
       <Box
         display="grid"
-        gridTemplateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"
+        gridTemplateColumns={{
+          // A wide desktop window has room for every thermostat on one row;
+          // the frame's own panels stay on the wrapping auto-fill track.
+          base: "repeat(auto-fill, minmax(20vmin, 1fr))",
+          xl: `repeat(${climate.length}, minmax(0, 1fr))`,
+        }}
         columnGap="2vmin"
         rowGap="2vmin"
         width="100%"

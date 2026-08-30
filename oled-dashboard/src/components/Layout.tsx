@@ -3,6 +3,7 @@ import { Box, HStack } from "@chakra-ui/react";
 import { SocketViewListener } from "./SocketViewListener";
 import { PageTransition } from "./PageTransition";
 import { LandscapeNav } from "./LandscapeNav";
+import { DoorbellCard } from "./DoorbellCard";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useReady } from "../hooks/useReady";
 import { getDeviceMode } from "../lib/deviceMode";
@@ -56,6 +57,8 @@ export function Layout() {
           {content}
         </Box>
       </HStack>
+
+      {!isControl && <DoorbellCard />}
     </>
   );
 }

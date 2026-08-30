@@ -30,6 +30,10 @@ export const openApiDocument = {
       description: "Now-playing artwork for the configured media player.",
     },
     {
+      name: "Camera",
+      description: "Live view of the configured camera, proxied from Home Assistant.",
+    },
+    {
       name: "Videos",
       description: "Video listing and delivery endpoints.",
     },
@@ -186,6 +190,34 @@ export const openApiDocument = {
           404: { description: "Nothing playing, or the media has no artwork.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           503: { description: "Home Assistant or the media player entity is not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/camera/stream": {
+      get: {
+        tags: ["Camera"],
+        operationId: "getCameraStream",
+        summary: "Proxy the MJPEG live stream of the configured camera",
+        description:
+          "Pipes Home Assistant's camera_proxy_stream for the camera entity in the entity config, attaching the server's HA token so clients never need one. The client supplies no entity ID. The upstream request is aborted as soon as the client disconnects.",
+        responses: {
+          200: { description: "MJPEG stream (multipart/x-mixed-replace).", content: { "multipart/x-mixed-replace": {} } },
+          502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "No camera entity configured, or HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/camera/snapshot": {
+      get: {
+        tags: ["Camera"],
+        operationId: "getCameraSnapshot",
+        summary: "Proxy a single still image from the configured camera",
+        description:
+          "Fallback for clients that cannot render the MJPEG stream: one JPEG from Home Assistant's camera_proxy for the configured camera entity, sent with no-store so each request is a fresh frame.",
+        responses: {
+          200: { description: "JPEG still image.", content: { "image/jpeg": {} } },
+          502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "No camera entity configured, or HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },

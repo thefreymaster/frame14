@@ -18,6 +18,8 @@ export interface EntitiesConfig {
   printer: string;
   bird: string;
   teamTracker: string[];
+  person: string;
+  camera: string;
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

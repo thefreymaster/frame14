@@ -4,7 +4,6 @@ import { useHomeData } from "../hooks/useHomeData";
 import { StatusBanner } from "../components/StatusBanner";
 import { EnergySection } from "../components/EnergySection";
 import { ClimateSection } from "../components/ClimateSection";
-import { ForecastSection } from "../components/ForecastSection";
 import { PrinterSection } from "../components/PrinterSection";
 import { VacuumSection } from "../components/VacuumSection";
 import { TeamTracker } from "../components/TeamTracker";
@@ -98,9 +97,6 @@ export function HomeOverview() {
             gap={GRID_GAP}
           >
             <HomeHeader internet={data.internet} weather={data.weather} />
-            {data.weather && (
-              <ForecastSection forecast={data.weather.forecast} count={6} />
-            )}
             <EnergySection energy={data.energy} />
             <FanSection fan={data.fan} />
             <PrinterSection printer={data.printer} />
@@ -145,14 +141,7 @@ export function HomeOverview() {
         padding={GRID_GAP}
       >
         <HomeHeader span={2} internet={data.internet} weather={data.weather} />
-
-        {data.weather && (
-          <ForecastSection
-            span={2}
-            forecast={data.weather.forecast}
-            count={6}
-          />
-        )}
+        <TeamTracker span={2} />
 
         <ClimateSection climate={data.climate} />
 
@@ -168,7 +157,6 @@ export function HomeOverview() {
             and report as chips in the strip below when they aren't. */}
         <PrinterSection span={2} printer={data.printer} />
         <VacuumSection span={2} vacuum={data.vacuum} />
-        <TeamTracker span={2} />
 
         <FanSection span={2} fan={data.fan} />
 

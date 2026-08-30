@@ -2,8 +2,9 @@
 
 ## 0.39.0
 
-- Added: sports card on the home overview — for each team you track with the TeamTracker integration it shows the matchup, the kickoff time before the game, the live score with the period and game clock while it's on, and the final score afterwards. The card updates as the game does, with no refresh, and disappears entirely when none of your teams have a game scheduled or when they're on a bye.
+- Added: sports card on the home overview — for each team you track with the TeamTracker integration it draws a broadcast-style score bug: team logos on colour-blocked end caps, both team names and scores facing a dark centre block carrying the network, the period and the game clock, and a strip under each name showing that team's timeouts or the current down when they have the ball. Before kickoff it shows the start time and both records; afterwards, the final. The card updates as the game does, with no refresh. A game appears in the 24 hours before kickoff and clears about six hours after the final, so the card is off the screen the rest of the week.
 - Added: `team_tracker_entities` configuration option, listing the TeamTracker sensors to follow (one per team, e.g. `sensor.teamtracker_fsu`). Set it in the addon's Configuration tab after updating — leave it empty and the card never appears.
+- Removed: the hourly forecast strip from the home overview, in both portrait and landscape. Current conditions still show in the header.
 
 ## 0.38.0
 

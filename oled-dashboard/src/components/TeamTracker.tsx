@@ -240,13 +240,15 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
       transition="opacity 400ms ease"
     >
       {side.logo && !broken ? (
-        <Box
-          as="img"
+        // Plain <img>: Chakra v3's polymorphic Box drops the img-only props.
+        <img
           src={side.logo}
           alt={side.abbr}
-          maxH="5.4vmin"
-          maxW="100%"
-          objectFit="contain"
+          style={{
+            maxHeight: "5.4vmin",
+            maxWidth: "100%",
+            objectFit: "contain",
+          }}
           onError={() => setBroken(true)}
         />
       ) : (

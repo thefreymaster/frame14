@@ -6,6 +6,10 @@
 - Changed: on a wide desktop browser window the thermostats now sit on a single row instead of wrapping onto a second line. The frame's own portrait layout is unchanged.
 - Added: `person_entity` and `camera_entity` configuration options — the person/motion sensor that triggers the card (e.g. `binary_sensor.front_porch_person_detected`) and the camera it shows (e.g. `camera.front_porch_high`). Set them in the addon's Configuration tab after updating; leave either empty and the card never appears.
 
+## 0.39.1
+
+- Fixed: the addon failed to build, so 0.39.0 could not install. Team logos on the sports card are drawn with a plain image element now; the build completes and the card ships as described below.
+
 ## 0.39.0
 
 - Added: sports card on the home overview — for each team you track with the TeamTracker integration it draws a college broadcast score bug. Team logos sit on end caps in the school's colours with a helmet stripe in its second colour, AP rank runs ahead of the name, and both scores face a dark centre block holding the period and game clock. Under each name is that team's remaining timeouts, or the down and distance when they have the ball. While the game is live a win-probability rule runs along the bottom in both schools' colours and the play-by-play reads underneath; scores roll over like a stadium scoreboard as they change. Before kickoff it shows the start time, both records, and the stadium; at the final the losing side dims. The card updates as the game does, with no refresh. A game appears in the 24 hours before kickoff and clears about six hours after the final, so the card is off the screen the rest of the week.

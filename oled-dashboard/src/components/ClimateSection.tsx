@@ -322,13 +322,21 @@ function ClimateModal({
   const [temp, setTemp] = useState(fmtClimateTemp(unit.targetTemp) ?? 72);
   const [fanMode, setFanMode] = useState<string | null>(unit.fanMode);
   const [isClosing, setIsClosing] = useState(false);
+  const isClosingRef = useRef(false);
 
+  // Only a switch to a different thermostat re-opens a modal that is closing.
   useEffect(() => {
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
+    isClosingRef.current = false;
     setIsClosing(false);
+  }, [unit.entity_id]);
+
+  // Incoming HA state must never resurrect a modal mid-exit.
+  useEffect(() => {
+    if (isClosingRef.current) return;
     setMode(normalizeClimateMode(unit.hvacMode ?? unit.state));
     if (!isDraggingRef.current) {
       setTemp(fmtClimateTemp(unit.targetTemp) ?? 72);
@@ -345,7 +353,8 @@ function ClimateModal({
   ]);
 
   function requestClose() {
-    if (isClosing) return;
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
     setIsClosing(true);
     closeTimerRef.current = setTimeout(() => {
       closeTimerRef.current = null;

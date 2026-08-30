@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.40.1
+
+- Fixed: closing the thermostat dialog after changing the temperature sometimes bounced it back open, forcing a second close. It now stays closed.
+
 ## 0.40.0
 
 - Added: front door card — when the porch person sensor trips, a card slides up over whatever the frame is showing, in the bottom-right corner, with the live front-door camera in it. It stays for 30 seconds and then hides itself; tap the X in its corner — or anywhere on the card — to dismiss it sooner. It shows on every screen, including the blank motion-off screen, so you always see who walked up.

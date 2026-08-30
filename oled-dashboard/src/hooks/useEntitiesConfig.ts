@@ -17,6 +17,7 @@ export interface EntitiesConfig {
   mediaPlayer: string;
   printer: string;
   bird: string;
+  teamTracker: string[];
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.38.0"
+version: "0.39.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -99,6 +99,8 @@ options:
   media_player_entity: "media_player.plex_plex_for_apple_tv_apple_tv"
   printer_status_entity: "sensor.a1_03919c442700723_print_status"
   bird_species_entity: "sensor.birdnet_go_front_porch_camera_last_species"
+  team_tracker_entities:
+    - "sensor.teamtracker_fsu"
 schema:
   ha_url: str
   ha_token: str
@@ -133,3 +135,5 @@ schema:
   media_player_entity: str?
   printer_status_entity: str?
   bird_species_entity: str?
+  team_tracker_entities:
+    - str

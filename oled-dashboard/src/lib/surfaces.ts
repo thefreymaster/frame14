@@ -18,6 +18,9 @@ export const CHIP_RADIUS = "0.5vmin";
 export const CHIP_PADDING_X = "1.6vmin";
 export const CHIP_PADDING_Y = "1.2vmin";
 
+/** Space under a card's header row, before its content. Collapses to 0. */
+export const CARD_HEADER_GAP = "1.2vmin";
+
 /** Gap between cards, and the page's own outer padding. */
 export const GRID_GAP = "1.5vmin";
 

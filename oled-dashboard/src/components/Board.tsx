@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { FiChevronDown } from "react-icons/fi";
-import { CARD_PADDING_X, CARD_PADDING_Y, CARD_RADIUS } from "../lib/surfaces";
+import {
+  CARD_HEADER_GAP,
+  CARD_PADDING_X,
+  CARD_PADDING_Y,
+  CARD_RADIUS,
+} from "../lib/surfaces";
 
 const STORAGE_PREFIX = "board-collapsed:";
 const ANIM_MS = 280;
@@ -63,6 +68,9 @@ export const Board = ({
   }, [open, fullKey]);
 
   const showHeader = collapsible || !!title;
+  // A collapsed board pulls its header down onto the content edge, so the gap
+  // goes away with the content rather than leaving the title floating.
+  const headerGap = !collapsible || open;
 
   return (
     <Box
@@ -101,8 +109,8 @@ export const Board = ({
           role={collapsible ? "button" : undefined}
           aria-expanded={collapsible ? open : undefined}
           style={{
-            marginBottom: 0,
-            transition: `margin-bottom ${ANIM_MS}ms ease`,
+            paddingBottom: headerGap ? CARD_HEADER_GAP : 0,
+            transition: `padding-bottom ${ANIM_MS}ms ease`,
           }}
         >
           <Box flex="1" minW="0" color="var(--theme-fg-dim)">

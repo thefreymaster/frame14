@@ -58,13 +58,14 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
   },
   "vacuums": ["vacuum.roborock_q5_pro"],
   "mediaPlayer": "media_player.plex_xxx",
-  "printer": "sensor.a1_xxx_print_status"
+  "printer": "sensor.a1_xxx_print_status",
+  "teamTracker": ["sensor.teamtracker_fsu"]
 }
 ```
 
 The `printer` field is the printer's `print_status` sensor entity ID; all sibling printer sensors (progress, temps, layers, …) are derived from its prefix in `src/lib/printerEntities.ts`. Empty string disables the printer card.
 
-In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` including the optional `energy_lifetime_production`/`energy_lifetime_consumption`, `media_player_entity`, `printer_status_entity` fields in `config.yaml`).
+In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` including the optional `energy_lifetime_production`/`energy_lifetime_consumption`, `media_player_entity`, `printer_status_entity`, `team_tracker_entities` fields in `config.yaml`).
 
 ## Frontend Routes
 
@@ -119,6 +120,7 @@ src/
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
     PrinterSection.tsx            — 3D printer card + click-to-open detail modal (temps, layers, ETA, filament)
+    TeamTracker.tsx               — TeamTracker sports card; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     ClimateSection.tsx            — thermostat cards + modal; modal has Nest-style 120° tick arc slider (drag/tap, commits on pointerup), animated sliding segmented mode pill (HEAT/COOL/FAN/OFF); responsive sizing (vw on phone, vmin on landscape)
     Divider.tsx                   — thin themed divider line

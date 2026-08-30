@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.39.0
+
+- Added: sports card on the home overview — for each team you track with the TeamTracker integration it draws a college broadcast score bug. Team logos sit on end caps in the school's colours with a helmet stripe in its second colour, AP rank runs ahead of the name, and both scores face a dark centre block holding the period and game clock. Under each name is that team's remaining timeouts, or the down and distance when they have the ball. While the game is live a win-probability rule runs along the bottom in both schools' colours and the play-by-play reads underneath; scores roll over like a stadium scoreboard as they change. Before kickoff it shows the start time, both records, and the stadium; at the final the losing side dims. The card updates as the game does, with no refresh. A game appears in the 24 hours before kickoff and clears about six hours after the final, so the card is off the screen the rest of the week.
+- Added: `team_tracker_entities` configuration option, listing the TeamTracker sensors to follow (one per team, e.g. `sensor.teamtracker_fsu`). Set it in the addon's Configuration tab after updating — leave it empty and the card never appears.
+- Removed: the hourly forecast strip from the home overview, in both portrait and landscape. Current conditions still show in the header.
+
 ## 0.38.0
 
 - Fixed: the energy figures were wrong. "Usage today" read far too high — 21.2 kWh at 10am on a day whose real usage was 16.6 — and yesterday's bar on the solar chart claimed 87.6 kWh against a real 52.3. The inverter's own "energy consumption today" sensor drifts and rolls over on the inverter's clock rather than at local midnight; the daily and monthly totals now come from the lifetime meters, so they match what the Home Assistant energy dashboard shows.

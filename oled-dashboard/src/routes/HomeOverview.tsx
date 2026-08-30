@@ -11,6 +11,7 @@ import { FanSection } from "../components/FanSection";
 import { HomeHeader } from "../components/HomeHeader";
 import { CalendarSection } from "../components/CalendarSection";
 import { StatusStrip } from "../components/StatusStrip";
+import { HomeOverviewSkeleton } from "../components/skeletons/HomeOverviewSkeleton";
 import { GRID_GAP } from "../lib/surfaces";
 
 // ── Orientation hook ─────────────────────────────────────────────────────────
@@ -51,17 +52,7 @@ export function HomeOverview() {
   const isLandscape = useIsLandscape();
 
   if (isPending) {
-    return (
-      <Centered>
-        <Text
-          fontSize="3vmin"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.12em"
-        >
-          loading
-        </Text>
-      </Centered>
-    );
+    return <HomeOverviewSkeleton isLandscape={isLandscape} />;
   }
 
   if (isError || !data) {

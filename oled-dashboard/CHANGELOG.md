@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.39.0
+
+- Added: sports card on the home overview — for each team you track with the TeamTracker integration it shows the matchup, the kickoff time before the game, the live score with the period and game clock while it's on, and the final score afterwards. The card updates as the game does, with no refresh, and disappears entirely when none of your teams have a game scheduled or when they're on a bye.
+- Added: `team_tracker_entities` configuration option, listing the TeamTracker sensors to follow (one per team, e.g. `sensor.teamtracker_fsu`). Set it in the addon's Configuration tab after updating — leave it empty and the card never appears.
+
 ## 0.38.0
 
 - Fixed: the energy figures were wrong. "Usage today" read far too high — 21.2 kWh at 10am on a day whose real usage was 16.6 — and yesterday's bar on the solar chart claimed 87.6 kWh against a real 52.3. The inverter's own "energy consumption today" sensor drifts and rolls over on the inverter's clock rather than at local midnight; the daily and monthly totals now come from the lifetime meters, so they match what the Home Assistant energy dashboard shows.

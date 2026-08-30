@@ -7,6 +7,7 @@ import { ClimateSection } from "../components/ClimateSection";
 import { ForecastSection } from "../components/ForecastSection";
 import { PrinterSection } from "../components/PrinterSection";
 import { VacuumSection } from "../components/VacuumSection";
+import { TeamTracker } from "../components/TeamTracker";
 import { FanSection } from "../components/FanSection";
 import { HomeHeader } from "../components/HomeHeader";
 import { CalendarSection } from "../components/CalendarSection";
@@ -104,6 +105,7 @@ export function HomeOverview() {
             <FanSection fan={data.fan} />
             <PrinterSection printer={data.printer} />
             <VacuumSection vacuum={data.vacuum} />
+            <TeamTracker />
           </Box>
 
           {/* Right column — details */}
@@ -166,6 +168,7 @@ export function HomeOverview() {
             and report as chips in the strip below when they aren't. */}
         <PrinterSection span={2} printer={data.printer} />
         <VacuumSection span={2} vacuum={data.vacuum} />
+        <TeamTracker span={2} />
 
         <FanSection span={2} fan={data.fan} />
 

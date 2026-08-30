@@ -42,6 +42,7 @@ function loadEntities() {
       mediaPlayer: options.media_player_entity ?? "",
       printer: options.printer_status_entity ?? "",
       bird: options.bird_species_entity ?? "",
+      teamTracker: options.team_tracker_entities ?? [],
     };
   }
 
@@ -60,6 +61,7 @@ function loadEntities() {
       mediaPlayer: frame14.mediaPlayer ?? "",
       printer: frame14.printer ?? "",
       bird: frame14.bird ?? "",
+      teamTracker: frame14.teamTracker ?? [],
     };
   }
 
@@ -75,6 +77,7 @@ function loadEntities() {
     mediaPlayer: "",
     printer: "",
     bird: "",
+    teamTracker: [],
   };
 }
 

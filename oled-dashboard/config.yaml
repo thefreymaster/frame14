@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.41.0"
+version: "0.42.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -23,6 +23,8 @@ options:
   plex_token: ""
   port: 4000
   screen_type: "oled"
+  assist_pipeline_id: ""
+  assist_speaker: ""
   weather_entity: "weather.openweathermap"
   weather_forecast_entity: "weather.openweathermap_2"
   weather_temperature_entity: "sensor.openweathermap_temperature"
@@ -112,6 +114,8 @@ schema:
   plex_token: password?
   port: int
   screen_type: str
+  assist_pipeline_id: str?
+  assist_speaker: str?
   weather_entity: str
   weather_forecast_entity: str
   weather_temperature_entity: str

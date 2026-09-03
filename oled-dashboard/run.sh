@@ -13,6 +13,12 @@ fi
 if bashio::config.has_value 'plex_token'; then
   export PLEX_TOKEN=$(bashio::config 'plex_token')
 fi
+if bashio::config.has_value 'assist_pipeline_id'; then
+  export ASSIST_PIPELINE_ID=$(bashio::config 'assist_pipeline_id')
+fi
+if bashio::config.has_value 'assist_speaker'; then
+  export ASSIST_SPEAKER=$(bashio::config 'assist_speaker')
+fi
 
 bashio::log.info "Starting OLED Dashboard on port ${PORT}"
 

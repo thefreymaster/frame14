@@ -1,4 +1,4 @@
-const CACHE = "frame14-v2";
+const CACHE = "frame14-v3";
 const PRECACHE = ["/", "/clock", "/blank", "/photos", "/control"];
 
 self.addEventListener("install", (e) => {

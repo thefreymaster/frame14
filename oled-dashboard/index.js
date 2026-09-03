@@ -41,6 +41,7 @@ import vacuumRouter from "./routes/vacuum.js";
 import fanRouter from "./routes/fan.js";
 import marqueeRouter from "./routes/marquee.js";
 import cameraRouter from "./routes/camera.js";
+import assistRouter, { attachAssistSocket } from "./routes/assist.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -117,6 +118,8 @@ io.on("connection", (socket) => {
     if (ok) console.log("[entity:call] sent", payload);
     else console.warn("[entity:call] rejected", payload);
   });
+
+  attachAssistSocket(socket);
 });
 
 app.use(express.json());
@@ -136,6 +139,7 @@ app.use("/api/home/vacuum", vacuumRouter);
 app.use("/api/home/fan", fanRouter);
 app.use("/api/marquee", marqueeRouter);
 app.use("/api/camera", cameraRouter);
+app.use("/api/assist", assistRouter);
 app.use("/api/home", homeRouter);
 app.use("/api/videos", videosRouter);
 app.use("/videos", videosRouter);

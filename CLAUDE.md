@@ -38,6 +38,8 @@ Priority: `/data/options.json` (HA addon) → `.env` file (local dev). See `.env
 | `PLEX_URL` | (Optional) Plex server URL for full-res marquee posters; must be the `plex.direct` hostname (a bare IP fails TLS verification) |
 | `PLEX_TOKEN` | (Optional) Plex token; without it marquee art falls back to HA's 200x300 thumbnail |
 | `PORT` | Express server port (default 4000) |
+| `ASSIST_PIPELINE_ID` | (Optional) Assist pipeline the mic button runs; empty uses HA's preferred pipeline |
+| `ASSIST_SPEAKER` | (Optional) `media_player` to also speak the assist reply on |
 
 ### Entity IDs (`entities.js`)
 Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
@@ -123,6 +125,10 @@ src/
     TeamTracker.tsx               — TeamTracker sports card; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     ClimateSection.tsx            — thermostat cards + modal; modal has Nest-style 120° tick arc slider (drag/tap, commits on pointerup), animated sliding segmented mode pill (HEAT/COOL/FAN/OFF); responsive sizing (vw on phone, vmin on landscape)
+    VoiceAssistButton.tsx         — fixed mic FAB; rendered from Layout so it exists on every view, hidden with the nav
+    VoiceAssistOverlay.tsx        — full-screen voice session UI (listening / thinking / speaking / error)
+    VoiceLevelRing.tsx            — mic level ring; writes transform in a rAF loop, never through React state
+    VoiceStatusBoard.tsx          — read-only voice diagnostics on /control
     Divider.tsx                   — thin themed divider line
     ViewButton.tsx                — styled outline/solid toggle button
     Board.tsx                     — themed panel with optional collapsible header (touch-friendly 48px min); collapse state persists in localStorage under `board-collapsed:<key>`; animated open/close via grid-template-rows; chevron rotates on toggle; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
@@ -137,6 +143,8 @@ src/
     useImmichAlbums.ts            — fetches /api/photos/albums
     useAlbumPhotos.ts             — fetches /api/photos/albums/:id
     usePhotosConfig.ts            — fetches /api/photos/config (pinned album ID)
+    useVoiceAssist.ts             — voice session snapshot + start/cancel (useSyncExternalStore over lib/voiceAssist)
+    useAssistConfig.ts            — fetches /api/assist/config, staleTime: Infinity
     useSocket.ts                  — socket.io-client connection status
     useReady.ts                   — reloads page on socket "ready" event (server restart)
     useRegionLuminance.ts         — samples top-left region of an image to determine dark/light
@@ -149,6 +157,8 @@ src/
     themeMode.ts                  — theme CSS vars, preference storage, socket sync; "auto" uses daylight window 07:00–19:00
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
+    voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
+    voiceAssist.ts                — voice session state machine + socket protocol (module store, like navVisibility)
 ```
 
 ## Backend Structure
@@ -159,7 +169,7 @@ config.js         — reads credentials from /data/options.json or .env
 entities.js       — reads entity IDs from /data/options.json (HA addon) or frame14.json (local dev)
 frame14.json      — local dev entity ID config (not used in HA addon)
 openapi.js        — OpenAPI document + Swagger UI renderer
-ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album/media watchers; exports TRANSIENT_VIEWS (views never persisted as the last route)
+ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album/media watchers; exports TRANSIENT_VIEWS (views never persisted as the last route). Also carries assist_pipeline runs, which are subscriptions rather than one-shot commands — pendingSubscriptions must be checked before the entity_id guard in the event branch, or every pipeline event is dropped
 routes/
   health.js       — GET /api
   docs.js         — GET /api/docs, GET /api/docs/openapi.json
@@ -171,6 +181,7 @@ routes/
   entities.js     — GET /api/entities (serves ENTITIES object to frontend)
   photos.js       — GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail
   marquee.js      — GET /api/marquee/art (full-res poster from Plex via media_content_id when PLEX_URL/PLEX_TOKEN are set; falls back to proxying the media player's entity_picture from the HA state cache)
+  assist.js       — GET /api/assist/config, GET /api/assist/tts/:id, plus attachAssistSocket() for the voice session
   views.js        — GET /api/change/:view (broadcasts change_view via io from app.locals)
   videos.js       — GET /api/videos/list, GET /videos/:file
 ```
@@ -192,6 +203,8 @@ routes/
 - `GET /api/photos/albums/:albumId` — assets in an album (images only)
 - `GET /api/photos/asset/:assetId/thumbnail` — proxies Immich thumbnail (hides API key)
 - `GET /api/marquee/art?v=<cachekey>` — poster art of the configured media player. With `PLEX_URL`/`PLEX_TOKEN` set it renders the poster at 1280x1920 through Plex's transcoder, keyed on the `media_content_id` (Plex ratingKey) from the HA state cache; otherwise it proxies the entity's `entity_picture`. The client never supplies a URL; `v` is ignored and exists only for cache busting
+- `GET /api/assist/config` — resolves the configured Assist pipeline to a name + engines, or reports why voice is unavailable (`unknown_pipeline` / `ha_unreachable`); cached 60s
+- `GET /api/assist/tts/:id` — proxies one reply's Piper audio from HA so the panel plays it from this origin (mixed content otherwise). The id is minted server-side; the client never supplies a URL
 - `GET /api/change/:view` — broadcasts `change_view` to all Socket.IO clients
 - `GET /api/videos/list` — lists `./videos/`
 - `GET /api/docs` — Swagger UI
@@ -203,6 +216,7 @@ routes/
 - HA WebSocket pushes state updates → server fans out to `entity:<id>` rooms
 - `GET /api/change/:view` broadcasts to **all** clients (used by HA automations)
 - `SocketViewListener` navigates on `change_view` but ignores it on `/control`
+- Voice assist: client emits `assist:start` (with ack), `assist:audio` (binary Int16LE PCM), `assist:audio_end`, `assist:cancel`; server emits `assist:event` (the HA pipeline event, with the TTS path swapped for an opaque `audioUrl`) and `assist:error`. One run at a time across all clients
 - `io` instance is passed to route handlers via `app.locals.io`
 
 ## Design Constraints (OLED)

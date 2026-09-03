@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.42.0
+
+- Added: a microphone button on the display. Tap it, speak, and the answer is spoken back through the display's own speaker. Speech recognition, the language model and the voice all run on your own Home Assistant — nothing is sent to a cloud service. Tap the button again, tap outside, or press Escape to cancel a turn at any point.
+- Added: `assist_pipeline_id` configuration option, naming the Assist pipeline the button runs. Leave it empty and your preferred pipeline is used. To pin a specific one, open Settings → Voice assistants in Home Assistant, click the pipeline, and copy the long id out of the browser's address bar.
+- Added: `assist_speaker` configuration option. Leave it empty and the reply is only spoken on the display, which is what you usually want. Set it to a media player (a HomePod, a speaker group) and the reply is played there as well — useful if you want to ask at the kitchen panel and hear the answer in another room.
+- Note: the microphone button only appears when the display is loaded over https, you have allowed microphone access, and the configured pipeline exists. If it is missing, check those three in that order.
+
 ## 0.41.0
 
 - Changed: on the frame and on phones the thermostats now wrap two across — four units read as 2x2 and the dials get the full width of the climate card instead of being squeezed into one row at the top of it. A wide desktop window, where the card is genuinely wide, still puts them all on one row.

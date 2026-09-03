@@ -40,6 +40,13 @@ export const PLEX_TOKEN = get("plex_token", "PLEX_TOKEN", "");
 export const PORT = Number(get("port", "PORT", "4000"));
 export const SCREEN_TYPE = get("screen_type", "SCREEN_TYPE", "oled");
 
+// Assist pipeline the mic button runs. Empty = use whichever pipeline Home
+// Assistant has marked preferred, so the button works before it is configured.
+export const ASSIST_PIPELINE_ID = get("assist_pipeline_id", "ASSIST_PIPELINE_ID", "");
+// Optional speaker to also play the spoken reply on. Empty = play only on the
+// panel itself, which is the normal case.
+export const ASSIST_SPEAKER = get("assist_speaker", "ASSIST_SPEAKER", "");
+
 function loadAddonVersion() {
   try {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));

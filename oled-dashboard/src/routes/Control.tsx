@@ -34,6 +34,7 @@ import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
 import { ControlButton } from "../components/ControlButton";
 import { SectionTitle } from "../components/SectionTitle/SectionTitle";
+import { VoiceStatusBoard } from "../components/VoiceStatusBoard";
 import {
   CARD_RADIUS,
   CHIP_GAP,
@@ -349,6 +350,9 @@ export function Control() {
               </ControlButton>
             </HStack>
           </Board>
+
+          {/* Voice */}
+          <VoiceStatusBoard />
 
           {/* Album */}
           <Board title={<SectionTitle>ALBUM</SectionTitle>}>

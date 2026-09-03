@@ -45,6 +45,11 @@ export const openApiDocument = {
       name: "Energy",
       description: "Solar production and consumption data proxied from Home Assistant.",
     },
+    {
+      name: "Assist",
+      description:
+        "Voice assist. The spoken turn itself runs over Socket.IO (assist:start / assist:audio / assist:audio_end / assist:cancel, with assist:event and assist:error coming back); these endpoints cover configuration and audio playback.",
+    },
   ],
   paths: {
     "/api": {
@@ -362,6 +367,65 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/assist/config": {
+      get: {
+        tags: ["Assist"],
+        operationId: "getAssistConfig",
+        summary: "Resolve the configured Assist pipeline",
+        description:
+          "Resolves the `assist_pipeline_id` option (or Home Assistant's preferred pipeline when it is blank) to a pipeline name and its speech-to-text, conversation and text-to-speech engines. Returns `enabled: false` with an `error` of `unknown_pipeline` or `ha_unreachable` when the mic button should stay hidden. Cached for 60 seconds.",
+        responses: {
+          200: {
+            description: "Resolved pipeline, or the reason voice is unavailable.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AssistConfigResponse" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/assist/tts/{id}": {
+      get: {
+        tags: ["Assist"],
+        operationId: "getAssistTts",
+        summary: "Stream the spoken reply for a completed turn",
+        description:
+          "Proxies the Piper audio for one reply from Home Assistant so the panel plays it from this addon's own origin — fetching it from Home Assistant directly would be blocked as mixed content. The id is minted server-side when the pipeline reports its audio; the client never supplies a URL. Ids expire two minutes after they are issued.",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+            description: "Opaque id from the `tts-end` assist event.",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Audio stream.",
+            content: { "audio/mpeg": { schema: { type: "string", format: "binary" } } },
+          },
+          404: {
+            description: "Unknown or expired audio id.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+          502: {
+            description: "Home Assistant refused the audio request.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+        },
+      },
+    },
     "/api/circuits": {
       get: {
         tags: ["Energy"],
@@ -593,6 +657,48 @@ export const openApiDocument = {
           data: {
             type: "array",
             items: { $ref: "#/components/schemas/NivoPoint" },
+          },
+        },
+      },
+      AssistConfigResponse: {
+        type: "object",
+        required: ["enabled"],
+        properties: {
+          enabled: { type: "boolean", example: true },
+          error: {
+            type: "string",
+            enum: ["unknown_pipeline", "ha_unreachable"],
+            description: "Present only when enabled is false.",
+          },
+          pipelineId: { type: "string", example: "01kpppasx45waqrbmh7syb8vhr" },
+          name: { type: "string", example: "Jarvis" },
+          language: { type: "string", example: "en" },
+          sttEngine: { type: "string", example: "stt.faster_whisper" },
+          ttsEngine: { type: "string", example: "tts.piper" },
+          conversationEngine: { type: "string", example: "conversation.jarvis" },
+          usingPreferred: {
+            type: "boolean",
+            description: "True when assist_pipeline_id is blank and HA's preferred pipeline was used.",
+          },
+          speaker: {
+            type: "string",
+            nullable: true,
+            description: "Optional media_player the reply is also played on.",
+          },
+          configuredId: {
+            type: "string",
+            description: "The unresolved option value, when it matches no pipeline.",
+          },
+          available: {
+            type: "array",
+            description: "Pipelines to choose from, when the configured id is unknown.",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+              },
+            },
           },
         },
       },

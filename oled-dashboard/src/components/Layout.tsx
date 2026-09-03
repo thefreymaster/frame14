@@ -4,9 +4,14 @@ import { SocketViewListener } from "./SocketViewListener";
 import { PageTransition } from "./PageTransition";
 import { LandscapeNav } from "./LandscapeNav";
 import { DoorbellCard } from "./DoorbellCard";
+import { VoiceAssistButton } from "./VoiceAssistButton";
+import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useReady } from "../hooks/useReady";
+import { useVoiceAssist } from "../hooks/useVoiceAssist";
+import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
+import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
 
 export function Layout() {
@@ -21,6 +26,12 @@ export function Layout() {
   const showNav = !isBlank && navVisible;
   const isController = getDeviceMode() === "controller";
   const scrollable = isControl || isLights || isHome || isController;
+
+  const voice = useVoiceAssist();
+  const { data: assistConfig } = useAssistConfig();
+  // Hidden when there is no microphone, no working pipeline, or the nav is
+  // hidden — which keeps /blank black and keeps it off photos and posters.
+  const showVoice = showNav && micAvailable() && assistConfig?.enabled === true;
 
   const content = (
     <PageTransition key={location.pathname} grow={scrollable}>
@@ -59,6 +70,18 @@ export function Layout() {
       </HStack>
 
       {!isControl && <DoorbellCard />}
+
+      {showVoice && (
+        <VoiceAssistButton
+          onTap={voice.state === "idle" ? voice.start : voice.cancel}
+          state={voice.state}
+          navVisible={showNav}
+        />
+      )}
+
+      {voice.state !== "idle" && (
+        <VoiceAssistOverlay snapshot={voice} onDismiss={voice.cancel} />
+      )}
     </>
   );
 }

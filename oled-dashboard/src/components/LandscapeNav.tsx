@@ -9,6 +9,8 @@ import {
   IoImages,
   IoSettingsOutline,
   IoSettings,
+  IoAmericanFootballOutline,
+  IoAmericanFootball,
 } from "react-icons/io5";
 
 import {
@@ -20,6 +22,7 @@ import {
 import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
+import { useLiveGame } from "../hooks/useLiveGame";
 import { PiSolarRoof } from "react-icons/pi";
 
 type NavItem = {
@@ -83,6 +86,19 @@ const NAV_ITEMS: NavItem[] = [
   // },
 ];
 
+/**
+ * Spliced in only while a tracked team is playing — the one nav entry that
+ * comes and goes. Deliberately not LOCAL_ONLY: tapping it should move every
+ * panel to the game, and "football" is a TRANSIENT_VIEW server-side so it is
+ * never remembered as the route to wake up on.
+ */
+const FOOTBALL_ITEM: NavItem = {
+  path: "/football",
+  label: "Football",
+  icon: IoAmericanFootballOutline,
+  activeIcon: IoAmericanFootball,
+};
+
 const LOCAL_ONLY_PATHS = new Set(["/control", "/lights", "/radar", "/timer"]);
 
 const BOTTOM_NAV_ITEMS: NavItem[] = [
@@ -103,6 +119,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState(location.pathname);
   const isFrame = getDeviceMode() === "frame";
+  const { games } = useLiveGame();
 
   useEffect(() => {
     setActiveView(location.pathname);
@@ -192,7 +209,10 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
     );
   }
 
-  const visibleNavItems = NAV_ITEMS.filter((i) => isFrame || !i.frameOnly);
+  const visibleNavItems = [
+    ...NAV_ITEMS.filter((i) => isFrame || !i.frameOnly),
+    ...(games.length > 0 ? [FOOTBALL_ITEM] : []),
+  ];
   const allItems = [...visibleNavItems, ...BOTTOM_NAV_ITEMS];
   const portraitItems = allItems.filter((i) => isFrame || !i.portraitHidden);
 

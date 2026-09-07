@@ -35,6 +35,14 @@ const MEDIA_STOP_STATES = new Set([
 // so wait before giving up on playback and going back home.
 const MEDIA_STOP_GRACE_MS = 10_000;
 
+// Football: route the frame to /football while a tracked team is playing.
+// TeamTracker publishes one sensor per team, so this is a set, not one id.
+const FOOTBALL_ENTITIES = new Set(ENTITIES.teamTracker ?? []);
+const FOOTBALL_LIVE_STATE = "IN";
+// Long enough to read the final score, short enough not to leave a scoreboard
+// sitting still on an OLED panel for the rest of the evening.
+const FOOTBALL_FINAL_HOLD_MS = 5 * 60 * 1000;
+
 /**
  * Views that must never be persisted as the "last route".
  *
@@ -42,7 +50,7 @@ const MEDIA_STOP_GRACE_MS = 10_000;
  * wake. Persisting a transient view would strand the frame there long after the
  * reason for showing it is gone.
  */
-export const TRANSIENT_VIEWS = new Set(["blank", "marquee"]);
+export const TRANSIENT_VIEWS = new Set(["blank", "marquee", "football"]);
 
 const GET_STATES_ID = 1;
 const SUBSCRIBE_EVENTS_ID = 2;
@@ -361,6 +369,52 @@ export function startHaSocket(io) {
     }
   }
 
+  let footballEndTimer = null;
+
+  function clearFootballEndTimer() {
+    if (footballEndTimer) {
+      clearTimeout(footballEndTimer);
+      footballEndTimer = null;
+    }
+  }
+
+  /** True while any tracked team's sensor says the ball is in play. */
+  function anyGameLive() {
+    for (const entityId of FOOTBALL_ENTITIES) {
+      if (stateCache.get(entityId)?.state === FOOTBALL_LIVE_STATE) return true;
+    }
+    return false;
+  }
+
+  function onFootballState() {
+    if (anyGameLive()) {
+      clearFootballEndTimer();
+      if (io.currentView !== "football") {
+        console.log("[ha-socket] game kicked off → football");
+        broadcastView("football");
+      }
+      return;
+    }
+
+    if (io.currentView !== "football") return;
+
+    clearFootballEndTimer();
+    footballEndTimer = setTimeout(() => {
+      footballEndTimer = null;
+      // Re-check: the frame may have been navigated away, or another team may
+      // have kicked off, in the meantime.
+      if (io.currentView !== "football" || anyGameLive()) return;
+      // A game that interrupted a movie has to give it back. The media watcher
+      // only sends the frame home from the marquee, so if we went to "home"
+      // here the movie would keep playing with nothing showing it.
+      const playing =
+        MEDIA_ENTITY && getState(MEDIA_ENTITY)?.state === "playing";
+      const next = playing ? "marquee" : "home";
+      console.log(`[ha-socket] game over → ${next}`);
+      broadcastView(next);
+    }, FOOTBALL_FINAL_HOLD_MS);
+  }
+
   // Dispatch cache updates to Socket.IO rooms + run local side effects.
   function publishState(entityId, newState, prevState) {
     if (!newState) return;
@@ -378,6 +432,13 @@ export function startHaSocket(io) {
       const prev = prevState?.state;
       const next = newState.state;
       if (prev !== next) onMediaState(next);
+      return;
+    }
+
+    if (FOOTBALL_ENTITIES.has(entityId)) {
+      // Attributes churn every few seconds during a game; only the phase
+      // (PRE/IN/POST) can start or end the view.
+      if (prevState?.state !== newState.state) onFootballState();
       return;
     }
 
@@ -443,6 +504,11 @@ export function startHaSocket(io) {
         console.log(
           `[ha-socket] cache primed with ${stateCache.size} entities`,
         );
+        // Priming writes the cache directly rather than through publishState,
+        // so no watcher has seen these. That matters for football: a live game
+        // holds "IN" while only its attributes change, so the edge test below
+        // would never fire and a restart at kickoff would miss the whole game.
+        onFootballState();
         return;
       }
 

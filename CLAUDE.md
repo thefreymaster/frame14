@@ -82,6 +82,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/radar` | `Radar` | Radar view — frame-only nav item |
 | `/timer` | `Timer` | Timer — frame-only nav item |
 | `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed |
+| `/football` | `Football` | Full-screen score bug + game detail for a live TeamTracker game; auto-routed on kickoff, nav item appears only in the ±30min window |
 | `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
 ## Component Rules
@@ -106,6 +107,7 @@ src/
     Radar.tsx                     — radar view (frame-only)
     Timer.tsx                     — timer (frame-only)
     Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; hides nav on mount (local only), eye button restores it
+    Football.tsx                  — live game page; renders every game in the route window, "no game in session" when empty (auto-routed, so it never decides whether to show itself)
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
@@ -122,7 +124,9 @@ src/
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
     PrinterSection.tsx            — 3D printer card + click-to-open detail modal (temps, layers, ETA, filament)
-    TeamTracker.tsx               — TeamTracker sports card; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND
+    TeamTracker.tsx               — TeamTracker sports card; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND. Card-sized rendering only — the game model is in `src/lib/teamTracker.ts`
+    FootballScoreboard.tsx        — the /football score bug at scoreboard scale; same anatomy as TeamTracker's chip, its own vmin sizes (the card's are tuned for a bento tile)
+    FootballDetail.tsx            — band under the scoreboard: full down & distance, last play, network/venue, records. Dim by design — it sits still for three hours
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     ClimateSection.tsx            — thermostat cards + modal; modal has Nest-style 120° tick arc slider (drag/tap, commits on pointerup), animated sliding segmented mode pill (HEAT/COOL/FAN/OFF); responsive sizing (vw on phone, vmin on landscape)
     VoiceAssistButton.tsx         — fixed mic FAB; rendered from Layout so it exists on every view, hidden with the nav
@@ -137,6 +141,7 @@ src/
     useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s
     useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
     useEntity.ts                  — subscribes to a single HA entity via Socket.IO room
+    useLiveGame.ts                — tracked games worth showing now; `useGames(window)` takes the window predicate, `useLiveGame()` is the route's tighter one. Ticks every 60s so windows open/close on the clock
     useEnergy.ts                  — fetches /api/energy, refetches every 5min
     useThemeMode.ts               — reads/writes theme preference (auto/bright/dark), syncs via socket
     useScreenType.ts              — fetches /api for screenType field ("oled" | "lcd")
@@ -156,6 +161,7 @@ src/
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — theme CSS vars, preference storage, socket sync; "auto" uses daylight window 07:00–19:00
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation
+    teamTracker.ts                — the TeamTracker game model shared by the home card, /football and its nav item: attribute types, `sides()` (away-first split), `stateLabel()`, and the two visibility windows — `inWindow` (card: 24h pre / 6h post) and `inRouteWindow` (route: ±30min)
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
     voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
     voiceAssist.ts                — voice session state machine + socket protocol (module store, like navVisibility)
@@ -169,7 +175,7 @@ config.js         — reads credentials from /data/options.json or .env
 entities.js       — reads entity IDs from /data/options.json (HA addon) or frame14.json (local dev)
 frame14.json      — local dev entity ID config (not used in HA addon)
 openapi.js        — OpenAPI document + Swagger UI renderer
-ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album/media watchers; exports TRANSIENT_VIEWS (views never persisted as the last route). Also carries assist_pipeline runs, which are subscriptions rather than one-shot commands — pendingSubscriptions must be checked before the entity_id guard in the event branch, or every pipeline event is dropped
+ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album/media/football watchers; exports TRANSIENT_VIEWS (views never persisted as the last route). The football watcher routes every panel to /football on the flip to `IN` and back 5min after the last game leaves it (to /marquee instead if Plex is still playing). It also runs once after the cache prime: priming bypasses publishState, and a live game holds `IN` while only attributes change, so a restart at kickoff would otherwise miss the whole game. Also carries assist_pipeline runs, which are subscriptions rather than one-shot commands — pendingSubscriptions must be checked before the entity_id guard in the event branch, or every pipeline event is dropped
 routes/
   health.js       — GET /api
   docs.js         — GET /api/docs, GET /api/docs/openapi.json

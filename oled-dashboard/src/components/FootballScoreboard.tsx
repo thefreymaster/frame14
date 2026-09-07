@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Box, HStack, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
+import { IoAmericanFootball } from "react-icons/io5";
 import { CARD_RADIUS } from "../lib/surfaces";
-import { sides, stateLabel, type Game, type Side } from "../lib/teamTracker";
+import {
+  sides,
+  stateLabel,
+  text,
+  type Game,
+  type Side,
+} from "../lib/teamTracker";
 import { FootballDetail } from "./FootballDetail";
 
 /**
@@ -53,7 +60,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
           src={side.logo}
           alt={side.abbr}
           style={{
-            maxHeight: "15vmin",
+            maxHeight: "16vmin",
             maxWidth: "100%",
             objectFit: "contain",
           }}
@@ -176,7 +183,7 @@ function Score({ side }: { side: Side }) {
       flexShrink={0}
       css={{
         // Portrait has a full row per team, so the score can be much bigger.
-        fontSize: "18vmin",
+        fontSize: "13vmin",
         "@media (orientation: landscape)": { fontSize: "13vmin" },
       }}
     >
@@ -193,7 +200,19 @@ function Score({ side }: { side: Side }) {
  * in landscape — there the home side mirrors so both teams face the clock. In
  * portrait both rows read left to right, like a scoreboard.
  */
-function TeamRow({ side, edge }: { side: Side; edge: "left" | "right" }) {
+function TeamRow({
+  side,
+  edge,
+  venue,
+  live,
+}: {
+  side: Side;
+  edge: "left" | "right";
+  /** HOME or AWAY — the sensor knows, and the score bug never said. */
+  venue: string;
+  /** Down and timeouts only mean anything once the ball is in play. */
+  live: boolean;
+}) {
   const mirrored = edge === "right";
 
   return (
@@ -225,7 +244,7 @@ function TeamRow({ side, edge }: { side: Side; edge: "left" | "right" }) {
         align="center"
         gap="2.4vmin"
         px="2.6vmin"
-        py="3vmin"
+        py="4vmin"
         css={{
           flexDirection: "row",
           "@media (orientation: landscape)": {
@@ -255,38 +274,61 @@ function TeamRow({ side, edge }: { side: Side; edge: "left" | "right" }) {
             whiteSpace="nowrap"
             textOverflow="ellipsis"
             css={{
-              fontSize: "5.5vmin",
+              fontSize: "4.2vmin",
               textAlign: "left",
               "@media (orientation: landscape)": {
-                fontSize: "4.2vmin",
+                fontSize: "3.2vmin",
                 textAlign: mirrored ? "right" : "left",
               },
             }}
           >
+            {live && side.down && (
+              <Box
+                as="span"
+                display="inline-flex"
+                verticalAlign="-0.4vmin"
+                mr="1.4vmin"
+                color={side.trim}
+                fontSize="3.4vmin"
+                aria-label="has possession"
+              >
+                <IoAmericanFootball />
+              </Box>
+            )}
             {side.rank && <Rank side={side} />}
             {side.name}
           </Text>
-          <StatusBar side={side} />
-        </VStack>
-
-        {side.score != null ? (
-          <Score side={side} />
-        ) : (
-          side.record && (
+          <HStack gap="1.6vmin" align="center" width="100%" minW="0">
             <Text
+              fontWeight="500"
               color="var(--theme-fg-faint)"
-              letterSpacing="0.04em"
-              flexShrink={0}
+              letterSpacing="0.12em"
               whiteSpace="nowrap"
+              flexShrink={0}
               css={{
-                fontSize: "5vmin",
-                "@media (orientation: landscape)": { fontSize: "4vmin" },
+                fontSize: "2.4vmin",
+                "@media (orientation: landscape)": { fontSize: "1.9vmin" },
               }}
             >
-              {side.record}
+              {venue}
+              {side.record ? `  ·  ${side.record}` : ""}
             </Text>
-          )
-        )}
+            {live && (
+              <Box
+                flex="1"
+                minW="0"
+                css={{
+                  maxWidth: "22vmin",
+                  "@media (orientation: landscape)": { maxWidth: "11vmin" },
+                }}
+              >
+                <StatusBar side={side} />
+              </Box>
+            )}
+          </HStack>
+        </VStack>
+
+        {side.score != null && <Score side={side} />}
       </HStack>
     </HStack>
   );
@@ -307,7 +349,7 @@ function CenterBlock({ game }: { game: Game }) {
         padding: "2vmin 3vmin",
         "@media (orientation: landscape)": {
           width: "auto",
-          minWidth: "26vmin",
+          minWidth: "20vmin",
           alignSelf: "stretch",
         },
       }}
@@ -345,33 +387,116 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
   const awayPct = Math.round((awayProb / total) * 100);
 
   return (
-    <Box position="relative" height="1.6vmin" width="100%" flexShrink={0}>
-      <HStack gap="0" height="100%" width="100%">
-        <Box
-          width={`${awayPct}%`}
-          height="100%"
-          bg={away.color}
-          transition="width 900ms ease"
-        />
-        <Box flex="1" height="100%" bg={home.color} />
+    <VStack
+      align="stretch"
+      gap="1vmin"
+      width="100%"
+      flexShrink={0}
+      bg="var(--theme-surface-1)"
+      px="2.6vmin"
+      py="2vmin"
+    >
+      <HStack justify="space-between" align="baseline">
+        <Text
+          fontSize="2.6vmin"
+          fontWeight="600"
+          color={away.color === "#3A3A42" ? "var(--theme-fg-dim)" : away.trim}
+        >
+          {awayPct}%
+        </Text>
+        <Text
+          fontSize="2vmin"
+          color="var(--theme-fg-faint)"
+          letterSpacing="0.14em"
+        >
+          WIN PROBABILITY
+        </Text>
+        <Text
+          fontSize="2.6vmin"
+          fontWeight="600"
+          color={home.color === "#3A3A42" ? "var(--theme-fg-dim)" : home.trim}
+        >
+          {100 - awayPct}%
+        </Text>
       </HStack>
-      {/* Two schools can wear nearly the same red, so mark the split itself. */}
       <Box
-        position="absolute"
-        top="0"
-        bottom="0"
-        left={`${awayPct}%`}
-        width="0.8vmin"
-        ml="-0.4vmin"
-        bg="var(--theme-bg)"
-        transition="left 900ms ease"
-      />
-    </Box>
+        position="relative"
+        height="1.4vmin"
+        width="100%"
+        borderRadius="0.7vmin"
+        overflow="hidden"
+      >
+        <HStack gap="0" height="100%" width="100%">
+          <Box
+            width={`${awayPct}%`}
+            height="100%"
+            bg={away.color}
+            transition="width 900ms ease"
+          />
+          <Box flex="1" height="100%" bg={home.color} />
+        </HStack>
+        {/* Two schools can wear nearly the same red, so mark the split itself. */}
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          left={`${awayPct}%`}
+          width="0.8vmin"
+          ml="-0.4vmin"
+          bg="var(--theme-bg)"
+          transition="left 900ms ease"
+        />
+      </Box>
+    </VStack>
+  );
+}
+
+/** Where and on what — the frame at the top of the card. */
+function MetaStrip({ game }: { game: Game }) {
+  const a = game.attributes;
+  const left = [text(a.league) ?? text(a.sport), text(a.tv_network)]
+    .filter(Boolean)
+    .join("   ·   ");
+  const right = text(a.venue) ?? text(a.location);
+  if (!left && !right) return null;
+
+  return (
+    <HStack
+      justify="space-between"
+      align="center"
+      gap="2vmin"
+      flexShrink={0}
+      bg="var(--theme-surface-1)"
+      px="2.6vmin"
+      py="1.8vmin"
+    >
+      <Text
+        fontSize="2.2vmin"
+        fontWeight="500"
+        color="var(--theme-fg-dim)"
+        letterSpacing="0.16em"
+        whiteSpace="nowrap"
+        textTransform="uppercase"
+      >
+        {left}
+      </Text>
+      <Text
+        fontSize="2.2vmin"
+        color="var(--theme-fg-faint)"
+        letterSpacing="0.1em"
+        overflow="hidden"
+        whiteSpace="nowrap"
+        textOverflow="ellipsis"
+      >
+        {right}
+      </Text>
+    </HStack>
   );
 }
 
 export function FootballScoreboard({ game }: { game: Game }) {
   const [away, home] = sides(game);
+  const live = game.state === "IN";
 
   return (
     <VStack
@@ -387,6 +512,8 @@ export function FootballScoreboard({ game }: { game: Game }) {
       overflow="hidden"
       bg="var(--theme-surface-1)"
     >
+      <MetaStrip game={game} />
+
       {/* Portrait stacks the two teams with the clock between them; landscape
           lays them out across one broadcast row. */}
       <Box
@@ -401,14 +528,14 @@ export function FootballScoreboard({ game }: { game: Game }) {
           },
         }}
       >
-        <TeamRow side={away} edge="left" />
+        <TeamRow side={away} edge="left" venue="AWAY" live={live} />
         <CenterBlock game={game} />
-        <TeamRow side={home} edge="right" />
+        <TeamRow side={home} edge="right" venue="HOME" live={live} />
       </Box>
 
       {game.state === "IN" && <WinBar away={away} home={home} />}
 
-      <FootballDetail game={game} away={away} home={home} />
+      <FootballDetail game={game} />
     </VStack>
   );
 }

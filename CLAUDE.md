@@ -242,6 +242,26 @@ The height is the axis with room to spare, which cuts the other way too: do not
 huge static saturated block — the burn-in case below. Size content-driven blocks
 to their content and centre them.
 
+**Look at the view before calling it done.** Layout bugs here are not subtle and
+not catchable by reading the JSX — a horizontal arrangement that reads fine in
+source is unusable at 1600x2400. Render it headlessly:
+
+```bash
+npx @puppeteer/browsers install chrome-headless-shell@stable
+# Ubuntu needs the runtime libs and at least one font, or Chrome either refuses
+# to start or renders every glyph blank — text silently disappears from the
+# screenshot while the boxes still draw. Without root, `apt-get download` +
+# `dpkg -x` into a scratch dir with LD_LIBRARY_PATH set works:
+#   libatk1.0-0t64 libatk-bridge2.0-0t64 libxcomposite1 libxdamage1 libxfixes3
+#   libxrandr2 libgbm1 libasound2t64 libatspi2.0-0t64 libxkbcommon0 libpango-1.0-0
+#   libcairo2 libcups2t64 libnspr4 libnss3 libdrm2 libxrender1 libxi6 libxres1
+#   fonts-dejavu-core  (copy the .ttf files to ~/.local/share/fonts)
+```
+
+Then drive the real server against a stub Home Assistant WebSocket (see
+`src/CLAUDE.md` for the shape) and screenshot at `1600x2400`, plus `1920x1080`
+to confirm landscape still works.
+
 - Background is always `#000000`
 - Avoid static bright elements — they cause burn-in
 - No dividers or decorative borders

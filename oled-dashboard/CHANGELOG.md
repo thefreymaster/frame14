@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.44.0
+
+- Added: the full-screen game now shows the league and network, the stadium, which side is home and which is away, both records, and — while the game is live — each team's win probability as a percentage next to the bar, not just a coloured sliver.
+- Added: a small football against whichever team has the ball, so possession is readable at a glance rather than inferred from where the down and distance sits.
+- Fixed: long team names were cut off with an ellipsis ("FLORIDA ST…") because the score was crowding them out. The score is slightly smaller and names now fit.
+- Fixed: before kickoff the page showed each team's record twice, and drew three timeout markers for a game that had not started. Timeouts and possession now appear only once the ball is in play, and the record appears once.
+- Fixed: the winning team's possession marker stayed on screen after the final whistle.
+- Changed: the stadium and network moved from the bottom of the page to a strip across the top, leaving the footer for the situation and the last play.
+
 ## 0.43.3
 
 - Added: a Football button in the Views grid on the Settings/remote screen, so you can put the display on the game from your phone. It is always listed there, unlike the Football tab in the navigation bar, which still only appears on the day of a game.

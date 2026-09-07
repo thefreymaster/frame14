@@ -119,3 +119,13 @@ being built:
 3. Start with the sensor already `IN` and send **no** state change — the
    post-prime path must still route.
 4. Media player `playing` — the return goes to `marquee`, not `home`.
+
+Give the stub realistic attributes — colours, ranks, records, timeouts, win
+probabilities, `down_distance_text`, `possession` matching `team_id`,
+`last_play`, `tv_network`, `venue`. A stub with only abbreviations renders a
+page that looks broken for reasons that have nothing to do with the code.
+
+Screenshot all three phases: `PRE` (preview — no scores, no timeouts, no
+possession), `IN` (full scoreboard), `POST` (`FINAL`, loser dimmed, and no
+possession marker — ESPN leaves `down_distance_text` on the sensor after the
+whistle, so it has to be gated on the state).

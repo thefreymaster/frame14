@@ -227,6 +227,21 @@ routes/
 
 ## Design Constraints (OLED)
 
+**The frame is a portrait panel — 1600x2400.** Design every view portrait-first
+and check it at that aspect before calling it done. A layout that reads well in
+a landscape browser window can be unusable on the device: a horizontal row of
+five elements that looks like a broadcast graphic on a desktop gets crushed into
+1600px of width, because `vmin` is the *width* in portrait, so anything sized in
+`vmin` that sits side by side is competing for the short axis. Prefer stacking
+down the long axis, and use `@media (orientation: portrait|landscape)` to
+re-flow rather than shipping one arrangement for both (`LandscapeNav`,
+`PageShell` and `FootballScoreboard` all do this).
+
+The height is the axis with room to spare, which cuts the other way too: do not
+`flex: 1` a coloured element down the full 2400px just to fill it. That paints a
+huge static saturated block — the burn-in case below. Size content-driven blocks
+to their content and centre them.
+
 - Background is always `#000000`
 - Avoid static bright elements — they cause burn-in
 - No dividers or decorative borders

@@ -1,13 +1,5 @@
 # Changelog
 
-## 0.43.0
-
-- Added: a full-screen scoreboard for the teams you track. When one of them kicks off, the display switches itself to it — team colours and helmets filling the sides, the score at scoreboard size, the quarter and clock between them, and ESPN's win probability as a bar along the bottom that slides as the game swings.
-- Added: below the score, the things the small card on the home screen has no room for — the down and distance including the yard line, ESPN's description of the last play, the network showing it, the stadium, and both records.
-- Added: a Football tab, which appears half an hour before kickoff and disappears about half an hour after the final. It is only there when there is a game, so tap it any time during one to get back to the scoreboard.
-- Changed: about five minutes after the final whistle the display returns to Home on its own. If a movie was playing on Plex when the game started, it goes back to the poster instead.
-- Note: no new configuration. This uses the `team_tracker_entities` you already have set; if that list is empty, nothing about the display changes.
-
 ## 0.42.0
 
 - Added: a microphone button on the display. Tap it, speak, and the answer is spoken back through the display's own speaker. Speech recognition, the language model and the voice all run on your own Home Assistant — nothing is sent to a cloud service. Tap the button again, tap outside, or press Escape to cancel a turn at any point.

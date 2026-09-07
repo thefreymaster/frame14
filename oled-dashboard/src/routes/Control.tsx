@@ -11,6 +11,8 @@ import {
   IoEyeOutline,
   IoEyeOffOutline,
   IoOptionsOutline,
+  IoAmericanFootballOutline,
+  IoAmericanFootball,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -77,6 +79,15 @@ const VIEWS: {
   },
   { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar },
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
+  // Always listed here, unlike the nav bar's tab which only appears on game
+  // day — the remote is where you go to put the frame on something, so the
+  // button should be there whether or not this phone thinks a game is on.
+  {
+    path: "/football",
+    label: "Football",
+    icon: IoAmericanFootballOutline,
+    activeIcon: IoAmericanFootball,
+  },
 ];
 
 const LOCAL_ONLY_PATHS = new Set(["/lights", "/radar", "/timer"]);

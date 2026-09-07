@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.43.3
+
+- Added: a Football button in the Views grid on the Settings/remote screen, so you can put the display on the game from your phone. It is always listed there, unlike the Football tab in the navigation bar, which still only appears on the day of a game.
+
 ## 0.43.2
 
 - Fixed: the full-screen game was laid out sideways on the display. The teams, score and clock sat in one row across the screen — a shape that suits a wide TV graphic, not a tall panel — so on the frame the team colours became narrow vertical stripes and the names and scores were squeezed into a sliver in the middle. The two teams now stack, one per full-width row, with the clock on a band between them, which is how a scoreboard reads anyway. A wide browser window still gets the side-by-side version.

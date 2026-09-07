@@ -1,23 +1,19 @@
 import { useState } from "react";
 import { Box, HStack, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
-import { IoTrophyOutline } from "react-icons/io5";
-import { useGames } from "../hooks/useLiveGame";
-import { SectionTitle } from "./SectionTitle/SectionTitle";
-import { Board } from "./Board";
-import { CHIP_GAP } from "../lib/surfaces";
-import { inWindow, sides, stateLabel, type Game, type Side } from "../lib/teamTracker";
+import { CARD_RADIUS } from "../lib/surfaces";
+import { sides, stateLabel, type Game, type Side } from "../lib/teamTracker";
+import { FootballDetail } from "./FootballDetail";
 
 /**
- * The home screen's sports chip: one score bug per tracked team.
+ * The /football page's score bug — the same anatomy as the home card's chip
+ * (colour caps, names facing a dark centre block, win probability along the
+ * bottom) drawn at the scale of a television scoreboard, so it reads from the
+ * other side of the room.
  *
- * It is drawn as a college broadcast score bug — helmet-striped colour caps at
- * the ends, AP rank ahead of each name, both scores facing a dark centre block
- * holding the period and clock, and — while the game is live — ESPN's win
- * probability as a tug-of-war rule along the bottom.
- *
- * The game model itself (what a game is, when it's worth showing, which side is
- * away) lives in lib/teamTracker.ts, shared with the /football route.
+ * The card's sizes are tuned for a tile inside the home bento and are far too
+ * small here, which is why this is its own component rather than a prop on
+ * that one. The game model it draws is shared: lib/teamTracker.ts.
  */
 
 /** Colour cap with a helmet stripe of the school's second colour. */
@@ -28,13 +24,13 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
     <Box
       position="relative"
       flexShrink={0}
-      width="8vmin"
+      width="20vmin"
       alignSelf="stretch"
       bg={side.color}
       display="flex"
       alignItems="center"
       justifyContent="center"
-      px="1vmin"
+      px="2vmin"
       opacity={side.lost ? 0.45 : 1}
       transition="opacity 400ms ease"
     >
@@ -44,7 +40,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
           src={side.logo}
           alt={side.abbr}
           style={{
-            maxHeight: "5.4vmin",
+            maxHeight: "14vmin",
             maxWidth: "100%",
             objectFit: "contain",
           }}
@@ -52,7 +48,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
         />
       ) : (
         <Text
-          fontSize="2.4vmin"
+          fontSize="6vmin"
           fontWeight="700"
           color="#FFFFFF"
           letterSpacing="0.04em"
@@ -64,7 +60,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
         position="absolute"
         top="0"
         bottom="0"
-        width="0.5vmin"
+        width="1.2vmin"
         bg={side.trim}
         {...(edge === "left" ? { right: 0 } : { left: 0 })}
       />
@@ -77,12 +73,12 @@ function Rank({ side }: { side: Side }) {
   return (
     <Text
       as="span"
-      fontSize="1.6vmin"
+      fontSize="2.6vmin"
       fontWeight="700"
       color={side.trim}
       letterSpacing="0.02em"
-      mr="0.6vmin"
-      verticalAlign="0.3vmin"
+      mr="1vmin"
+      verticalAlign="0.6vmin"
     >
       #{side.rank}
     </Text>
@@ -96,13 +92,18 @@ function Rank({ side }: { side: Side }) {
 function StatusBar({ side }: { side: Side }) {
   if (side.down) {
     return (
-      <Box bg={side.color} borderRadius="0.2vmin" px="0.8vmin" py="0.2vmin">
+      <Box
+        alignSelf="flex-start"
+        bg={side.color}
+        borderRadius="0.4vmin"
+        px="1.6vmin"
+        py="0.5vmin"
+      >
         <Text
-          fontSize="1.5vmin"
+          fontSize="2.4vmin"
           fontWeight="600"
           color="#FFFFFF"
           letterSpacing="0.08em"
-          textAlign="center"
           whiteSpace="nowrap"
         >
           {side.down}
@@ -113,13 +114,13 @@ function StatusBar({ side }: { side: Side }) {
 
   if (side.timeouts != null) {
     return (
-      <HStack gap="0.4vmin" height="0.8vmin">
+      <HStack gap="0.8vmin" height="1.4vmin">
         {[0, 1, 2].map((i) => (
           <Box
             key={i}
             flex="1"
             height="100%"
-            borderRadius="0.2vmin"
+            borderRadius="0.4vmin"
             bg={side.color}
             opacity={i < side.timeouts! ? 1 : 0.25}
           />
@@ -128,7 +129,7 @@ function StatusBar({ side }: { side: Side }) {
     );
   }
 
-  return <Box height="0.8vmin" borderRadius="0.2vmin" bg={side.color} />;
+  return <Box height="1.4vmin" borderRadius="0.4vmin" bg={side.color} />;
 }
 
 function Score({ side }: { side: Side }) {
@@ -137,7 +138,7 @@ function Score({ side }: { side: Side }) {
   return (
     <Text
       className="display-numeral"
-      fontSize="4.4vmin"
+      fontSize="13vmin"
       fontWeight="500"
       lineHeight="1"
       color="var(--theme-fg)"
@@ -161,18 +162,24 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
       alignSelf="stretch"
       bg="var(--theme-surface-2)"
       align="center"
-      gap="1.2vmin"
-      px="1.2vmin"
-      py="1vmin"
+      gap="2.4vmin"
+      px="2.6vmin"
+      py="2vmin"
       flexDirection={right ? "row-reverse" : "row"}
     >
-      <VStack flex="1" minW="0" align="stretch" gap="0.6vmin">
+      <VStack
+        flex="1"
+        minW="0"
+        align={right ? "flex-end" : "flex-start"}
+        gap="1.4vmin"
+      >
         <Text
-          fontSize="1.9vmin"
+          fontSize="4.2vmin"
           fontWeight="600"
           color="var(--theme-fg)"
           letterSpacing="0.03em"
           textAlign={align}
+          width="100%"
           opacity={side.lost ? 0.5 : 1}
           transition="opacity 400ms ease"
           overflow="hidden"
@@ -182,7 +189,11 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
           {side.rank && <Rank side={side} />}
           {side.name}
         </Text>
-        <StatusBar side={side} />
+        <Box width="100%" display="flex" justifyContent={align === "right" ? "flex-end" : "flex-start"}>
+          <Box width="100%" maxW="24vmin">
+            <StatusBar side={side} />
+          </Box>
+        </Box>
       </VStack>
 
       {side.score != null ? (
@@ -190,7 +201,7 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
       ) : (
         side.record && (
           <Text
-            fontSize="2vmin"
+            fontSize="4vmin"
             color="var(--theme-fg-faint)"
             letterSpacing="0.04em"
             flexShrink={0}
@@ -210,18 +221,19 @@ function CenterBlock({ game }: { game: Game }) {
       flexShrink={0}
       alignSelf="stretch"
       justify="center"
-      gap="0.4vmin"
       bg="var(--theme-bg)"
-      px="1.4vmin"
-      py="1vmin"
-      minW="12vmin"
+      px="3vmin"
+      py="2vmin"
+      minW="26vmin"
     >
       <Text
-        fontSize="2vmin"
+        className="display-numeral"
+        fontSize="5vmin"
         fontWeight="500"
         color="var(--theme-fg)"
         letterSpacing="0.08em"
         whiteSpace="nowrap"
+        textAlign="center"
       >
         {stateLabel(game)}
       </Text>
@@ -244,7 +256,7 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
   const awayPct = Math.round((awayProb / total) * 100);
 
   return (
-    <Box position="relative" height="0.7vmin" width="100%">
+    <Box position="relative" height="1.6vmin" width="100%" flexShrink={0}>
       <HStack gap="0" height="100%" width="100%">
         <Box
           width={`${awayPct}%`}
@@ -260,8 +272,8 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
         top="0"
         bottom="0"
         left={`${awayPct}%`}
-        width="0.4vmin"
-        ml="-0.2vmin"
+        width="0.8vmin"
+        ml="-0.4vmin"
         bg="var(--theme-bg)"
         transition="left 900ms ease"
       />
@@ -269,7 +281,7 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
   );
 }
 
-function ScoreBug({ game }: { game: Game }) {
+export function FootballScoreboard({ game }: { game: Game }) {
   const [away, home] = sides(game);
 
   return (
@@ -278,53 +290,23 @@ function ScoreBug({ game }: { game: Game }) {
       gap="0"
       minW="0"
       width="100%"
-      borderRadius="1.2vmin"
+      flex="1"
+      minH="0"
+      borderRadius={CARD_RADIUS}
       overflow="hidden"
+      bg="var(--theme-surface-1)"
     >
-      <HStack gap="0" align="stretch" minW="0">
+      <HStack gap="0" align="stretch" minW="0" flex="1" minH="0">
         <LogoCap side={away} edge="left" />
         <TeamPanel side={away} align="left" />
         <CenterBlock game={game} />
         <TeamPanel side={home} align="right" />
         <LogoCap side={home} edge="right" />
       </HStack>
+
       {game.state === "IN" && <WinBar away={away} home={home} />}
+
+      <FootballDetail game={game} away={away} home={home} />
     </VStack>
-  );
-}
-
-export function TeamTracker({ span }: { span?: 1 | 2 }) {
-  const { games, anyLive } = useGames(inWindow);
-
-  if (games.length === 0) return null;
-
-  return (
-    <Board
-      span={span}
-      collapsible
-      storageKey="teamtracker"
-      title={
-        <HStack width="100%" align="center" gap="1.5vmin">
-          <SectionTitle icon={<IoTrophyOutline />}>TEAMS</SectionTitle>
-          <Box flex="1" minW="0" />
-          {anyLive && (
-            <Text
-              fontSize="1.8vmin"
-              color="var(--theme-fg-dim)"
-              letterSpacing="0.06em"
-              fontWeight="500"
-            >
-              LIVE
-            </Text>
-          )}
-        </HStack>
-      }
-    >
-      <VStack align="stretch" gap={CHIP_GAP} width="100%">
-        {games.map((game) => (
-          <ScoreBug key={game.entity_id} game={game} />
-        ))}
-      </VStack>
-    </Board>
   );
 }

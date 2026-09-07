@@ -82,11 +82,18 @@ and scores into what is left. `FootballScoreboard` therefore re-flows on
 clock as a band between them, landscape keeps the broadcast row. Same DOM both
 ways, so there is one tree to keep correct.
 
-It is also **content-sized and centred in portrait, not stretched.** Filling the
-panel would give each team a ~290x980px slab of solid team colour behind ~120px
-of content, which is both sparse and exactly the static bright element the OLED
-constraints rule out. Landscape still fills, because there the row is wide and
-short.
+It **fills the panel in both orientations**, and the sizes are chosen so it fills
+with content — a 22vmin score, a colour block sized to hold a logo at 60% of the
+row height. An earlier pass stretched the rows without scaling anything, which
+gave each team a ~290x980px slab of solid colour behind two lines of text: sparse,
+and the static bright element the OLED constraints rule out. If you grow the
+rows, grow what is in them.
+
+The name and the score sit on **separate lines**, not side by side. Sharing a
+line is what repeatedly truncated long names ("FLORIDA ST…") — the score is the
+widest thing on the page and always won. The short status line (HOME/AWAY,
+record, timeouts or the down) shares the score's line instead, and must be
+`flexShrink: 0` or the down chip's background stops short of its own text.
 
 If you change any `vmin` size here, redo the arithmetic for 1600x2400 before
 assuming it fits — `1vmin` is 16px on that panel, so `18vmin` is a 288px glyph.

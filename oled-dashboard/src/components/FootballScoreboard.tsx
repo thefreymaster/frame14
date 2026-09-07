@@ -45,12 +45,13 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
       display="flex"
       alignItems="center"
       justifyContent="center"
+      overflow="hidden"
       opacity={side.lost ? 0.45 : 1}
       transition="opacity 400ms ease"
       css={{
         // Portrait: the cap leads every row, so it can be narrower.
-        width: "22vmin",
-        padding: "0 2vmin",
+        width: "17vmin",
+        padding: "0 1.6vmin",
         "@media (orientation: landscape)": { width: "20vmin" },
       }}
     >
@@ -60,7 +61,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
           src={side.logo}
           alt={side.abbr}
           style={{
-            maxHeight: "16vmin",
+            maxHeight: "60%",
             maxWidth: "100%",
             objectFit: "contain",
           }}
@@ -68,10 +69,17 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
         />
       ) : (
         <Text
-          fontSize="6vmin"
           fontWeight="700"
           color="#FFFFFF"
           letterSpacing="0.04em"
+          maxW="100%"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+          css={{
+            fontSize: "5vmin",
+            "@media (orientation: landscape)": { fontSize: "5vmin" },
+          }}
         >
           {side.abbr}
         </Text>
@@ -143,7 +151,14 @@ function StatusBar({ side }: { side: Side }) {
 
   if (side.timeouts != null) {
     return (
-      <HStack gap="0.8vmin" height="1.2vmin" width="100%" maxW="22vmin">
+      <HStack
+        gap="0.8vmin"
+        height="1.2vmin"
+        css={{
+          width: "22vmin",
+          "@media (orientation: landscape)": { width: "11vmin" },
+        }}
+      >
         {[0, 1, 2].map((i) => (
           <Box
             key={i}
@@ -161,10 +176,12 @@ function StatusBar({ side }: { side: Side }) {
   return (
     <Box
       height="1.2vmin"
-      width="100%"
-      maxW="22vmin"
       borderRadius="0.4vmin"
       bg={side.color}
+      css={{
+        width: "22vmin",
+        "@media (orientation: landscape)": { width: "11vmin" },
+      }}
     />
   );
 }
@@ -183,7 +200,8 @@ function Score({ side }: { side: Side }) {
       flexShrink={0}
       css={{
         // Portrait has a full row per team, so the score can be much bigger.
-        fontSize: "13vmin",
+        fontSize: "22vmin",
+        lineHeight: "0.85",
         "@media (orientation: landscape)": { fontSize: "13vmin" },
       }}
     >
@@ -223,15 +241,14 @@ function TeamRow({
       align="stretch"
       bg="var(--theme-surface-2)"
       css={{
-        // Landscape has one row to fill; portrait stacks, and a row stretched
-        // down a 2400px panel would be a huge slab of solid team colour for a
-        // couple of lines of content — the static bright element the OLED
-        // constraints rule out. Size to content and let the page centre it.
-        flex: "0 0 auto",
+        // Both orientations fill. The content scales with the row rather than
+        // sitting small inside it — a stretched row holding a couple of lines
+        // would be the huge static colour slab the OLED constraints rule out,
+        // but a filled one is a scoreboard.
+        flex: "1 1 0%",
+        minHeight: 0,
         flexDirection: "row",
         "@media (orientation: landscape)": {
-          flex: "1 1 0%",
-          minHeight: 0,
           flexDirection: mirrored ? "row-reverse" : "row",
         },
       }}
@@ -255,9 +272,9 @@ function TeamRow({
         <VStack
           flex="1"
           minW="0"
-          gap="1.2vmin"
+          gap="1.6vmin"
           css={{
-            alignItems: "flex-start",
+            alignItems: "stretch",
             "@media (orientation: landscape)": {
               alignItems: mirrored ? "flex-end" : "flex-start",
             },
@@ -274,7 +291,7 @@ function TeamRow({
             whiteSpace="nowrap"
             textOverflow="ellipsis"
             css={{
-              fontSize: "4.2vmin",
+              fontSize: "6vmin",
               textAlign: "left",
               "@media (orientation: landscape)": {
                 fontSize: "3.2vmin",
@@ -298,7 +315,18 @@ function TeamRow({
             {side.rank && <Rank side={side} />}
             {side.name}
           </Text>
-          <HStack gap="1.6vmin" align="center" width="100%" minW="0">
+          <HStack
+            gap="1.6vmin"
+            align="center"
+            width="100%"
+            minW="0"
+            css={{
+              justifyContent: "flex-start",
+              "@media (orientation: landscape)": {
+                justifyContent: mirrored ? "flex-end" : "flex-start",
+              },
+            }}
+          >
             <Text
               fontWeight="500"
               color="var(--theme-fg-faint)"
@@ -306,7 +334,7 @@ function TeamRow({
               whiteSpace="nowrap"
               flexShrink={0}
               css={{
-                fontSize: "2.4vmin",
+                fontSize: "3.2vmin",
                 "@media (orientation: landscape)": { fontSize: "1.9vmin" },
               }}
             >
@@ -314,21 +342,14 @@ function TeamRow({
               {side.record ? `  ·  ${side.record}` : ""}
             </Text>
             {live && (
-              <Box
-                flex="1"
-                minW="0"
-                css={{
-                  maxWidth: "22vmin",
-                  "@media (orientation: landscape)": { maxWidth: "11vmin" },
-                }}
-              >
+              <Box flexShrink={0}>
                 <StatusBar side={side} />
               </Box>
             )}
+            <Box flex="1" minW="0" />
+            {side.score != null && <Score side={side} />}
           </HStack>
         </VStack>
-
-        {side.score != null && <Score side={side} />}
       </HStack>
     </HStack>
   );
@@ -362,7 +383,7 @@ function CenterBlock({ game }: { game: Game }) {
         whiteSpace="nowrap"
         textAlign="center"
         css={{
-          fontSize: "6vmin",
+          fontSize: "8vmin",
           "@media (orientation: landscape)": { fontSize: "5vmin" },
         }}
       >
@@ -505,10 +526,7 @@ export function FootballScoreboard({ game }: { game: Game }) {
       minW="0"
       width="100%"
       borderRadius={CARD_RADIUS}
-      css={{
-        flex: "0 0 auto",
-        "@media (orientation: landscape)": { flex: "1 1 0%", minHeight: 0 },
-      }}
+      css={{ flex: "1 1 0%", minHeight: 0 }}
       overflow="hidden"
       bg="var(--theme-surface-1)"
     >
@@ -520,12 +538,12 @@ export function FootballScoreboard({ game }: { game: Game }) {
         display="flex"
         minW="0"
         css={{
+          // Fills in both orientations, so the two rows have a height to share
+          // rather than leaving the bottom of the card empty.
+          flex: "1 1 0%",
+          minHeight: 0,
           flexDirection: "column",
-          "@media (orientation: landscape)": {
-            flexDirection: "row",
-            flex: "1 1 0%",
-            minHeight: 0,
-          },
+          "@media (orientation: landscape)": { flexDirection: "row" },
         }}
       >
         <TeamRow side={away} edge="left" venue="AWAY" live={live} />

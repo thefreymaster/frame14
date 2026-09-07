@@ -37,16 +37,7 @@ export function Football() {
 
   return (
     <PageShell fill>
-      {/* Portrait: the scoreboard is content-sized, so centre it on the panel
-          rather than stretching it down 2400px of glass. Landscape fills. */}
-      <VStack
-        align="stretch"
-        justify="center"
-        gap="1.5vmin"
-        flex="1"
-        minH="0"
-        width="100%"
-      >
+      <VStack align="stretch" gap="1.5vmin" flex="1" minH="0" width="100%">
         {games.map((game) => (
           <FootballScoreboard key={game.entity_id} game={game} />
         ))}

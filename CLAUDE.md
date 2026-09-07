@@ -237,10 +237,12 @@ down the long axis, and use `@media (orientation: portrait|landscape)` to
 re-flow rather than shipping one arrangement for both (`LandscapeNav`,
 `PageShell` and `FootballScoreboard` all do this).
 
-The height is the axis with room to spare, which cuts the other way too: do not
-`flex: 1` a coloured element down the full 2400px just to fill it. That paints a
-huge static saturated block — the burn-in case below. Size content-driven blocks
-to their content and centre them.
+The height is the axis with room to spare. Views should fill it rather than sit
+centred in a band of black — but fill it with *content*, scaling type and
+artwork up to match. Stretching a saturated block down 2400px behind a couple of
+lines of small text is the failure mode: it reads as sparse and it is the
+burn-in case below. If a view cannot fill the height without doing that, the
+sizes are wrong, not the layout.
 
 **Look at the view before calling it done.** Layout bugs here are not subtle and
 not catchable by reading the JSX — a horizontal arrangement that reads fine in

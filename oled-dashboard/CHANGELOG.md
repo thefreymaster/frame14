@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.45.0
+
+- Changed: the full-screen game now fills the display instead of sitting in the middle with black above and below it. The scores are much larger, and the team blocks, clock and win-probability bar all grow to use the height.
+- Changed: each team's name now has a line to itself with the score below it, rather than sharing a line. Long names like "FLORIDA STATE" were being cut off with an ellipsis because the score crowded them out; they fit now, in both the portrait display and a wide browser window.
+- Fixed: the down-and-distance tag was drawn narrower than its own text, so it read as "3RD &" with the rest hanging outside the box.
+- Fixed: when a team has no logo, the abbreviation shown in its place could spill outside the coloured block and off the edge of the card.
+
 ## 0.44.0
 
 - Added: the full-screen game now shows the league and network, the stadium, which side is home and which is away, both records, and — while the game is live — each team's win probability as a percentage next to the bar, not just a coloured sliver.

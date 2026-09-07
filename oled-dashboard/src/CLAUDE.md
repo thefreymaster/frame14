@@ -72,6 +72,25 @@ render churns the socket subscriptions.
 in Chakra v3 drops img-only props. This broke the addon build once already
 (0.39.1 was the fix).
 
+## Portrait is the target
+
+The frame is 1600x2400. The broadcast arrangement the home chip uses — cap |
+team | clock | team | cap across one row — **does not fit in portrait**: the two
+caps plus the centre block claim about two thirds of 1600px and crush the names
+and scores into what is left. `FootballScoreboard` therefore re-flows on
+`@media (orientation: ...)`: portrait stacks one team per full-width row with the
+clock as a band between them, landscape keeps the broadcast row. Same DOM both
+ways, so there is one tree to keep correct.
+
+It is also **content-sized and centred in portrait, not stretched.** Filling the
+panel would give each team a ~290x980px slab of solid team colour behind ~120px
+of content, which is both sparse and exactly the static bright element the OLED
+constraints rule out. Landscape still fills, because there the row is wide and
+short.
+
+If you change any `vmin` size here, redo the arithmetic for 1600x2400 before
+assuming it fits — `1vmin` is 16px on that panel, so `18vmin` is a 288px glyph.
+
 ## Known gap
 
 A display that connects _after_ the server broadcasts — reconnecting from a

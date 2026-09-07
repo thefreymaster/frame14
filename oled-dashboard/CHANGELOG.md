@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.43.2
+
+- Fixed: the full-screen game was laid out sideways on the display. The teams, score and clock sat in one row across the screen — a shape that suits a wide TV graphic, not a tall panel — so on the frame the team colours became narrow vertical stripes and the names and scores were squeezed into a sliver in the middle. The two teams now stack, one per full-width row, with the clock on a band between them, which is how a scoreboard reads anyway. A wide browser window still gets the side-by-side version.
+- Changed: the scoreboard now sits centred on the display at its natural size instead of being stretched down the full height, so the team colour blocks are a reasonable size rather than tall slabs of solid colour — easier to read, and easier on an OLED.
+
 ## 0.43.1
 
 - Added: tap the sports card on the home screen to open the full-screen game. On the display it takes the other panels with it, the way the sidebar buttons do; from a phone it just opens on the phone.

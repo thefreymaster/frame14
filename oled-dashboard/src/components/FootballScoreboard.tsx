@@ -6,17 +6,26 @@ import { sides, stateLabel, type Game, type Side } from "../lib/teamTracker";
 import { FootballDetail } from "./FootballDetail";
 
 /**
- * The /football page's score bug — the same anatomy as the home card's chip
- * (colour caps, names facing a dark centre block, win probability along the
- * bottom) drawn at the scale of a television scoreboard, so it reads from the
- * other side of the room.
+ * The /football page's score bug, at the scale of a television scoreboard.
  *
- * The card's sizes are tuned for a tile inside the home bento and are far too
- * small here, which is why this is its own component rather than a prop on
- * that one. The game model it draws is shared: lib/teamTracker.ts.
+ * **Portrait is the real target.** The frame is a 1600x2400 panel, so the
+ * broadcast arrangement — cap | team | clock | team | cap across one row —
+ * does not fit: the two caps and the centre block alone claim about two thirds
+ * of the width and crush the names and scores into what is left. In portrait
+ * the same parts stack instead, one team per full-width row with the clock as
+ * a band between them, which is also how a stadium scoreboard reads. Landscape
+ * keeps the broadcast row, where there is width to spend.
+ *
+ * Both layouts are the same DOM, re-flowed with orientation media queries —
+ * the pattern LandscapeNav and PageShell already use — so there is one tree to
+ * keep correct rather than two.
+ *
+ * The home card's chip is deliberately a separate component: its sizes are
+ * tuned for a tile inside the bento and are far too small here. The game model
+ * both draw is shared, in lib/teamTracker.ts.
  */
 
-/** Colour cap with a helmet stripe of the school's second colour. */
+/** Colour block carrying the helmet logo, with a stripe of the second colour. */
 function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
   const [broken, setBroken] = useState(false);
 
@@ -24,15 +33,19 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
     <Box
       position="relative"
       flexShrink={0}
-      width="20vmin"
       alignSelf="stretch"
       bg={side.color}
       display="flex"
       alignItems="center"
       justifyContent="center"
-      px="2vmin"
       opacity={side.lost ? 0.45 : 1}
       transition="opacity 400ms ease"
+      css={{
+        // Portrait: the cap leads every row, so it can be narrower.
+        width: "22vmin",
+        padding: "0 2vmin",
+        "@media (orientation: landscape)": { width: "20vmin" },
+      }}
     >
       {side.logo && !broken ? (
         // Plain <img>: Chakra v3's polymorphic Box drops the img-only props.
@@ -40,7 +53,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
           src={side.logo}
           alt={side.abbr}
           style={{
-            maxHeight: "14vmin",
+            maxHeight: "15vmin",
             maxWidth: "100%",
             objectFit: "contain",
           }}
@@ -62,7 +75,16 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
         bottom="0"
         width="1.2vmin"
         bg={side.trim}
-        {...(edge === "left" ? { right: 0 } : { left: 0 })}
+        css={{
+          // Portrait: every cap is on the left, so the stripe faces inward.
+          right: 0,
+          left: "auto",
+          "@media (orientation: landscape)": {
+            ...(edge === "left"
+              ? { right: 0, left: "auto" }
+              : { left: 0, right: "auto" }),
+          },
+        }}
       />
     </Box>
   );
@@ -97,10 +119,10 @@ function StatusBar({ side }: { side: Side }) {
         bg={side.color}
         borderRadius="0.4vmin"
         px="1.6vmin"
-        py="0.5vmin"
+        py="0.3vmin"
       >
         <Text
-          fontSize="2.4vmin"
+          fontSize="2.2vmin"
           fontWeight="600"
           color="#FFFFFF"
           letterSpacing="0.08em"
@@ -114,7 +136,7 @@ function StatusBar({ side }: { side: Side }) {
 
   if (side.timeouts != null) {
     return (
-      <HStack gap="0.8vmin" height="1.4vmin">
+      <HStack gap="0.8vmin" height="1.2vmin" width="100%" maxW="22vmin">
         {[0, 1, 2].map((i) => (
           <Box
             key={i}
@@ -129,7 +151,15 @@ function StatusBar({ side }: { side: Side }) {
     );
   }
 
-  return <Box height="1.4vmin" borderRadius="0.4vmin" bg={side.color} />;
+  return (
+    <Box
+      height="1.2vmin"
+      width="100%"
+      maxW="22vmin"
+      borderRadius="0.4vmin"
+      bg={side.color}
+    />
+  );
 }
 
 function Score({ side }: { side: Side }) {
@@ -138,13 +168,17 @@ function Score({ side }: { side: Side }) {
   return (
     <Text
       className="display-numeral"
-      fontSize="13vmin"
       fontWeight="500"
       lineHeight="1"
       color="var(--theme-fg)"
       opacity={side.lost ? 0.5 : 1}
       transition="opacity 400ms ease"
       flexShrink={0}
+      css={{
+        // Portrait has a full row per team, so the score can be much bigger.
+        fontSize: "18vmin",
+        "@media (orientation: landscape)": { fontSize: "13vmin" },
+      }}
     >
       {/* Digits roll the way a stadium scoreboard flips them. */}
       {Number.isFinite(n) ? <NumberFlow value={n} /> : side.score}
@@ -152,64 +186,108 @@ function Score({ side }: { side: Side }) {
   );
 }
 
-function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
-  const right = align === "right";
+/**
+ * One team: colour cap, name and status, then the score.
+ *
+ * `edge` is which end of the broadcast row this team sits at, and only matters
+ * in landscape — there the home side mirrors so both teams face the clock. In
+ * portrait both rows read left to right, like a scoreboard.
+ */
+function TeamRow({ side, edge }: { side: Side; edge: "left" | "right" }) {
+  const mirrored = edge === "right";
 
   return (
     <HStack
-      flex="1"
+      flexShrink={0}
       minW="0"
-      alignSelf="stretch"
+      gap="0"
+      align="stretch"
       bg="var(--theme-surface-2)"
-      align="center"
-      gap="2.4vmin"
-      px="2.6vmin"
-      py="2vmin"
-      flexDirection={right ? "row-reverse" : "row"}
+      css={{
+        // Landscape has one row to fill; portrait stacks, and a row stretched
+        // down a 2400px panel would be a huge slab of solid team colour for a
+        // couple of lines of content — the static bright element the OLED
+        // constraints rule out. Size to content and let the page centre it.
+        flex: "0 0 auto",
+        flexDirection: "row",
+        "@media (orientation: landscape)": {
+          flex: "1 1 0%",
+          minHeight: 0,
+          flexDirection: mirrored ? "row-reverse" : "row",
+        },
+      }}
     >
-      <VStack
+      <LogoCap side={side} edge={edge} />
+
+      <HStack
         flex="1"
         minW="0"
-        align={right ? "flex-end" : "flex-start"}
-        gap="1.4vmin"
+        align="center"
+        gap="2.4vmin"
+        px="2.6vmin"
+        py="3vmin"
+        css={{
+          flexDirection: "row",
+          "@media (orientation: landscape)": {
+            flexDirection: mirrored ? "row-reverse" : "row",
+          },
+        }}
       >
-        <Text
-          fontSize="4.2vmin"
-          fontWeight="600"
-          color="var(--theme-fg)"
-          letterSpacing="0.03em"
-          textAlign={align}
-          width="100%"
-          opacity={side.lost ? 0.5 : 1}
-          transition="opacity 400ms ease"
-          overflow="hidden"
-          whiteSpace="nowrap"
-          textOverflow="ellipsis"
+        <VStack
+          flex="1"
+          minW="0"
+          gap="1.2vmin"
+          css={{
+            alignItems: "flex-start",
+            "@media (orientation: landscape)": {
+              alignItems: mirrored ? "flex-end" : "flex-start",
+            },
+          }}
         >
-          {side.rank && <Rank side={side} />}
-          {side.name}
-        </Text>
-        <Box width="100%" display="flex" justifyContent={align === "right" ? "flex-end" : "flex-start"}>
-          <Box width="100%" maxW="24vmin">
-            <StatusBar side={side} />
-          </Box>
-        </Box>
-      </VStack>
-
-      {side.score != null ? (
-        <Score side={side} />
-      ) : (
-        side.record && (
           <Text
-            fontSize="4vmin"
-            color="var(--theme-fg-faint)"
-            letterSpacing="0.04em"
-            flexShrink={0}
+            fontWeight="600"
+            color="var(--theme-fg)"
+            letterSpacing="0.03em"
+            width="100%"
+            opacity={side.lost ? 0.5 : 1}
+            transition="opacity 400ms ease"
+            overflow="hidden"
+            whiteSpace="nowrap"
+            textOverflow="ellipsis"
+            css={{
+              fontSize: "5.5vmin",
+              textAlign: "left",
+              "@media (orientation: landscape)": {
+                fontSize: "4.2vmin",
+                textAlign: mirrored ? "right" : "left",
+              },
+            }}
           >
-            {side.record}
+            {side.rank && <Rank side={side} />}
+            {side.name}
           </Text>
-        )
-      )}
+          <StatusBar side={side} />
+        </VStack>
+
+        {side.score != null ? (
+          <Score side={side} />
+        ) : (
+          side.record && (
+            <Text
+              color="var(--theme-fg-faint)"
+              letterSpacing="0.04em"
+              flexShrink={0}
+              whiteSpace="nowrap"
+              css={{
+                fontSize: "5vmin",
+                "@media (orientation: landscape)": { fontSize: "4vmin" },
+              }}
+            >
+              {side.record}
+            </Text>
+          )
+        )}
+      </HStack>
     </HStack>
   );
 }
@@ -217,27 +295,38 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
 /** Game state — period and clock live, kickoff before, FINAL after. */
 function CenterBlock({ game }: { game: Game }) {
   return (
-    <VStack
+    <Box
       flexShrink={0}
-      alignSelf="stretch"
-      justify="center"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
       bg="var(--theme-bg)"
-      px="3vmin"
-      py="2vmin"
-      minW="26vmin"
+      css={{
+        // Portrait: a full-width band between the two teams.
+        width: "100%",
+        padding: "2vmin 3vmin",
+        "@media (orientation: landscape)": {
+          width: "auto",
+          minWidth: "26vmin",
+          alignSelf: "stretch",
+        },
+      }}
     >
       <Text
         className="display-numeral"
-        fontSize="5vmin"
         fontWeight="500"
         color="var(--theme-fg)"
         letterSpacing="0.08em"
         whiteSpace="nowrap"
         textAlign="center"
+        css={{
+          fontSize: "6vmin",
+          "@media (orientation: landscape)": { fontSize: "5vmin" },
+        }}
       >
         {stateLabel(game)}
       </Text>
-    </VStack>
+    </Box>
   );
 }
 
@@ -290,19 +379,32 @@ export function FootballScoreboard({ game }: { game: Game }) {
       gap="0"
       minW="0"
       width="100%"
-      flex="1"
-      minH="0"
       borderRadius={CARD_RADIUS}
+      css={{
+        flex: "0 0 auto",
+        "@media (orientation: landscape)": { flex: "1 1 0%", minHeight: 0 },
+      }}
       overflow="hidden"
       bg="var(--theme-surface-1)"
     >
-      <HStack gap="0" align="stretch" minW="0" flex="1" minH="0">
-        <LogoCap side={away} edge="left" />
-        <TeamPanel side={away} align="left" />
+      {/* Portrait stacks the two teams with the clock between them; landscape
+          lays them out across one broadcast row. */}
+      <Box
+        display="flex"
+        minW="0"
+        css={{
+          flexDirection: "column",
+          "@media (orientation: landscape)": {
+            flexDirection: "row",
+            flex: "1 1 0%",
+            minHeight: 0,
+          },
+        }}
+      >
+        <TeamRow side={away} edge="left" />
         <CenterBlock game={game} />
-        <TeamPanel side={home} align="right" />
-        <LogoCap side={home} edge="right" />
-      </HStack>
+        <TeamRow side={home} edge="right" />
+      </Box>
 
       {game.state === "IN" && <WinBar away={away} home={home} />}
 

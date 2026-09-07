@@ -65,14 +65,6 @@ export const PRE_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** Measured from the flip to POST, which lands on the final whistle. */
 export const POST_WINDOW_MS = 6 * 60 * 60 * 1000;
 
-/**
- * The tighter window the /football route lives in: the run-up, the game, the
- * final. A whole page given over to one game earns its place for less of the
- * day than a card on the home screen does.
- */
-export const ROUTE_PRE_MS = 30 * 60 * 1000;
-export const ROUTE_POST_MS = 30 * 60 * 1000;
-
 export const TICK_MS = 60 * 1000;
 
 const NO_DATA = new Set(["", "unknown", "unavailable", "none"]);
@@ -99,35 +91,47 @@ function timestamp(value: string | null | undefined): number | null {
 }
 
 /**
- * A game is worth showing while it's on, in the run-up to kickoff, and for a
- * while after the final. A game whose timing we can't read stays visible —
- * better a stale chip than a missing one.
+ * The home card's window: a game is worth a chip while it's on, in the day
+ * before kickoff, and for a few hours after the final. A game whose timing we
+ * can't read stays visible — better a stale chip than a missing one.
  */
-function withinWindows(
-  game: Game,
-  now: number,
-  preMs: number,
-  postMs: number,
-): boolean {
+export function inWindow(game: Game, now: number): boolean {
   if (game.state === "IN") return true;
 
   if (game.state === "PRE") {
     const kickoff = timestamp(game.attributes.date);
-    return kickoff == null || kickoff - now <= preMs;
+    return kickoff == null || kickoff - now <= PRE_WINDOW_MS;
   }
 
   const final = timestamp(game.last_changed);
-  return final == null || now - final <= postMs;
+  return final == null || now - final <= POST_WINDOW_MS;
 }
 
-/** The home card's window: the day before kickoff, and hours after the final. */
-export function inWindow(game: Game, now: number): boolean {
-  return withinWindows(game, now, PRE_WINDOW_MS, POST_WINDOW_MS);
+function sameLocalDay(a: number, b: number): boolean {
+  const x = new Date(a);
+  const y = new Date(b);
+  return (
+    x.getFullYear() === y.getFullYear() &&
+    x.getMonth() === y.getMonth() &&
+    x.getDate() === y.getDate()
+  );
 }
 
-/** The /football route's window — the same rules, drawn much tighter. */
+/**
+ * The /football route's window: game day, all of it.
+ *
+ * The route and its nav tab are there from midnight to midnight on the day of
+ * the game, so the run-up and the whole evening after the final are one tap
+ * away. Keyed on the game's own kickoff rather than the sensor's last_changed,
+ * which is the more honest answer for "which day is this game on" and survives
+ * a Home Assistant restart; last_changed is only the fallback for a sensor not
+ * reporting a date. A live game always shows, including one that runs past
+ * midnight.
+ */
 export function inRouteWindow(game: Game, now: number): boolean {
-  return withinWindows(game, now, ROUTE_PRE_MS, ROUTE_POST_MS);
+  if (game.state === "IN") return true;
+  const at = timestamp(game.attributes.date) ?? timestamp(game.last_changed);
+  return at == null || sameLocalDay(at, now);
 }
 
 /** Ball actually in play, as opposed to merely scheduled or finished. */

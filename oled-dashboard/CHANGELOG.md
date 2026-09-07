@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.43.1
+
+- Added: tap the sports card on the home screen to open the full-screen game. On the display it takes the other panels with it, the way the sidebar buttons do; from a phone it just opens on the phone.
+- Changed: the Football tab and the full-screen game are now up for the whole day of the game, midnight to midnight, instead of only around kickoff. The run-up in the morning and the rest of the evening after the final are both one tap away.
+- Changed: before kickoff the full-screen page is a proper preview — both teams with their records, the kickoff time, how long until it starts, and the network and stadium — rather than the "no game in session" message it used to show until the ball was snapped.
+- Note: the display still switches itself over at kickoff, not first thing in the morning, so having the tab up all day does not mean the panel gets taken over all day.
+
 ## 0.43.0
 
 - Added: a full-screen scoreboard for the teams you track. When one of them kicks off, the display switches itself to it — team colours and helmets filling the sides, the score at scoreboard size, the quarter and clock between them, and ESPN's win probability as a bar along the bottom that slides as the game swings.

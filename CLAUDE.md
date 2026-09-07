@@ -82,7 +82,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/radar` | `Radar` | Radar view — frame-only nav item |
 | `/timer` | `Timer` | Timer — frame-only nav item |
 | `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed |
-| `/football` | `Football` | Full-screen score bug + game detail for a live TeamTracker game; auto-routed on kickoff, nav item appears only in the ±30min window |
+| `/football` | `Football` | Full-screen score bug + game detail; a preview before kickoff, a scoreboard during. Up all of game day (nav tab too); auto-routed on kickoff |
 | `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
 ## Component Rules
@@ -124,7 +124,7 @@ src/
     LightControl.tsx              — single light/switch toggle
     EnergyPanel.tsx               — solar production/consumption display
     PrinterSection.tsx            — 3D printer card + click-to-open detail modal (temps, layers, ETA, filament)
-    TeamTracker.tsx               — TeamTracker sports card; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND. Card-sized rendering only — the game model is in `src/lib/teamTracker.ts`
+    TeamTracker.tsx               — TeamTracker sports card; tapping a score bug opens /football; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND. Card-sized rendering only — the game model is in `src/lib/teamTracker.ts`
     FootballScoreboard.tsx        — the /football score bug at scoreboard scale; same anatomy as TeamTracker's chip, its own vmin sizes (the card's are tuned for a bento tile)
     FootballDetail.tsx            — band under the scoreboard: full down & distance, last play, network/venue, records. Dim by design — it sits still for three hours
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
@@ -161,7 +161,7 @@ src/
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — theme CSS vars, preference storage, socket sync; "auto" uses daylight window 07:00–19:00
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation
-    teamTracker.ts                — the TeamTracker game model shared by the home card, /football and its nav item: attribute types, `sides()` (away-first split), `stateLabel()`, and the two visibility windows — `inWindow` (card: 24h pre / 6h post) and `inRouteWindow` (route: ±30min)
+    teamTracker.ts                — the TeamTracker game model shared by the home card, /football and its nav item: attribute types, `sides()` (away-first split), `stateLabel()`, and the two visibility windows — `inWindow` (card: rolling 24h pre / 6h post) and `inRouteWindow` (route: the whole local day of the game, keyed on kickoff)
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
     voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
     voiceAssist.ts                — voice session state machine + socket protocol (module store, like navVisibility)

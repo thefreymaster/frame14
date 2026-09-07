@@ -12,9 +12,11 @@ the whole game rides along in the attributes. Two surfaces consume it:
 
 - **the home card** — `components/TeamTracker.tsx`, a chip inside the `/home`
   bento, up for the day around a game.
-- **the `/football` route** — the whole panel given to a live game. The server
-  routes every display here on kickoff and away again after the final, the same
-  way Plex playback drives `/marquee`.
+- **the `/football` route** — the whole panel given to the game, all day. Before
+  kickoff it is a preview (records instead of scores, kickoff time, countdown);
+  during the game it is a scoreboard. The server routes every display here on
+  kickoff and away again after the final, the same way Plex playback drives
+  `/marquee`. Tapping the home card is the other way in.
 
 ## Who owns what
 

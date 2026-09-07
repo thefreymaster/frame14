@@ -25,7 +25,7 @@ const ROUTE_ENTITY = "input_select.oledos_route";
 const ALBUM_ENTITY = "input_select.smart_frame_album";
 const RECONNECT_DELAY_MS = 5_000;
 
-// Plex marquee: route the frame to /marquee while something is playing.
+// Plex marquee: route the frame to /marquee while a movie is playing.
 const MEDIA_ENTITY = ENTITIES.mediaPlayer;
 const MEDIA_PLAY_STATES = new Set(["playing"]);
 const MEDIA_STOP_STATES = new Set([
@@ -34,6 +34,24 @@ const MEDIA_STOP_STATES = new Set([
 // The Apple TV flaps idle -> unavailable -> idle when the Plex client drops,
 // so wait before giving up on playback and going back home.
 const MEDIA_STOP_GRACE_MS = 10_000;
+/**
+ * Content types that earn the whole panel.
+ *
+ * The marquee is a movie poster, and only a movie has one worth the frame: HA's
+ * Plex integration reports "tvshow" for an episode, whose art is the same series
+ * card every night, and live TV arrives as "video"/"channel" with a station logo
+ * or nothing at all. Those keep playing without taking the display over.
+ */
+const MEDIA_MARQUEE_TYPES = new Set(["movie"]);
+
+function mediaType(state) {
+  const type = state?.attributes?.media_content_type;
+  return typeof type === "string" ? type : null;
+}
+
+function isMarqueeMedia(state) {
+  return MEDIA_MARQUEE_TYPES.has(mediaType(state));
+}
 
 // Football: route the frame to /football while a tracked team is playing.
 // TeamTracker publishes one sensor per team, so this is a set, not one id.
@@ -341,22 +359,35 @@ export function startHaSocket(io) {
     }
   }
 
-  function onMediaState(state) {
-    if (MEDIA_PLAY_STATES.has(state)) {
+  function onMediaState(mediaState) {
+    const state = mediaState?.state;
+
+    // Something is on screen: it takes the panel only if it is a movie, and a
+    // marquee already up gives the panel straight back if it stops being one —
+    // the next episode autoplaying, or a switch over to live TV.
+    if (MEDIA_PLAY_STATES.has(state) || state === "paused") {
       clearMediaStopTimer();
-      if (io.currentView !== "marquee") {
-        console.log(`[ha-socket] media playing (${state}) → marquee`);
+
+      if (!isMarqueeMedia(mediaState)) {
+        if (io.currentView === "marquee") {
+          console.log(
+            `[ha-socket] ${mediaType(mediaState) ?? "unknown"} is not a movie → home`,
+          );
+          broadcastView("home");
+        }
+        return;
+      }
+
+      // Paused keeps the marquee up, but never starts it — only playback does.
+      if (MEDIA_PLAY_STATES.has(state) && io.currentView !== "marquee") {
+        console.log(`[ha-socket] movie playing (${state}) → marquee`);
         broadcastView("marquee");
       }
       return;
     }
 
-    // Paused keeps the marquee up — only a real stop sends the frame home.
-    if (state === "paused") {
-      clearMediaStopTimer();
-      return;
-    }
-
+    // A stopped player drops its attributes, so the content type is gone by the
+    // time we get here — the grace timer below is what ends the marquee.
     if (MEDIA_STOP_STATES.has(state) && io.currentView === "marquee") {
       clearMediaStopTimer();
       mediaStopTimer = setTimeout(() => {
@@ -407,8 +438,8 @@ export function startHaSocket(io) {
       // A game that interrupted a movie has to give it back. The media watcher
       // only sends the frame home from the marquee, so if we went to "home"
       // here the movie would keep playing with nothing showing it.
-      const playing =
-        MEDIA_ENTITY && getState(MEDIA_ENTITY)?.state === "playing";
+      const media = MEDIA_ENTITY ? getState(MEDIA_ENTITY) : null;
+      const playing = media?.state === "playing" && isMarqueeMedia(media);
       const next = playing ? "marquee" : "home";
       console.log(`[ha-socket] game over → ${next}`);
       broadcastView(next);
@@ -429,9 +460,12 @@ export function startHaSocket(io) {
     }
 
     if (MEDIA_ENTITY && entityId === MEDIA_ENTITY) {
-      const prev = prevState?.state;
-      const next = newState.state;
-      if (prev !== next) onMediaState(next);
+      // The state alone is no longer enough: a Plex client rolling out of a
+      // movie and into an episode stays "playing", and only the content type
+      // says the marquee has to go. Position updates still churn past here.
+      const stateChanged = prevState?.state !== newState.state;
+      const typeChanged = mediaType(prevState) !== mediaType(newState);
+      if (stateChanged || typeChanged) onMediaState(newState);
       return;
     }
 

@@ -4,7 +4,7 @@ import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
 import { MarqueeArt } from "../components/MarqueeArt";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity } from "../hooks/useEntity";
-import { artUrl, isActive, type PlexAttrs } from "../lib/plexMedia";
+import { artUrl, isActive, isMovie, type PlexAttrs } from "../lib/plexMedia";
 import {
   getNavVisible,
   setNavVisibleLocal,
@@ -26,7 +26,16 @@ export function Marquee() {
   }, []);
 
   const state = media?.state;
-  const src = isActive(state) ? artUrl(media?.attributes) : null;
+  const attrs = media?.attributes;
+  // Movies only, matching the watcher that routes the frame here: an episode or
+  // live TV plays on without the poster wall following it.
+  const showing = isActive(state);
+  const src = showing && isMovie(attrs) ? artUrl(attrs) : null;
+  const empty = !entityId
+    ? "no media player configured"
+    : showing
+      ? "movies only"
+      : "nothing playing";
 
   return (
     <Box
@@ -48,7 +57,7 @@ export function Marquee() {
           justifyContent="center"
         >
           <Text color="var(--theme-fg-faint)" fontSize="sm">
-            {entityId ? "nothing playing" : "no media player configured"}
+            {empty}
           </Text>
         </Box>
       )}

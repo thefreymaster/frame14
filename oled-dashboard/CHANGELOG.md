@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.46.0
+
+- Changed: the movie marquee is now for movies only. A TV episode or live TV playing on Plex no longer takes the display over — it stays on whatever view it was showing.
+- Changed: if a movie rolls into the next episode, or you switch from a movie to live TV, the marquee hands the display back instead of leaving the old poster up.
+- Changed: opening the marquee by hand while a show or live TV is playing says "movies only" rather than showing its artwork.
+
 ## 0.45.0
 
 - Changed: the full-screen game now fills the display instead of sitting in the middle with black above and below it. The scores are much larger, and the team blocks, clock and win-probability bar all grow to use the height.

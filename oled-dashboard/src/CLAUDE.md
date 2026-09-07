@@ -60,9 +60,11 @@ restart at kickoff means the panel never shows the game _at all_, for the whole
 game. It is not a nicety.
 
 **Handing back to the marquee.** When a game ends, the watcher returns to
-`marquee` if the media player is still playing, else `home`. The media watcher
-only sends the panel home from `io.currentView === "marquee"`, so returning to
-`home` unconditionally would leave a movie playing with nothing showing it.
+`marquee` if the media player is still playing *a movie*, else `home`. The media
+watcher only sends the panel home from `io.currentView === "marquee"`, so
+returning to `home` unconditionally would leave a movie playing with nothing
+showing it — and returning to `marquee` for an episode or live TV would strand
+the panel on a view that refuses to draw them.
 
 **`EMPTY` is a module constant on purpose.** `useEntities` memoises on the
 joined id string but its effect depends on the array identity; a fresh `[]` each

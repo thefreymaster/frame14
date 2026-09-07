@@ -24,6 +24,22 @@ export function isActive(state: string | undefined) {
 }
 
 /**
+ * Content types the marquee is for.
+ *
+ * A movie poster is the whole point of this view, and only a movie has one
+ * worth the panel: HA's Plex integration reports "tvshow" for an episode, whose
+ * art is the same series card every night, and live TV comes through as
+ * "video"/"channel" with a station logo or nothing at all. The server watcher
+ * in ha-socket.js draws the same line before it routes the frame here.
+ */
+export const MARQUEE_CONTENT_TYPES = new Set(["movie"]);
+
+export function isMovie(attrs: PlexAttrs | undefined): boolean {
+  return !!attrs?.media_content_type &&
+    MARQUEE_CONTENT_TYPES.has(attrs.media_content_type);
+}
+
+/**
  * URL for the poster proxy.
  *
  * The server reads the real `entity_picture` path from its own state cache; the

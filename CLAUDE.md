@@ -81,7 +81,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/photos` | `Photos` | Immich photo slideshow |
 | `/radar` | `Radar` | Radar view — frame-only nav item |
 | `/timer` | `Timer` | Timer — frame-only nav item |
-| `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed |
+| `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed. Movies only — an episode (`tvshow`) or live TV (`video`/`channel`) never routes here and shows "movies only" if you navigate in |
 | `/football` | `Football` | Full-screen score bug + game detail; a preview before kickoff, a scoreboard during. Up all of game day (nav tab too); auto-routed on kickoff |
 | `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
@@ -106,7 +106,7 @@ src/
     Photos.tsx                    — Immich slideshow
     Radar.tsx                     — radar view (frame-only)
     Timer.tsx                     — timer (frame-only)
-    Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; hides nav on mount (local only), eye button restores it
+    Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; movies only (`isMovie`), hides nav on mount (local only), eye button restores it
     Football.tsx                  — live game page; renders every game in the route window, "no game in session" when empty (auto-routed, so it never decides whether to show itself)
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
@@ -160,7 +160,7 @@ src/
     deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — theme CSS vars, preference storage, socket sync; "auto" uses daylight window 07:00–19:00
-    plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation
+    plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation, isMovie (the marquee's content-type gate, mirrored by the media watcher in ha-socket.js)
     teamTracker.ts                — the TeamTracker game model shared by the home card, /football and its nav item: attribute types, `sides()` (away-first split), `stateLabel()`, and the two visibility windows — `inWindow` (card: rolling 24h pre / 6h post) and `inRouteWindow` (route: the whole local day of the game, keyed on kickoff)
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
     voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
@@ -175,7 +175,7 @@ config.js         — reads credentials from /data/options.json or .env
 entities.js       — reads entity IDs from /data/options.json (HA addon) or frame14.json (local dev)
 frame14.json      — local dev entity ID config (not used in HA addon)
 openapi.js        — OpenAPI document + Swagger UI renderer
-ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album/media/football watchers; exports TRANSIENT_VIEWS (views never persisted as the last route). The football watcher routes every panel to /football on the flip to `IN` and back 5min after the last game leaves it (to /marquee instead if Plex is still playing). It also runs once after the cache prime: priming bypasses publishState, and a live game holds `IN` while only attributes change, so a restart at kickoff would otherwise miss the whole game. Also carries assist_pipeline runs, which are subscriptions rather than one-shot commands — pendingSubscriptions must be checked before the entity_id guard in the event branch, or every pipeline event is dropped
+ha-socket.js      — persistent HA WebSocket: state cache, entity rooms, motion/album/media/football watchers. The media watcher routes to /marquee only for `media_content_type: movie` — episodes and live TV are ignored, and a marquee already up hands the panel back when playback rolls into one — so it fires on content-type changes as well as state changes; exports TRANSIENT_VIEWS (views never persisted as the last route). The football watcher routes every panel to /football on the flip to `IN` and back 5min after the last game leaves it (to /marquee instead if Plex is still playing). It also runs once after the cache prime: priming bypasses publishState, and a live game holds `IN` while only attributes change, so a restart at kickoff would otherwise miss the whole game. Also carries assist_pipeline runs, which are subscriptions rather than one-shot commands — pendingSubscriptions must be checked before the entity_id guard in the event branch, or every pipeline event is dropped
 routes/
   health.js       — GET /api
   docs.js         — GET /api/docs, GET /api/docs/openapi.json

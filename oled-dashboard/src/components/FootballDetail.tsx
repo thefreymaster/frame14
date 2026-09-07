@@ -51,6 +51,11 @@ export function FootballDetail({
   const down = game.state === "IN" ? text(a.down_distance_text) : null;
   const lastPlay = game.state === "IN" ? text(a.last_play) : null;
 
+  // On game day the route is up long before kickoff, so the page is a preview
+  // until the ball is snapped. How long until it starts is the one thing the
+  // score bug above can't already say.
+  const upcoming = game.state === "PRE" ? text(a.kickoff_in) : null;
+
   // Records are already on the panels before kickoff — repeat them only once
   // the scores have taken that spot.
   const records =
@@ -62,7 +67,7 @@ export function FootballDetail({
     .filter(Boolean)
     .join("   ·   ");
 
-  if (!down && !lastPlay && !records && !place) return null;
+  if (!down && !upcoming && !lastPlay && !records && !place) return null;
 
   return (
     <Box
@@ -75,10 +80,12 @@ export function FootballDetail({
       gap="1vmin"
       alignItems="center"
     >
-      {down && (
+      {/* Mutually exclusive by state: the down while it's on, the countdown
+          before it starts. */}
+      {(down || upcoming) && (
         <Line size="3vmin">
           <Text as="span" color="var(--theme-fg)" letterSpacing="0.08em">
-            {down.toUpperCase()}
+            {(down ?? upcoming)!.toUpperCase()}
           </Text>
         </Line>
       )}

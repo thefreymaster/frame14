@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { Box, HStack, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { IoTrophyOutline } from "react-icons/io5";
@@ -6,7 +7,15 @@ import { useGames } from "../hooks/useLiveGame";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 import { CHIP_GAP } from "../lib/surfaces";
-import { inWindow, sides, stateLabel, type Game, type Side } from "../lib/teamTracker";
+import { socket } from "../lib/socket";
+import { getDeviceMode } from "../lib/deviceMode";
+import {
+  inWindow,
+  sides,
+  stateLabel,
+  type Game,
+  type Side,
+} from "../lib/teamTracker";
 
 /**
  * The home screen's sports chip: one score bug per tracked team.
@@ -295,6 +304,14 @@ function ScoreBug({ game }: { game: Game }) {
 
 export function TeamTracker({ span }: { span?: 1 | 2 }) {
   const { games, anyLive } = useGames(inWindow);
+  const navigate = useNavigate();
+
+  // The chip is a doorway to the full-screen game. Same rule the nav bar uses:
+  // on a frame the tap takes the other panels with it, on a phone it doesn't.
+  function openFootball() {
+    void navigate("/football");
+    if (getDeviceMode() === "frame") socket.emit("change", "football");
+  }
 
   if (games.length === 0) return null;
 
@@ -322,7 +339,21 @@ export function TeamTracker({ span }: { span?: 1 | 2 }) {
     >
       <VStack align="stretch" gap={CHIP_GAP} width="100%">
         {games.map((game) => (
-          <ScoreBug key={game.entity_id} game={game} />
+          <Box
+            key={game.entity_id}
+            as="button"
+            onClick={openFootball}
+            display="block"
+            width="100%"
+            textAlign="left"
+            bg="transparent"
+            cursor="pointer"
+            _active={{ opacity: 0.6 }}
+            transition="opacity 0.1s"
+            aria-label={`Open ${game.attributes.team_name ?? "game"} full screen`}
+          >
+            <ScoreBug game={game} />
+          </Box>
         ))}
       </VStack>
     </Board>

@@ -27,8 +27,8 @@ In the addon's **Configuration** tab, set the following:
 | `immich_url` | Immich server URL | `http://192.168.1.x:2283` |
 | `immich_api_key` | Immich API key | |
 | `port` | Server port | `4000` |
-| `weather_entity` | Current conditions entity | `weather.openweathermap` |
-| `weather_forecast_entity` | Hourly forecast entity | `weather.openweathermap_2` |
+| `weather_entity` | Current conditions entity | `weather.systems_weatherkit` |
+| `weather_forecast_entity` | Hourly forecast entity | `weather.systems_weatherkit` |
 | `light_entities` | List of light/switch entity IDs to control | see below |
 | `climate_entities` | List of climate entity IDs to display | see below |
 | `energy_current_production` | Live solar production sensor | `sensor.envoy_xxx_current_power_production` |
@@ -93,8 +93,8 @@ Copy `.env.example` to `.env` and fill in your values. Create `frame14.json` in 
 {
   "lights": ["light.living_room", "light.kitchen_main_lights"],
   "weather": {
-    "current": "weather.openweathermap",
-    "forecast": "weather.openweathermap_2"
+    "current": "weather.systems_weatherkit",
+    "forecast": "weather.systems_weatherkit"
   },
   "climate": ["climate.1st_floor_ac"],
   "energy": {

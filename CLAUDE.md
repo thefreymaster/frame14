@@ -48,7 +48,7 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
 ```json
 {
   "lights": ["light.living_room", "switch.sonoff_xxx"],
-  "weather": { "current": "weather.openweathermap", "forecast": "weather.openweathermap_2" },
+  "weather": { "current": "weather.systems_weatherkit", "forecast": "weather.systems_weatherkit" },
   "climate": ["climate.1st_floor_ac"],
   "energy": {
     "currentProduction": "sensor.envoy_xxx_current_power_production",

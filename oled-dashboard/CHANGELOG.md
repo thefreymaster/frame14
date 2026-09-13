@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.47.1
+
+- Changed: weather now comes from Apple WeatherKit (`weather.systems_weatherkit`) instead of OpenWeatherMap — current conditions, the hourly forecast and the rain radar trigger all read it. The new default only applies to fresh installs: on an existing install, set `weather_entity` and `weather_forecast_entity` to `weather.systems_weatherkit` in the addon's Configuration tab.
+
 ## 0.47.0
 
 - Added: rain radar card on the home screen — whenever Home Assistant's current weather is rain (including downpours, thunderstorms and sleet), a Windy radar map appears above the energy card. It goes away again once the rain stops.

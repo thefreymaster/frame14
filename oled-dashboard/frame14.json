@@ -20,8 +20,8 @@
     "light.workshop"
   ],
   "weather": {
-    "current": "weather.openweathermap",
-    "forecast": "weather.openweathermap_2",
+    "current": "weather.systems_weatherkit",
+    "forecast": "weather.systems_weatherkit",
     "temperature": "sensor.openweathermap_temperature"
   },
   "climate": [

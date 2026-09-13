@@ -8,6 +8,7 @@ import { PrinterSection } from "../components/PrinterSection";
 import { VacuumSection } from "../components/VacuumSection";
 import { TeamTracker } from "../components/TeamTracker";
 import { FanSection } from "../components/FanSection";
+import { RadarSection } from "../components/RadarSection";
 import { HomeHeader } from "../components/HomeHeader";
 import { CalendarSection } from "../components/CalendarSection";
 import { StatusStrip } from "../components/StatusStrip";
@@ -89,6 +90,7 @@ export function HomeOverview() {
           >
             <HomeHeader internet={data.internet} weather={data.weather} />
             <TeamTracker />
+            <RadarSection condition={data.weather?.state} />
             <EnergySection energy={data.energy} />
             <PrinterSection printer={data.printer} />
             <VacuumSection vacuum={data.vacuum} />
@@ -133,6 +135,9 @@ export function HomeOverview() {
       >
         <HomeHeader span={2} internet={data.internet} weather={data.weather} />
         <TeamTracker span={2} />
+        {/* Full width rather than in the energy rail: a map needs the width,
+            and a tall rail would stretch the climate cell beside it. */}
+        <RadarSection span={2} condition={data.weather?.state} />
 
         <ClimateSection climate={data.climate} />
 

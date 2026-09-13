@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.47.0
+
+- Added: rain radar card on the home screen — whenever Home Assistant's current weather is rain (including downpours, thunderstorms and sleet), a Windy radar map appears above the energy card. It goes away again once the rain stops.
+
 ## 0.46.0
 
 - Changed: the movie marquee is now for movies only. A TV episode or live TV playing on Plex no longer takes the display over — it stays on whatever view it was showing.

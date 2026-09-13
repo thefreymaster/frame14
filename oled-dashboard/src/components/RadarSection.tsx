@@ -34,6 +34,8 @@ export function RadarSection({
   return (
     <Board
       span={span}
+      collapsible
+      storageKey="radar"
       title={<SectionTitle icon={<IoRainyOutline />}>RADAR</SectionTitle>}
     >
       <Box

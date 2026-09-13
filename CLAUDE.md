@@ -128,7 +128,7 @@ src/
     FootballScoreboard.tsx        — the /football score bug at scoreboard scale; same anatomy as TeamTracker's chip, its own vmin sizes (the card's are tuned for a bento tile)
     FootballDetail.tsx            — band under the scoreboard: full down & distance, last play, network/venue, records. Dim by design — it sits still for three hours
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
-    RadarSection.tsx              — Windy radar card; renders only while the current weather condition is rain (rainy/pouring/lightning-rainy/snowy-rainy); iframe is pointer-events none so it can't trap page scroll
+    RadarSection.tsx              — Windy radar card, collapsible (`board-collapsed:radar`), above energy in both layouts; renders only while the current weather condition is rain (rainy/pouring/lightning-rainy/snowy-rainy); iframe is pointer-events none so it can't trap page scroll
     ClimateSection.tsx            — thermostat cards + modal; modal has Nest-style 120° tick arc slider (drag/tap, commits on pointerup), animated sliding segmented mode pill (HEAT/COOL/FAN/OFF); responsive sizing (vw on phone, vmin on landscape)
     VoiceAssistButton.tsx         — fixed mic FAB; rendered from Layout so it exists on every view, hidden with the nav
     VoiceAssistOverlay.tsx        — full-screen voice session UI (listening / thinking / speaking / error)

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.47.2
+
+- Changed: on the portrait frame the rain radar now sits in the half-width column directly above the energy card, instead of spanning the full width of the screen.
+- Added: the radar card can be collapsed — tap its header to fold it away, and it stays collapsed the next time it rains.
+
 ## 0.47.1
 
 - Changed: weather now comes from Apple WeatherKit (`weather.systems_weatherkit`) instead of OpenWeatherMap — current conditions, the hourly forecast and the rain radar trigger all read it. The new default only applies to fresh installs: on an existing install, set `weather_entity` and `weather_forecast_entity` to `weather.systems_weatherkit` in the addon's Configuration tab.

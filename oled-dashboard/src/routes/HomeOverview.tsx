@@ -135,13 +135,11 @@ export function HomeOverview() {
       >
         <HomeHeader span={2} internet={data.internet} weather={data.weather} />
         <TeamTracker span={2} />
-        {/* Full width rather than in the energy rail: a map needs the width,
-            and a tall rail would stretch the climate cell beside it. */}
-        <RadarSection span={2} condition={data.weather?.state} />
 
         <ClimateSection climate={data.climate} />
 
         <Box display="flex" flexDirection="column" gap={GRID_GAP} minW="0">
+          <RadarSection condition={data.weather?.state} />
           <EnergySection energy={data.energy} />
           <CalendarSection
             today={data.calendar?.today ?? []}

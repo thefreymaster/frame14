@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.47.3
+
+- Fixed: the Solar page's chart was missing on any device set to Remote mode (desktop browsers and phones) — only the totals and legend showed. The chart now fills the page there, as it does on the frame.
+- Changed: in Remote mode the Timer and Power pages now fill the screen the same way they do on the frame, instead of stopping short of the bottom.
+
 ## 0.47.2
 
 - Changed: on the portrait frame the rain radar now sits in the half-width column directly above the energy card, instead of spanning the full width of the screen.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.47.4
+
+- Fixed: the Photos slideshow stayed black after upgrading Immich to 3.x — Immich no longer lists an album's photos where Frame14 looked for them. Photos load again from the album selected in `input_select.smart_frame_album`.
+
 ## 0.47.3
 
 - Fixed: the Solar page's chart was missing on any device set to Remote mode (desktop browsers and phones) — only the totals and legend showed. The chart now fills the page there, as it does on the frame.

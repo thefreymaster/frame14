@@ -112,6 +112,31 @@ router.get("/albums", async (_req, res) => {
   }
 });
 
+// Immich 3 dropped `assets` from GET /albums/:id, so the album's images come
+// from metadata search instead, a page of up to 1000 at a time.
+async function fetchAlbumImages(albumId) {
+  const images = [];
+  let cursor;
+  do {
+    const response = await fetch(`${IMMICH_URL}/api/search/metadata`, {
+      method: "POST",
+      headers: { ...immichHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filter: { albumIds: { any: [albumId] }, type: { eq: "IMAGE" } },
+        size: 1000,
+        ...(cursor ? { cursor } : {}),
+      }),
+    });
+    if (!response.ok) return { status: response.status };
+    const { assets } = await response.json();
+    for (const a of assets?.items ?? []) {
+      images.push({ id: a.id, createdAt: a.createdAt });
+    }
+    cursor = assets?.nextCursor;
+  } while (cursor);
+  return { images };
+}
+
 router.get("/albums/:albumId", async (req, res) => {
   if (!requireImmich(res)) return;
 
@@ -127,9 +152,11 @@ router.get("/albums/:albumId", async (req, res) => {
       return;
     }
     const album = await response.json();
-    const images = (album.assets ?? [])
-      .filter((a) => a.type === "IMAGE")
-      .map((a) => ({ id: a.id, createdAt: a.createdAt }));
+    const { images, status } = await fetchAlbumImages(album.id);
+    if (!images) {
+      res.status(502).json({ error: `Immich search responded with ${status}` });
+      return;
+    }
 
     // Fisher-Yates shuffle
     for (let i = images.length - 1; i > 0; i--) {

@@ -8,7 +8,6 @@ import { ClimateDialog } from "./ClimateDialog";
 import {
   climateGridCss,
   fmtClimateTemp,
-  HEAT_FILL,
   HVAC_MODES,
   hvacPalette,
   MODE_ICON,
@@ -24,13 +23,13 @@ const RUNNING: Record<string, { mode: ClimateVisualMode; label: string }> = {
 
 /**
  * One thermostat as a Stat tile: the name and a mode icon, then the room
- * temperature and what it's doing. A unit that's on fills the whole tile with
- * its mode's solid colour (orange heat, blue cool, teal fan; heat is HEAT_FILL
- * rather than orange.solid) and every word on it takes the fill's contrast
- * colour; the status line says whether it's running now ("Heating to 70°",
- * with the icon pulsing) or idle ("Heat · set 70°"). An off unit is the plain
- * outline card with a grey "Off" Badge. The whole tile is the button that
- * opens the dialog.
+ * temperature and what it's doing. A unit that's on gets the dialog's ring: a
+ * 0.25rem border in its mode's colour (orange heat, blue cool, teal fan, from
+ * hvacPalette, so the tile and the dial it opens match), with the icon and
+ * status line in that colour. The status says whether it's running now
+ * ("Heating to 70°", with the icon pulsing) or idle ("Heat · set 70°"). An off
+ * unit is the plain outline card with a grey "Off" Badge. The whole tile is
+ * the button that opens the dialog.
  */
 function ClimateTile({
   unit,
@@ -43,8 +42,7 @@ function ClimateTile({
   const running = unit.hvacAction ? RUNNING[unit.hvacAction] : undefined;
   const shown = running?.mode ?? mode;
   const on = shown !== "off";
-  const { palette } = hvacPalette(shown);
-  const heat = palette === "orange";
+  const { accent, ring, palette } = hvacPalette(shown);
   const ModeIcon = MODE_ICON[shown];
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const targetTemp = fmtClimateTemp(unit.targetTemp);
@@ -72,23 +70,17 @@ function ClimateTile({
     <Card.Root
       asChild
       size="sm"
-      variant={on ? "subtle" : "outline"}
+      variant="outline"
       colorPalette={palette}
-      bg={on ? (heat ? HEAT_FILL.bg : "colorPalette.solid") : undefined}
-      color={
-        on ? (heat ? HEAT_FILL.ink : "colorPalette.contrast") : undefined
-      }
+      // The ring is the 1px outline border plus an inset shadow, 0.25rem in
+      // all, so a lit tile is exactly the size of an off one.
+      borderColor={on ? ring : undefined}
+      boxShadow={on ? `inset 0 0 0 calc(0.25rem - 1px) ${ring}` : undefined}
+      transition="box-shadow 400ms ease, border-color 400ms ease"
       borderRadius="sm"
       cursor="pointer"
       focusVisibleRing="outside"
-      // Pressing goes one shade darker, in light mode and dark alike.
-      _active={{
-        bg: on
-          ? heat
-            ? HEAT_FILL.pressed
-            : "colorPalette.700"
-          : "bg.emphasized",
-      }}
+      _active={{ bg: "bg.emphasized" }}
     >
       <button
         type="button"
@@ -100,15 +92,11 @@ function ClimateTile({
             {/* A narrow tile (a phone, or four across in landscape) wraps the
                 name rather than cutting it off. */}
             <HStack justify="space-between" align="start" gap="2">
-              <Stat.Label
-                minW="0"
-                lineClamp="2"
-                color={on ? "inherit" : undefined}
-              >
+              <Stat.Label minW="0" lineClamp="2">
                 {unit.name}
               </Stat.Label>
               <Icon
-                color={on ? "inherit" : "fg.subtle"}
+                color={on ? accent : "fg.subtle"}
                 boxSize="5"
                 animation={
                   running ? "pulse 2s ease-in-out infinite" : undefined
@@ -126,7 +114,7 @@ function ClimateTile({
               </Stat.ValueText>
               {on ? (
                 <Stat.HelpText
-                  color="inherit"
+                  color={accent}
                   textStyle="xs"
                   fontWeight="semibold"
                 >

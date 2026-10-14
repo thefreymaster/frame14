@@ -107,10 +107,6 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   `colorPalette`. Where a raw CSS string is needed (SVG strokes in the climate dialog's dial and the analog
   clock), use the variable, e.g. `var(--chakra-colors-orange-solid)`; nivo needs literals, so Solar resolves
   palette colours with `defaultSystem.token()`.
-- **One colour exception: the heat tile.** A heating thermostat tile on /home fills with `HEAT_FILL`
-  (`lib/hvac.ts`: shadcn's orange-600, `oklch(0.646 0.222 41.116)`, white text) instead of `orange.solid`,
-  which is orange.500 in dark mode and reads lighter and yellower than the other builds' heat; Chakra's own
-  orange.600 still looks browner beside it.
 - **Bespoke graphics stay hand-drawn**: the thermostat arc dial in the climate dialog (`ThermostatDial`; the
   Home card itself is stock Card / Stat / Badge tiles), the analog clock, the TeamTracker / football score bug
   and the nivo chart. They take their colours from Chakra tokens; team colours are data and stay as delivered.
@@ -161,7 +157,7 @@ src/
     FootballDetail.tsx            — band under the scoreboard: full down & distance, last play, network/venue, records. Dim by design — it sits still for three hours
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     RadarSection.tsx              — Windy radar card, collapsible (`board-collapsed:radar`), above energy in both layouts; renders only while the current weather condition is rain (rainy/pouring/lightning-rainy/snowy-rainy); iframe is pointer-events none so it can't trap page scroll
-    ClimateSection.tsx            — one compact tile per thermostat: a Card rendered as a button holding a Stat (name, mode icon, room temperature, status line). A unit that's on fills the tile with its palette's `solid` colour and `contrast` text (heat: `HEAT_FILL`, see "UI system") ("Heating to 70°" with a pulsing icon while running, "Heat · set 70°" idle); an off unit is the outline card with a grey "Off" Badge; columns come from the card's width (container query, `climateGridCss`); a tap opens ClimateDialog
+    ClimateSection.tsx            — one compact tile per thermostat: a Card rendered as a button holding a Stat (name, mode icon, room temperature, status line). A unit that's on gets the dialog's ring, a 0.25rem border in `hvacPalette`'s ring colour, with the icon and status line in its accent ("Heating to 70°" with a pulsing icon while running, "Heat · set 70°" idle); an off unit is the outline card with a grey "Off" Badge; columns come from the card's width (container query, `climateGridCss`); a tap opens ClimateDialog
     ClimateDialog.tsx             — thermostat modal: a stock Chakra Dialog holding a draggable ThermostatDial, a SegmentGroup (Heat / Cool / Fan / Off) and a fan-speed Slider
     ThermostatDial.tsx            — ClimateDialog's Nest-style face: ring, live pulse, 120° tick arc in the mode's Chakra palette colour; with `control` the arc drags/taps and commits on pointerup. The one hand-drawn control (geometry in lib/thermostatArc.ts)
     FanSpeedSlider.tsx            — Chakra Slider over a climate entity's fan_modes, commits on release

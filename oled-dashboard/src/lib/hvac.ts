@@ -83,20 +83,6 @@ export function getClimateAction(
   return null;
 }
 
-/**
- * The home tile's heat fill. Chakra's `orange.solid` is orange.500 in dark mode
- * (#f97316), a lighter, yellower orange than the heat the other builds use
- * (Tailwind v4's orange-600, the shadcn build's fill); even Chakra's orange.600
- * (#ea580c) reads browner beside it. So heat fills with that exact colour, with
- * white text, and presses to Tailwind's orange-700. Cool and fan keep their
- * palette's `solid`.
- */
-export const HEAT_FILL = {
-  bg: "oklch(0.646 0.222 41.116)",
-  pressed: "oklch(0.553 0.195 38.402)",
-  ink: "white",
-};
-
 export const MODE_ICON: Record<ClimateVisualMode, typeof IoFlame> = {
   heat: IoFlame,
   cool: IoSnow,

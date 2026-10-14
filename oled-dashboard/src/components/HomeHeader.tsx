@@ -76,6 +76,8 @@ export function HomeHeader({
   // The hero figures climb Chakra's type scale with the breakpoints, topping
   // out at 9xl on the panel. Landscape gives this card half the width, so it
   // climbs slower there. A fixed 9xl overflowed phones and crowded laptops.
+  // They are semibold with tight tracking and tabular digits, matching the
+  // shadcn build's clock, so the minutes don't shift as they tick.
   const hero = {
     base: "5xl",
     sm: "6xl",
@@ -115,7 +117,9 @@ export function HomeHeader({
       <HStack width="100%" align="baseline" mt="2" minW="0">
         <Text
           fontSize={hero}
-          fontWeight="light"
+          fontWeight="semibold"
+          letterSpacing="tight"
+          fontVariantNumeric="tabular-nums"
           lineHeight="1"
           whiteSpace="nowrap"
         >
@@ -135,6 +139,7 @@ export function HomeHeader({
           <Text
             as="span"
             textStyle={{ base: "xl", md: "4xl" }}
+            fontWeight="medium"
             color="fg.muted"
             ms="2"
           >
@@ -145,7 +150,9 @@ export function HomeHeader({
         {weather && weather.temperature != null && (
           <Text
             fontSize={hero}
-            fontWeight="light"
+            fontWeight="semibold"
+            letterSpacing="tight"
+            fontVariantNumeric="tabular-nums"
             lineHeight="1"
             whiteSpace="nowrap"
           >

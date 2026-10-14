@@ -4,6 +4,7 @@ import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { BirdSection } from "./BirdSection";
 import { Board } from "./Board";
+import { HERO_SUFFIX_SIZE, HERO_TEXT } from "../lib/hero";
 
 const DAYS = [
   "Sunday",
@@ -73,15 +74,6 @@ export function HomeHeader({
     ? (CONDITION_LABEL[weather.state] ?? weather.state)
     : "";
 
-  // The hero figures are sized from the width of their own row (cqi), not
-  // from breakpoints, so the clock and temperature fill the card at every
-  // size: the frame, half a landscape screen, a phone. "08:56 pm 74°" is
-  // about 5.5em wide with the am/pm at 0.35em, so 17cqi leaves a ~7% gap
-  // between them. They are semibold with tight tracking and tabular digits,
-  // matching the shadcn build's clock, so the minutes don't shift as they
-  // tick.
-  const hero = "17cqi";
-
   return (
     <Board storageKey="time-weather">
       <HStack
@@ -115,16 +107,10 @@ export function HomeHeader({
         align="baseline"
         mt="2"
         minW="0"
+        // The hero figures size themselves from this row; see lib/hero.ts.
         css={{ containerType: "inline-size" }}
       >
-        <Text
-          fontSize={hero}
-          fontWeight="semibold"
-          letterSpacing="tight"
-          fontVariantNumeric="tabular-nums"
-          lineHeight="1"
-          whiteSpace="nowrap"
-        >
+        <Text {...HERO_TEXT}>
           <NumberFlow
             digits={{ 2: { max: 2 } }}
             value={hours}
@@ -140,7 +126,7 @@ export function HomeHeader({
           />
           <Text
             as="span"
-            fontSize="0.35em"
+            fontSize={HERO_SUFFIX_SIZE}
             fontWeight="medium"
             color="fg.muted"
             ms="2"
@@ -150,14 +136,7 @@ export function HomeHeader({
         </Text>
         <Spacer />
         {weather && weather.temperature != null && (
-          <Text
-            fontSize={hero}
-            fontWeight="semibold"
-            letterSpacing="tight"
-            fontVariantNumeric="tabular-nums"
-            lineHeight="1"
-            whiteSpace="nowrap"
-          >
+          <Text {...HERO_TEXT}>
             <NumberFlow value={Math.round(weather.temperature)} />°
           </Text>
         )}

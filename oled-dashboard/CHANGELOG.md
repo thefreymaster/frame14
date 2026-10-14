@@ -2,6 +2,7 @@
 
 ## 0.50.0
 
+- Changed: the digital clock on the Clock page and the time and temperature over Photos now match Home's clock: the same heavy semibold figures at the same size, with a smaller am/pm (and seconds on the Clock page).
 - Changed: the clock and outside temperature on Home are larger and use a heavier semibold weight with tighter spacing. They grow with the width of their card, so they fill it on the frame, on a phone and in landscape, and the digits keep a fixed width so the time doesn't shift as it ticks.
 - Changed: the dashboard now uses the standard Chakra UI look throughout. Cards have Chakra's own borders and rounded corners, text uses Chakra's type scale, and controls are stock Chakra buttons, tabs, switches, sliders and segmented controls. Card and page layout, and everything the dashboard does, are unchanged.
 - Changed: dark mode is Chakra's own dark theme (a near-black background with soft grey cards) rather than pure black, and Bright is Chakra's light theme. Auto still switches between them at 7:00 and 19:00.

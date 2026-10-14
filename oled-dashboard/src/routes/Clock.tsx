@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { PageTransition } from "../components/PageTransition";
+import { HERO_SUFFIX_SIZE, HERO_TEXT, HOME_HERO_INSET } from "../lib/hero";
 
 type ClockStyle = "analog" | "digital";
 
@@ -220,6 +221,8 @@ function DigitalClock() {
   const ampm = rawHours < 12 ? "am" : "pm";
 
   return (
+    // Padded like Home's clock row so the figures come out the same size as
+    // Home's; see lib/hero.ts.
     <Box
       width="100%"
       height="100%"
@@ -227,14 +230,10 @@ function DigitalClock() {
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
+      px={HOME_HERO_INSET}
+      css={{ containerType: "inline-size" }}
     >
-      <Text
-        textStyle="9xl"
-        fontWeight="light"
-        color="fg"
-        lineHeight="1"
-        fontVariantNumeric="tabular-nums"
-      >
+      <Text {...HERO_TEXT} color="fg">
         <NumberFlow
           digits={{ 2: { max: 2 } }}
           value={hours}
@@ -250,8 +249,8 @@ function DigitalClock() {
         />
         <Text
           as="span"
-          textStyle="5xl"
-          fontWeight="light"
+          fontSize={HERO_SUFFIX_SIZE}
+          fontWeight="medium"
           color="fg.muted"
           ms="3"
         >
@@ -264,8 +263,8 @@ function DigitalClock() {
         </Text>
         <Text
           as="span"
-          textStyle="4xl"
-          fontWeight="light"
+          fontSize={HERO_SUFFIX_SIZE}
+          fontWeight="medium"
           color="fg.muted"
           ms="3"
         >
@@ -273,7 +272,7 @@ function DigitalClock() {
         </Text>
       </Text>
 
-      <Text textStyle="3xl" color="fg.muted" fontWeight="light" mt="6">
+      <Text textStyle={{ base: "lg", md: "3xl" }} color="fg.muted" mt="6">
         {DAYS[now.getDay()]}, {MONTHS[now.getMonth()]} {now.getDate()}
       </Text>
     </Box>

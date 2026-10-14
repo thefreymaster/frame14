@@ -15,6 +15,7 @@ import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
 import { EmptyState } from "../components/ui/empty-state";
+import { HERO_SUFFIX_SIZE, HERO_TEXT, HOME_HERO_INSET } from "../lib/hero";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -43,38 +44,39 @@ function PhotoOverlay({ assetId }: OverlayProps) {
   const rawHours = now.getHours();
   const hours = pad(rawHours % 12 || 12);
   const minutes = pad(now.getMinutes());
-  const ampm = rawHours < 12 ? "AM" : "PM";
+  const ampm = rawHours < 12 ? "am" : "pm";
 
   return (
     <PixelShift>
+      {/* Inset and sized like Home's clock row, so the figures match Home's;
+          see lib/hero.ts. */}
       <Box
         position="absolute"
         top="8"
-        left="8"
-        right="8"
+        left={HOME_HERO_INSET}
+        right={HOME_HERO_INSET}
         textAlign="left"
         pointerEvents="none"
       >
         <Box
           display="flex"
           justifyContent="space-between"
-          alignItems="flex-end"
+          alignItems="baseline"
           width="100%"
+          css={{ containerType: "inline-size" }}
         >
           <Text
-            textStyle="9xl"
-            fontWeight="light"
+            {...HERO_TEXT}
             color={color}
-            lineHeight="0.9"
             style={{ transition: "color 1s ease" }}
           >
             {hours}:{minutes}
             <Text
               as="span"
-              textStyle="4xl"
-              fontWeight="light"
+              fontSize={HERO_SUFFIX_SIZE}
+              fontWeight="medium"
               color={color}
-              ms="3"
+              ms="2"
               style={{ transition: "color 1s ease" }}
             >
               {ampm}
@@ -82,10 +84,8 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           </Text>
           {weather && (
             <Text
-              textStyle="9xl"
-              fontWeight="light"
+              {...HERO_TEXT}
               color={color}
-              lineHeight="0.9"
               style={{ transition: "color 1s ease" }}
             >
               {Math.round(weather.temperature)}°

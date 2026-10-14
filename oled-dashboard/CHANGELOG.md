@@ -2,6 +2,7 @@
 
 ## 0.50.0
 
+- Changed: light and switch tiles no longer show a checkbox; the lit icon and the yellow tile show what's on. On a phone the tiles sit three across instead of four, and long names wrap instead of being cut off.
 - Changed: every button is fully rounded: text buttons are pills and icon buttons are circles, and the segmented controls (such as heat / cool / fan / off) have a pill-shaped track.
 - Changed: the digital clock on the Clock page and the time and temperature over Photos now match Home's clock: the same heavy semibold figures, with a smaller am/pm (and seconds on the Clock page). The Clock page is the same size as Home; Photos is a size smaller so the picture shows.
 - Changed: the clock and outside temperature on Home are larger and use a heavier semibold weight with tighter spacing. They grow with the width of their card, so they fill it on the frame, on a phone and in landscape, and the digits keep a fixed width so the time doesn't shift as it ticks.

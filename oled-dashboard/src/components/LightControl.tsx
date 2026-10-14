@@ -15,7 +15,8 @@ type LightAttrs = {
 
 /**
  * One light or switch as a Chakra CheckboxCard: the whole card is the toggle,
- * and the checked state is Chakra's own (yellow palette).
+ * and the checked state is Chakra's own (yellow palette). There is no
+ * checkbox indicator; the lit icon and the card's yellow surface show it's on.
  */
 export function LightControl({ entity_id, name, Icon: LightIcon }: Props) {
   const { data } = useEntity<LightAttrs>(entity_id);
@@ -33,6 +34,8 @@ export function LightControl({ entity_id, name, Icon: LightIcon }: Props) {
       onCheckedChange={() => callService(entity_id, "toggle")}
       colorPalette="yellow"
       variant="surface"
+      // Chakra's small card on phones, so a name gets most of the tile.
+      size={{ base: "sm", md: "md" }}
       orientation="vertical"
       align="center"
       minW="0"
@@ -43,11 +46,16 @@ export function LightControl({ entity_id, name, Icon: LightIcon }: Props) {
           <LightIcon />
         </Icon>
         <CheckboxCard.Content minW="0" maxW="100%">
-          <CheckboxCard.Label truncate maxW="100%">
+          {/* Wraps before it cuts off (three lines on a phone, two above):
+              long names like "Dining Room Chandelier" keep their last word. */}
+          <CheckboxCard.Label
+            lineClamp={{ base: "3", md: "2" }}
+            maxW="100%"
+            textAlign="center"
+          >
             {label}
           </CheckboxCard.Label>
         </CheckboxCard.Content>
-        <CheckboxCard.Indicator />
       </CheckboxCard.Control>
     </CheckboxCard.Root>
   );

@@ -1136,3 +1136,115 @@ body {
     animation: none !important;
   }
 }
+
+/* Home layout (HomeBoard) ------------------------------------------------ */
+
+/* A card that rendered nothing — or only an empty box, like a status strip
+   with no chips — takes no room and no gap, and a zone or column pair left
+   with nothing visible goes too. Decided here because only the DOM knows:
+   each card chooses whether to show from its own subscriptions. */
+.home-card,
+.home-card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.home-card:not([data-editing]):not(:has(> .home-card-body > :not(:empty))),
+.home-zone:not([data-editing]):not(:has(> .home-card > .home-card-body > :not(:empty))),
+.home-columns:not([data-editing]):not(:has(.home-card-body > :not(:empty))) {
+  display: none;
+}
+
+/* Columns end where their cards do. Stretching a short card to meet a tall
+   column beside it would light a slab of empty surface — the burn-in case —
+   and a rearranged page can make that slab thousands of pixels tall. */
+
+/* Arranging. Card contents go inert, so a drag never also taps a card. */
+.home-board[data-editing] {
+  /* Room to scroll the last card clear of the toolbar. */
+  padding-bottom: calc(64px + 16vmin);
+}
+
+.home-zone[data-editing] {
+  min-height: 12vmin;
+  border-radius: 1vmin;
+  outline: 0.2vmin dashed var(--theme-divider);
+  outline-offset: 0.6vmin;
+}
+
+.home-zone[data-targeted] {
+  outline: 0.3vmin solid var(--theme-fg-dim);
+}
+
+.home-zone-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10vmin;
+  border-radius: 0.8vmin;
+  border: 0.2vmin dashed var(--theme-fg-faint);
+}
+
+.home-card[data-editing] {
+  position: relative;
+  cursor: grab;
+  touch-action: manipulation;
+  border-radius: 0.8vmin;
+}
+
+.home-card[data-editing] > .home-card-body {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.home-card[data-dragging] {
+  opacity: 0.25;
+}
+
+.home-card-lifted {
+  cursor: grabbing;
+  box-shadow: 0 2vmin 6vmin rgba(0, 0, 0, 0.75);
+}
+
+.home-card-lifted[data-editing] > .home-card-body {
+  opacity: 1;
+}
+
+/* Stand-in for a card that is hidden right now (see HomeCardFace). */
+.home-card-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.6vmin;
+  min-height: 10vmin;
+  padding: 2.4vmin 2.6vmin;
+  border-radius: 0.8vmin;
+  background: var(--theme-surface-1);
+  border: 0.2vmin dashed var(--theme-divider);
+}
+
+.home-card-body:has(> :not(:empty)) + .home-card-placeholder {
+  display: none;
+}
+
+/* Straddles the card's corner rather than sitting inside it, where it would
+   cover header text like the weather or the energy chip. */
+.home-card-grip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(30%, -30%);
+  box-shadow: 0 0.4vmin 1.2vmin rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(32px, 5vmin, 64px);
+  height: clamp(32px, 5vmin, 64px);
+  border-radius: 50%;
+  background: var(--theme-surface-2-on);
+  color: var(--theme-fg);
+  font-size: clamp(18px, 3vmin, 40px);
+  pointer-events: none;
+}

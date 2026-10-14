@@ -20,10 +20,8 @@ const GRID_ACTIVE_THRESHOLD = 5;
 
 export function EnergySection({
   energy,
-  span,
 }: {
   energy: HomeEnergy;
-  span?: 1 | 2;
 }) {
   const [showModal, setShowModal] = useState(false);
   const {
@@ -48,7 +46,6 @@ export function EnergySection({
         <EnergyModal energy={energy} onClose={() => setShowModal(false)} />
       )}
       <Board
-        span={span}
         collapsible
         storageKey="energy"
         title={

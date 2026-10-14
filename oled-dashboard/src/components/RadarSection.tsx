@@ -25,15 +25,12 @@ const RAIN_CONDITIONS = new Set([
  */
 export function RadarSection({
   condition,
-  span,
 }: {
   condition: string | null | undefined;
-  span?: 1 | 2;
 }) {
   if (!condition || !RAIN_CONDITIONS.has(condition)) return null;
   return (
     <Board
-      span={span}
       collapsible
       storageKey="radar"
       title={<SectionTitle icon={<IoRainyOutline />}>RADAR</SectionTitle>}

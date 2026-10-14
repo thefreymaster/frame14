@@ -75,7 +75,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 |---|---|---|
 | `/` | redirect | → `/home` |
 | `/clock` | `Clock` | Portrait display: clock + NWS weather |
-| `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar |
+| `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar. Cards are rearrangeable per device (press and hold) — see `HomeBoard` |
 | `/lights` | `Lights` | Light + switch controls |
 | `/blank` | `Blank` | Pure black screen (motion off) |
 | `/photos` | `Photos` | Immich photo slideshow |
@@ -100,7 +100,7 @@ src/
   router.tsx                      — createBrowserRouter, Layout wraps all routes
   routes/
     Clock.tsx                     — clock + weather page
-    HomeOverview.tsx              — home overview page
+    HomeOverview.tsx              — home overview page; builds the card map and hands it to HomeBoard (keyed by orientation)
     Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
     Photos.tsx                    — Immich slideshow
@@ -136,6 +136,11 @@ src/
     VoiceStatusBoard.tsx          — read-only voice diagnostics on /control
     Divider.tsx                   — thin themed divider line
     ViewButton.tsx                — styled outline/solid toggle button
+    HomeBoard.tsx                 — /home's rearrangeable layout: press-and-hold enters arranging, dnd-kit multiple-containers drag between zones, saves via lib/homeLayout, Done/Escape/90s idle leaves. DragOverlay and toolbar are portalled to body (PageTransition's transform would offset fixed elements)
+    HomeZone.tsx                  — one column or full-width band: SortableContext + its own droppable, so empty zones accept drops
+    HomeCardSlot.tsx              — sortable wrapper per card; inert (no listeners, no transform) outside arranging
+    HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in index.css)
+    HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging
     Board.tsx                     — themed panel with optional collapsible header (touch-friendly 48px min); collapse state persists in localStorage under `board-collapsed:<key>`; animated open/close via grid-template-rows; chevron rotates on toggle; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
@@ -149,6 +154,7 @@ src/
     useImmichAlbums.ts            — fetches /api/photos/albums
     useAlbumPhotos.ts             — fetches /api/photos/albums/:id
     usePhotosConfig.ts            — fetches /api/photos/config (pinned album ID)
+    useLongPress.ts               — press-and-hold pointer handlers; movement cancels, ignores portal events, swallows the release click
     useVoiceAssist.ts             — voice session snapshot + start/cancel (useSyncExternalStore over lib/voiceAssist)
     useAssistConfig.ts            — fetches /api/assist/config, staleTime: Infinity
     useSocket.ts                  — socket.io-client connection status
@@ -166,6 +172,7 @@ src/
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
     voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
     voiceAssist.ts                — voice session state machine + socket protocol (module store, like navVisibility)
+    homeLayout.ts                 — /home card ids, zones per orientation (portrait: top/left/right/bottom, landscape: left/right), defaults, and localStorage `home-layout:<orientation>`; written only after a card is moved, normalised on read (unknown ids dropped, missing cards return to their default zone)
     voiceCue.ts                   — synthesised success/failure tones (Web Audio, no asset files) that stand in for a spoken reply
 ```
 

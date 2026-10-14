@@ -302,7 +302,7 @@ function ScoreBug({ game }: { game: Game }) {
   );
 }
 
-export function TeamTracker({ span }: { span?: 1 | 2 }) {
+export function TeamTracker() {
   const { games, anyLive } = useGames(inWindow);
   const navigate = useNavigate();
 
@@ -317,7 +317,6 @@ export function TeamTracker({ span }: { span?: 1 | 2 }) {
 
   return (
     <Board
-      span={span}
       collapsible
       storageKey="teamtracker"
       title={

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.49.0
+
+- Added: rearrange the Home screen. Press and hold any card until the outlines appear, then drag cards to reorder them or move them between columns — in portrait, also into the full-width bands above and below the columns. Tap Done when finished (or leave it; it finishes itself after 90 seconds). Reset puts the original layout back.
+- Added: while arranging, cards that are hidden right now (football, rain radar, 3D printer, vacuum) show as labelled stand-ins so they can be placed too.
+- Added: the arrangement is saved on each device separately, and portrait and landscape are remembered independently.
+- Changed: in portrait the Climate card now ends below its last thermostat, instead of stretching down to match the column beside it.
+
 ## 0.48.0
 
 - Changed: a voice command that works now answers with a short chime and a checkmark instead of a spoken sentence — "Turned on the kitchen lights" is no longer read out. Answers to questions, questions back to you, and anything that only partly worked are still spoken, and the reply text still shows on screen either way.

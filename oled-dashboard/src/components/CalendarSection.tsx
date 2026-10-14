@@ -113,15 +113,12 @@ function EventList({
 export function CalendarSection({
   today,
   tomorrow,
-  span,
 }: {
   today: HomeCalendarEvent[];
   tomorrow: HomeCalendarEvent[];
-  span?: 1 | 2;
 }) {
   return (
     <Board
-      span={span}
       collapsible
       storageKey="calendar"
       title={

@@ -13,7 +13,8 @@ import { HomeHeader } from "../components/HomeHeader";
 import { CalendarSection } from "../components/CalendarSection";
 import { StatusStrip } from "../components/StatusStrip";
 import { HomeOverviewSkeleton } from "../components/skeletons/HomeOverviewSkeleton";
-import { GRID_GAP } from "../lib/surfaces";
+import { HomeBoard } from "../components/HomeBoard";
+import type { HomeCardId } from "../lib/homeLayout";
 
 // ── Orientation hook ─────────────────────────────────────────────────────────
 
@@ -66,96 +67,33 @@ export function HomeOverview() {
     );
   }
 
-  if (isLandscape) {
-    return (
-      <>
-        <StatusBanner />
-        <Box
-          width="100%"
-          minHeight="100%"
-          bg="var(--theme-bg)"
-          display="flex"
-          flexDirection="row"
-          alignItems="flex-start"
-          gap={GRID_GAP}
-          padding={GRID_GAP}
-        >
-          {/* Left column — time & weather */}
-          <Box
-            flex="1"
-            minW="0"
-            display="flex"
-            flexDirection="column"
-            gap={GRID_GAP}
-          >
-            <HomeHeader internet={data.internet} weather={data.weather} />
-            <TeamTracker />
-            <RadarSection condition={data.weather?.state} />
-            <EnergySection energy={data.energy} />
-            <PrinterSection printer={data.printer} />
-            <VacuumSection vacuum={data.vacuum} />
-          </Box>
+  const cards: Record<HomeCardId, React.ReactNode> = {
+    header: <HomeHeader internet={data.internet} weather={data.weather} />,
+    teamTracker: <TeamTracker />,
+    radar: <RadarSection condition={data.weather?.state} />,
+    energy: <EnergySection energy={data.energy} />,
+    climate: <ClimateSection climate={data.climate} />,
+    fan: <FanSection fan={data.fan} />,
+    calendar: (
+      <CalendarSection
+        today={data.calendar?.today ?? []}
+        tomorrow={data.calendar?.tomorrow ?? []}
+      />
+    ),
+    // Active-only sections: they claim a tile while running, and report as
+    // chips in the status strip when they aren't.
+    printer: <PrinterSection printer={data.printer} />,
+    vacuum: <VacuumSection vacuum={data.vacuum} />,
+    statusStrip: <StatusStrip printer={data.printer} vacuum={data.vacuum} />,
+  };
 
-          {/* Right column — details */}
-          <Box
-            flex="1"
-            minW="0"
-            display="flex"
-            flexDirection="column"
-            gap={GRID_GAP}
-          >
-            <ClimateSection climate={data.climate} />
-            <FanSection fan={data.fan} />
-            <CalendarSection
-              today={data.calendar?.today ?? []}
-              tomorrow={data.calendar?.tomorrow ?? []}
-            />
-            <StatusStrip printer={data.printer} vacuum={data.vacuum} />
-          </Box>
-        </Box>
-      </>
-    );
-  }
+  const orientation = isLandscape ? "landscape" : "portrait";
 
-  // Portrait — asymmetric bento. Wide blocks span both columns; climate takes
-  // the wider left cell while energy and calendar stack in a narrower rail, so
-  // no two tiles share a size and the layout stops reading as a flat stack.
   return (
     <>
       <StatusBanner />
-      <Box
-        width="100%"
-        minHeight="100%"
-        bg="var(--theme-bg)"
-        display="grid"
-        gridTemplateColumns="1.15fr 1fr"
-        alignContent="start"
-        gap={GRID_GAP}
-        padding={GRID_GAP}
-      >
-        <HomeHeader span={2} internet={data.internet} weather={data.weather} />
-        <TeamTracker span={2} />
-
-        <ClimateSection climate={data.climate} />
-
-        <Box display="flex" flexDirection="column" gap={GRID_GAP} minW="0">
-          <RadarSection condition={data.weather?.state} />
-          <EnergySection energy={data.energy} />
-          <CalendarSection
-            today={data.calendar?.today ?? []}
-            tomorrow={data.calendar?.tomorrow ?? []}
-          />
-        </Box>
-
-        {/* Active-only sections: they claim a full-width tile when running,
-            and report as chips in the strip below when they aren't. */}
-        <PrinterSection span={2} printer={data.printer} />
-        <VacuumSection span={2} vacuum={data.vacuum} />
-
-        <FanSection span={2} fan={data.fan} />
-
-        <StatusStrip span={2} printer={data.printer} vacuum={data.vacuum} />
-      </Box>
+      {/* Keyed so each orientation loads its own saved arrangement. */}
+      <HomeBoard key={orientation} orientation={orientation} cards={cards} />
     </>
   );
 }

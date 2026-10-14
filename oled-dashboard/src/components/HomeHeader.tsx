@@ -51,11 +51,9 @@ const CONDITION_LABEL: Record<string, string> = {
 export function HomeHeader({
   internet: { connected = true },
   weather,
-  span,
 }: {
   internet: HomeInternet;
   weather?: HomeWeather | null;
-  span?: 1 | 2;
 }) {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -76,7 +74,7 @@ export function HomeHeader({
     : "";
 
   return (
-    <Board span={span} storageKey="time-weather">
+    <Board storageKey="time-weather">
       {/* Size the header's type against this card, not the viewport.
        *
        * vmin tracks the viewport's short edge, but in landscape this card only

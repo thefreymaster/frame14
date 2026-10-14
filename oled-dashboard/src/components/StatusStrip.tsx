@@ -42,11 +42,9 @@ function ChipText({ children }: { children: React.ReactNode }) {
 export function StatusStrip({
   printer,
   vacuum,
-  span,
 }: {
   printer: HomePrinter;
   vacuum: HomeVacuum[];
-  span?: 1 | 2;
 }) {
   const printerStatus = printer.status?.trim().toLowerCase() ?? "";
   // The printer keeps its own tile while active, and says nothing at all when
@@ -60,7 +58,6 @@ export function StatusStrip({
 
   return (
     <Flex
-      gridColumn={span === 2 ? "1 / -1" : undefined}
       width="100%"
       minW="0"
       gap={CHIP_GAP}

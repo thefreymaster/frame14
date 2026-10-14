@@ -948,10 +948,8 @@ export const SINGLE_ROW_MIN_PX = 900;
 
 export function ClimateSection({
   climate,
-  span,
 }: {
   climate: HomeClimate[];
-  span?: 1 | 2;
 }) {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const selectedUnit =
@@ -959,7 +957,6 @@ export function ClimateSection({
 
   return (
     <Board
-      span={span}
       collapsible
       storageKey="climate"
       title={

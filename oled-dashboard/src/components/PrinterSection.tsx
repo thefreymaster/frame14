@@ -36,10 +36,8 @@ function titleCase(s: string): string {
 
 export function PrinterSection({
   printer,
-  span,
 }: {
   printer: HomePrinter;
-  span?: 1 | 2;
 }) {
   const [showModal, setShowModal] = useState(false);
   const isActive =
@@ -57,7 +55,6 @@ export function PrinterSection({
         <PrinterModal printer={printer} onClose={() => setShowModal(false)} />
       )}
       <Board
-        span={span}
         collapsible
         storageKey="printer"
         title={

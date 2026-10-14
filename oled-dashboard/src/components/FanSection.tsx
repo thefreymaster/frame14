@@ -408,7 +408,7 @@ function FanRow({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
   );
 }
 
-export function FanSection({ fan, span }: { fan: HomeFan[]; span?: 1 | 2 }) {
+export function FanSection({ fan }: { fan: HomeFan[] }) {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   if (fan.length === 0) return null;
   const onCount = fan.filter((f) => f.state === "on").length;
@@ -417,7 +417,6 @@ export function FanSection({ fan, span }: { fan: HomeFan[]; span?: 1 | 2 }) {
 
   return (
     <Board
-      span={span}
       collapsible
       storageKey="fan"
       title={

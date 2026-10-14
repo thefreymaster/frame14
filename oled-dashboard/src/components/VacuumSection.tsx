@@ -14,17 +14,14 @@ const STATE_LABEL: Record<string, string> = {
 
 export function VacuumSection({
   vacuum,
-  span,
 }: {
   vacuum: HomeVacuum[];
-  span?: 1 | 2;
 }) {
   const active = vacuum.filter((v) => ACTIVE_STATES.has(v.state));
   if (active.length === 0) return null;
 
   return (
     <Board
-      span={span}
       collapsible
       storageKey="vacuum"
       title={<SectionTitle icon={<TbVacuumCleaner />}>VACUUM</SectionTitle>}

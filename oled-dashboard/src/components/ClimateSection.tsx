@@ -8,6 +8,7 @@ import { ClimateDialog } from "./ClimateDialog";
 import {
   climateGridCss,
   fmtClimateTemp,
+  HEAT_FILL,
   HVAC_MODES,
   hvacPalette,
   MODE_ICON,
@@ -24,11 +25,12 @@ const RUNNING: Record<string, { mode: ClimateVisualMode; label: string }> = {
 /**
  * One thermostat as a Stat tile: the name and a mode icon, then the room
  * temperature and what it's doing. A unit that's on fills the whole tile with
- * its mode's solid colour (orange heat, blue cool, teal fan) and every word on
- * it takes the palette's contrast colour; the status line says whether it's
- * running now ("Heating to 70°", with the icon pulsing) or idle ("Heat · set
- * 70°"). An off unit is the plain outline card with a grey "Off" Badge. The
- * whole tile is the button that opens the dialog.
+ * its mode's solid colour (orange heat, blue cool, teal fan; heat is HEAT_FILL
+ * rather than orange.solid) and every word on it takes the fill's contrast
+ * colour; the status line says whether it's running now ("Heating to 70°",
+ * with the icon pulsing) or idle ("Heat · set 70°"). An off unit is the plain
+ * outline card with a grey "Off" Badge. The whole tile is the button that
+ * opens the dialog.
  */
 function ClimateTile({
   unit,
@@ -42,6 +44,7 @@ function ClimateTile({
   const shown = running?.mode ?? mode;
   const on = shown !== "off";
   const { palette } = hvacPalette(shown);
+  const heat = palette === "orange";
   const ModeIcon = MODE_ICON[shown];
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const targetTemp = fmtClimateTemp(unit.targetTemp);
@@ -71,12 +74,21 @@ function ClimateTile({
       size="sm"
       variant={on ? "subtle" : "outline"}
       colorPalette={palette}
-      bg={on ? "colorPalette.solid" : undefined}
-      color={on ? "colorPalette.contrast" : undefined}
+      bg={on ? (heat ? HEAT_FILL.bg : "colorPalette.solid") : undefined}
+      color={
+        on ? (heat ? HEAT_FILL.ink : "colorPalette.contrast") : undefined
+      }
       borderRadius="sm"
       cursor="pointer"
       focusVisibleRing="outside"
-      _active={{ bg: on ? "colorPalette.solid/80" : "bg.emphasized" }}
+      // Pressing goes one shade darker, in light mode and dark alike.
+      _active={{
+        bg: on
+          ? heat
+            ? HEAT_FILL.pressed
+            : "colorPalette.700"
+          : "bg.emphasized",
+      }}
     >
       <button
         type="button"

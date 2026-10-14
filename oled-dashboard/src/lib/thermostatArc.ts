@@ -1,7 +1,7 @@
 /**
  * Geometry of the Nest-style thermostat arc: a 120° sweep across the top of a
- * 100x100 viewBox, one tick per degree from 60° to 85°. Shared by the card's
- * static dial and the modal's draggable one (components/ThermostatDial.tsx).
+ * 100x100 viewBox, one tick per degree from 60° to 85°. Drawn by the climate
+ * dialog's dial (components/ThermostatDial.tsx).
  */
 export const ARC_MIN_TEMP = 60;
 export const ARC_MAX_TEMP = 85;

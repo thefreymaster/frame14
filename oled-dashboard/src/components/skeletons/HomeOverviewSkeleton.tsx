@@ -16,7 +16,7 @@ const DEFAULT_CHIPS = 2;
  * replaced by its placeholder, so the page doesn't jump when the data lands.
  *
  * Counts come from /api/entities (cached with staleTime: Infinity, so it is
- * usually already resolved) — that gets the number of thermostat dials and fan
+ * usually already resolved) — that gets the number of thermostat tiles and fan
  * chips right instead of guessing. Printer, vacuum and team sections are
  * active-only in the real page, so they're represented by the status strip's
  * chips rather than tiles that would vanish on load.
@@ -71,6 +71,9 @@ export function HomeOverviewSkeleton({
         display="grid"
         gridTemplateColumns="1.15fr 1fr"
         alignContent="start"
+        // Each card ends below its content, as on the live page — the climate
+        // tiles are shorter than the column beside them.
+        alignItems="start"
         gap="4"
         p="4"
       >

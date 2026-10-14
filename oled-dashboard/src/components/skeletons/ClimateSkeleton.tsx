@@ -1,9 +1,9 @@
-import { Box, Grid, Skeleton, SkeletonCircle, VStack } from "@chakra-ui/react";
+import { Box, Card, Grid, HStack, Skeleton, Stack } from "@chakra-ui/react";
 import { Board } from "../Board";
 import { SkeletonSectionTitle } from "./SkeletonSectionTitle";
-import { SINGLE_ROW_MIN_PX } from "../../lib/hvac";
+import { climateGridCss } from "../../lib/hvac";
 
-/** Placeholder for <ClimateSection>: one dial per configured thermostat. */
+/** Placeholder for <ClimateSection>: one tile per configured thermostat. */
 export function ClimateSkeleton({
   count,
   span,
@@ -14,21 +14,19 @@ export function ClimateSkeleton({
   return (
     <Board span={span} title={<SkeletonSectionTitle />}>
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <Grid
-          templateColumns="repeat(auto-fill, minmax(9rem, 1fr))"
-          css={{
-            [`@container (min-width: ${SINGLE_ROW_MIN_PX}px)`]: {
-              gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))`,
-            },
-          }}
-          gap="4"
-          width="100%"
-        >
+        <Grid css={climateGridCss(count)} width="100%">
           {Array.from({ length: count }).map((_, i) => (
-            <VStack key={i} gap="2">
-              <SkeletonCircle size="auto" width="100%" aspectRatio="1" />
-              <Skeleton height="4" width="70%" />
-            </VStack>
+            <Card.Root key={i} size="sm" variant="outline">
+              <Card.Body p="3">
+                <Stack gap="1">
+                  <Skeleton height="5" width="60%" />
+                  <HStack justify="space-between" gap="2">
+                    <Skeleton height="8" width="30%" />
+                    <Skeleton height="5" width="40%" />
+                  </HStack>
+                </Stack>
+              </Card.Body>
+            </Card.Root>
           ))}
         </Grid>
       </Box>

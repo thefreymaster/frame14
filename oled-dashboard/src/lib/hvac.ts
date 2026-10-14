@@ -6,9 +6,9 @@ import type { HomeClimate } from "../hooks/useHomeData";
 export type ClimateVisualMode = "heat" | "cool" | "fan_only" | "off";
 
 // Each hvac key maps to one of Chakra's colour palettes. `accent` and `ring`
-// are CSS colours for the hand-drawn dial (its SVG strokes), taken from the
-// palette's semantic `solid` token; `palette` feeds library parts
-// (colorPalette on the slider).
+// are CSS colours for the dialog's hand-drawn dial (its SVG strokes), taken
+// from the palette's semantic `solid` token; `palette` feeds library parts
+// (colorPalette on the home card's badges and the slider).
 const HVAC_PALETTE: Record<string, string> = {
   cool: "blue",
   cooling: "blue",
@@ -90,8 +90,30 @@ export const MODE_ICON: Record<ClimateVisualMode, typeof IoFlame> = {
   off: IoPowerOutline,
 };
 
+// Narrowest a home-card tile gets, and the grid gap between tiles, in rem.
+const TILE_MIN_REM = 10;
+const TILE_GAP_REM = 0.75;
+
 /**
- * Card width at which every thermostat fits on one row. Below it the dials
- * wrap — four units read as 2x2 on the frame and on a phone.
+ * Columns for the home card's thermostat tiles (and their skeleton), chosen by
+ * the card's own width — the caller makes the wrapper a size container. One
+ * column, then two, then one row for every unit once they all fit; never a
+ * row of three with one left over. In rem so the steps follow the root size:
+ * four units are 2x2 on the portrait frame, one row in landscape and a single
+ * column in a phone's narrow cell.
  */
-export const SINGLE_ROW_MIN_PX = 900;
+export function climateGridCss(count: number) {
+  const atLeast = (n: number) =>
+    `@container (min-width: ${n * TILE_MIN_REM + (n - 1) * TILE_GAP_REM}rem)`;
+  const columns = (n: number) => ({
+    gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
+  });
+  const pair = Math.max(1, Math.min(2, count));
+  const all = Math.max(1, count);
+  return {
+    gap: `${TILE_GAP_REM}rem`,
+    ...columns(1),
+    [atLeast(pair)]: columns(pair),
+    [atLeast(all)]: columns(all),
+  };
+}

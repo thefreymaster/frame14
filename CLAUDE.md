@@ -104,12 +104,12 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   and the socket sync; `components/ui/provider.tsx` feeds the effective mode to Chakra's colour mode (the
   `color-mode` snippet, next-themes, `forcedTheme`). Bright is Chakra's light mode, Dark is Chakra's dark mode.
 - **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
-  `colorPalette`. Where a raw CSS string is needed (SVG strokes in the thermostat dial and analog clock), use the
-  variable, e.g. `var(--chakra-colors-orange-solid)`; nivo needs literals, so Solar resolves palette colours with
-  `defaultSystem.token()`.
-- **Bespoke graphics stay hand-drawn**: the thermostat arc dial (`ThermostatDial`), the analog clock, the
-  TeamTracker / football score bug and the nivo chart. They take their colours from Chakra tokens; team colours
-  are data and stay as delivered.
+  `colorPalette`. Where a raw CSS string is needed (SVG strokes in the climate dialog's dial and the analog
+  clock), use the variable, e.g. `var(--chakra-colors-orange-solid)`; nivo needs literals, so Solar resolves
+  palette colours with `defaultSystem.token()`.
+- **Bespoke graphics stay hand-drawn**: the thermostat arc dial in the climate dialog (`ThermostatDial`; the
+  Home card itself is stock Card / Stat / Badge tiles), the analog clock, the TeamTracker / football score bug
+  and the nivo chart. They take their colours from Chakra tokens; team colours are data and stay as delivered.
 - `src/components/ui/` holds Chakra CLI snippets (`npx @chakra-ui/cli snippet add <name>`).
 
 ## Component Rules
@@ -157,9 +157,9 @@ src/
     FootballDetail.tsx            — band under the scoreboard: full down & distance, last play, network/venue, records. Dim by design — it sits still for three hours
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     RadarSection.tsx              — Windy radar card, collapsible (`board-collapsed:radar`), above energy in both layouts; renders only while the current weather condition is rain (rainy/pouring/lightning-rainy/snowy-rainy); iframe is pointer-events none so it can't trap page scroll
-    ClimateSection.tsx            — thermostat cards (ThermostatDial as a button); opens ClimateDialog
+    ClimateSection.tsx            — one compact tile per thermostat: a Card rendered as a button holding a Stat (name, mode icon, room temperature) and a Badge ("Heating → 70°" solid while running, subtle on standby, grey "Off"); columns come from the card's width (container query, `climateGridCss`); a tap opens ClimateDialog
     ClimateDialog.tsx             — thermostat modal: a stock Chakra Dialog holding a draggable ThermostatDial, a SegmentGroup (Heat / Cool / Fan / Off) and a fan-speed Slider
-    ThermostatDial.tsx            — the Nest-style face: ring, live pulse, 120° tick arc in the mode's Chakra palette colour; with `control` the arc drags/taps and commits on pointerup. The one hand-drawn control (geometry in lib/thermostatArc.ts)
+    ThermostatDial.tsx            — ClimateDialog's Nest-style face: ring, live pulse, 120° tick arc in the mode's Chakra palette colour; with `control` the arc drags/taps and commits on pointerup. The one hand-drawn control (geometry in lib/thermostatArc.ts)
     FanSpeedSlider.tsx            — Chakra Slider over a climate entity's fan_modes, commits on release
     FanSection.tsx                — fan Buttons + modal (stock Dialog: vertical Slider for speed, Switch for power)
     VoiceAssistButton.tsx         — fixed mic FAB; rendered from Layout so it exists on every view, hidden with the nav
@@ -201,7 +201,7 @@ src/
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
     navMetrics.ts                 — nav bar height / rail width in rem, shared by Layout, the mic button and the arranging bar
-    hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection
+    hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
     weatherIcons.ts               — HA weather condition → react-icons element (day/night)
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation, isMovie (the marquee's content-type gate, mirrored by the media watcher in ha-socket.js)

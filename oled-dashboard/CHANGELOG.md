@@ -11,7 +11,7 @@
 - Changed: everything is scaled up as one, so the frame reads like a large tablet page; phones are unaffected.
 - Changed: every pop-up — thermostat, fan, energy, 3D printer, forecast and the voice assistant — is a standard Chakra dialog with a title and a close button. Tap outside or press Escape to close it.
 - Changed: the thermostat mode selector is a segmented control (Heat / Cool / Fan / Off) and fan speed is a slider. The temperature arc itself still works the same way.
-- Changed: the thermostats on Home are compact tiles instead of big round dials, so the Climate card takes about half the room. Each tile shows the room temperature and a coloured label for what the unit is doing, such as "Heating → 70°" (filled in while it is actively heating or cooling) or "Off"; tap a tile to open the thermostat pop-up as before.
+- Changed: the thermostats on Home are compact tiles instead of big round dials, so the Climate card takes about half the room. Each tile shows the unit's name, the room temperature and what it is doing; tap a tile to open the thermostat window.
 - Changed: on phones (screens narrower than 768px) cards have tighter padding, the same as Chakra's small card, so more fits on screen. Tablets, desktops and the frame are unchanged.
 - Changed: on phones, Home is one column. Every card takes the full width, in the same order as before, instead of being squeezed into two narrow columns. The thermostats there show as two rows of two.
 - Changed: on a phone (or any narrow Teams card), the score bug stacks the two teams one above the other with the game time between them, so names and scores are readable instead of tiny.
@@ -19,9 +19,7 @@
 - Fixed: on a phone the last bird seen was cut off to "Blue …". The common name now stays whole and the Latin name is shortened instead.
 - Changed: cards have smaller, tighter rounded corners, and so do the tiles inside them (thermostats, calendar events, the score bug), so nothing inside a card is rounder than the card itself.
 - Changed: a thermostat that is on now has a thick border in its colour around its tile, like the ring in the thermostat window — orange for heat, blue for cool, teal for fan — with its icon and status in that colour. The tile says "Heating to 70°" while it is running and "Heat · set 70°" while it is idle; an off thermostat keeps a plain tile with a grey "Off".
-- Changed: the navigation icons are larger, the selected view has a grey highlight, and the nav's spacing matches the shadcn build.
-- Changed: each light is a tile you tap to toggle; lit tiles are highlighted in yellow and show a check mark.
-- Changed: the navigation bar highlights the current page with a filled tab.
+- Changed: the navigation icons are larger and the selected view has a grey highlight.
 - Changed: Settings uses segmented controls for device mode and theme, a switch for "Show navigation", and a status dot for the connection.
 - Added: a short notification when you refresh displays, change the photo album, or reset the Home layout.
 - Added: a red LIVE badge on the Teams card while a game is on, and hover labels on the status icons at the top of Home.

@@ -4,7 +4,7 @@
 // Size is 17cqi of the row the figures sit in, so give that row
 // `containerType: "inline-size"`. "08:56 pm 74°" is about 5.5em wide with the
 // suffix at HERO_SUFFIX_SIZE, so 17cqi fills the row and leaves a ~7% gap.
-// Weight and tracking follow the shadcn build's clock; tabular digits keep the
+// Semibold with tight tracking reads at a distance; tabular digits keep the
 // minutes from shifting as they tick.
 
 /** Font size for the hero figures, relative to their row. */

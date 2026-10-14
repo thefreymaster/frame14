@@ -27,10 +27,10 @@ function buildMarkers() {
     const outerR = 92;
     const innerR = isCardinal ? 78 : isHour ? 82 : 88;
     const strokeVar = isCardinal
-      ? "var(--theme-marker-cardinal)"
+      ? "var(--chakra-colors-marker-cardinal)"
       : isHour
-        ? "var(--theme-marker-hour)"
-        : "var(--theme-marker-minor)";
+        ? "var(--chakra-colors-marker-hour)"
+        : "var(--chakra-colors-marker-minor)";
     const width = isCardinal ? 2.2 : isHour ? 1.4 : 0.6;
     markers.push(
       <line
@@ -119,7 +119,7 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY - 52}
-            style={{ stroke: "var(--theme-fg)" }}
+            style={{ stroke: "var(--chakra-colors-fg)" }}
             strokeWidth={3.5}
             strokeLinecap="round"
           />
@@ -131,7 +131,7 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY - 72}
-            style={{ stroke: "var(--theme-fg)" }}
+            style={{ stroke: "var(--chakra-colors-fg)" }}
             strokeWidth={2}
             strokeLinecap="round"
           />
@@ -161,7 +161,7 @@ function AnalogClock() {
           />
 
           {/* Center dot */}
-          <circle cx={CX} cy={CY} r={3.5} style={{ fill: "var(--theme-fg)" }} />
+          <circle cx={CX} cy={CY} r={3.5} style={{ fill: "var(--chakra-colors-fg)" }} />
           <circle cx={CX} cy={CY} r={1.8} fill="#c53030" />
         </svg>
       </Box>
@@ -219,11 +219,11 @@ function DigitalClock() {
       justifyContent="center"
     >
       <Text
-        className="display-numeral"
+        fontFamily="display"
         fontSize="24vmin"
         fontWeight="200"
         letterSpacing="-0.03em"
-        color="var(--theme-fg)"
+        color="fg"
         lineHeight="1"
         fontVariantNumeric="tabular-nums"
       >
@@ -242,10 +242,10 @@ function DigitalClock() {
         />
         <Text
           as="span"
-          className="display-numeral"
+          fontFamily="display"
           fontSize="10vmin"
           fontWeight="200"
-          color="var(--theme-fg-dim)"
+          color="fg.dim"
           ml="1.5vmin"
         >
           <NumberFlow
@@ -257,10 +257,10 @@ function DigitalClock() {
         </Text>
         <Text
           as="span"
-          className="display-numeral"
+          fontFamily="display"
           fontSize="8vmin"
           fontWeight="300"
-          color="var(--theme-fg-dim)"
+          color="fg.dim"
           ml="2vmin"
         >
           {ampm}
@@ -269,7 +269,7 @@ function DigitalClock() {
 
       <Text
         fontSize="4vmin"
-        color="var(--theme-fg-muted)"
+        color="fg.muted"
         fontWeight="300"
         letterSpacing="0.04em"
         mt="3vmin"
@@ -298,7 +298,7 @@ export function Clock() {
       position="relative"
       width="100%"
       height="100vh"
-      bg="var(--theme-bg)"
+      bg="bg"
       overflow="hidden"
       display="flex"
       alignItems="center"

@@ -50,19 +50,18 @@ export function Layout() {
           overflow={scrollable ? "auto" : "hidden"}
           pt={showNav ? "env(safe-area-inset-top, 0px)" : 0}
           transition="padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-          css={{
-            "@media (orientation: landscape)": {
-              minWidth: "100vw",
-              paddingLeft: showNav
-                ? "calc(68px + env(safe-area-inset-left, 0px))"
-                : "0px",
-            },
-            "@media (orientation: portrait)": {
-              minWidth: "100%",
-              paddingBottom: showNav
-                ? "calc(64px + env(safe-area-inset-bottom, 0px))"
-                : "0px",
-            },
+          // Room for the nav: a rail on the left in landscape, a bar along the
+          // bottom in portrait.
+          minW={{ _landscape: "100vw", _portrait: "100%" }}
+          pl={{
+            _landscape: showNav
+              ? "calc({sizes.navRail} + env(safe-area-inset-left, 0px))"
+              : "0px",
+          }}
+          pb={{
+            _portrait: showNav
+              ? "calc({sizes.navBar} + env(safe-area-inset-bottom, 0px))"
+              : "0px",
           }}
         >
           {content}
@@ -79,9 +78,7 @@ export function Layout() {
         />
       )}
 
-      {voice.state !== "idle" && (
-        <VoiceAssistOverlay snapshot={voice} onDismiss={voice.cancel} />
-      )}
+      <VoiceAssistOverlay snapshot={voice} onDismiss={voice.cancel} />
     </>
   );
 }

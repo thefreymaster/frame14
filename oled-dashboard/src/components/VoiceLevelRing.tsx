@@ -49,7 +49,7 @@ export function VoiceLevelRing({ size = "24vmin" }: { size?: string }) {
       width={size}
       height={size}
       borderRadius="full"
-      bg="var(--theme-surface-2)"
+      bg="surface.chip"
       style={{ transform: "scale(1)", opacity: 0.25, willChange: "transform" }}
       pointerEvents="none"
     />

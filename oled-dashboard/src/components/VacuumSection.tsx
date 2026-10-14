@@ -1,4 +1,4 @@
-import { Box, Text, HStack, VStack } from "@chakra-ui/react";
+import { HStack, Progress, Text, VStack } from "@chakra-ui/react";
 import { TbVacuumCleaner } from "react-icons/tb";
 import NumberFlow from "@number-flow/react";
 import type { HomeVacuum } from "../hooks/useHomeData";
@@ -12,11 +12,7 @@ const STATE_LABEL: Record<string, string> = {
   returning: "Returning",
 };
 
-export function VacuumSection({
-  vacuum,
-}: {
-  vacuum: HomeVacuum[];
-}) {
+export function VacuumSection({ vacuum }: { vacuum: HomeVacuum[] }) {
   const active = vacuum.filter((v) => ACTIVE_STATES.has(v.state));
   if (active.length === 0) return null;
 
@@ -30,39 +26,48 @@ export function VacuumSection({
         {active.map((v) => {
           const progress = Math.max(0, Math.min(100, v.progress ?? 0));
           return (
-            <Box key={v.entity_id} width="100%">
+            <Progress.Root
+              key={v.entity_id}
+              value={progress}
+              variant="soft"
+              size="hair"
+              shape="full"
+              colorPalette="green"
+              width="100%"
+            >
               <HStack width="100%" justify="space-between" align="baseline">
                 <VStack align="flex-start" gap="0.2vmin" flex="1" minW="0">
-                  <Text
+                  <Progress.Label
                     fontSize="3.8vmin"
-                    color="var(--theme-fg-dim)"
+                    color="fg.dim"
                     fontWeight="300"
-                    overflow="hidden"
-                    whiteSpace="nowrap"
-                    textOverflow="ellipsis"
+                    truncate
+                    display="block"
                     maxW="45vmin"
                   >
                     {v.name}
-                  </Text>
+                  </Progress.Label>
                   <Text
                     fontSize="2.2vmin"
-                    color="var(--theme-fg-faint)"
+                    color="fg.faint"
                     letterSpacing="0.08em"
                   >
                     {STATE_LABEL[v.state] ?? v.state}
                   </Text>
                 </VStack>
                 <Text
-                  className="display-numeral"
+                  textStyle="numeral"
+                  letterSpacing="normal"
                   fontSize="5.5vmin"
                   color="green.500"
-                  fontWeight="300"
-                  lineHeight="1"
                 >
                   <NumberFlow value={progress} />%
                 </Text>
               </HStack>
-            </Box>
+              <Progress.Track mt="1.5vmin">
+                <Progress.Range transition="width 600ms ease" />
+              </Progress.Track>
+            </Progress.Root>
           );
         })}
       </VStack>

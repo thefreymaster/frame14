@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.50.0
+
+- Changed: the dashboard is rebuilt on Chakra UI's component library. Layout, cards and routes are where they were; the controls underneath are now standard components, so they look and behave consistently from page to page.
+- Changed: every modal — thermostat, fan, energy, 3D printer, forecast and the voice overlay — now closes the same way (tap outside, the close button, or Escape) and keeps keyboard focus inside while open.
+- Changed: the thermostat's mode selector is a sliding segmented control outlined in the mode's colour, and its fan speed is a slider with a stop for each fan mode instead of a row of bars.
+- Changed: the fan's on/off control is a switch, and each light tile carries a small switch in its corner that lights amber when the light is on.
+- Changed: Settings uses segmented controls for device mode and Auto / Bright / Dark, a switch for "Show navigation", and a connection status dot; Solar and Timer use segmented controls for their toggles and presets.
+- Changed: the timer's ring, the print / vacuum / solar-coverage / circuit bars, and the stat figures in the detail modals and on Solar and Power are now library components at the same sizes as before.
+- Added: a short notification when you refresh displays, change the photo album, or reset the Home layout.
+- Added: a LIVE marker with a blinking dot on the Teams card while a game is on, and hover labels on the status icons at the top of Home.
+- Changed: the bar shown while arranging Home slides up from the bottom, and empty states ("no game in session", "nothing playing", "no album configured") now show an icon.
+- Fixed: the few library-drawn pieces (the offline alert, loading spinners, the arranging bar's buttons) now follow the dashboard's Auto / Bright / Dark setting; they could follow the device's own light/dark preference instead.
+- Changed: the doorbell camera card now shows above an open modal instead of underneath it.
+
 ## 0.49.0
 
 - Added: rearrange the Home screen. Press and hold any card until the outlines appear, then drag cards to reorder them or move them between columns — in portrait, also into the full-width bands above and below the columns. Tap Done when finished (or leave it; it finishes itself after 90 seconds). Reset puts the original layout back.

@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Box, Text, HStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  Grid,
+  HStack,
+  IconButton,
+  Text,
+} from "@chakra-ui/react";
 import { MdSkipNext, MdRefresh, MdRadar, MdElectricBolt } from "react-icons/md";
 import {
   IoTimeOutline,
@@ -8,8 +16,6 @@ import {
   IoImages,
   IoTimerOutline,
   IoTimer,
-  IoEyeOutline,
-  IoEyeOffOutline,
   IoOptionsOutline,
   IoAmericanFootballOutline,
   IoAmericanFootball,
@@ -29,22 +35,22 @@ import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import { useImmichAlbums } from "../hooks/useImmichAlbums";
-import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
+import { useNavVisible, setNavVisible } from "../lib/navVisibility";
 import type { ThemeModePreference } from "../lib/themeMode";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
-import { ControlButton } from "../components/ControlButton";
 import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { VoiceStatusBoard } from "../components/VoiceStatusBoard";
+import { toaster } from "../components/ui/toaster";
+import { Tooltip } from "../components/ui/tooltip";
+import { SegmentedControl } from "../components/ui/segmented-control";
+import { Status } from "../components/ui/status";
+import { Switch } from "../components/ui/switch";
 import {
-  CARD_RADIUS,
-  CHIP_GAP,
-  CHIP_PADDING_X,
-  CHIP_PADDING_Y,
-  CHIP_RADIUS,
-  GRID_GAP,
-} from "../lib/surfaces";
+  NativeSelectField,
+  NativeSelectRoot,
+} from "../components/ui/native-select";
 
 const VIEWS: {
   path: string;
@@ -98,6 +104,11 @@ const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "dark", label: "Dark" },
 ];
 
+const DEVICE_MODES = [
+  { value: "frame", label: "Use as frame" },
+  { value: "controller", label: "Use as remote" },
+] as const;
+
 function nextPhoto() {
   socket.emit("next_photo");
 }
@@ -122,6 +133,12 @@ export function Control() {
       body: JSON.stringify({ option }),
     });
     queryClient.invalidateQueries({ queryKey: ["photos", "config"] });
+    const name = albums?.find((a) => a.id === option)?.albumName ?? option;
+    toaster.create({
+      title: "Album changed",
+      description: name,
+      type: "success",
+    });
   }
 
   useEffect(() => {
@@ -154,212 +171,141 @@ export function Control() {
         icon={<IoOptionsOutline />}
         title="CONTROL"
         actions={
-          <HStack gap="1vmin" align="center">
-            <Box
-              width="1vmin"
-              minWidth="6px"
-              height="1vmin"
-              minHeight="6px"
-              borderRadius="full"
-              bg={connected ? "green.400" : "var(--theme-fg-faint)"}
-            />
-            <Text
-              fontSize="1.8vmin"
-              fontWeight="400"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.08em"
-              whiteSpace="nowrap"
-            >
-              {connected ? "CONNECTED" : "DISCONNECTED"}
-            </Text>
-          </HStack>
+          <Status
+            value="success"
+            size="panel"
+            colorPalette={connected ? "green" : "gray"}
+            color="fg.faint"
+            whiteSpace="nowrap"
+          >
+            {connected ? "CONNECTED" : "DISCONNECTED"}
+          </Status>
         }
       >
-        {/* Device mode buttons */}
-        <HStack gap={CHIP_GAP} mt="1.5vmin">
-          {(["frame", "controller"] as const).map((mode) => {
-            const isActive = deviceMode === mode;
-            const label = mode === "frame" ? "Use as frame" : "Use as remote";
-            return (
-              <ControlButton
-                key={mode}
-                grow
-                active={isActive}
-                onClick={() => {
-                  setDeviceMode(mode);
-                  setDeviceModeState(mode);
-                  if (mode === "frame") window.location.href = "/home";
-                }}
-              >
-                <Text
-                  fontSize="2.2vmin"
-                  fontWeight={isActive ? "500" : "300"}
-                  letterSpacing="0.02em"
-                  whiteSpace="nowrap"
-                >
-                  {label}
-                </Text>
-              </ControlButton>
-            );
-          })}
-        </HStack>
+        {/* Device mode */}
+        <SegmentedControl
+          fitted
+          mt="1.5vmin"
+          items={[...DEVICE_MODES]}
+          value={deviceMode}
+          aria-label="Device mode"
+          onValueChange={(e) => {
+            const mode = e.value as "frame" | "controller" | null;
+            if (!mode) return;
+            setDeviceMode(mode);
+            setDeviceModeState(mode);
+            if (mode === "frame") window.location.href = "/home";
+          }}
+        />
       </PageHeader>
 
       {/* Body: stacked portrait, side-by-side landscape */}
-      <Box
-        css={{
-          display: "flex",
-          flexDirection: "column",
-          gap: GRID_GAP,
-          "@media (orientation: landscape)": {
-            flexDirection: "row",
-            alignItems: "flex-start",
-          },
-        }}
+      <Flex
+        direction={{ base: "column", _landscape: "row" }}
+        align={{ _landscape: "flex-start" }}
+        gap="gutter"
       >
         {deviceMode !== "frame" && (
           <Box flex="1" minWidth="0">
             <Board title={<SectionTitle>VIEWS</SectionTitle>}>
-              {/* View grid */}
-              <Box
-                display="grid"
-                gridTemplateColumns="1fr 1fr 1fr"
-                gap={CHIP_GAP}
-                width="100%"
-              >
+              <Grid templateColumns="1fr 1fr 1fr" gap="chipGap" width="100%">
                 {VIEWS.map((v) => {
                   const isActive = activeView === v.path;
-                  const isPhotos = v.path === "/photos";
                   const Icon = isActive ? v.activeIcon : v.icon;
-
                   return (
-                    <ControlButton
-                      key={v.path}
-                      square
-                      radius={CARD_RADIUS}
-                      active={isActive}
-                      onClick={() => changeView(v.path)}
-                      label={v.label}
-                    >
-                      <Box
-                        color={
-                          isActive ? "var(--theme-fg)" : "var(--theme-fg-dim)"
-                        }
-                        fontSize="5vmin"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
+                    <Box key={v.path} position="relative" minW="0">
+                      <Button
+                        variant="chip"
+                        size="tile"
+                        width="100%"
+                        aria-pressed={isActive}
+                        aria-label={v.label}
+                        onClick={() => changeView(v.path)}
                       >
                         <Icon />
-                      </Box>
-                      <Text
-                        fontSize="2.2vmin"
-                        fontWeight={isActive ? "500" : "300"}
-                        letterSpacing="0.01em"
-                      >
                         {v.label}
-                      </Text>
-                      {isPhotos && (
-                        <Box
-                          as="span"
-                          role="button"
-                          aria-label="Next photo"
-                          position="absolute"
-                          top="1.2vmin"
-                          right="1.2vmin"
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
-                            nextPhoto();
-                          }}
-                          color="var(--theme-fg-faint)"
-                          _hover={{ color: "var(--theme-fg)" }}
-                          display="flex"
-                          alignItems="center"
-                          fontSize="2.8vmin"
-                        >
-                          <MdSkipNext />
-                        </Box>
+                      </Button>
+                      {v.path === "/photos" && (
+                        <Tooltip content="Next photo" showArrow>
+                          <IconButton
+                            aria-label="Next photo"
+                            variant="plain"
+                            position="absolute"
+                            top="0.6vmin"
+                            right="0.6vmin"
+                            minW="0"
+                            boxSize="5vmin"
+                            color="fg.faint"
+                            _hover={{ color: "fg" }}
+                            _icon={{ width: "2.8vmin", height: "2.8vmin" }}
+                            onClick={nextPhoto}
+                          >
+                            <MdSkipNext />
+                          </IconButton>
+                        </Tooltip>
                       )}
-                    </ControlButton>
+                    </Box>
                   );
                 })}
-              </Box>
+              </Grid>
             </Board>
           </Box>
         )}
-        <Box
-          flex="1"
-          minWidth="0"
-          display="flex"
-          flexDirection="column"
-          gap={GRID_GAP}
-        >
+        <Flex flex="1" minWidth="0" direction="column" gap="gutter">
           {/* Display mode */}
           <Board
             title={
               <HStack justify="space-between" align="baseline" width="100%">
                 <SectionTitle>DISPLAY</SectionTitle>
                 {preference === "auto" && (
-                  <Text fontSize="1.8vmin" color="var(--theme-fg-faint)">
+                  <Text fontSize="1.8vmin" color="fg.faint">
                     auto · {effectiveMode}
                   </Text>
                 )}
               </HStack>
             }
           >
-            <HStack gap={CHIP_GAP} width="100%">
-              {THEME_MODES.map((m) => {
-                const isActive = preference === m.value;
-                return (
-                  <ControlButton
-                    key={m.value}
-                    grow
-                    active={isActive}
-                    onClick={() => setPreference(m.value)}
-                  >
-                    <Text
-                      fontSize="2.4vmin"
-                      fontWeight={isActive ? "500" : "300"}
-                      letterSpacing="0.02em"
-                    >
-                      {m.label}
-                    </Text>
-                  </ControlButton>
-                );
-              })}
-            </HStack>
+            <SegmentedControl
+              fitted
+              items={THEME_MODES}
+              value={preference}
+              aria-label="Theme"
+              onValueChange={(e) => {
+                if (e.value) setPreference(e.value as ThemeModePreference);
+              }}
+            />
 
             {/* Refresh all frames */}
-            <HStack mt={CHIP_GAP} width="100%">
-              <ControlButton grow onClick={() => socket.emit("refresh")}>
-                <Box fontSize="2.8vmin" display="flex">
-                  <MdRefresh />
-                </Box>
-                <Text
-                  fontSize="2.4vmin"
-                  fontWeight="300"
-                  letterSpacing="0.02em"
-                >
-                  Refresh displays
-                </Text>
-              </ControlButton>
-            </HStack>
+            <Button
+              variant="chip"
+              size="chip"
+              width="100%"
+              mt="chipGap"
+              fontSize="2.4vmin"
+              onClick={() => {
+                socket.emit("refresh");
+                toaster.create({ title: "Refreshing displays", type: "info" });
+              }}
+            >
+              <MdRefresh />
+              Refresh displays
+            </Button>
 
             {/* Show/hide nav */}
-            <HStack mt={CHIP_GAP} width="100%">
-              <ControlButton grow onClick={() => toggleNavVisible()}>
-                <Box fontSize="2.8vmin" display="flex">
-                  {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
-                </Box>
-                <Text
-                  fontSize="2.4vmin"
-                  fontWeight="300"
-                  letterSpacing="0.02em"
-                >
-                  {navVisible ? "Hide navigation" : "Show navigation"}
-                </Text>
-              </ControlButton>
-            </HStack>
+            <Switch
+              size="panel"
+              colorPalette="teal"
+              checked={navVisible}
+              onCheckedChange={(e) => setNavVisible(e.checked)}
+              layerStyle="chip"
+              width="100%"
+              mt="chipGap"
+              justifyContent="space-between"
+              flexDirection="row-reverse"
+              color="fg.dim"
+            >
+              Show navigation
+            </Switch>
           </Board>
 
           {/* Voice */}
@@ -367,42 +313,26 @@ export function Control() {
 
           {/* Album */}
           <Board title={<SectionTitle>ALBUM</SectionTitle>}>
-            <select
-              style={{
-                width: "100%",
-                padding: `${CHIP_PADDING_Y} ${CHIP_PADDING_X}`,
-                borderRadius: CHIP_RADIUS,
-                // Fill, not outline — matches every other control on the page
-                // and stays visible when the palette flips to bright.
-                background: "var(--theme-surface-2)",
-                border: "none",
-                color: "var(--theme-fg)",
-                fontSize: "2.4vmin",
-                fontWeight: 300,
-              }}
-              value={photosConfig?.defaultAlbumId ?? ""}
-              onChange={handleAlbumChange}
-            >
-              {!photosConfig?.defaultAlbumId && <option value="">—</option>}
-              {photosConfig?.options.map((id) => {
-                const album = albums?.find((a) => a.id === id);
-                return (
-                  <option
-                    key={id}
-                    value={id}
-                    style={{
-                      background: "var(--theme-surface-2)",
-                      color: "var(--theme-fg)",
-                    }}
-                  >
-                    {album?.albumName ?? id}
-                  </option>
-                );
-              })}
-            </select>
+            <NativeSelectRoot variant="chip" size="panel">
+              <NativeSelectField
+                aria-label="Photo album"
+                value={photosConfig?.defaultAlbumId ?? ""}
+                onChange={handleAlbumChange}
+              >
+                {!photosConfig?.defaultAlbumId && <option value="">—</option>}
+                {photosConfig?.options.map((id) => {
+                  const album = albums?.find((a) => a.id === id);
+                  return (
+                    <option key={id} value={id}>
+                      {album?.albumName ?? id}
+                    </option>
+                  );
+                })}
+              </NativeSelectField>
+            </NativeSelectRoot>
           </Board>
-        </Box>
-      </Box>
+        </Flex>
+      </Flex>
     </PageShell>
   );
 }

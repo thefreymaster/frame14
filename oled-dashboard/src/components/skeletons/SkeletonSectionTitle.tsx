@@ -1,5 +1,4 @@
-import { Box, HStack } from "@chakra-ui/react";
-import { SkeletonBlock } from "./SkeletonBlock";
+import { Box, HStack, Skeleton, SkeletonCircle } from "@chakra-ui/react";
 
 /**
  * Stand-in for a card's <SectionTitle>: the icon glyph as a dot, the label as
@@ -15,11 +14,11 @@ export function SkeletonSectionTitle({
 }) {
   return (
     <HStack width="100%" align="center" gap="1vmin">
-      <SkeletonBlock boxSize="2.4vmin" borderRadius="full" flexShrink={0} />
-      <SkeletonBlock height="2.2vmin" width={width} borderRadius="0.4vmin" />
+      <SkeletonCircle size="2.4vmin" flexShrink={0} />
+      <Skeleton height="2.2vmin" width={width} borderRadius="0.4vmin" />
       <Box flex="1" minW="0" />
       {meta && (
-        <SkeletonBlock height="1.8vmin" width={meta} borderRadius="0.4vmin" />
+        <Skeleton height="1.8vmin" width={meta} borderRadius="0.4vmin" />
       )}
     </HStack>
   );

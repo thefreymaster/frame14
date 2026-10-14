@@ -1,6 +1,5 @@
-import { Box, HStack, Spacer } from "@chakra-ui/react";
+import { Box, HStack, Skeleton, Spacer } from "@chakra-ui/react";
 import { Board } from "../Board";
-import { SkeletonBlock } from "./SkeletonBlock";
 
 /**
  * Placeholder for <HomeHeader>.
@@ -15,10 +14,10 @@ export function HomeHeaderSkeleton({ span }: { span?: 1 | 2 }) {
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
         {/* Row 1: date — condition + humidity */}
         <HStack width="100%" align="center" mb="1.2cqi" minW="0">
-          <SkeletonBlock height="4.1cqi" width="34cqi" borderRadius="0.4vmin" />
+          <Skeleton height="4.1cqi" width="34cqi" borderRadius="0.4vmin" />
           <Spacer />
-          <SkeletonBlock height="4.1cqi" width="14cqi" borderRadius="0.4vmin" />
-          <SkeletonBlock
+          <Skeleton height="4.1cqi" width="14cqi" borderRadius="0.4vmin" />
+          <Skeleton
             height="4.1cqi"
             width="7cqi"
             borderRadius="0.4vmin"
@@ -28,17 +27,9 @@ export function HomeHeaderSkeleton({ span }: { span?: 1 | 2 }) {
 
         {/* Row 2: time — temp */}
         <HStack width="100%" align="center" minW="0">
-          <SkeletonBlock
-            height="14.7cqi"
-            width="44cqi"
-            borderRadius="0.8vmin"
-          />
+          <Skeleton height="14.7cqi" width="44cqi" borderRadius="0.8vmin" />
           <Spacer />
-          <SkeletonBlock
-            height="13.7cqi"
-            width="18cqi"
-            borderRadius="0.8vmin"
-          />
+          <Skeleton height="13.7cqi" width="18cqi" borderRadius="0.8vmin" />
         </HStack>
       </Box>
     </Board>

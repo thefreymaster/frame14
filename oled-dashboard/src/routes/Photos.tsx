@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { Box, Text, Spinner } from "@chakra-ui/react";
-import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { Box, IconButton, Spinner, Text } from "@chakra-ui/react";
+import {
+  IoEyeOutline,
+  IoEyeOffOutline,
+  IoImagesOutline,
+} from "react-icons/io5";
 import { PhotoSlide } from "../components/PhotoSlide";
 import { PixelShift } from "../components/PixelShift";
 import { useAlbumPhotos } from "../hooks/useAlbumPhotos";
@@ -10,6 +14,7 @@ import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
+import { EmptyState } from "../components/ui/empty-state";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -57,7 +62,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           width="100%"
         >
           <Text
-            className="display-numeral"
+            fontFamily="display"
             fontSize="14vmin"
             fontWeight="300"
             letterSpacing="-0.03em"
@@ -68,7 +73,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
             {hours}:{minutes}
             <Text
               as="span"
-              className="display-numeral"
+              fontFamily="display"
               fontSize="5.5vmin"
               fontWeight="300"
               color={color}
@@ -80,7 +85,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           </Text>
           {weather && (
             <Text
-              className="display-numeral"
+              fontFamily="display"
               fontSize="14vmin"
               fontWeight="300"
               letterSpacing="-0.03em"
@@ -131,10 +136,12 @@ export function Photos() {
     return () => clearInterval(id);
   }, [album]);
 
-  // Reset index when album changes
-  useEffect(() => {
+  // Reset index when album changes (derived during render, not in an effect).
+  const [indexAlbumId, setIndexAlbumId] = useState(activeAlbumId);
+  if (indexAlbumId !== activeAlbumId) {
+    setIndexAlbumId(activeAlbumId);
     setCurrentIndex(0);
-  }, [activeAlbumId]);
+  }
 
   // Advance to a random photo
   function advancePhoto() {
@@ -186,12 +193,12 @@ export function Photos() {
       <Box
         width="100%"
         height="100vh"
-        bg="var(--theme-bg)"
+        bg="bg"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Spinner size="lg" color="var(--theme-fg-muted)" />
+        <Spinner size="lg" color="fg.muted" />
       </Box>
     );
   }
@@ -201,14 +208,17 @@ export function Photos() {
       <Box
         width="100%"
         height="100vh"
-        bg="var(--theme-bg)"
+        bg="bg"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Text color="var(--theme-fg-faint)" fontSize="sm">
-          no album configured
-        </Text>
+        <EmptyState
+          size="panel"
+          icon={<IoImagesOutline />}
+          title="no album configured"
+          description="Pick one under Album on the Settings page."
+        />
       </Box>
     );
   }
@@ -217,7 +227,7 @@ export function Photos() {
     <Box
       width="100%"
       height="100vh"
-      bg="var(--theme-bg)"
+      bg="bg"
       position="relative"
       overflow="hidden"
       onClick={advancePhoto}
@@ -231,7 +241,7 @@ export function Photos() {
           alignItems="center"
           justifyContent="center"
         >
-          <Spinner size="lg" color="var(--theme-fg-muted)" />
+          <Spinner size="lg" color="fg.muted" />
         </Box>
       )}
 
@@ -245,8 +255,10 @@ export function Photos() {
 
       <PhotoOverlay assetId={album?.assets[currentIndex]?.id ?? null} />
 
-      <Box
-        as="button"
+      <IconButton
+        variant="glass"
+        size="lg"
+        borderRadius="full"
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
           toggleNavVisible();
@@ -254,26 +266,11 @@ export function Photos() {
         position="fixed"
         bottom="calc(16px + env(safe-area-inset-bottom, 0px))"
         right="calc(16px + env(safe-area-inset-right, 0px))"
-        width="44px"
-        height="44px"
-        borderRadius="full"
-        bg="rgba(0,0,0,0.4)"
-        color="rgba(255,255,255,0.85)"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        backdropFilter="blur(8px)"
-        border="1px solid rgba(255,255,255,0.15)"
-        _active={{ opacity: 0.5 }}
         zIndex={200}
         aria-label={navVisible ? "Hide navigation" : "Show navigation"}
       >
-        {navVisible ? (
-          <IoEyeOffOutline size={20} />
-        ) : (
-          <IoEyeOutline size={20} />
-        )}
-      </Box>
+        {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
+      </IconButton>
     </Box>
   );
 }

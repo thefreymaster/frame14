@@ -30,7 +30,7 @@ export function FootballDetail({ game }: { game: Game }) {
   return (
     <Box
       flexShrink={0}
-      bg="var(--theme-bg)"
+      bg="bg"
       px="3vmin"
       py="2.4vmin"
       display="flex"
@@ -44,7 +44,7 @@ export function FootballDetail({ game }: { game: Game }) {
         <Text
           fontSize="3vmin"
           fontWeight="500"
-          color="var(--theme-fg)"
+          color="fg"
           letterSpacing="0.1em"
           textAlign="center"
           width="100%"
@@ -59,7 +59,7 @@ export function FootballDetail({ game }: { game: Game }) {
       {lastPlay && (
         <Text
           fontSize="2.4vmin"
-          color="var(--theme-fg-faint)"
+          color="fg.faint"
           letterSpacing="0.02em"
           textAlign="center"
           width="100%"

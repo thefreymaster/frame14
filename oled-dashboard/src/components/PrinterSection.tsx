@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import { Box, Text, HStack, VStack, Grid } from "@chakra-ui/react";
-import { IoClose, IoPrintOutline } from "react-icons/io5";
+import { useState } from "react";
+import {
+  Box,
+  Grid,
+  HStack,
+  Progress,
+  Stat,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import { IoPrintOutline } from "react-icons/io5";
 import NumberFlow from "@number-flow/react";
 import type { HomePrinter } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
-import { MODAL_RADIUS } from "../lib/surfaces";
+import { PanelDialog } from "./PanelDialog";
 
 function fmtMins(minutes: number) {
   if (!isFinite(minutes) || minutes <= 0) return "—";
@@ -34,12 +42,8 @@ function titleCase(s: string): string {
   return s.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function PrinterSection({
-  printer,
-}: {
-  printer: HomePrinter;
-}) {
-  const [showModal, setShowModal] = useState(false);
+export function PrinterSection({ printer }: { printer: HomePrinter }) {
+  const [open, setOpen] = useState(false);
   const isActive =
     printer.status === "running" ||
     printer.status === "printing" ||
@@ -51,9 +55,11 @@ export function PrinterSection({
 
   return (
     <>
-      {showModal && (
-        <PrinterModal printer={printer} onClose={() => setShowModal(false)} />
-      )}
+      <PrinterModal
+        printer={printer}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
       <Board
         collapsible
         storageKey="printer"
@@ -61,117 +67,74 @@ export function PrinterSection({
           <HStack width="100%" align="center" gap="1.5vmin">
             <SectionTitle icon={<IoPrintOutline />}>3D PRINTER</SectionTitle>
             <Box flex="1" minW="0" />
-            <Text
-              fontSize="1.8vmin"
-              color="green.500"
-              letterSpacing="0.06em"
-              fontWeight="500"
-            >
+            <Text textStyle="meta" color="green.500">
               <NumberFlow value={printer.progress} />%
             </Text>
-            <Text
-              fontSize="1.8vmin"
-              color="var(--theme-fg-dim)"
-              letterSpacing="0.06em"
-              fontWeight="500"
-            >
+            <Text textStyle="meta" color="fg.dim">
               {fmtMins(printer.remainingTime)}
             </Text>
           </HStack>
         }
       >
-        <Box onClick={() => setShowModal(true)} cursor="pointer" width="100%">
+        <Box
+          role="button"
+          aria-label="Show printer detail"
+          onClick={() => setOpen(true)}
+          cursor="pointer"
+          width="100%"
+        >
           <HStack width="100%" justify="space-between" align="baseline">
             <Text
               fontSize="3.8vmin"
-              color="var(--theme-fg-dim)"
+              color="fg.dim"
               fontWeight="300"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
+              truncate
               maxW="45vmin"
             >
               {printer.taskName ?? "—"}
             </Text>
             <HStack align="baseline" gap="4vmin">
               <Text
-                className="display-numeral"
+                textStyle="numeral"
                 fontSize="5.5vmin"
+                letterSpacing="normal"
                 color="green.500"
-                fontWeight="300"
-                lineHeight="1"
               >
                 <NumberFlow value={printer.progress} />%
               </Text>
-              <Text
-                fontSize="4vmin"
-                color="var(--theme-fg-dim)"
-                fontWeight="300"
-              >
+              <Text fontSize="4vmin" color="fg.dim" fontWeight="300">
                 {fmtMins(printer.remainingTime)}
               </Text>
             </HStack>
           </HStack>
-          <Box
+          <Progress.Root
+            value={cardProgress}
+            variant="soft"
+            size="hair"
+            shape="full"
+            colorPalette="green"
             mt="1.5vmin"
-            height="0.7vmin"
-            borderRadius="999px"
-            bg="rgba(255,255,255,0.16)"
-            overflow="hidden"
-            width="100%"
+            aria-label="Print progress"
           >
-            <Box
-              height="100%"
-              width={`${cardProgress}%`}
-              bg="green.500"
-              transition="width 600ms ease"
-            />
-          </Box>
+            <Progress.Track>
+              <Progress.Range transition="width 600ms ease" />
+            </Progress.Track>
+          </Progress.Root>
         </Box>
       </Board>
     </>
   );
 }
 
-const PRINTER_EXIT_MS = 260;
-
 function PrinterModal({
   printer,
+  open,
   onClose,
 }: {
   printer: HomePrinter;
+  open: boolean;
   onClose: () => void;
 }) {
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isClosing, setIsClosing] = useState(false);
-
-  function requestClose() {
-    if (isClosing) return;
-    setIsClosing(true);
-    closeTimerRef.current = setTimeout(() => {
-      closeTimerRef.current = null;
-      onClose();
-    }, PRINTER_EXIT_MS);
-  }
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        requestClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isClosing]);
-
-  useEffect(
-    () => () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    },
-    [],
-  );
-
   const etaLabel = fmtTime(printer.endTime);
   const startLabel = fmtTime(printer.startTime);
   const layerPct =
@@ -186,118 +149,70 @@ function PrinterModal({
     : titleCase(printer.status);
 
   return (
-    <Box
-      className={`printer-modal${isClosing ? " printer-modal--closing" : ""}`}
-      position="fixed"
-      inset="0"
-      zIndex={200}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      onClick={requestClose}
+    <PanelDialog
+      open={open}
+      onClose={onClose}
+      label="printer details"
+      glow="rgba(34, 197, 94, 0.08)"
     >
-      <Box
-        className="printer-panel"
-        borderRadius={MODAL_RADIUS}
-        p="6vmin"
-        minW="70vmin"
-        maxW="92vmin"
-        display="flex"
-        flexDirection="column"
-        gap="3.5vmin"
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-      >
-        <Box
-          as="button"
-          className="printer-close"
-          aria-label="Close printer details"
-          onClick={requestClose}
-          style={{ WebkitTapHighlightColor: "transparent" }}
+      <VStack gap="1vmin" align="stretch" pe="6vmin">
+        <Text textStyle="eyebrow" color="fg.faint">
+          3D PRINTER · {stageLabel.toUpperCase()}
+        </Text>
+        <Text
+          fontSize="5vmin"
+          fontWeight="300"
+          letterSpacing="-0.02em"
+          lineHeight="1.1"
         >
-          <IoClose />
-        </Box>
-
-        <VStack gap="1vmin" align="stretch">
-          <Text
-            fontSize="2.2vmin"
-            letterSpacing="0.16em"
-            color="var(--theme-fg-faint)"
-          >
-            3D PRINTER · {stageLabel.toUpperCase()}
+          {printer.taskName ?? "—"}
+        </Text>
+        {printer.gcodeFilename && (
+          <Text fontSize="2.2vmin" color="fg.faint" truncate>
+            {printer.gcodeFilename}
           </Text>
-          <Text
-            fontSize="5vmin"
-            fontWeight="300"
-            letterSpacing="-0.02em"
-            lineHeight="1.1"
-          >
-            {printer.taskName ?? "—"}
-          </Text>
-          {printer.gcodeFilename && (
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
-            >
-              {printer.gcodeFilename}
-            </Text>
-          )}
-        </VStack>
+        )}
+      </VStack>
 
+      <Progress.Root
+        value={progress}
+        variant="soft"
+        size="bar"
+        shape="full"
+        colorPalette="green"
+      >
         <VStack gap="1.5vmin" align="stretch">
           <HStack justify="space-between" align="baseline">
-            <Text
-              className="display-numeral"
-              fontSize="11vmin"
-              fontWeight="300"
-              color="green.400"
-              lineHeight="1"
-              letterSpacing="-0.04em"
-            >
+            <Text textStyle="numeral" fontSize="11vmin" color="green.400">
               <NumberFlow value={progress} />%
             </Text>
             <VStack align="flex-end" gap="0.2vmin">
               <Text fontSize="4.5vmin" fontWeight="300" lineHeight="1">
                 {fmtMins(printer.remainingTime)}
               </Text>
-              <Text
+              <Progress.Label
                 fontSize="2vmin"
+                fontWeight="400"
                 letterSpacing="0.12em"
-                color="var(--theme-fg-faint)"
+                color="fg.faint"
               >
                 REMAINING
-              </Text>
+              </Progress.Label>
             </VStack>
           </HStack>
-          <Box
-            height="0.9vmin"
-            borderRadius="999px"
-            bg="rgba(255,255,255,0.16)"
-            overflow="hidden"
-          >
-            <Box
-              height="100%"
-              width={`${progress}%`}
-              bg="green.400"
-              transition="width 600ms ease"
-            />
-          </Box>
+          <Progress.Track>
+            <Progress.Range transition="width 600ms ease" />
+          </Progress.Track>
           <HStack justify="space-between">
             {startLabel && (
-              <Text
-                fontSize="2.2vmin"
-                color="var(--theme-fg-faint)"
-                letterSpacing="0.04em"
-              >
+              <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.04em">
                 Started {startLabel}
               </Text>
             )}
             {etaLabel && (
               <Text
                 fontSize="2.2vmin"
-                color="var(--theme-fg-faint)"
+                color="fg.faint"
                 letterSpacing="0.04em"
                 ml="auto"
               >
@@ -306,79 +221,61 @@ function PrinterModal({
             )}
           </HStack>
         </VStack>
+      </Progress.Root>
 
-        <Box borderTop="1px solid var(--theme-divider)" pt="3vmin">
-          <Grid templateColumns="1fr 1fr" gap="2.5vmin">
-            <StatTile
-              label="LAYER"
-              value={
-                printer.currentLayer != null && printer.totalLayers != null
-                  ? `${printer.currentLayer} / ${printer.totalLayers}${
-                      layerPct != null ? ` · ${layerPct}%` : ""
-                    }`
-                  : "—"
-              }
-            />
-            <StatTile
-              label="SPEED"
-              value={
-                printer.speedProfile ? titleCase(printer.speedProfile) : "—"
-              }
-            />
-            <StatTile
-              label="NOZZLE"
-              value={`${fmtNum(printer.nozzleTemp)}° / ${fmtNum(printer.nozzleTarget)}°`}
-            />
-            <StatTile
-              label="BED"
-              value={`${fmtNum(printer.bedTemp)}° / ${fmtNum(printer.bedTarget)}°`}
-            />
-            <StatTile label="FILAMENT" value={printer.activeTray ?? "—"} />
-            <StatTile
-              label="WEIGHT"
-              value={
-                printer.printWeight != null
-                  ? `${fmtNum(printer.printWeight, 1)} g`
-                  : "—"
-              }
-            />
-            <StatTile
-              label="LENGTH"
-              value={
-                printer.printLength != null
-                  ? `${fmtNum(printer.printLength, 1)} m`
-                  : "—"
-              }
-            />
-            <StatTile label="STAGE" value={stageLabel} />
-          </Grid>
-        </Box>
+      <Box borderTopWidth="1px" borderColor="divider" pt="3vmin">
+        <Grid templateColumns="1fr 1fr" gap="2.5vmin">
+          <StatTile
+            label="LAYER"
+            value={
+              printer.currentLayer != null && printer.totalLayers != null
+                ? `${printer.currentLayer} / ${printer.totalLayers}${
+                    layerPct != null ? ` · ${layerPct}%` : ""
+                  }`
+                : "—"
+            }
+          />
+          <StatTile
+            label="SPEED"
+            value={printer.speedProfile ? titleCase(printer.speedProfile) : "—"}
+          />
+          <StatTile
+            label="NOZZLE"
+            value={`${fmtNum(printer.nozzleTemp)}° / ${fmtNum(printer.nozzleTarget)}°`}
+          />
+          <StatTile
+            label="BED"
+            value={`${fmtNum(printer.bedTemp)}° / ${fmtNum(printer.bedTarget)}°`}
+          />
+          <StatTile label="FILAMENT" value={printer.activeTray ?? "—"} />
+          <StatTile
+            label="WEIGHT"
+            value={
+              printer.printWeight != null
+                ? `${fmtNum(printer.printWeight, 1)} g`
+                : "—"
+            }
+          />
+          <StatTile
+            label="LENGTH"
+            value={
+              printer.printLength != null
+                ? `${fmtNum(printer.printLength, 1)} m`
+                : "—"
+            }
+          />
+          <StatTile label="STAGE" value={stageLabel} />
+        </Grid>
       </Box>
-    </Box>
+    </PanelDialog>
   );
 }
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <VStack align="flex-start" gap="0.4vmin">
-      <Text
-        fontSize="1.9vmin"
-        letterSpacing="0.14em"
-        color="var(--theme-fg-faint)"
-      >
-        {label}
-      </Text>
-      <Text
-        fontSize="3.2vmin"
-        fontWeight="300"
-        lineHeight="1.1"
-        overflow="hidden"
-        whiteSpace="nowrap"
-        textOverflow="ellipsis"
-        maxW="100%"
-      >
-        {value}
-      </Text>
-    </VStack>
+    <Stat.Root size="panel">
+      <Stat.Label>{label}</Stat.Label>
+      <Stat.ValueText>{value}</Stat.ValueText>
+    </Stat.Root>
   );
 }

@@ -61,7 +61,7 @@ export function BirdSection() {
     >
       <Text
         fontSize="2.4vmin"
-        color="var(--theme-fg-dim)"
+        color="fg.dim"
         fontWeight="300"
         overflow="hidden"
         whiteSpace="nowrap"
@@ -73,7 +73,7 @@ export function BirdSection() {
       {scientificName && (
         <Text
           fontSize="2vmin"
-          color="var(--theme-fg-faint)"
+          color="fg.faint"
           fontStyle="italic"
           letterSpacing="0.04em"
           overflow="hidden"
@@ -87,7 +87,7 @@ export function BirdSection() {
       {confidencePct != null && (
         <Text
           fontSize="2.2vmin"
-          color="var(--theme-fg-faint)"
+          color="fg.faint"
           fontWeight="300"
           flexShrink={0}
           ml="auto"
@@ -98,7 +98,7 @@ export function BirdSection() {
       {seen && (
         <Text
           fontSize="2vmin"
-          color="var(--theme-fg-faint)"
+          color="fg.faint"
           letterSpacing="0.08em"
           flexShrink={0}
         >

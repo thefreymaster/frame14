@@ -1,11 +1,12 @@
-import { HStack, Box } from "@chakra-ui/react";
+import { HStack, Icon } from "@chakra-ui/react";
+import { Tooltip } from "./ui/tooltip";
 import { TbWashMachine, TbWashTumbleDry, TbBowlSpoon } from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useEntities, useEntity } from "../hooks/useEntity";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { printerBaseId, printerEntityId } from "../lib/printerEntities";
 
-function PrinterNozzleIcon() {
+function PrinterNozzleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       width="1em"
@@ -13,6 +14,7 @@ function PrinterNozzleIcon() {
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
+      {...props}
     >
       <rect x="9" y="2" width="6" height="3" rx="0.5" />
       <path d="M5 6h14v4l-5 6h-4l-5-6z" />
@@ -55,26 +57,30 @@ export function ApplianceIndicators() {
 
   return (
     <HStack gap="6px" align="center">
-      {running.map(({ id, Icon, label }) => (
-        <Box
+      {running.map(({ id, Icon: ApplianceIcon, label }) => (
+        <Tooltip
           key={id}
-          fontSize="10px"
-          color="#22c55e"
-          lineHeight="1"
-          aria-label={`${label} running`}
+          content={`${label[0].toUpperCase()}${label.slice(1)} running`}
         >
-          <Icon />
-        </Box>
+          <Icon
+            boxSize="10px"
+            color="green.500"
+            aria-label={`${label} running`}
+          >
+            <ApplianceIcon />
+          </Icon>
+        </Tooltip>
       ))}
       {printerActive && (
-        <Box
-          fontSize="10px"
-          color="#22c55e"
-          lineHeight="1"
-          aria-label="3d printer running"
-        >
-          <PrinterNozzleIcon />
-        </Box>
+        <Tooltip content="3D printer running">
+          <Icon
+            boxSize="10px"
+            color="green.500"
+            aria-label="3d printer running"
+          >
+            <PrinterNozzleIcon />
+          </Icon>
+        </Tooltip>
       )}
     </HStack>
   );

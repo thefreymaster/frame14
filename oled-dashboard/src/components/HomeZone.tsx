@@ -1,8 +1,10 @@
-import { Box, Text } from "@chakra-ui/react";
+import { Box, EmptyState, Text } from "@chakra-ui/react";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { HomeCardSlot } from "./HomeCardSlot";
-import { GRID_GAP } from "../lib/surfaces";
 import type { HomeCardId, HomeZoneId } from "../lib/homeLayout";
 
 /**
@@ -29,7 +31,11 @@ export function HomeZone({
   const { setNodeRef } = useDroppable({ id, disabled: !editing });
 
   return (
-    <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
+    <SortableContext
+      id={id}
+      items={items}
+      strategy={verticalListSortingStrategy}
+    >
       <Box
         ref={setNodeRef}
         className="home-zone"
@@ -38,16 +44,24 @@ export function HomeZone({
         data-targeted={targeted || undefined}
         display="flex"
         flexDirection="column"
-        gap={GRID_GAP}
+        gap="gutter"
         flex={flex}
         minW="0"
+        {...(editing && {
+          minH: "12vmin",
+          borderRadius: "1vmin",
+          outline: targeted
+            ? "0.3vmin solid {colors.fg.dim}"
+            : "0.2vmin dashed {colors.divider}",
+          outlineOffset: "0.6vmin",
+        })}
       >
         {editing && (
           <Text
             fontSize="clamp(11px, 1.6vmin, 22px)"
             letterSpacing="0.12em"
             textTransform="uppercase"
-            color="var(--theme-fg-faint)"
+            color="fg.faint"
           >
             {label}
           </Text>
@@ -58,11 +72,28 @@ export function HomeZone({
           </HomeCardSlot>
         ))}
         {editing && items.length === 0 && (
-          <div className="home-zone-empty">
-            <Text fontSize="clamp(13px, 2vmin, 26px)" color="var(--theme-fg-faint)">
-              Drag a card here
-            </Text>
-          </div>
+          <EmptyState.Root
+            flex="1"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            minH="10vmin"
+            p="0"
+            borderRadius="card"
+            borderWidth="0.2vmin"
+            borderStyle="dashed"
+            borderColor="fg.faint"
+          >
+            <EmptyState.Content>
+              <EmptyState.Title
+                fontSize="clamp(13px, 2vmin, 26px)"
+                fontWeight="400"
+                color="fg.faint"
+              >
+                Drag a card here
+              </EmptyState.Title>
+            </EmptyState.Content>
+          </EmptyState.Root>
         )}
       </Box>
     </SortableContext>

@@ -1,8 +1,8 @@
-import { Box, VStack } from "@chakra-ui/react";
+import { Box, Skeleton, VStack } from "@chakra-ui/react";
 import { Board } from "../Board";
-import { SkeletonBlock } from "./SkeletonBlock";
+
 import { SkeletonSectionTitle } from "./SkeletonSectionTitle";
-import { SINGLE_ROW_MIN_PX } from "../ClimateSection";
+import { SINGLE_ROW_MIN_PX } from "../../lib/hvac";
 
 /** Placeholder for <ClimateSection>: one dial per configured thermostat. */
 export function ClimateSkeleton({
@@ -29,12 +29,8 @@ export function ClimateSkeleton({
         >
           {Array.from({ length: count }).map((_, i) => (
             <VStack key={i} gap="1vmin" align="center">
-              <SkeletonBlock width="100%" aspectRatio="1" borderRadius="full" />
-              <SkeletonBlock
-                height="1.8vmin"
-                width="70%"
-                borderRadius="0.4vmin"
-              />
+              <Skeleton width="100%" aspectRatio="1" borderRadius="full" />
+              <Skeleton height="1.8vmin" width="70%" borderRadius="0.4vmin" />
             </VStack>
           ))}
         </Box>

@@ -1,72 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { Box, Text, HStack, VStack, Grid } from "@chakra-ui/react";
-import { IoClose } from "react-icons/io5";
-import {
-  WiDaySunny,
-  WiNightClear,
-  WiDayCloudy,
-  WiNightAltPartlyCloudy,
-  WiCloudy,
-  WiFog,
-  WiHail,
-  WiLightning,
-  WiThunderstorm,
-  WiNightAltThunderstorm,
-  WiRain,
-  WiShowers,
-  WiNightAltShowers,
-  WiSnow,
-  WiNightAltSnow,
-  WiRainMix,
-  WiStrongWind,
-  WiNa,
-} from "react-icons/wi";
+import { Box, Grid, HStack, Icon, Stat, Text, VStack } from "@chakra-ui/react";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
-import { MODAL_RADIUS } from "../lib/surfaces";
-
-const FORECAST_EXIT_MS = 260;
-
-type IconComponent = React.ComponentType<{
-  size?: string | number;
-  color?: string;
-}>;
-
-const DAY_ICONS: Record<string, IconComponent> = {
-  sunny: WiDaySunny,
-  "clear-night": WiNightClear,
-  partlycloudy: WiDayCloudy,
-  cloudy: WiCloudy,
-  fog: WiFog,
-  hail: WiHail,
-  lightning: WiLightning,
-  "lightning-rainy": WiThunderstorm,
-  pouring: WiRain,
-  rainy: WiShowers,
-  snowy: WiSnow,
-  "snowy-rainy": WiRainMix,
-  windy: WiStrongWind,
-  "windy-variant": WiStrongWind,
-  exceptional: WiNa,
-};
-
-const NIGHT_ICONS: Record<string, IconComponent> = {
-  ...DAY_ICONS,
-  sunny: WiNightClear,
-  partlycloudy: WiNightAltPartlyCloudy,
-  "lightning-rainy": WiNightAltThunderstorm,
-  rainy: WiNightAltShowers,
-  snowy: WiNightAltSnow,
-};
-
-function isNight(datetime: string) {
-  const h = new Date(datetime).getHours();
-  return h >= 20 || h < 6;
-}
-
-function getIcon(condition: string, datetime: string): IconComponent {
-  const map = isNight(datetime) ? NIGHT_ICONS : DAY_ICONS;
-  return map[condition] ?? WiNa;
-}
+import { weatherIcon } from "../lib/weatherIcons";
+import { PanelDialog } from "./PanelDialog";
 
 function formatConditionLabel(condition: string | null) {
   if (!condition) return "Unknown";
@@ -91,193 +26,122 @@ function formatFullTime(datetime: string) {
   return `${day} · ${time}`;
 }
 
+const CARDINALS = [
+  "N",
+  "NNE",
+  "NE",
+  "ENE",
+  "E",
+  "ESE",
+  "SE",
+  "SSE",
+  "S",
+  "SSW",
+  "SW",
+  "WSW",
+  "W",
+  "WNW",
+  "NW",
+  "NNW",
+];
+
 function bearingToCardinal(deg: number) {
-  const dirs = [
-    "N",
-    "NNE",
-    "NE",
-    "ENE",
-    "E",
-    "ESE",
-    "SE",
-    "SSE",
-    "S",
-    "SSW",
-    "SW",
-    "WSW",
-    "W",
-    "WNW",
-    "NW",
-    "NNW",
-  ];
-  return dirs[Math.round((deg % 360) / 22.5) % 16];
+  return CARDINALS[Math.round((deg % 360) / 22.5) % 16];
 }
 
 interface Props {
-  period: HomeForecastPeriod;
+  period: HomeForecastPeriod | null;
+  open: boolean;
   onClose: () => void;
 }
 
-export function ForecastDetailModal({ period, onClose }: Props) {
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isClosing, setIsClosing] = useState(false);
-
-  function requestClose() {
-    if (isClosing) return;
-    setIsClosing(true);
-    closeTimerRef.current = setTimeout(() => {
-      closeTimerRef.current = null;
-      onClose();
-    }, FORECAST_EXIT_MS);
-  }
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        requestClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isClosing]);
-
-  useEffect(
-    () => () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    },
-    [],
-  );
-
-  const Icon = getIcon(period.condition ?? "", period.datetime);
-
+/** One forecast period in full: a Dialog of Stat tiles. */
+export function ForecastDetailModal({ period, open, onClose }: Props) {
   return (
-    <Box
-      className={`energy-modal${isClosing ? " energy-modal--closing" : ""}`}
-      position="fixed"
-      inset="0"
-      zIndex={200}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      onClick={requestClose}
+    <PanelDialog
+      open={open && period != null}
+      onClose={onClose}
+      label="forecast detail"
     >
-      <Box
-        className="energy-panel"
-        borderRadius={MODAL_RADIUS}
-        p="6vmin"
-        minW="70vmin"
-        maxW="90vmin"
-        display="flex"
-        flexDirection="column"
-        alignItems="stretch"
-        gap="3.5vmin"
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-      >
-        <Box
-          as="button"
-          className="energy-close"
-          aria-label="Close forecast detail"
-          onClick={requestClose}
-          style={{ WebkitTapHighlightColor: "transparent" }}
-        >
-          <IoClose />
-        </Box>
-
-        <VStack gap="1vmin" align="stretch">
-          <Text
-            fontSize="2.2vmin"
-            letterSpacing="0.16em"
-            color="var(--theme-fg-faint)"
-          >
-            FORECAST
-          </Text>
-          <Text fontSize="3vmin" color="var(--theme-fg-dim)">
-            {formatFullTime(period.datetime)}
-          </Text>
-        </VStack>
-
-        <HStack gap="3vmin" align="center">
-          <Box
-            color="var(--theme-fg-dim)"
-            className="display-numeral"
-            fontSize="14vmin"
-            lineHeight="1"
-            flexShrink={0}
-          >
-            <Icon size="1em" />
-          </Box>
-          <VStack align="flex-start" gap="0.5vmin">
-            <Text
-              className="display-numeral"
-              fontSize="11vmin"
-              fontWeight="300"
-              letterSpacing="-0.04em"
-              lineHeight="1"
-            >
-              {period.temperature != null
-                ? `${Math.round(period.temperature)}°`
-                : "—"}
-            </Text>
-            <Text
-              fontSize="2.6vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.06em"
-            >
-              {formatConditionLabel(period.condition)}
-            </Text>
-          </VStack>
-        </HStack>
-
-        <Box borderTop="1px solid var(--theme-divider)" pt="3vmin">
-          <Grid templateColumns="1fr 1fr" gap="2.5vmin">
-            <DetailRow
-              label="LOW"
-              value={
-                period.templow != null ? `${Math.round(period.templow)}°` : "—"
-              }
-            />
-            <DetailRow
-              label="PRECIP CHANCE"
-              value={
-                period.precipitationProbability != null
-                  ? `${period.precipitationProbability}%`
-                  : "—"
-              }
-              accent={
-                (period.precipitationProbability ?? 0) > 0
-                  ? "blue.400"
-                  : undefined
-              }
-            />
-            <DetailRow
-              label="PRECIP AMOUNT"
-              value={
-                period.precipitation != null
-                  ? `${period.precipitation} mm`
-                  : "—"
-              }
-            />
-            <DetailRow
-              label="WIND"
-              value={
-                period.windSpeed != null
-                  ? `${Math.round(period.windSpeed)}${
-                      period.windBearing != null
-                        ? ` ${bearingToCardinal(period.windBearing)}`
-                        : ""
-                    }`
-                  : "—"
-              }
-            />
-          </Grid>
-        </Box>
-      </Box>
-    </Box>
+      {period && <ForecastDetail period={period} />}
+    </PanelDialog>
   );
 }
 
-function DetailRow({
+function ForecastDetail({ period }: { period: HomeForecastPeriod }) {
+  return (
+    <>
+      <VStack gap="1vmin" align="stretch">
+        <Text textStyle="eyebrow" color="fg.faint">
+          FORECAST
+        </Text>
+        <Text fontSize="3vmin" color="fg.dim">
+          {formatFullTime(period.datetime)}
+        </Text>
+      </VStack>
+
+      <HStack gap="3vmin" align="center">
+        <Icon color="fg.dim" boxSize="14vmin" flexShrink={0}>
+          {weatherIcon(period.condition ?? "", period.datetime)}
+        </Icon>
+        <VStack align="flex-start" gap="0.5vmin">
+          <Text textStyle="numeral" fontSize="11vmin">
+            {period.temperature != null
+              ? `${Math.round(period.temperature)}°`
+              : "—"}
+          </Text>
+          <Text fontSize="2.6vmin" color="fg.faint" letterSpacing="0.06em">
+            {formatConditionLabel(period.condition)}
+          </Text>
+        </VStack>
+      </HStack>
+
+      <Box borderTopWidth="1px" borderColor="divider" pt="3vmin">
+        <Grid templateColumns="1fr 1fr" gap="2.5vmin">
+          <Detail
+            label="LOW"
+            value={
+              period.templow != null ? `${Math.round(period.templow)}°` : "—"
+            }
+          />
+          <Detail
+            label="PRECIP CHANCE"
+            value={
+              period.precipitationProbability != null
+                ? `${period.precipitationProbability}%`
+                : "—"
+            }
+            accent={
+              (period.precipitationProbability ?? 0) > 0
+                ? "blue.400"
+                : undefined
+            }
+          />
+          <Detail
+            label="PRECIP AMOUNT"
+            value={
+              period.precipitation != null ? `${period.precipitation} mm` : "—"
+            }
+          />
+          <Detail
+            label="WIND"
+            value={
+              period.windSpeed != null
+                ? `${Math.round(period.windSpeed)}${
+                    period.windBearing != null
+                      ? ` ${bearingToCardinal(period.windBearing)}`
+                      : ""
+                  }`
+                : "—"
+            }
+          />
+        </Grid>
+      </Box>
+    </>
+  );
+}
+
+function Detail({
   label,
   value,
   accent,
@@ -287,22 +151,15 @@ function DetailRow({
   accent?: string;
 }) {
   return (
-    <VStack align="flex-start" gap="0.4vmin">
-      <Text
-        fontSize="1.8vmin"
-        letterSpacing="0.14em"
-        color="var(--theme-fg-faint)"
-      >
-        {label}
-      </Text>
-      <Text
+    <Stat.Root size="panel">
+      <Stat.Label fontSize="1.8vmin">{label}</Stat.Label>
+      <Stat.ValueText
         fontSize="4.2vmin"
-        fontWeight="300"
         lineHeight="1"
-        color={accent ?? "var(--theme-fg-dim)"}
+        color={accent ?? "fg.dim"}
       >
         {value}
-      </Text>
-    </VStack>
+      </Stat.ValueText>
+    </Stat.Root>
   );
 }

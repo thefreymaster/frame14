@@ -1,5 +1,13 @@
 import { useMemo, useState } from "react";
-import { Box, HStack, VStack, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Center,
+  HStack,
+  IconButton,
+  Spinner,
+  Stat,
+  Text,
+} from "@chakra-ui/react";
 import { ResponsiveLine } from "@nivo/line";
 import { PiSolarRoof } from "react-icons/pi";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
@@ -9,9 +17,7 @@ import { useThemeMode } from "../hooks/useThemeMode";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
-import { ControlButton } from "../components/ControlButton";
-import { CHIP_RADIUS } from "../lib/surfaces";
-import { FONT_BODY } from "../lib/typography";
+import { SegmentedControl } from "../components/ui/segmented-control";
 
 const MONTHS = [
   "January",
@@ -28,7 +34,7 @@ const MONTHS = [
   "December",
 ];
 
-// Built per-render inside component — must react to theme changes
+const FONT_BODY = "var(--chakra-fonts-body)";
 
 function fmtKwh(n: number) {
   return n.toFixed(1);
@@ -89,8 +95,8 @@ export function Solar() {
   const consumptionColor = isDark ? "rgba(255,255,255,0.55)" : "#4A5568";
   const temperatureColor = isDark ? "rgba(56,189,248,0.6)" : "#0284c7";
   // Tooltip floats over the chart card, so it steps up one surface level.
-  const tooltipBg = "var(--theme-surface-2)";
-  const tooltipFg = "var(--theme-fg)";
+  const tooltipBg = "var(--chakra-colors-surface-chip)";
+  const tooltipFg = "var(--chakra-colors-fg)";
   const crosshairColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
   const tickColor = isDark ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.35)";
 
@@ -168,8 +174,7 @@ export function Solar() {
   const consTotal =
     data?.find((s) => s.id === "runningConsumption")?.data.at(-1)?.y ?? 0;
   const pct = consTotal > 0 ? Math.round((prodTotal / consTotal) * 100) : 0;
-  const pctColor =
-    pct >= 100 ? "#22c55e" : pct >= 60 ? "#eab308" : "var(--theme-fg-faint)";
+  const pctColor = pct >= 100 ? "#22c55e" : pct >= 60 ? "#eab308" : "fg.faint";
 
   return (
     <PageShell fill>
@@ -179,80 +184,73 @@ export function Solar() {
         title="SOLAR"
         actions={
           <HStack gap="1.5vmin" rowGap="1vmin" wrap="wrap" align="center">
-            {/* total / daily toggle */}
-            <HStack gap="0.6vmin">
-              {(["total", "daily"] as ChartMode[]).map((m) => (
-                <ControlButton
-                  key={m}
-                  active={chartMode === m}
-                  onClick={() => setChartMode(m)}
-                  py="0.9vmin"
-                  px="2.4vmin"
-                >
-                  <Text fontSize="2vmin" letterSpacing="0.08em">
-                    {m === "total" ? "TOTAL" : "DAILY"}
-                  </Text>
-                </ControlButton>
-              ))}
-            </HStack>
+            <SegmentedControl
+              size="compact"
+              items={[
+                { value: "total", label: "TOTAL" },
+                { value: "daily", label: "DAILY" },
+              ]}
+              value={chartMode}
+              aria-label="Chart"
+              onValueChange={(e) =>
+                e.value && setChartMode(e.value as ChartMode)
+              }
+            />
 
-            {/* month / year toggle */}
-            <HStack gap="0.6vmin">
-              {(["month", "year"] as View[]).map((v) => (
-                <ControlButton
-                  key={v}
-                  active={view === v}
-                  onClick={() => switchView(v)}
-                  py="0.9vmin"
-                  px="2.4vmin"
-                >
-                  <Text fontSize="2vmin" letterSpacing="0.08em">
-                    {v === "month" ? "MONTH" : "YEAR"}
-                  </Text>
-                </ControlButton>
-              ))}
-            </HStack>
+            <SegmentedControl
+              size="compact"
+              items={[
+                { value: "month", label: "MONTH" },
+                { value: "year", label: "YEAR" },
+              ]}
+              value={view}
+              aria-label="Period"
+              onValueChange={(e) => e.value && switchView(e.value as View)}
+            />
 
             {/* prev / label / next */}
             <HStack
               gap="0.6vmin"
               align="center"
-              bg="var(--theme-surface-2)"
-              borderRadius={CHIP_RADIUS}
+              layerStyle="chip"
               px="1.2vmin"
               py="0.6vmin"
             >
-              <Box
-                as="button"
+              <IconButton
+                aria-label={
+                  view === "month" ? "Previous month" : "Previous year"
+                }
+                variant="plain"
+                size="xs"
+                color="fg.dim"
+                minW="0"
+                _icon={{ width: "3vmin", height: "3vmin" }}
                 onClick={shiftBack}
-                fontSize="3vmin"
-                lineHeight="1"
-                color="var(--theme-fg-dim)"
-                display="flex"
               >
                 <FiChevronLeft />
-              </Box>
+              </IconButton>
               <Text
                 fontSize="2vmin"
                 fontWeight="400"
-                color="var(--theme-fg-dim)"
+                color="fg.dim"
                 letterSpacing="0.08em"
                 minW="11vmin"
                 textAlign="center"
               >
                 {label}
               </Text>
-              <Box
-                as="button"
+              <IconButton
+                aria-label={view === "month" ? "Next month" : "Next year"}
+                variant="plain"
+                size="xs"
+                color="fg.dim"
+                minW="0"
+                _icon={{ width: "3vmin", height: "3vmin" }}
+                disabled={atNow}
                 onClick={shiftForward}
-                fontSize="3vmin"
-                lineHeight="1"
-                color={atNow ? "var(--theme-divider)" : "var(--theme-fg-dim)"}
-                display="flex"
-                pointerEvents={atNow ? "none" : "auto"}
               >
                 <FiChevronRight />
-              </Box>
+              </IconButton>
             </HStack>
           </HStack>
         }
@@ -261,73 +259,28 @@ export function Solar() {
       {/* Stats */}
       <Board>
         <HStack justify="space-between" align="flex-end" width="100%" minW="0">
-          <VStack align="flex-start" gap="0.4vmin">
-            <Text
-              className="display-numeral"
-              fontSize="7vmin"
-              fontWeight="300"
-              lineHeight="1"
-              color="yellow.500"
-            >
+          <Stat.Root size="display" alignItems="flex-start">
+            <Stat.ValueText color="yellow.500">
               {fmtKwh(prodTotal as number)}
-              <Text as="span" fontSize="3vmin" color="yellow.700" ml="1vmin">
-                kWh
-              </Text>
-            </Text>
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              PRODUCED
-            </Text>
-          </VStack>
+              <Stat.ValueUnit color="yellow.700">kWh</Stat.ValueUnit>
+            </Stat.ValueText>
+            <Stat.HelpText>PRODUCED</Stat.HelpText>
+          </Stat.Root>
 
-          <VStack align="center" gap="0.4vmin">
-            <Text
-              className="display-numeral"
-              fontSize="7vmin"
-              fontWeight="400"
-              lineHeight="1"
-              style={{ color: pctColor }}
-            >
+          <Stat.Root size="display" alignItems="center">
+            <Stat.ValueText fontWeight="400" color={pctColor}>
               {pct}%
-            </Text>
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              SOLAR
-            </Text>
-          </VStack>
+            </Stat.ValueText>
+            <Stat.HelpText>SOLAR</Stat.HelpText>
+          </Stat.Root>
 
-          <VStack align="flex-end" gap="0.4vmin">
-            <Text
-              className="display-numeral"
-              fontSize="7vmin"
-              fontWeight="300"
-              lineHeight="1"
-              color="var(--theme-fg-dim)"
-            >
+          <Stat.Root size="display" alignItems="flex-end">
+            <Stat.ValueText color="fg.dim">
               {fmtKwh(consTotal as number)}
-              <Text
-                as="span"
-                fontSize="3vmin"
-                color="var(--theme-fg-faint)"
-                ml="1vmin"
-              >
-                kWh
-              </Text>
-            </Text>
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              CONSUMED
-            </Text>
-          </VStack>
+              <Stat.ValueUnit>kWh</Stat.ValueUnit>
+            </Stat.ValueText>
+            <Stat.HelpText>CONSUMED</Stat.HelpText>
+          </Stat.Root>
         </HStack>
       </Board>
 
@@ -335,37 +288,21 @@ export function Solar() {
       <Board fill>
         <Box height="100%" display="flex" flexDirection="column" minH="0">
           {isPending && (
-            <Box
-              height="100%"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Text
-                fontSize="2.8vmin"
-                color="var(--theme-fg-faint)"
-                letterSpacing="0.1em"
-              >
-                loading
-              </Text>
-            </Box>
+            <Center height="100%">
+              <Spinner size="lg" color="fg.faint" aria-label="Loading" />
+            </Center>
           )}
           {isError && (
-            <Box
-              height="100%"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Text fontSize="2.8vmin" color="var(--theme-fg-faint)">
+            <Center height="100%">
+              <Text fontSize="2.8vmin" color="fg.faint">
                 unavailable
               </Text>
-            </Box>
+            </Center>
           )}
           {!isPending && !isError && chartData.length > 0 && (
             <Box
               key={`${view}-${chartMode}-${label}`}
-              className="solar-chart-reveal"
+              animation="chart-reveal 0.9s cubic-bezier(0.4, 0, 0.2, 1) both"
               flex="1"
               minH="0"
             >
@@ -457,7 +394,7 @@ export function Solar() {
                     <Box
                       px="2.5vmin"
                       py="1.5vmin"
-                      borderRadius={CHIP_RADIUS}
+                      borderRadius="chip"
                       style={{ pointerEvents: "none", background: tooltipBg }}
                     >
                       <Text
@@ -492,11 +429,7 @@ export function Solar() {
           <HStack gap="5vmin" justify="center" mt="2vmin" flexShrink={0}>
             <HStack gap="1.5vmin" align="center">
               <Box w="4vmin" h="1.5px" bg="yellow.500" borderRadius="full" />
-              <Text
-                fontSize="2.2vmin"
-                color="var(--theme-fg-faint)"
-                letterSpacing="0.1em"
-              >
+              <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.1em">
                 PRODUCTION
               </Text>
             </HStack>
@@ -509,11 +442,7 @@ export function Solar() {
                 borderRadius="full"
                 style={{ background: consumptionColor }}
               />
-              <Text
-                fontSize="2.2vmin"
-                color="var(--theme-fg-faint)"
-                letterSpacing="0.1em"
-              >
+              <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.1em">
                 CONSUMPTION
               </Text>
             </HStack>
@@ -525,11 +454,7 @@ export function Solar() {
                   borderRadius="full"
                   style={{ background: temperatureColor }}
                 />
-                <Text
-                  fontSize="2.2vmin"
-                  color="var(--theme-fg-faint)"
-                  letterSpacing="0.1em"
-                >
+                <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.1em">
                   TEMP
                 </Text>
               </HStack>

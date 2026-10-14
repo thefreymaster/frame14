@@ -1,4 +1,4 @@
-import { Box, Text } from "@chakra-ui/react";
+import { Center, Spinner, Text } from "@chakra-ui/react";
 import { MdElectricBolt } from "react-icons/md";
 import { useCircuits } from "../hooks/useCircuits";
 import { useEnergy } from "../hooks/useEnergy";
@@ -41,21 +41,17 @@ export function Power() {
           </SectionTitle>
         }
       >
-        {(isPending || isError) && (
-          <Box
-            height="100%"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text
-              fontSize="2.8vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              {isError ? "unavailable" : "loading"}
+        {isPending && (
+          <Center height="100%">
+            <Spinner size="lg" color="fg.faint" aria-label="Loading circuits" />
+          </Center>
+        )}
+        {isError && (
+          <Center height="100%">
+            <Text fontSize="2.8vmin" color="fg.faint" letterSpacing="0.1em">
+              unavailable
             </Text>
-          </Box>
+          </Center>
         )}
         {!isPending && !isError && data && (
           <CircuitBreakdown

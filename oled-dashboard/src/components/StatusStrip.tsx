@@ -1,9 +1,8 @@
-import { Flex, Text } from "@chakra-ui/react";
+import { Flex, Tag } from "@chakra-ui/react";
 import { IoPrintOutline } from "react-icons/io5";
 import { TbVacuumCleaner } from "react-icons/tb";
 import type { HomePrinter, HomeVacuum } from "../hooks/useHomeData";
 import { StatusChip } from "./StatusChip";
-import { CHIP_GAP } from "../lib/surfaces";
 
 const PRINTER_ACTIVE = new Set(["running", "printing", "pause"]);
 const VACUUM_ACTIVE = new Set(["cleaning", "returning"]);
@@ -19,16 +18,7 @@ const VACUUM_IDLE_LABEL: Record<string, string> = {
 };
 
 function ChipText({ children }: { children: React.ReactNode }) {
-  return (
-    <Text
-      fontSize="2.2vmin"
-      color="var(--theme-fg-faint)"
-      fontWeight="300"
-      whiteSpace="nowrap"
-    >
-      {children}
-    </Text>
-  );
+  return <Tag.Label whiteSpace="nowrap">{children}</Tag.Label>;
 }
 
 /**
@@ -60,7 +50,7 @@ export function StatusStrip({
     <Flex
       width="100%"
       minW="0"
-      gap={CHIP_GAP}
+      gap="chipGap"
       wrap="wrap"
       align="center"
     >

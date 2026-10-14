@@ -1,4 +1,4 @@
-import { HStack, VStack, Text, Box } from "@chakra-ui/react";
+import { HStack, Icon, Stat } from "@chakra-ui/react";
 import { PiSolarRoof } from "react-icons/pi";
 import { IoFlash } from "react-icons/io5";
 
@@ -15,6 +15,7 @@ interface Props {
   homeWatts: number | null;
 }
 
+/** Solar | grid | home as three display-size Stats. */
 export function PowerTotals({ production, homeWatts }: Props) {
   const prod = production ?? 0;
   const home = homeWatts ?? 0;
@@ -26,129 +27,49 @@ export function PowerTotals({ production, homeWatts }: Props) {
 
   return (
     <HStack justify="space-between" align="flex-end" px="0.5vmin">
-      {/* Solar production */}
-      <VStack align="flex-start" gap="0.4vmin">
-        <HStack gap="1.5vmin" align="baseline">
-          <Box
-            color="yellow.500"
-            fontSize="3.5vmin"
-            lineHeight="1"
-            flexShrink={0}
-          >
+      <Stat.Root size="display" alignItems="flex-start">
+        <Stat.ValueText color="yellow.500" gap="1.5vmin">
+          <Icon boxSize="3.5vmin" alignSelf="center">
             <PiSolarRoof />
-          </Box>
-          <Text
-            className="display-numeral"
-            fontSize="7vmin"
-            fontWeight="300"
-            lineHeight="1"
-            color="yellow.500"
-          >
-            {fmtKw(production)}
-            <Text as="span" fontSize="3vmin" color="yellow.700" ml="1vmin">
-              kW
-            </Text>
-          </Text>
-        </HStack>
-        <Text
-          fontSize="2.2vmin"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.1em"
-        >
-          SOLAR
-        </Text>
-      </VStack>
+          </Icon>
+          {fmtKw(production)}
+          <Stat.ValueUnit color="yellow.700">kW</Stat.ValueUnit>
+        </Stat.ValueText>
+        <Stat.HelpText>SOLAR</Stat.HelpText>
+      </Stat.Root>
 
-      {/* Net grid */}
-      <VStack align="center" gap="0.4vmin">
+      <Stat.Root size="display" alignItems="center">
         {gridActive ? (
           <>
-            <Text
-              className="display-numeral"
-              fontSize="7vmin"
-              fontWeight="300"
-              lineHeight="1"
-              color={gridColor}
-            >
+            <Stat.ValueText color={gridColor}>
               {isExporting ? "↑" : "↓"}
               {fmtKw(gridAbs)}
-              <Text
-                as="span"
-                fontSize="3vmin"
-                color={gridColor}
-                opacity={0.6}
-                ml="1vmin"
-              >
+              <Stat.ValueUnit color={gridColor} opacity={0.6}>
                 kW
-              </Text>
-            </Text>
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
+              </Stat.ValueUnit>
+            </Stat.ValueText>
+            <Stat.HelpText>
               {isExporting ? "EXPORTING" : "FROM GRID"}
-            </Text>
+            </Stat.HelpText>
           </>
         ) : (
           <>
-            <Text
-              className="display-numeral"
-              fontSize="7vmin"
-              fontWeight="300"
-              lineHeight="1"
-              color="var(--theme-fg-faint)"
-            >
-              —
-            </Text>
-            <Text
-              fontSize="2.2vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              GRID IDLE
-            </Text>
+            <Stat.ValueText color="fg.faint">—</Stat.ValueText>
+            <Stat.HelpText>GRID IDLE</Stat.HelpText>
           </>
         )}
-      </VStack>
+      </Stat.Root>
 
-      {/* Home usage */}
-      <VStack align="flex-end" gap="0.4vmin">
-        <HStack gap="1.5vmin" align="baseline">
-          <Box
-            color="var(--theme-fg-dim)"
-            fontSize="3.5vmin"
-            lineHeight="1"
-            flexShrink={0}
-          >
+      <Stat.Root size="display" alignItems="flex-end">
+        <Stat.ValueText color="fg.dim" gap="1.5vmin">
+          <Icon boxSize="3.5vmin" alignSelf="center">
             <IoFlash />
-          </Box>
-          <Text
-            className="display-numeral"
-            fontSize="7vmin"
-            fontWeight="300"
-            lineHeight="1"
-            color="var(--theme-fg-dim)"
-          >
-            {fmtKw(homeWatts)}
-            <Text
-              as="span"
-              fontSize="3vmin"
-              color="var(--theme-fg-faint)"
-              ml="1vmin"
-            >
-              kW
-            </Text>
-          </Text>
-        </HStack>
-        <Text
-          fontSize="2.2vmin"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.1em"
-        >
-          HOME
-        </Text>
-      </VStack>
+          </Icon>
+          {fmtKw(homeWatts)}
+          <Stat.ValueUnit>kW</Stat.ValueUnit>
+        </Stat.ValueText>
+        <Stat.HelpText>HOME</Stat.HelpText>
+      </Stat.Root>
     </HStack>
   );
 }

@@ -1,5 +1,6 @@
-import { Box, HStack, Text } from "@chakra-ui/react";
+import { HStack, Heading, Icon } from "@chakra-ui/react";
 
+/** A card's section label, with an optional leading icon. */
 export const SectionTitle = ({
   children,
   icon,
@@ -9,26 +10,24 @@ export const SectionTitle = ({
   icon?: React.ReactNode;
   iconColor?: string;
 }) => {
-  if (!icon) {
-    return (
-      <Text fontSize="2.2vmin" color="var(--theme-fg)" letterSpacing="0.1em">
-        {children}
-      </Text>
-    );
-  }
+  const label = (
+    <Heading
+      as="h2"
+      textStyle="section"
+      color="fg"
+      lineHeight="1.5"
+      fontFamily="body"
+    >
+      {children}
+    </Heading>
+  );
+  if (!icon) return label;
   return (
     <HStack gap="1vmin" align="center">
-      <Box
-        color={iconColor ?? "var(--theme-fg)"}
-        fontSize="2.4vmin"
-        lineHeight="1"
-        display="inline-flex"
-      >
+      <Icon color={iconColor ?? "fg"} boxSize="2.4vmin">
         {icon}
-      </Box>
-      <Text fontSize="2.2vmin" color="var(--theme-fg)" letterSpacing="0.1em">
-        {children}
-      </Text>
+      </Icon>
+      {label}
     </HStack>
   );
 };

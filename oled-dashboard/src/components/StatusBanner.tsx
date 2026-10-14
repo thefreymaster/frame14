@@ -1,43 +1,43 @@
-import { Box, HStack, Text } from "@chakra-ui/react";
+import { HStack, Icon, Text } from "@chakra-ui/react";
 import { MdWifi, MdWifiOff } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
 import { useVersion } from "../hooks/useVersion";
 import { ApplianceIndicators } from "./ApplianceIndicators";
+import { Tooltip } from "./ui/tooltip";
 
+/** The thin strip above /home: connection, running appliances, version. */
 export function StatusBanner() {
   const { connected } = useSocket();
   const version = useVersion();
-  const iconColor = connected ? "#22c55e" : "#ef4444";
-  const Icon = connected ? MdWifi : MdWifiOff;
+  const StatusIcon = connected ? MdWifi : MdWifiOff;
 
   return (
-    <Box
+    <HStack
       zIndex={1000}
-      bg="var(--theme-bg)"
-      borderBottom="1px solid var(--theme-divider)"
-      px={3}
+      bg="bg"
+      borderBottomWidth="1px"
+      borderColor="divider"
+      px="5"
       py="1"
-      css={{
-        "@media (orientation: landscape)": {
-          left: "56px",
-        },
-      }}
+      gap="3"
+      justify="flex-start"
     >
-      <HStack gap={3} px="2" justify="flex-start">
-        <Box as="span" display="inline-flex" color={iconColor} flexShrink={0}>
-          <Icon size={12} />
-        </Box>
-        <ApplianceIndicators />
-        {version && (
-          <Text
-            fontSize="10px"
-            color="var(--theme-fg-muted)"
-            letterSpacing="0.05em"
-          >
-            v{version}
-          </Text>
-        )}
-      </HStack>
-    </Box>
+      <Tooltip content={connected ? "Connected" : "Disconnected"}>
+        <Icon
+          boxSize="12px"
+          color={connected ? "green.500" : "red.500"}
+          flexShrink={0}
+          aria-label={connected ? "Connected" : "Disconnected"}
+        >
+          <StatusIcon />
+        </Icon>
+      </Tooltip>
+      <ApplianceIndicators />
+      {version && (
+        <Text fontSize="10px" color="fg.muted" letterSpacing="0.05em">
+          v{version}
+        </Text>
+      )}
+    </HStack>
   );
 }

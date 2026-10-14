@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, HStack, Status, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { IoTrophyOutline } from "react-icons/io5";
 import { useGames } from "../hooks/useLiveGame";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
-import { CHIP_GAP } from "../lib/surfaces";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import {
@@ -145,11 +144,11 @@ function Score({ side }: { side: Side }) {
 
   return (
     <Text
-      className="display-numeral"
+      fontFamily="display"
       fontSize="4.4vmin"
       fontWeight="500"
       lineHeight="1"
-      color="var(--theme-fg)"
+      color="fg"
       opacity={side.lost ? 0.5 : 1}
       transition="opacity 400ms ease"
       flexShrink={0}
@@ -168,7 +167,7 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
       flex="1"
       minW="0"
       alignSelf="stretch"
-      bg="var(--theme-surface-2)"
+      bg="surface.chip"
       align="center"
       gap="1.2vmin"
       px="1.2vmin"
@@ -179,7 +178,7 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
         <Text
           fontSize="1.9vmin"
           fontWeight="600"
-          color="var(--theme-fg)"
+          color="fg"
           letterSpacing="0.03em"
           textAlign={align}
           opacity={side.lost ? 0.5 : 1}
@@ -200,7 +199,7 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
         side.record && (
           <Text
             fontSize="2vmin"
-            color="var(--theme-fg-faint)"
+            color="fg.faint"
             letterSpacing="0.04em"
             flexShrink={0}
           >
@@ -220,7 +219,7 @@ function CenterBlock({ game }: { game: Game }) {
       alignSelf="stretch"
       justify="center"
       gap="0.4vmin"
-      bg="var(--theme-bg)"
+      bg="bg"
       px="1.4vmin"
       py="1vmin"
       minW="12vmin"
@@ -228,7 +227,7 @@ function CenterBlock({ game }: { game: Game }) {
       <Text
         fontSize="2vmin"
         fontWeight="500"
-        color="var(--theme-fg)"
+        color="fg"
         letterSpacing="0.08em"
         whiteSpace="nowrap"
       >
@@ -271,7 +270,7 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
         left={`${awayPct}%`}
         width="0.4vmin"
         ml="-0.2vmin"
-        bg="var(--theme-bg)"
+        bg="bg"
         transition="left 900ms ease"
       />
     </Box>
@@ -324,19 +323,17 @@ export function TeamTracker() {
           <SectionTitle icon={<IoTrophyOutline />}>TEAMS</SectionTitle>
           <Box flex="1" minW="0" />
           {anyLive && (
-            <Text
-              fontSize="1.8vmin"
-              color="var(--theme-fg-dim)"
-              letterSpacing="0.06em"
-              fontWeight="500"
-            >
+            <Badge variant="glow" size="panel" colorPalette="red">
+              <Status.Root colorPalette="red" size="sm">
+                <Status.Indicator animation="blink 1.6s ease-in-out infinite" />
+              </Status.Root>
               LIVE
-            </Text>
+            </Badge>
           )}
         </HStack>
       }
     >
-      <VStack align="stretch" gap={CHIP_GAP} width="100%">
+      <VStack align="stretch" gap="chipGap" width="100%">
         {games.map((game) => (
           <Box
             key={game.entity_id}

@@ -1,8 +1,7 @@
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Icon, Switch } from "@chakra-ui/react";
 import type { IconType } from "react-icons";
 import { useEntity } from "../hooks/useEntity";
 import { callService } from "../lib/callService";
-import { CHIP_RADIUS } from "../lib/surfaces";
 
 type Props = {
   entity_id: string;
@@ -14,7 +13,14 @@ type LightAttrs = {
   friendly_name?: string;
 };
 
-export function LightControl({ entity_id, name, Icon }: Props) {
+/**
+ * One light or switch: the whole tile is a Chakra Switch (a labelled
+ * checkbox), with the switch itself as the pip in the corner. "On" is the
+ * chip fill with an amber wash composited over it — the `warm` palette — so
+ * the lit state survives the bright/dark swap instead of relying on a border
+ * that vanishes on white.
+ */
+export function LightControl({ entity_id, name, Icon: LightIcon }: Props) {
   const { data } = useEntity<LightAttrs>(entity_id);
   const state = data?.state;
   const isOn = state === "on";
@@ -23,31 +29,23 @@ export function LightControl({ entity_id, name, Icon }: Props) {
 
   if (unavailable) return null;
 
-  const handleClick = () => {
-    callService(entity_id, "toggle");
-  };
-
-  // Amber on black, a darker amber on white — see --theme-accent-warm.
-  const ON_ACCENT = "var(--theme-accent-warm)";
-
   return (
-    <Box
-      as="button"
-      onClick={handleClick}
+    <Switch.Root
       data-light-entry=""
+      size="pip"
+      colorPalette="warm"
+      checked={isOn}
+      onCheckedChange={() => callService(entity_id, "toggle")}
       position="relative"
       aspectRatio="1"
-      borderRadius={CHIP_RADIUS}
-      // Raised fill like every other chip; "on" is the same fill with an amber
-      // wash composited over it, so the lit state survives the bright/dark swap
-      // instead of relying on a border that vanishes on white.
-      bg="var(--theme-surface-2)"
+      borderRadius="chip"
+      bg="surface.chip"
       backgroundImage={
         isOn
-          ? "linear-gradient(rgba(255, 200, 87, 0.18), rgba(255, 200, 87, 0.18))"
+          ? "linear-gradient({colors.warm.muted}, {colors.warm.muted})"
           : undefined
       }
-      boxShadow={isOn ? `0 0 2.4vmin rgba(255, 200, 87, 0.18)` : "none"}
+      boxShadow={isOn ? "0 0 2.4vmin {colors.warm.muted}" : "none"}
       cursor="pointer"
       display="flex"
       flexDirection="column"
@@ -55,48 +53,36 @@ export function LightControl({ entity_id, name, Icon }: Props) {
       justifyContent="center"
       gap="1vmin"
       px="1.2vmin"
-      transform="scale(1)"
-      transformOrigin="center"
-      willChange="transform"
       _active={{ transform: "scale(0.94)", opacity: 0.85 }}
       transition="transform 80ms cubic-bezier(0.2, 0, 0.2, 1), background-color 140ms ease, box-shadow 180ms ease, opacity 140ms ease"
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      <Box
-        position="absolute"
-        top="1.2vmin"
-        right="1.2vmin"
-        width="1.2vmin"
-        height="1.2vmin"
-        borderRadius="full"
-        bg={isOn ? ON_ACCENT : "var(--theme-surface-1)"}
-        boxShadow={isOn ? `0 0 1vmin ${ON_ACCENT}` : "none"}
-        transition="background-color 140ms ease, box-shadow 180ms ease"
-      />
-      <Box
-        color={isOn ? ON_ACCENT : "var(--theme-fg-faint)"}
-        fontSize="5.5vmin"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
+      <Switch.HiddenInput />
+      <Box position="absolute" top="1.2vmin" right="1.2vmin">
+        <Switch.Control>
+          <Switch.Thumb />
+        </Switch.Control>
+      </Box>
+      <Icon
+        color={isOn ? "accent.warm" : "fg.faint"}
+        boxSize="5.5vmin"
         transition="color 200ms ease"
       >
-        <Icon />
-      </Box>
-      <Text
+        <LightIcon />
+      </Icon>
+      <Switch.Label
         fontSize="2vmin"
         fontWeight={isOn ? "500" : "300"}
-        color={isOn ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
+        color={isOn ? "fg" : "fg.muted"}
         letterSpacing="0.01em"
         textAlign="center"
-        overflow="hidden"
-        whiteSpace="nowrap"
-        textOverflow="ellipsis"
+        truncate
         maxWidth="100%"
-        transition="color 200ms ease, font-weight 200ms ease"
+        lineHeight="1.2"
+        transition="color 200ms ease"
       >
         {label}
-      </Text>
-    </Box>
+      </Switch.Label>
+    </Switch.Root>
   );
 }

@@ -1,15 +1,8 @@
-import { useEffect, useState } from "react";
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { useState } from "react";
+import { Box, Card, Collapsible } from "@chakra-ui/react";
 import { FiChevronDown } from "react-icons/fi";
-import {
-  CARD_HEADER_GAP,
-  CARD_PADDING_X,
-  CARD_PADDING_Y,
-  CARD_RADIUS,
-} from "../lib/surfaces";
 
 const STORAGE_PREFIX = "board-collapsed:";
-const ANIM_MS = 280;
 
 const slugify = (s: string) =>
   s
@@ -17,6 +10,35 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
+function readOpen(key: string | undefined, fallback: boolean): boolean {
+  if (!key) return fallback;
+  try {
+    const v = localStorage.getItem(key);
+    if (v === "1") return false;
+    if (v === "0") return true;
+  } catch {
+    // ignore
+  }
+  return fallback;
+}
+
+function writeOpen(key: string | undefined, open: boolean) {
+  if (!key) return;
+  try {
+    localStorage.setItem(key, open ? "0" : "1");
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * The raised tile every section sits on: Chakra's Card in the `raised`
+ * variant (src/theme/recipes/card.ts), optionally collapsible.
+ *
+ * A collapsible board is a Collapsible whose trigger is the card header, so the
+ * open/close animation and the chevron come from the library. Collapse state
+ * persists per board in localStorage under `board-collapsed:<key>`.
+ */
 export const Board = ({
   children,
   onClick,
@@ -45,116 +67,83 @@ export const Board = ({
     ? storageKey || (typeof title === "string" ? slugify(title) : undefined)
     : undefined;
   const fullKey = persistKey ? `${STORAGE_PREFIX}${persistKey}` : undefined;
+  const [open, setOpen] = useState(() => readOpen(fullKey, defaultOpen));
 
-  const [open, setOpen] = useState<boolean>(() => {
-    if (!fullKey) return defaultOpen;
-    try {
-      const v = localStorage.getItem(fullKey);
-      if (v === "1") return false;
-      if (v === "0") return true;
-    } catch {
-      // ignore
-    }
-    return defaultOpen;
-  });
+  const titleNode =
+    typeof title === "string" ? (
+      <Card.Title fontSize="sm" fontWeight="500" letterSpacing="normal">
+        {title}
+      </Card.Title>
+    ) : (
+      title
+    );
 
-  useEffect(() => {
-    if (!fullKey) return;
-    try {
-      localStorage.setItem(fullKey, open ? "0" : "1");
-    } catch {
-      // ignore
-    }
-  }, [open, fullKey]);
-
-  const showHeader = collapsible || !!title;
-  // A collapsed board pulls its header down onto the content edge, so the gap
-  // goes away with the content rather than leaving the title floating.
-  const headerGap = !collapsible || open;
+  const body = (
+    <Card.Body flex={fill ? "1" : undefined} minH={fill ? "0" : undefined}>
+      {children}
+    </Card.Body>
+  );
 
   return (
-    <Box
-      width="100%"
-      minW="0"
+    <Card.Root
       flex={fill ? "1" : undefined}
       minH={fill ? "0" : undefined}
-      display={fill ? "flex" : undefined}
-      flexDirection={fill ? "column" : undefined}
       gridColumn={span === 2 ? "1 / -1" : undefined}
-      // Elevation by fill, not outline — see themeMode.ts for why this is the
-      // dimmer option on an OLED panel as well as the better-looking one.
-      backgroundColor="var(--theme-surface-1)"
-      px={CARD_PADDING_X}
-      pt={CARD_PADDING_Y}
-      pb={CARD_PADDING_Y}
       onClick={!collapsible ? onClick : undefined}
       cursor={onClick && !collapsible ? "pointer" : undefined}
-      borderRadius={CARD_RADIUS}
     >
-      {showHeader && (
-        <Flex
-          align="center"
-          justify="space-between"
-          minH="48px"
-          cursor={collapsible ? "pointer" : undefined}
-          onClick={
-            collapsible
-              ? (e) => {
-                  e.stopPropagation();
-                  setOpen((v) => !v);
-                }
-              : undefined
-          }
-          userSelect="none"
-          role={collapsible ? "button" : undefined}
-          aria-expanded={collapsible ? open : undefined}
-          style={{
-            paddingBottom: headerGap ? CARD_HEADER_GAP : 0,
-            transition: `padding-bottom ${ANIM_MS}ms ease`,
-          }}
-        >
-          <Box flex="1" minW="0" color="var(--theme-fg-dim)">
-            {typeof title === "string" ? (
-              <Text fontSize="sm" fontWeight="500" mb="0">
-                {title}
-              </Text>
-            ) : (
-              title
-            )}
-          </Box>
-          {collapsible && (
-            <Box
-              color="var(--theme-fg-faint)"
-              fontSize="20px"
-              display="flex"
-              alignItems="center"
-              style={{
-                transform: open ? "rotate(0deg)" : "rotate(-90deg)",
-                transition: `transform ${ANIM_MS}ms ease`,
-              }}
-            >
-              <FiChevronDown />
-            </Box>
-          )}
-        </Flex>
-      )}
       {collapsible ? (
-        <Box
-          style={{
-            display: "grid",
-            gridTemplateRows: open ? "1fr" : "0fr",
-            transition: `grid-template-rows ${ANIM_MS}ms ease`,
+        <Collapsible.Root
+          open={open}
+          onOpenChange={(e) => {
+            setOpen(e.open);
+            writeOpen(fullKey, e.open);
           }}
         >
-          <Box style={{ overflow: "hidden", minHeight: 0 }}>{children}</Box>
-        </Box>
-      ) : fill ? (
-        <Box flex="1" minH="0" minW="0">
-          {children}
-        </Box>
+          <Collapsible.Trigger asChild>
+            <Card.Header
+              as="button"
+              width="100%"
+              textAlign="start"
+              cursor="pointer"
+              userSelect="none"
+              color="inherit"
+              transition="padding-bottom 280ms ease"
+              // A collapsed board pulls its header down onto the content edge,
+              // so the gap goes away with the content.
+              _closed={{ pb: "0" }}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <Box flex="1" minW="0" color="fg.dim">
+                {titleNode}
+              </Box>
+              <Collapsible.Indicator
+                color="fg.faint"
+                fontSize="20px"
+                display="flex"
+                alignItems="center"
+                transition="transform 280ms ease"
+                transform="rotate(-90deg)"
+                _open={{ transform: "rotate(0deg)" }}
+              >
+                <FiChevronDown />
+              </Collapsible.Indicator>
+            </Card.Header>
+          </Collapsible.Trigger>
+          <Collapsible.Content>{body}</Collapsible.Content>
+        </Collapsible.Root>
       ) : (
-        children
+        <>
+          {title != null && (
+            <Card.Header>
+              <Box flex="1" minW="0" color="fg.dim">
+                {titleNode}
+              </Box>
+            </Card.Header>
+          )}
+          {body}
+        </>
       )}
-    </Box>
+    </Card.Root>
   );
 };

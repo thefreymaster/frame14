@@ -1,8 +1,7 @@
-import { Box } from "@chakra-ui/react";
+import { AspectRatio } from "@chakra-ui/react";
 import { IoRainyOutline } from "react-icons/io5";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
-import { CHIP_RADIUS } from "../lib/surfaces";
 
 const RADAR_URL =
   "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=7&overlay=radar&product=radar&level=surface&lat=42.456&lon=-71.071&pressure=false&message=false";
@@ -35,12 +34,12 @@ export function RadarSection({
       storageKey="radar"
       title={<SectionTitle icon={<IoRainyOutline />}>RADAR</SectionTitle>}
     >
-      <Box
+      <AspectRatio
+        ratio={16 / 10}
         width="100%"
-        aspectRatio="16 / 10"
         overflow="hidden"
-        borderRadius={CHIP_RADIUS}
-        bg="var(--theme-surface-2)"
+        borderRadius="chip"
+        bg="surface.chip"
       >
         <iframe
           src={RADAR_URL}
@@ -53,7 +52,7 @@ export function RadarSection({
             pointerEvents: "none",
           }}
         />
-      </Box>
+      </AspectRatio>
     </Board>
   );
 }

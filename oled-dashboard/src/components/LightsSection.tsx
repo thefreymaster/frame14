@@ -1,6 +1,5 @@
-import { Box } from "@chakra-ui/react";
+import { Grid } from "@chakra-ui/react";
 import { LightControl } from "./LightControl";
-import { CHIP_GAP } from "../lib/surfaces";
 import type { LightEntry } from "../lib/lightsConfig";
 
 type Props = {
@@ -9,15 +8,12 @@ type Props = {
 
 export function LightsSection({ entries }: Props) {
   return (
-    <Box
-      display="grid"
-      gap={CHIP_GAP}
+    <Grid
+      gap="chipGap"
       width="100%"
-      css={{
-        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-        "@media (orientation: landscape)": {
-          gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-        },
+      templateColumns={{
+        base: "repeat(4, minmax(0, 1fr))",
+        _landscape: "repeat(6, minmax(0, 1fr))",
       }}
     >
       {entries.map((entry) => (
@@ -28,6 +24,6 @@ export function LightsSection({ entries }: Props) {
           Icon={entry.Icon}
         />
       ))}
-    </Box>
+    </Grid>
   );
 }

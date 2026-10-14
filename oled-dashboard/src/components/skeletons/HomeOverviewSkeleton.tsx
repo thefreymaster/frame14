@@ -1,6 +1,5 @@
 import { Box } from "@chakra-ui/react";
 import { useEntitiesConfig } from "../../hooks/useEntitiesConfig";
-import { GRID_GAP } from "../../lib/surfaces";
 import { StatusBanner } from "../StatusBanner";
 import { CalendarSkeleton } from "./CalendarSkeleton";
 import { ClimateSkeleton } from "./ClimateSkeleton";
@@ -41,19 +40,19 @@ export function HomeOverviewSkeleton({
         <Box
           width="100%"
           minHeight="100%"
-          bg="var(--theme-bg)"
+          bg="bg"
           display="flex"
           flexDirection="row"
           alignItems="flex-start"
-          gap={GRID_GAP}
-          padding={GRID_GAP}
+          gap="gutter"
+          p="gutter"
         >
           <Box
             flex="1"
             minW="0"
             display="flex"
             flexDirection="column"
-            gap={GRID_GAP}
+            gap="gutter"
           >
             <HomeHeaderSkeleton />
             <EnergySkeleton />
@@ -64,7 +63,7 @@ export function HomeOverviewSkeleton({
             minW="0"
             display="flex"
             flexDirection="column"
-            gap={GRID_GAP}
+            gap="gutter"
           >
             <ClimateSkeleton count={climateCount} />
             {fanCount > 0 && <FanSkeleton count={fanCount} />}
@@ -82,18 +81,18 @@ export function HomeOverviewSkeleton({
       <Box
         width="100%"
         minHeight="100%"
-        bg="var(--theme-bg)"
+        bg="bg"
         display="grid"
         gridTemplateColumns="1.15fr 1fr"
         alignContent="start"
-        gap={GRID_GAP}
-        padding={GRID_GAP}
+        gap="gutter"
+        p="gutter"
       >
         <HomeHeaderSkeleton span={2} />
 
         <ClimateSkeleton count={climateCount} />
 
-        <Box display="flex" flexDirection="column" gap={GRID_GAP} minW="0">
+        <Box display="flex" flexDirection="column" gap="gutter" minW="0">
           <EnergySkeleton />
           <CalendarSkeleton />
         </Box>

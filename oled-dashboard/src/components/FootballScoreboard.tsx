@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Box, HStack, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { IoAmericanFootball } from "react-icons/io5";
-import { CARD_RADIUS } from "../lib/surfaces";
 import {
   sides,
   stateLabel,
@@ -191,10 +190,10 @@ function Score({ side }: { side: Side }) {
 
   return (
     <Text
-      className="display-numeral"
+      fontFamily="display"
       fontWeight="500"
       lineHeight="1"
-      color="var(--theme-fg)"
+      color="fg"
       opacity={side.lost ? 0.5 : 1}
       transition="opacity 400ms ease"
       flexShrink={0}
@@ -239,7 +238,7 @@ function TeamRow({
       minW="0"
       gap="0"
       align="stretch"
-      bg="var(--theme-surface-2)"
+      bg="surface.chip"
       css={{
         // Both orientations fill. The content scales with the row rather than
         // sitting small inside it — a stretched row holding a couple of lines
@@ -282,7 +281,7 @@ function TeamRow({
         >
           <Text
             fontWeight="600"
-            color="var(--theme-fg)"
+            color="fg"
             letterSpacing="0.03em"
             width="100%"
             opacity={side.lost ? 0.5 : 1}
@@ -329,7 +328,7 @@ function TeamRow({
           >
             <Text
               fontWeight="500"
-              color="var(--theme-fg-faint)"
+              color="fg.faint"
               letterSpacing="0.12em"
               whiteSpace="nowrap"
               flexShrink={0}
@@ -363,7 +362,7 @@ function CenterBlock({ game }: { game: Game }) {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg="var(--theme-bg)"
+      bg="bg"
       css={{
         // Portrait: a full-width band between the two teams.
         width: "100%",
@@ -376,9 +375,9 @@ function CenterBlock({ game }: { game: Game }) {
       }}
     >
       <Text
-        className="display-numeral"
+        fontFamily="display"
         fontWeight="500"
-        color="var(--theme-fg)"
+        color="fg"
         letterSpacing="0.08em"
         whiteSpace="nowrap"
         textAlign="center"
@@ -413,7 +412,7 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
       gap="1vmin"
       width="100%"
       flexShrink={0}
-      bg="var(--theme-surface-1)"
+      bg="surface.card"
       px="2.6vmin"
       py="2vmin"
     >
@@ -421,13 +420,13 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
         <Text
           fontSize="2.6vmin"
           fontWeight="600"
-          color={away.color === "#3A3A42" ? "var(--theme-fg-dim)" : away.trim}
+          color={away.color === "#3A3A42" ? "fg.dim" : away.trim}
         >
           {awayPct}%
         </Text>
         <Text
           fontSize="2vmin"
-          color="var(--theme-fg-faint)"
+          color="fg.faint"
           letterSpacing="0.14em"
         >
           WIN PROBABILITY
@@ -435,7 +434,7 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
         <Text
           fontSize="2.6vmin"
           fontWeight="600"
-          color={home.color === "#3A3A42" ? "var(--theme-fg-dim)" : home.trim}
+          color={home.color === "#3A3A42" ? "fg.dim" : home.trim}
         >
           {100 - awayPct}%
         </Text>
@@ -464,7 +463,7 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
           left={`${awayPct}%`}
           width="0.8vmin"
           ml="-0.4vmin"
-          bg="var(--theme-bg)"
+          bg="bg"
           transition="left 900ms ease"
         />
       </Box>
@@ -487,14 +486,14 @@ function MetaStrip({ game }: { game: Game }) {
       align="center"
       gap="2vmin"
       flexShrink={0}
-      bg="var(--theme-surface-1)"
+      bg="surface.card"
       px="2.6vmin"
       py="1.8vmin"
     >
       <Text
         fontSize="2.2vmin"
         fontWeight="500"
-        color="var(--theme-fg-dim)"
+        color="fg.dim"
         letterSpacing="0.16em"
         whiteSpace="nowrap"
         textTransform="uppercase"
@@ -503,7 +502,7 @@ function MetaStrip({ game }: { game: Game }) {
       </Text>
       <Text
         fontSize="2.2vmin"
-        color="var(--theme-fg-faint)"
+        color="fg.faint"
         letterSpacing="0.1em"
         overflow="hidden"
         whiteSpace="nowrap"
@@ -525,10 +524,10 @@ export function FootballScoreboard({ game }: { game: Game }) {
       gap="0"
       minW="0"
       width="100%"
-      borderRadius={CARD_RADIUS}
+      borderRadius="card"
       css={{ flex: "1 1 0%", minHeight: 0 }}
       overflow="hidden"
-      bg="var(--theme-surface-1)"
+      bg="surface.card"
     >
       <MetaStrip game={game} />
 

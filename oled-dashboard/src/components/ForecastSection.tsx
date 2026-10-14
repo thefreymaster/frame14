@@ -32,7 +32,7 @@ export function ForecastSection({ forecast, count = 6, span }: Props) {
               {high != null && (
                 <Text
                   fontSize="2.2vmin"
-                  color="var(--theme-fg)"
+                  color="fg"
                   letterSpacing="0.1em"
                 >
                   H {Math.round(high)}°
@@ -41,7 +41,7 @@ export function ForecastSection({ forecast, count = 6, span }: Props) {
               {low != null && (
                 <Text
                   fontSize="2.2vmin"
-                  color="var(--theme-fg)"
+                  color="fg"
                   letterSpacing="0.1em"
                 >
                   L {Math.round(low)}°
@@ -57,7 +57,7 @@ export function ForecastSection({ forecast, count = 6, span }: Props) {
   );
 }
 
-export function getTodayHighLow(forecast: HomeForecastPeriod[]): {
+function getTodayHighLow(forecast: HomeForecastPeriod[]): {
   high: number | null;
   low: number | null;
 } {

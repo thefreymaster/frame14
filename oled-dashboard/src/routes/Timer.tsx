@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { Box, HStack, Text } from "@chakra-ui/react";
-import { keyframes } from "@emotion/react";
+import {
+  Box,
+  Center,
+  HStack,
+  IconButton,
+  ProgressCircle,
+  Text,
+} from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import {
   IoPlayOutline,
@@ -9,18 +15,9 @@ import {
 } from "react-icons/io5";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
-import { ControlButton } from "../components/ControlButton";
+import { SegmentedControl } from "../components/ui/segmented-control";
 
 const PRESETS = [5, 10, 15, 25, 30];
-const R = 88;
-const CX = 100;
-const CY = 100;
-const CIRCUMFERENCE = 2 * Math.PI * R;
-
-const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-`;
 
 export function Timer() {
   const [totalSeconds, setTotalSeconds] = useState(25 * 60);
@@ -73,18 +70,13 @@ export function Timer() {
   }
 
   const progress = totalSeconds > 0 ? remaining / totalSeconds : 0;
-  const offset = CIRCUMFERENCE * (1 - progress);
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
 
   // Idle uses the neutral face-marker gray rather than fg-faint: the ring is a
   // large static element, so it wants the dimmest token that still reads, and
   // fg-faint is both brighter and noticeably blue at this size.
-  const ringColor = finished
-    ? "#c53030"
-    : running
-      ? "var(--theme-fg)"
-      : "var(--theme-marker-hour)";
+  const ringColor = finished ? "#c53030" : running ? "fg" : "marker.hour";
 
   const isPaused = !running && remaining < totalSeconds && remaining > 0;
   const isReady = !running && remaining === totalSeconds && remaining > 0;
@@ -100,74 +92,53 @@ export function Timer() {
           justifyContent="center"
           gap="4vmin"
         >
-          {/* Ring + time display */}
-          <Box
-            position="relative"
-            width="62vmin"
-            height="62vmin"
+          {/* Ring + time display: a ProgressCircle draining as time runs. */}
+          <ProgressCircle.Root
+            size="timer"
+            value={progress * 100}
             cursor="pointer"
             onClick={toggle}
             _active={{ opacity: 0.7 }}
             transition="opacity 0.1s"
-            animation={
-              finished ? `${pulse} 1s ease-in-out infinite` : undefined
-            }
+            animation={finished ? "blink 1s ease-in-out infinite" : undefined}
+            aria-label="Timer"
           >
-            <svg viewBox="0 0 200 200" width="100%" height="100%">
-              {/* Track */}
-              <circle
-                cx={CX}
-                cy={CY}
-                r={R}
-                fill="none"
-                stroke="var(--theme-surface-2)"
-                strokeWidth={7}
-              />
-              {/* Progress arc */}
-              <circle
-                cx={CX}
-                cy={CY}
-                r={R}
-                fill="none"
+            <ProgressCircle.Circle>
+              <ProgressCircle.Track stroke="surface.chip" />
+              <ProgressCircle.Range
                 stroke={ringColor}
-                strokeWidth={7}
                 strokeLinecap="round"
-                strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={offset}
-                transform={`rotate(-90 ${CX} ${CY})`}
-                style={{
-                  transition: running
-                    ? "stroke-dashoffset 1s linear, stroke 0.4s ease"
-                    : "stroke 0.4s ease",
-                }}
+                transition={
+                  running
+                    ? "stroke-dashoffset 1s linear, stroke-dasharray 1s linear, stroke 0.4s ease"
+                    : "stroke 0.4s ease"
+                }
               />
-            </svg>
+            </ProgressCircle.Circle>
 
             {/* Centered time */}
-            <Box
+            <Center
               position="absolute"
               inset="0"
-              display="flex"
               flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
               pointerEvents="none"
             >
               <Text
-                className="display-numeral"
+                fontFamily="display"
                 fontSize="16vmin"
                 fontWeight="200"
                 letterSpacing="-0.02em"
-                color={finished ? "#c53030" : "var(--theme-fg)"}
+                color={finished ? "#c53030" : "fg"}
                 lineHeight="1"
                 fontVariantNumeric="tabular-nums"
-                style={{ transition: "color 0.4s ease" }}
+                whiteSpace="nowrap"
+                transition="color 0.4s ease"
               >
                 <NumberFlow value={minutes} prefix={minutes < 10 ? "0" : ""} />
                 <Text
                   as="span"
-                  color={finished ? "#c53030" : "var(--theme-fg-dim)"}
-                  style={{ transition: "color 0.4s ease" }}
+                  color={finished ? "#c53030" : "fg.dim"}
+                  transition="color 0.4s ease"
                 >
                   :
                 </Text>
@@ -176,13 +147,13 @@ export function Timer() {
 
               <Text
                 fontSize="2.8vmin"
-                color="var(--theme-fg-muted)"
+                color="fg.muted"
                 fontWeight="300"
                 letterSpacing="0.12em"
                 mt="2.5vmin"
                 textTransform="uppercase"
                 opacity={finished ? 0 : 1}
-                style={{ transition: "opacity 0.3s ease" }}
+                transition="opacity 0.3s ease"
               >
                 {finished
                   ? "\u00a0"
@@ -192,64 +163,52 @@ export function Timer() {
                       ? "tap to start"
                       : "tap to pause"}
               </Text>
-            </Box>
-          </Box>
+            </Center>
+          </ProgressCircle.Root>
 
           {/* Controls */}
           <HStack gap="2vmin" align="center">
-            <ControlButton
+            <IconButton
+              variant="chip"
+              size="chip"
               onClick={reset}
-              label="Reset timer"
+              aria-label="Reset timer"
               px="3vmin"
               py="2vmin"
+              color="fg.muted"
+              _icon={{ width: "3.4vmin", height: "3.4vmin" }}
             >
-              <Box
-                fontSize="3.4vmin"
-                display="flex"
-                color="var(--theme-fg-muted)"
-              >
-                <IoRefreshOutline />
-              </Box>
-            </ControlButton>
-            <ControlButton
+              <IoRefreshOutline />
+            </IconButton>
+            <IconButton
+              variant="chip"
+              size="chip"
               onClick={toggle}
-              active={running}
-              label={running ? "Pause timer" : "Start timer"}
+              aria-pressed={running}
+              aria-label={running ? "Pause timer" : "Start timer"}
               px="4vmin"
               py="2vmin"
+              color={remaining === 0 ? "fg.muted" : "fg"}
+              _icon={{ width: "5vmin", height: "5vmin" }}
             >
-              <Box
-                fontSize="5vmin"
-                display="flex"
-                color={
-                  remaining === 0 ? "var(--theme-fg-muted)" : "var(--theme-fg)"
-                }
-              >
-                {running ? <IoPauseOutline /> : <IoPlayOutline />}
-              </Box>
-            </ControlButton>
+              {running ? <IoPauseOutline /> : <IoPlayOutline />}
+            </IconButton>
           </HStack>
 
-          {/* Preset pills */}
-          <HStack gap="1.2vmin">
-            {PRESETS.map((min) => (
-              <ControlButton
-                key={min}
-                active={totalSeconds === min * 60}
-                onClick={() => selectPreset(min)}
-                px="3vmin"
-                py="1.2vmin"
-              >
-                <Text
-                  fontSize="2.2vmin"
-                  fontWeight={totalSeconds === min * 60 ? "600" : "400"}
-                  letterSpacing="0.02em"
-                >
-                  {min}m
-                </Text>
-              </ControlButton>
-            ))}
-          </HStack>
+          {/* Presets */}
+          <SegmentedControl
+            items={PRESETS.map((min) => ({
+              value: String(min),
+              label: `${min}m`,
+            }))}
+            value={
+              PRESETS.includes(totalSeconds / 60)
+                ? String(totalSeconds / 60)
+                : null
+            }
+            aria-label="Duration"
+            onValueChange={(e) => e.value && selectPreset(Number(e.value))}
+          />
         </Box>
       </Board>
     </PageShell>

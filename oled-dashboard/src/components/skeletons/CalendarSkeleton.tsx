@@ -1,7 +1,6 @@
-import { Box, VStack } from "@chakra-ui/react";
+import { Box, Skeleton, VStack } from "@chakra-ui/react";
 import { Board } from "../Board";
-import { CHIP_GAP, CHIP_RADIUS } from "../../lib/surfaces";
-import { SkeletonBlock } from "./SkeletonBlock";
+
 import { SkeletonSectionTitle } from "./SkeletonSectionTitle";
 
 const EVENT_WIDTHS = ["100%", "100%", "100%"];
@@ -16,13 +15,13 @@ export function CalendarSkeleton({ span }: { span?: 1 | 2 }) {
       <Box mb="1.2vmin">
         <SkeletonSectionTitle width="9vmin" />
       </Box>
-      <VStack gap={CHIP_GAP} align="stretch" width="100%">
+      <VStack gap="chipGap" align="stretch" width="100%">
         {EVENT_WIDTHS.map((width, i) => (
-          <SkeletonBlock
+          <Skeleton
             key={i}
             width={width}
             height="6.6vmin"
-            borderRadius={CHIP_RADIUS}
+            borderRadius="chip"
           />
         ))}
       </VStack>

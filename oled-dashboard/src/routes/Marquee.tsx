@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { Box, Text } from "@chakra-ui/react";
-import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { Box, IconButton } from "@chakra-ui/react";
+import { IoEyeOutline, IoEyeOffOutline, IoFilmOutline } from "react-icons/io5";
 import { MarqueeArt } from "../components/MarqueeArt";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity } from "../hooks/useEntity";
@@ -11,6 +11,7 @@ import {
   toggleNavVisible,
   useNavVisible,
 } from "../lib/navVisibility";
+import { EmptyState } from "../components/ui/empty-state";
 
 export function Marquee() {
   const { data: entities } = useEntitiesConfig();
@@ -42,28 +43,29 @@ export function Marquee() {
       width="100%"
       height="100%"
       minHeight="100vh"
-      bg="var(--theme-bg)"
+      bg="bg"
       position="relative"
       overflow="hidden"
     >
       {src ? (
         <MarqueeArt src={src} />
       ) : (
-        <Box
+        <EmptyState
+          size="panel"
           position="absolute"
           inset={0}
           display="flex"
           alignItems="center"
           justifyContent="center"
-        >
-          <Text color="var(--theme-fg-faint)" fontSize="sm">
-            {empty}
-          </Text>
-        </Box>
+          icon={<IoFilmOutline />}
+          title={empty}
+        />
       )}
 
-      <Box
-        as="button"
+      <IconButton
+        variant="glass"
+        size="lg"
+        borderRadius="full"
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
           toggleNavVisible();
@@ -71,26 +73,11 @@ export function Marquee() {
         position="fixed"
         bottom="calc(16px + env(safe-area-inset-bottom, 0px))"
         right="calc(16px + env(safe-area-inset-right, 0px))"
-        width="44px"
-        height="44px"
-        borderRadius="full"
-        bg="rgba(0,0,0,0.4)"
-        color="rgba(255,255,255,0.85)"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        backdropFilter="blur(8px)"
-        border="1px solid rgba(255,255,255,0.15)"
-        _active={{ opacity: 0.5 }}
         zIndex={200}
         aria-label={navVisible ? "Hide navigation" : "Show navigation"}
       >
-        {navVisible ? (
-          <IoEyeOffOutline size={20} />
-        ) : (
-          <IoEyeOutline size={20} />
-        )}
-      </Box>
+        {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
+      </IconButton>
     </Box>
   );
 }

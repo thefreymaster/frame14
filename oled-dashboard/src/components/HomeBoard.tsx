@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Box } from "@chakra-ui/react";
+import { Box, Grid } from "@chakra-ui/react";
 import {
   closestCenter,
   DndContext,
@@ -24,8 +24,8 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { HomeZone } from "./HomeZone";
 import { HomeCardFace } from "./HomeCardFace";
 import { HomeLayoutToolbar } from "./HomeLayoutToolbar";
+import { toaster } from "./ui/toaster";
 import { useLongPress } from "../hooks/useLongPress";
-import { GRID_GAP } from "../lib/surfaces";
 import {
   clearHomeLayout,
   defaultHomeLayout,
@@ -213,6 +213,11 @@ export function HomeBoard({
     clearHomeLayout(orientation);
     setLayout(defaultHomeLayout(orientation));
     setActivity((n) => n + 1);
+    toaster.create({
+      title: "Layout reset",
+      description: `Cards are back in their default ${orientation} places.`,
+      type: "info",
+    });
   }
 
   const zone = (id: HomeZoneId, props: { flex?: string } = {}) => (
@@ -243,12 +248,14 @@ export function HomeBoard({
         data-editing={editing || undefined}
         width="100%"
         minHeight="100%"
-        bg="var(--theme-bg)"
+        bg="bg"
         display="flex"
         flexDirection={orientation === "portrait" ? "column" : "row"}
         alignItems={orientation === "portrait" ? undefined : "flex-start"}
-        gap={GRID_GAP}
-        padding={GRID_GAP}
+        gap="gutter"
+        p="gutter"
+        // Room to scroll the last card clear of the arranging bar.
+        pb={editing ? "calc(64px + 16vmin)" : "gutter"}
         onPointerDownCapture={editing ? () => setActivity((n) => n + 1) : undefined}
         {...longPress}
       >
@@ -258,16 +265,15 @@ export function HomeBoard({
             {/* Climate takes the wider left cell while the right stacks in a
                 narrower rail, so no two tiles share a size and the page stops
                 reading as a flat stack. */}
-            <Box
+            <Grid
               className="home-columns"
               data-editing={editing || undefined}
-              display="grid"
-              gridTemplateColumns="1.15fr 1fr"
-              gap={GRID_GAP}
+              templateColumns="1.15fr 1fr"
+              gap="gutter"
             >
               {zone("left")}
               {zone("right")}
-            </Box>
+            </Grid>
             {zone("bottom")}
           </>
         ) : (
@@ -293,7 +299,11 @@ export function HomeBoard({
         document.body,
       )}
 
-      {editing && <HomeLayoutToolbar onDone={() => setEditing(false)} onReset={reset} />}
+      <HomeLayoutToolbar
+        open={editing}
+        onDone={() => setEditing(false)}
+        onReset={reset}
+      />
     </DndContext>
   );
 }

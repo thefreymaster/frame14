@@ -100,7 +100,7 @@ export function HomeHeader({
             <HStack gap="1vmin" align="baseline" flexShrink={0}>
               <Text
                 fontSize="4.1cqi"
-                color="var(--theme-fg-dim)"
+                color="fg.dim"
                 fontWeight="400"
                 whiteSpace="nowrap"
               >
@@ -109,7 +109,7 @@ export function HomeHeader({
               {weather.humidity != null && (
                 <Text
                   fontSize="4.1cqi"
-                  color="var(--theme-fg-dim)"
+                  color="fg.dim"
                   fontWeight="400"
                   whiteSpace="nowrap"
                 >
@@ -131,7 +131,7 @@ export function HomeHeader({
         {/* Row 2: time — temp */}
         <HStack width="100%" align="baseline" minW="0">
           <Text
-            className="display-numeral"
+            fontFamily="display"
             fontSize="16.3cqi"
             fontWeight="300"
             letterSpacing="-0.03em"
@@ -154,10 +154,10 @@ export function HomeHeader({
             />
             <Text
               as="span"
-              className="display-numeral"
+              fontFamily="display"
               fontSize="6.5cqi"
               fontWeight="300"
-              color="var(--theme-fg-dim)"
+              color="fg.dim"
               ml="1vmin"
             >
               {ampm}
@@ -166,7 +166,7 @@ export function HomeHeader({
           <Spacer />
           {weather && weather.temperature != null && (
             <Text
-              className="display-numeral"
+              fontFamily="display"
               fontSize="15.2cqi"
               fontWeight="300"
               letterSpacing="-0.03em"

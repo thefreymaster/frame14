@@ -1,14 +1,8 @@
-import { Box, HStack, VStack, Text } from "@chakra-ui/react";
+import { Box, HStack, List, Text } from "@chakra-ui/react";
 import { IoCalendarOutline } from "react-icons/io5";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
-import {
-  CHIP_GAP,
-  CHIP_PADDING_X,
-  CHIP_PADDING_Y,
-  CHIP_RADIUS,
-} from "../lib/surfaces";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -64,49 +58,45 @@ function EventList({
   max?: number;
 }) {
   return (
-    <VStack gap={CHIP_GAP} align="stretch" width="100%">
+    <List.Root variant="plain" gap="chipGap" width="100%">
       {events.slice(0, max).map((event, i) => {
         const past = isPast(event);
         return (
-          <HStack
+          <List.Item
             key={i}
-            justify="space-between"
-            align="baseline"
+            layerStyle="chip"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="baseline"
             width="100%"
             minW="0"
-            bg="var(--theme-surface-2)"
-            borderRadius={CHIP_RADIUS}
-            px={CHIP_PADDING_X}
-            py={CHIP_PADDING_Y}
             opacity={past ? 0.55 : 1}
           >
             <Text
               fontSize="3.2vmin"
               fontWeight="300"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
+              truncate
               flex="1"
               minW="0"
               mr="1.5vmin"
               textDecoration={past ? "line-through" : undefined}
-              color={past ? "var(--theme-fg-faint)" : undefined}
+              color={past ? "fg.faint" : undefined}
             >
               {event.summary}
             </Text>
             <Text
               fontSize="2.6vmin"
-              color={past ? "var(--theme-fg-faint)" : "var(--theme-fg)"}
+              color={past ? "fg.faint" : "fg"}
               fontWeight="300"
               flexShrink={0}
               textDecoration={past ? "line-through" : undefined}
             >
               {event.allDay ? "all day" : formatEventTime(event.start)}
             </Text>
-          </HStack>
+          </List.Item>
         );
       })}
-    </VStack>
+    </List.Root>
   );
 }
 
@@ -125,12 +115,7 @@ export function CalendarSection({
         <HStack width="100%" align="center" gap="1.5vmin">
           <SectionTitle icon={<IoCalendarOutline />}>CALENDAR</SectionTitle>
           <Box flex="1" minW="0" />
-          <Text
-            fontSize="1.8vmin"
-            color="var(--theme-fg-dim)"
-            letterSpacing="0.06em"
-            fontWeight="500"
-          >
+          <Text textStyle="meta" color="fg.dim">
             {eventCountLabel(today.length, "today")}
           </Text>
         </HStack>
@@ -140,7 +125,7 @@ export function CalendarSection({
       {today.length > 0 ? (
         <EventList events={today} />
       ) : (
-        <Text fontSize="3.8vmin" fontWeight="300" color="var(--theme-fg-faint)">
+        <Text fontSize="3.8vmin" fontWeight="300" color="fg.faint">
           No events today
         </Text>
       )}

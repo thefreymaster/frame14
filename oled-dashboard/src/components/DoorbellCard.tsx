@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { keyframes } from "@emotion/react";
-import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { Box, Card, Status, Text } from "@chakra-ui/react";
 import { IoClose } from "react-icons/io5";
+import { CloseButton } from "./ui/close-button";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity, type HAState } from "../hooks/useEntity";
 import { socket } from "../lib/socket";
-import { CARD_RADIUS, CHIP_PADDING_X, CHIP_PADDING_Y } from "../lib/surfaces";
 
 /**
  * Front-door card.
@@ -20,22 +19,6 @@ import { CARD_RADIUS, CHIP_PADDING_X, CHIP_PADDING_Y } from "../lib/surfaces";
  */
 const SHOW_MS = 30_000;
 const SNAPSHOT_INTERVAL_MS = 1_000;
-
-const riseIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(8%) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-`;
-
-const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
-`;
 
 interface NamedAttributes {
   friendly_name?: string | null;
@@ -124,48 +107,43 @@ export function DoorbellCard() {
   const label = camera?.attributes?.friendly_name || "Front Door";
 
   return (
-    <Box
+    <Card.Root
       position="fixed"
       bottom="calc(env(safe-area-inset-bottom, 0px) + 1.5vmin)"
       right="calc(env(safe-area-inset-right, 0px) + 1.5vmin)"
-      zIndex={200}
+      // Above any open dialog: someone at the door outranks a modal.
+      zIndex="toast"
       width="34vmin"
       minWidth="240px"
       maxWidth="90vw"
-      bg="var(--theme-surface-1)"
-      borderRadius={CARD_RADIUS}
+      p="0"
       overflow="hidden"
       boxShadow="0 1.2vmin 3vmin rgba(0, 0, 0, 0.55)"
-      animation={`${riseIn} 0.3s ease-out both`}
+      animation="rise-in 0.3s ease-out both"
       cursor="pointer"
       onClick={hide}
     >
       <Box aspectRatio={16 / 9} bg="#000000" position="relative">
-        <Box
-          as="button"
+        <CloseButton
           aria-label="Dismiss"
           position="absolute"
           top="1vmin"
           right="1vmin"
-          width="4.4vmin"
-          height="4.4vmin"
-          minWidth="32px"
-          minHeight="32px"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
+          zIndex={1}
+          variant="glass"
+          minW="32px"
+          minH="32px"
+          boxSize="4.4vmin"
           borderRadius="full"
           color="#FFFFFF"
-          bg="rgba(0, 0, 0, 0.45)"
-          backdropFilter="blur(4px)"
-          fontSize="2.6vmin"
+          _icon={{ width: "2.6vmin", height: "2.6vmin" }}
           onClick={(e) => {
             e.stopPropagation();
             hide();
           }}
         >
           <IoClose />
-        </Box>
+        </CloseButton>
         <img
           key={src}
           src={src}
@@ -180,42 +158,37 @@ export function DoorbellCard() {
         />
       </Box>
 
-      <HStack
-        px={CHIP_PADDING_X}
-        py={CHIP_PADDING_Y}
+      <Card.Body
+        px="chipX"
+        py="chipY"
+        display="flex"
+        flexDirection="row"
+        alignItems="center"
         gap="1.4vmin"
-        align="center"
       >
-        <Box
-          width="1.1vmin"
-          height="1.1vmin"
-          minWidth="7px"
-          minHeight="7px"
-          borderRadius="full"
-          bg="red.500"
-          flexShrink="0"
-          animation={`${pulse} 1.6s ease-in-out infinite`}
-        />
-        <VStack align="flex-start" gap="0.2vmin" minW="0">
-          <Text
+        <Status.Root colorPalette="red" flexShrink={0}>
+          <Status.Indicator
+            boxSize="1.1vmin"
+            minW="7px"
+            minH="7px"
+            animation="blink 1.6s ease-in-out infinite"
+          />
+        </Status.Root>
+        <Box minW="0">
+          <Card.Title
             fontSize="2.6vmin"
             fontWeight="300"
-            color="var(--theme-fg-dim)"
-            whiteSpace="nowrap"
-            overflow="hidden"
-            textOverflow="ellipsis"
+            letterSpacing="normal"
+            color="fg.dim"
+            truncate
           >
             {label}
-          </Text>
-          <Text
-            fontSize="1.9vmin"
-            color="var(--theme-fg-faint)"
-            letterSpacing="0.08em"
-          >
+          </Card.Title>
+          <Text fontSize="1.9vmin" color="fg.faint" letterSpacing="0.08em">
             PERSON DETECTED
           </Text>
-        </VStack>
-      </HStack>
-    </Box>
+        </Box>
+      </Card.Body>
+    </Card.Root>
   );
 }

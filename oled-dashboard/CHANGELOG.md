@@ -2,6 +2,7 @@
 
 ## 0.50.0
 
+- Changed: every button is fully rounded: text buttons are pills and icon buttons are circles, and the segmented controls (such as heat / cool / fan / off) have a pill-shaped track.
 - Changed: the digital clock on the Clock page and the time and temperature over Photos now match Home's clock: the same heavy semibold figures, with a smaller am/pm (and seconds on the Clock page). The Clock page is the same size as Home; Photos is a size smaller so the picture shows.
 - Changed: the clock and outside temperature on Home are larger and use a heavier semibold weight with tighter spacing. They grow with the width of their card, so they fill it on the frame, on a phone and in landscape, and the digits keep a fixed width so the time doesn't shift as it ticks.
 - Changed: the dashboard now uses the standard Chakra UI look throughout. Cards have Chakra's own borders and rounded corners, text uses Chakra's type scale, and controls are stock Chakra buttons, tabs, switches, sliders and segmented controls. Card and page layout, and everything the dashboard does, are unchanged.

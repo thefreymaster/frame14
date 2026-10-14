@@ -162,6 +162,11 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         height="auto"
         py="2"
         gap="1"
+        // Icons and the selected fill follow the shadcn build's nav: 20px
+        // icons on a phone, a step up wherever the type scale grows, and a
+        // neutral grey fill (gray.100 / gray.800) on the selected entry.
+        _icon={{ boxSize: { base: "5", md: "6" } }}
+        _selected={{ bg: { _light: "gray.100", _dark: "gray.800" } }}
       >
         <Icon />
         {item.label}

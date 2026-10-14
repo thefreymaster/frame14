@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.48.0
+
+- Changed: a voice command that works now answers with a short chime and a checkmark instead of a spoken sentence — "Turned on the kitchen lights" is no longer read out. Answers to questions, questions back to you, and anything that only partly worked are still spoken, and the reply text still shows on screen either way.
+- Added: a low two-note tone plays when a voice request fails, alongside the reason on screen.
+- Changed: a reply answered with the chime is no longer played on `assist_speaker` either.
+
 ## 0.47.4
 
 - Fixed: the Photos slideshow stayed black after upgrading Immich to 3.x — Immich no longer lists an album's photos where Frame14 looked for them. Photos load again from the album selected in `input_select.smart_frame_album`.

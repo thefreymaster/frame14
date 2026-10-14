@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Text, VStack } from "@chakra-ui/react";
-import { IoMic } from "react-icons/io5";
+import { IoCheckmark, IoMic } from "react-icons/io5";
 import { VoiceLevelRing } from "./VoiceLevelRing";
 import type { VoiceSnapshot } from "../lib/voiceAssist";
 
@@ -12,6 +12,7 @@ const STATUS: Record<string, string> = {
   transcribing: "Listening",
   thinking: "Thinking",
   speaking: "",
+  done: "",
   error: "",
 };
 
@@ -96,7 +97,7 @@ export function VoiceAssistOverlay({
             display="flex"
             color={state === "error" ? "var(--theme-fg-muted)" : "var(--theme-fg-dim)"}
           >
-            <IoMic />
+            {state === "done" ? <IoCheckmark /> : <IoMic />}
           </Box>
         </Box>
 

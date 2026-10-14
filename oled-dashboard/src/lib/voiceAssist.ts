@@ -9,6 +9,7 @@
 
 import { socket } from "./socket";
 import { MicError, startRecording, type Recorder } from "./voiceRecorder";
+import { playCue, type ReplyCue } from "./voiceCue";
 
 export type VoiceState =
   | "idle"
@@ -17,6 +18,7 @@ export type VoiceState =
   | "transcribing"
   | "thinking"
   | "speaking"
+  | "done"
   | "error";
 
 export type SlowHint = "none" | "still-thinking" | "waking-model";
@@ -94,9 +96,13 @@ function finish(delayMs = DISMISS_AFTER_MS) {
 }
 
 function fail(message: string) {
+  // After the chime there is nothing left to spoil, and after a first error the
+  // first message is the one worth keeping.
+  if (snapshot.state === "done" || snapshot.state === "error") return;
   clearTimers();
   stopRecorder();
   set({ state: "error", errorMessage: message, slowHint: "none" });
+  void playCue("failure");
 }
 
 const ERROR_TEXT: Record<string, string> = {
@@ -171,10 +177,24 @@ function onEvent(event: { type: string; data?: Record<string, unknown> }) {
       const speech = output?.response?.speech?.plain?.speech;
       if (speech) set({ reply: speech, slowHint: "none" });
       conversationExpiry = Date.now() + CONVERSATION_TTL_MS;
+
+      // The server decides when a tone says it better than a sentence.
+      const cue = data?.cue as ReplyCue | null | undefined;
+      if (cue === "success") {
+        set({ state: "done", slowHint: "none" });
+        void playCue("success").then(() => {
+          if (snapshot.state === "done") finish();
+        });
+      } else if (cue === "failure") {
+        set({ reply: "" });
+        fail(speech || "Something went wrong.");
+      }
       break;
     }
 
     case "tts-end": {
+      // A cue already answered; this reply was never meant to be heard.
+      if (snapshot.state === "done" || snapshot.state === "error") break;
       const url = (data?.tts_output as { audioUrl?: string })?.audioUrl ?? null;
       set({ state: "speaking", audioUrl: url, slowHint: "none" });
       if (url) play(url);

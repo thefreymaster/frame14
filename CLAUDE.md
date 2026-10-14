@@ -131,7 +131,7 @@ src/
     RadarSection.tsx              — Windy radar card, collapsible (`board-collapsed:radar`), above energy in both layouts; renders only while the current weather condition is rain (rainy/pouring/lightning-rainy/snowy-rainy); iframe is pointer-events none so it can't trap page scroll
     ClimateSection.tsx            — thermostat cards + modal; modal has Nest-style 120° tick arc slider (drag/tap, commits on pointerup), animated sliding segmented mode pill (HEAT/COOL/FAN/OFF); responsive sizing (vw on phone, vmin on landscape)
     VoiceAssistButton.tsx         — fixed mic FAB; rendered from Layout so it exists on every view, hidden with the nav
-    VoiceAssistOverlay.tsx        — full-screen voice session UI (listening / thinking / speaking / error)
+    VoiceAssistOverlay.tsx        — full-screen voice session UI (listening / thinking / speaking / done / error); done swaps the mic for a checkmark
     VoiceLevelRing.tsx            — mic level ring; writes transform in a rAF loop, never through React state
     VoiceStatusBoard.tsx          — read-only voice diagnostics on /control
     Divider.tsx                   — thin themed divider line
@@ -166,6 +166,7 @@ src/
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
     voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
     voiceAssist.ts                — voice session state machine + socket protocol (module store, like navVisibility)
+    voiceCue.ts                   — synthesised success/failure tones (Web Audio, no asset files) that stand in for a spoken reply
 ```
 
 ## Backend Structure
@@ -223,7 +224,7 @@ routes/
 - HA WebSocket pushes state updates → server fans out to `entity:<id>` rooms
 - `GET /api/change/:view` broadcasts to **all** clients (used by HA automations)
 - `SocketViewListener` navigates on `change_view` but ignores it on `/control`
-- Voice assist: client emits `assist:start` (with ack), `assist:audio` (binary Int16LE PCM), `assist:audio_end`, `assist:cancel`; server emits `assist:event` (the HA pipeline event, with the TTS path swapped for an opaque `audioUrl`) and `assist:error`. One run at a time across all clients
+- Voice assist: client emits `assist:start` (with ack), `assist:audio` (binary Int16LE PCM), `assist:audio_end`, `assist:cancel`; server emits `assist:event` (the HA pipeline event, with the TTS path swapped for an opaque `audioUrl`) and `assist:error`. The server adds `cue` (`"success"` / `"failure"` / `null`) to `intent-end`: a non-null cue means the panel plays a tone instead of the speech, and that turn's `tts-end` carries no `audioUrl`. Local intents are judged by their `response_type`; LLM turns by the tool results streamed in `intent-progress`, because an LLM agent labels every reply `action_done`. One run at a time across all clients
 - `io` instance is passed to route handlers via `app.locals.io`
 
 ## Design Constraints (OLED)

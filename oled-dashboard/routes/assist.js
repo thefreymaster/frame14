@@ -95,6 +95,52 @@ router.get("/tts/:id", async (req, res) => {
   }
 });
 
+// ── Reply cue ───────────────────────────────────────────────────────────────
+//
+// A command that worked gets a chime instead of a sentence: "Turned on the
+// kitchen lights" is noise when you can watch them come on. Anything that
+// carries information — an answer, a question back, a partial failure — is
+// still spoken.
+//
+// Local intents label their response honestly. The LLM agent does not: every
+// reply it gives comes back as "action_done", "It's Wednesday" included. So
+// for its turns the tool results streamed in intent-progress decide instead.
+
+function isActionResult({ name, error, data }) {
+  if (error) return false;
+  // Intent tools return the intent response; scripts are actions by definition.
+  return data?.response_type === "action_done" || name.startsWith("script__");
+}
+
+function isTroubleResult({ error, data }) {
+  return Boolean(error) || data?.response_type === "error" || data?.data?.failed?.length > 0;
+}
+
+function replyCue(intentEnd, toolResults) {
+  const output = intentEnd?.intent_output;
+  const response = output?.response;
+  if (!response) return null;
+  // The agent itself failed (API down, model refused) — there is no answer.
+  if (response.response_type === "error") return "failure";
+  // It asked something back; the question has to be heard.
+  if (output.continue_conversation) return null;
+
+  if (intentEnd.processed_locally) {
+    // Sentence triggers and timers come back with no success targets and a
+    // custom sentence worth speaking.
+    const { success = [], failed = [] } = response.data ?? {};
+    return response.response_type === "action_done" && success.length && !failed.length
+      ? "success"
+      : null;
+  }
+
+  // A retry after a wrong guess also lands here, and is spoken: a chime would
+  // hide the one turn where something did go wrong.
+  const acted = toolResults.some(isActionResult);
+  const troubled = toolResults.some(isTroubleResult);
+  return acted && !troubled ? "success" : null;
+}
+
 // ── Config ──────────────────────────────────────────────────────────────────
 //
 // Resolves the configured pipeline id to a name so a typo surfaces on /control
@@ -161,6 +207,8 @@ function makeSession(socket) {
     finished: false,
     hardTimer: null,
     speechTimer: null,
+    toolResults: [],
+    cue: null,
   };
 
   function clearTimers() {
@@ -212,17 +260,29 @@ function makeSession(socket) {
       session.speechTimer = null;
     }
 
+    const delta = data?.chat_log_delta;
+    if (type === "intent-progress" && delta?.role === "tool_result") {
+      session.toolResults.push({
+        name: delta.tool_name ?? "",
+        error: delta.result?.error ?? false,
+        data: delta.result?.data ?? delta.tool_result,
+      });
+    }
+
+    let payload = data;
     if (type === "intent-end") {
       // Carry the conversation forward so "turn it off" after "turn on the lamp"
       // resolves against the same context.
       const cid = data?.intent_output?.conversation_id;
       if (cid) socket.data.assistConversationId = cid;
+      session.cue = replyCue(data, session.toolResults);
+      payload = { ...data, cue: session.cue };
     }
 
-    let payload = data;
     if (type === "tts-end") {
       const url = data?.tts_output?.url;
-      const id = mintTtsId(url) ?? session.ttsId ?? null;
+      // A cue replaces the speech: no audio for the panel, none for the speaker.
+      const id = session.cue ? null : (mintTtsId(url) ?? session.ttsId ?? null);
       // Never hand the raw HA path or token to the browser.
       payload = { ...data, tts_output: { ...data?.tts_output, url: undefined, audioUrl: id ? `/api/assist/tts/${id}` : null } };
       if (id && ASSIST_SPEAKER) playOnSpeaker(url);

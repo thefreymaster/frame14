@@ -69,7 +69,8 @@ export function HomeOverviewSkeleton({
         width="100%"
         minHeight="100%"
         display="grid"
-        gridTemplateColumns="1.15fr 1fr"
+        // One column on a phone, as HomeBoard does.
+        gridTemplateColumns={{ base: "minmax(0, 1fr)", md: "1.15fr 1fr" }}
         alignContent="start"
         // Each card ends below its content, as on the live page — the climate
         // tiles are shorter than the column beside them.

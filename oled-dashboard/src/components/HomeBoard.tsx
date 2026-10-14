@@ -280,11 +280,13 @@ export function HomeBoard({
             {zone("top")}
             {/* Climate takes the wider left cell while the right stacks in a
                 narrower rail, so no two tiles share a size and the page stops
-                reading as a flat stack. */}
+                reading as a flat stack. On a phone (below Chakra's md) two
+                columns are too narrow to read, so the zones stack instead —
+                every card full width, in its saved order. */}
             <Grid
               className="home-columns"
               data-editing={editing || undefined}
-              templateColumns="1.15fr 1fr"
+              templateColumns={{ base: "minmax(0, 1fr)", md: "1.15fr 1fr" }}
               gap="4"
             >
               {zone("left")}

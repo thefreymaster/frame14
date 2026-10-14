@@ -91,7 +91,7 @@ export const MODE_ICON: Record<ClimateVisualMode, typeof IoFlame> = {
 };
 
 // Narrowest a home-card tile gets, and the grid gap between tiles, in rem.
-const TILE_MIN_REM = 10;
+const TILE_MIN_REM = 9;
 const TILE_GAP_REM = 0.75;
 
 /**
@@ -99,8 +99,8 @@ const TILE_GAP_REM = 0.75;
  * the card's own width — the caller makes the wrapper a size container. One
  * column, then two, then one row for every unit once they all fit; never a
  * row of three with one left over. In rem so the steps follow the root size:
- * four units are 2x2 on the portrait frame, one row in landscape and a single
- * column in a phone's narrow cell.
+ * four units are 2x2 on the portrait frame and on a phone, and one row in
+ * landscape; a very narrow card falls back to a single column.
  */
 export function climateGridCss(count: number) {
   const atLeast = (n: number) =>

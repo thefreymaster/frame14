@@ -30,7 +30,7 @@ the whole game rides along in the attributes. Two surfaces consume it:
 | ----------------------------------- | ----------------------------------------------------------------------------------------- |
 | `lib/teamTracker.ts`                | **The game model.** Attribute types, `sides()`, `stateLabel()`, both visibility windows.  |
 | `hooks/useLiveGame.ts`              | The subscription. `useGames(window)` takes the predicate; `useLiveGame()` is the route's. |
-| `components/TeamTracker.tsx`        | Card-sized rendering only.                                                                |
+| `components/TeamTracker.tsx`        | Card-sized rendering only; re-flows on a narrow card (see below).                         |
 | `components/FootballScoreboard.tsx` | Route-sized rendering. Same anatomy, its own `vmin` scale.                                |
 | `components/FootballDetail.tsx`     | The band the card has no room for.                                                        |
 | `routes/Football.tsx`               | Composition only.                                                                         |
@@ -89,6 +89,16 @@ and scores into what is left. `FootballScoreboard` therefore re-flows on
 `@media (orientation: ...)`: portrait stacks one team per full-width row with the
 clock as a band between them, landscape keeps the broadcast row. Same DOM both
 ways, so there is one tree to keep correct.
+
+The home chip (`TeamTracker`) does the same on a narrow card, but measures the
+card rather than the orientation: below `NARROW` (`@container (max-width:
+36rem)`, a phone or a small landscape window) its row becomes a grid of one
+team per row — cap, then name and score — with the clock band between. The row
+keeps its vmin sizes, tuned for the frame; the stacked rows use rem, because on
+a phone `1vmin` is under 4px. Each part's `css` carries only the stacked
+overrides, so the frame and landscape rows are untouched. Keep the wide values
+as props: Chakra's `HStack`/`VStack` set `gap` and `flexDirection` as props,
+and an unconditional `css` value for those loses to them.
 
 It **fills the panel in both orientations**, and the sizes are chosen so it fills
 with content — a 22vmin score, a colour block sized to hold a logo at 60% of the

@@ -9,6 +9,10 @@
 - Changed: the thermostat mode selector is a segmented control (Heat / Cool / Fan / Off) and fan speed is a slider. The temperature arc itself still works the same way.
 - Changed: the thermostats on Home are compact tiles instead of big round dials, so the Climate card takes about half the room. Each tile shows the room temperature and a coloured label for what the unit is doing, such as "Heating → 70°" (filled in while it is actively heating or cooling) or "Off"; tap a tile to open the thermostat pop-up as before.
 - Changed: on phones (screens narrower than 768px) cards have tighter padding, the same as Chakra's small card, so more fits on screen. Tablets, desktops and the frame are unchanged.
+- Changed: on phones, Home is one column. Every card takes the full width, in the same order as before, instead of being squeezed into two narrow columns. The thermostats there show as two rows of two.
+- Changed: on a phone (or any narrow Teams card), the score bug stacks the two teams one above the other with the game time between them, so names and scores are readable instead of tiny.
+- Fixed: on a narrow screen the Calendar card's event count ran past the edge of the card. It now moves under the title when there isn't room, and the loading placeholders stay inside their cards too.
+- Fixed: on a phone the last bird seen was cut off to "Blue …". The common name now stays whole and the Latin name is shortened instead.
 - Changed: each light is a tile you tap to toggle; lit tiles are highlighted in yellow and show a check mark.
 - Changed: the navigation bar highlights the current page with a filled tab.
 - Changed: Settings uses segmented controls for device mode and theme, a switch for "Show navigation", and a status dot for the connection.

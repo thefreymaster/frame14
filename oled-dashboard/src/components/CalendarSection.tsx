@@ -1,4 +1,4 @@
-import { Box, Card, HStack, Stack, Text } from "@chakra-ui/react";
+import { Box, Card, Flex, Stack, Text } from "@chakra-ui/react";
 import { IoCalendarOutline } from "react-icons/io5";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -109,13 +109,14 @@ export function CalendarSection({
       collapsible
       storageKey="calendar"
       title={
-        <HStack width="100%" gap="3">
+        // Wraps the count under the title when the card is too narrow for
+        // both, like the Energy card's badge.
+        <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
           <SectionTitle icon={<IoCalendarOutline />}>Calendar</SectionTitle>
-          <Box flex="1" minW="0" />
-          <Text textStyle="sm" color="fg.muted">
+          <Text textStyle="sm" color="fg.muted" ms="auto">
             {eventCountLabel(today.length, "today")}
           </Text>
-        </HStack>
+        </Flex>
       }
     >
       <SectionTitle>Today</SectionTitle>

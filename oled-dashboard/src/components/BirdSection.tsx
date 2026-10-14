@@ -62,12 +62,15 @@ export function BirdSection() {
       <Text textStyle="md" truncate minW="0">
         {name}
       </Text>
+      {/* The Latin name only takes the room that's left, so on a narrow
+          header it gives way before the common name does. */}
       {scientificName && (
         <Text
           textStyle="sm"
           color="fg.muted"
           fontStyle="italic"
           truncate
+          flex="1"
           minW="0"
         >
           {scientificName}

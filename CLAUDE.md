@@ -152,7 +152,7 @@ src/
     PrinterSection.tsx            — 3D printer card (Progress) + click-to-open detail modal (PanelDialog: temps, layers, ETA, filament as Stats)
     PanelDialog.tsx               — shell of the detail modals: a stock Chakra Dialog with title, body and close button
     ForecastDetailModal.tsx       — one forecast period as a PanelDialog of Stats
-    TeamTracker.tsx               — TeamTracker sports card; tapping a score bug opens /football; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND. Card-sized rendering only — the game model is in `src/lib/teamTracker.ts`
+    TeamTracker.tsx               — TeamTracker sports card; tapping a score bug opens /football; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND. On a narrow card (container query, `NARROW`) the broadcast row re-flows to one team per row with the clock between. Card-sized rendering only — the game model is in `src/lib/teamTracker.ts`
     FootballScoreboard.tsx        — the /football score bug at scoreboard scale; same anatomy as TeamTracker's chip, its own vmin sizes (the card's are tuned for a bento tile)
     FootballDetail.tsx            — band under the scoreboard: full down & distance, last play, network/venue, records. Dim by design — it sits still for three hours
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
@@ -166,7 +166,7 @@ src/
     VoiceAssistOverlay.tsx        — full-screen voice session UI, a stock Chakra Dialog, always mounted and open while a session runs; keeps the last live snapshot for the exit animation (listening / thinking / speaking / done / error); done swaps the mic for a checkmark
     VoiceLevelRing.tsx            — mic level ring; writes transform in a rAF loop, never through React state
     VoiceStatusBoard.tsx          — read-only voice diagnostics on /control (DataList, Alerts)
-    HomeBoard.tsx                 — /home's rearrangeable layout: press-and-hold enters arranging, dnd-kit multiple-containers drag between zones, saves via lib/homeLayout, Done/Escape/90s idle leaves. DragOverlay and toolbar are portalled to body (PageTransition's transform would offset fixed elements)
+    HomeBoard.tsx                 — /home's rearrangeable layout (portrait's two columns stack into one below Chakra's md, i.e. on phones): press-and-hold enters arranging, dnd-kit multiple-containers drag between zones, saves via lib/homeLayout, Done/Escape/90s idle leaves. DragOverlay and toolbar are portalled to body (PageTransition's transform would offset fixed elements)
     HomeZone.tsx                  — one column or full-width band: SortableContext + its own droppable, so empty zones accept drops
     HomeCardSlot.tsx              — sortable wrapper per card; inert (no listeners, no transform) outside arranging
     HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)

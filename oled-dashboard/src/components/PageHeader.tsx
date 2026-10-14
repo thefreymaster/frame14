@@ -3,12 +3,9 @@ import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 
 /**
- * A route's title tile — the same Board + SectionTitle pairing every card on
- * /home uses for its header, so a page title reads at the same weight as a
- * section title instead of shouting at its own scale.
- *
- * `actions` sits right-aligned on the header's row (toggles, a pager, a
- * connection dot). Anything passed as children renders in the tile below it.
+ * A route's title card — the same Board + SectionTitle pairing every card on
+ * /home uses for its header. `actions` sits right-aligned on the header row;
+ * children render in the card body.
  */
 export function PageHeader({
   icon,
@@ -26,14 +23,7 @@ export function PageHeader({
   return (
     <Board
       title={
-        <Flex
-          align="center"
-          gap="1.5vmin"
-          rowGap="0.8vmin"
-          wrap="wrap"
-          width="100%"
-          minW="0"
-        >
+        <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
           <SectionTitle icon={icon} iconColor={iconColor}>
             {title}
           </SectionTitle>

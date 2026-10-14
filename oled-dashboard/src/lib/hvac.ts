@@ -5,17 +5,18 @@ import type { HomeClimate } from "../hooks/useHomeData";
 /** The thermostat model shared by the climate card and its modal. */
 export type ClimateVisualMode = "heat" | "cool" | "fan_only" | "off";
 
-// Each hvac key's colour is a semantic token (hvac.* in src/theme/tokens.ts),
-// so the bright/dark swap is the system's job, not a hook's. The Chakra
-// palette is for the library parts (mode pill, fan slider).
-const HVAC_TOKEN: Record<string, { token: string; palette: string }> = {
-  cool: { token: "hvac-cool", palette: "blue" },
-  cooling: { token: "hvac-cool", palette: "blue" },
-  heat: { token: "hvac-heat", palette: "orange" },
-  heating: { token: "hvac-heat", palette: "orange" },
-  fan_only: { token: "hvac-fan", palette: "teal" },
-  fan: { token: "hvac-fan", palette: "teal" },
-  auto: { token: "hvac-auto", palette: "green" },
+// Each hvac key maps to one of Chakra's colour palettes. `accent` and `ring`
+// are CSS colours for the hand-drawn dial (its SVG strokes), taken from the
+// palette's semantic `solid` token; `palette` feeds library parts
+// (colorPalette on the slider).
+const HVAC_PALETTE: Record<string, string> = {
+  cool: "blue",
+  cooling: "blue",
+  heat: "orange",
+  heating: "orange",
+  fan_only: "teal",
+  fan: "teal",
+  auto: "green",
 };
 
 const LIVE_HVAC_KEYS = new Set(["heating", "cooling", "fan"]);
@@ -24,16 +25,19 @@ export type HvacPalette = { accent: string; ring: string; palette: string };
 
 /** Accent + ring colours (CSS) and the Chakra palette for an hvac key. */
 export function hvacPalette(key: string): HvacPalette {
-  const entry = HVAC_TOKEN[key];
-  if (!entry) {
-    const faint = "var(--chakra-colors-fg-faint)";
-    return { accent: faint, ring: faint, palette: "gray" };
+  const palette = HVAC_PALETTE[key];
+  if (!palette) {
+    return {
+      accent: "var(--chakra-colors-fg-muted)",
+      ring: "var(--chakra-colors-border-emphasized)",
+      palette: "gray",
+    };
   }
-  const accent = `var(--chakra-colors-${entry.token})`;
+  const accent = `var(--chakra-colors-${palette}-solid)`;
   const ring = LIVE_HVAC_KEYS.has(key)
     ? accent
-    : `color-mix(in srgb, ${accent} 87%, transparent)`;
-  return { accent, ring, palette: entry.palette };
+    : `color-mix(in srgb, ${accent} 70%, transparent)`;
+  return { accent, ring, palette };
 }
 
 const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
@@ -43,10 +47,10 @@ const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
 };
 
 export const HVAC_MODES: { key: ClimateVisualMode; label: string }[] = [
-  { key: "heat", label: "HEAT" },
-  { key: "cool", label: "COOL" },
-  { key: "fan_only", label: "FAN" },
-  { key: "off", label: "OFF" },
+  { key: "heat", label: "Heat" },
+  { key: "cool", label: "Cool" },
+  { key: "fan_only", label: "Fan" },
+  { key: "off", label: "Off" },
 ];
 
 export function normalizeClimateMode(

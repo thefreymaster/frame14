@@ -1,10 +1,11 @@
 import { HStack, Icon, Text } from "@chakra-ui/react";
-import { Slider } from "./ui/slider";
 import { MdAir } from "react-icons/md";
+import { Slider } from "./ui/slider";
 
-/** Slug-ish HA fan mode name ("wind_free") → display label ("WIND FREE"). */
+/** Slug-ish HA fan mode name ("wind_free") → display label ("Wind free"). */
 function fanModeLabel(mode: string) {
-  return mode.replace(/[_-]+/g, " ").toUpperCase();
+  const words = mode.replace(/[_-]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 /**
@@ -15,7 +16,6 @@ function fanModeLabel(mode: string) {
 export function FanSpeedSlider({
   modes,
   value,
-  accent,
   colorPalette,
   disabled = false,
   onChange,
@@ -25,9 +25,7 @@ export function FanSpeedSlider({
 }: {
   modes: string[];
   value: string | null;
-  /** CSS colour for the icon and label (the thermostat's mode accent). */
-  accent: string;
-  /** Chakra palette for the slider itself. */
+  /** Chakra palette for the slider (the thermostat mode's colour). */
   colorPalette: string;
   disabled?: boolean;
   onChange: (mode: string) => void;
@@ -40,31 +38,12 @@ export function FanSpeedSlider({
   const single = modes.length === 1;
 
   return (
-    <HStack
-      width="100%"
-      gap={{ base: "3vw", md: "1.6vmin" }}
-      align="center"
-      bg="rgba(0, 0, 0, 0.05)"
-      _dark={{ bg: "rgba(0, 0, 0, 0.55)" }}
-      boxShadow="inset 0 0 0 1px {colors.chrome.border}"
-      borderRadius="full"
-      px={{ base: "4vw", md: "2vmin" }}
-      py={{ base: "2vw", md: "1.2vmin" }}
-      opacity={disabled ? 0.5 : 1}
-      transition="opacity 260ms ease"
-    >
-      <Icon
-        color={accent}
-        boxSize={{ base: "4.4vw", md: "2.4vmin" }}
-        flexShrink={0}
-      >
+    <HStack width="100%" gap="4">
+      <Icon color="fg.muted" boxSize="5">
         <MdAir />
       </Icon>
       <Slider
         flex="1"
-        minW="0"
-        variant="rail"
-        size="panel"
         colorPalette={colorPalette}
         min={0}
         max={single ? 1 : modes.length - 1}
@@ -85,16 +64,7 @@ export function FanSpeedSlider({
         }}
         marks={single ? undefined : modes.map((_, i) => i)}
       />
-      <Text
-        flexShrink={0}
-        minWidth={{ base: "14vw", md: "8vmin" }}
-        textAlign="right"
-        fontSize={{ base: "2.4vw", md: "1.3vmin" }}
-        fontWeight="600"
-        letterSpacing="0.12em"
-        color={accent}
-        whiteSpace="nowrap"
-      >
+      <Text textStyle="sm" minW="5rem" textAlign="end">
         {fanModeLabel(modes[activeIndex])}
       </Text>
     </HStack>

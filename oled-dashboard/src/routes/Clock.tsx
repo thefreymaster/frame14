@@ -27,10 +27,10 @@ function buildMarkers() {
     const outerR = 92;
     const innerR = isCardinal ? 78 : isHour ? 82 : 88;
     const strokeVar = isCardinal
-      ? "var(--chakra-colors-marker-cardinal)"
+      ? "var(--chakra-colors-fg-muted)"
       : isHour
-        ? "var(--chakra-colors-marker-hour)"
-        : "var(--chakra-colors-marker-minor)";
+        ? "var(--chakra-colors-border-emphasized)"
+        : "var(--chakra-colors-border)";
     const width = isCardinal ? 2.2 : isHour ? 1.4 : 0.6;
     markers.push(
       <line
@@ -143,7 +143,7 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY + 18}
-            stroke="#c53030"
+            stroke="var(--chakra-colors-red-solid)"
             strokeWidth={1.2}
             strokeLinecap="round"
           />
@@ -155,14 +155,24 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY - 80}
-            stroke="#c53030"
+            stroke="var(--chakra-colors-red-solid)"
             strokeWidth={1.2}
             strokeLinecap="round"
           />
 
           {/* Center dot */}
-          <circle cx={CX} cy={CY} r={3.5} style={{ fill: "var(--chakra-colors-fg)" }} />
-          <circle cx={CX} cy={CY} r={1.8} fill="#c53030" />
+          <circle
+            cx={CX}
+            cy={CY}
+            r={3.5}
+            style={{ fill: "var(--chakra-colors-fg)" }}
+          />
+          <circle
+            cx={CX}
+            cy={CY}
+            r={1.8}
+            fill="var(--chakra-colors-red-solid)"
+          />
         </svg>
       </Box>
     </Box>
@@ -219,10 +229,8 @@ function DigitalClock() {
       justifyContent="center"
     >
       <Text
-        fontFamily="display"
-        fontSize="24vmin"
-        fontWeight="200"
-        letterSpacing="-0.03em"
+        textStyle="9xl"
+        fontWeight="light"
         color="fg"
         lineHeight="1"
         fontVariantNumeric="tabular-nums"
@@ -242,11 +250,10 @@ function DigitalClock() {
         />
         <Text
           as="span"
-          fontFamily="display"
-          fontSize="10vmin"
-          fontWeight="200"
-          color="fg.dim"
-          ml="1.5vmin"
+          textStyle="5xl"
+          fontWeight="light"
+          color="fg.muted"
+          ms="3"
         >
           <NumberFlow
             digits={{ 2: { max: 2 } }}
@@ -257,23 +264,16 @@ function DigitalClock() {
         </Text>
         <Text
           as="span"
-          fontFamily="display"
-          fontSize="8vmin"
-          fontWeight="300"
-          color="fg.dim"
-          ml="2vmin"
+          textStyle="4xl"
+          fontWeight="light"
+          color="fg.muted"
+          ms="3"
         >
           {ampm}
         </Text>
       </Text>
 
-      <Text
-        fontSize="4vmin"
-        color="fg.muted"
-        fontWeight="300"
-        letterSpacing="0.04em"
-        mt="3vmin"
-      >
+      <Text textStyle="3xl" color="fg.muted" fontWeight="light" mt="6">
         {DAYS[now.getDay()]}, {MONTHS[now.getMonth()]} {now.getDate()}
       </Text>
     </Box>
@@ -298,7 +298,6 @@ export function Clock() {
       position="relative"
       width="100%"
       height="100vh"
-      bg="bg"
       overflow="hidden"
       display="flex"
       alignItems="center"

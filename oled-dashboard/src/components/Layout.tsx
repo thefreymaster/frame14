@@ -13,6 +13,7 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
 import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
+import { NAV_BAR_HEIGHT, NAV_RAIL_WIDTH } from "../lib/navMetrics";
 
 export function Layout() {
   useThemeMode();
@@ -55,12 +56,12 @@ export function Layout() {
           minW={{ _landscape: "100vw", _portrait: "100%" }}
           pl={{
             _landscape: showNav
-              ? "calc({sizes.navRail} + env(safe-area-inset-left, 0px))"
+              ? `calc(${NAV_RAIL_WIDTH} + env(safe-area-inset-left, 0px))`
               : "0px",
           }}
           pb={{
             _portrait: showNav
-              ? "calc({sizes.navBar} + env(safe-area-inset-bottom, 0px))"
+              ? `calc(${NAV_BAR_HEIGHT} + env(safe-area-inset-bottom, 0px))`
               : "0px",
           }}
         >

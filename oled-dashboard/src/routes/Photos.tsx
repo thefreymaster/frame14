@@ -49,9 +49,9 @@ function PhotoOverlay({ assetId }: OverlayProps) {
     <PixelShift>
       <Box
         position="absolute"
-        top="5vmin"
-        left="5vmin"
-        right="5vmin"
+        top="8"
+        left="8"
+        right="8"
         textAlign="left"
         pointerEvents="none"
       >
@@ -62,10 +62,8 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           width="100%"
         >
           <Text
-            fontFamily="display"
-            fontSize="14vmin"
-            fontWeight="300"
-            letterSpacing="-0.03em"
+            textStyle="9xl"
+            fontWeight="light"
             color={color}
             lineHeight="0.9"
             style={{ transition: "color 1s ease" }}
@@ -73,11 +71,10 @@ function PhotoOverlay({ assetId }: OverlayProps) {
             {hours}:{minutes}
             <Text
               as="span"
-              fontFamily="display"
-              fontSize="5.5vmin"
-              fontWeight="300"
+              textStyle="4xl"
+              fontWeight="light"
               color={color}
-              ml="1.5vmin"
+              ms="3"
               style={{ transition: "color 1s ease" }}
             >
               {ampm}
@@ -85,10 +82,8 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           </Text>
           {weather && (
             <Text
-              fontFamily="display"
-              fontSize="14vmin"
-              fontWeight="300"
-              letterSpacing="-0.03em"
+              textStyle="9xl"
+              fontWeight="light"
               color={color}
               lineHeight="0.9"
               style={{ transition: "color 1s ease" }}
@@ -193,12 +188,11 @@ export function Photos() {
       <Box
         width="100%"
         height="100vh"
-        bg="bg"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Spinner size="lg" color="fg.muted" />
+        <Spinner size="lg" />
       </Box>
     );
   }
@@ -208,13 +202,11 @@ export function Photos() {
       <Box
         width="100%"
         height="100vh"
-        bg="bg"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
         <EmptyState
-          size="panel"
           icon={<IoImagesOutline />}
           title="no album configured"
           description="Pick one under Album on the Settings page."
@@ -227,7 +219,6 @@ export function Photos() {
     <Box
       width="100%"
       height="100vh"
-      bg="bg"
       position="relative"
       overflow="hidden"
       onClick={advancePhoto}
@@ -241,7 +232,7 @@ export function Photos() {
           alignItems="center"
           justifyContent="center"
         >
-          <Spinner size="lg" color="fg.muted" />
+          <Spinner size="lg" />
         </Box>
       )}
 
@@ -256,9 +247,8 @@ export function Photos() {
       <PhotoOverlay assetId={album?.assets[currentIndex]?.id ?? null} />
 
       <IconButton
-        variant="glass"
+        variant="surface"
         size="lg"
-        borderRadius="full"
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
           toggleNavVisible();

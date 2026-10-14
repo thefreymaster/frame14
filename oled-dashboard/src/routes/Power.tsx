@@ -17,11 +17,7 @@ export function Power() {
 
   return (
     <PageShell fill>
-      <PageHeader
-        icon={<MdElectricBolt />}
-        iconColor="cyan.400"
-        title="POWER"
-      />
+      <PageHeader icon={<MdElectricBolt />} iconColor="blue.fg" title="Power" />
 
       <Board>
         <PowerTotals
@@ -34,7 +30,7 @@ export function Power() {
         fill
         title={
           <SectionTitle>
-            CIRCUITS
+            Circuits
             {totalWatts != null
               ? ` · ${(totalWatts / 1000).toFixed(1)} kW`
               : ""}
@@ -43,14 +39,12 @@ export function Power() {
       >
         {isPending && (
           <Center height="100%">
-            <Spinner size="lg" color="fg.faint" aria-label="Loading circuits" />
+            <Spinner size="lg" aria-label="Loading circuits" />
           </Center>
         )}
         {isError && (
           <Center height="100%">
-            <Text fontSize="2.8vmin" color="fg.faint" letterSpacing="0.1em">
-              unavailable
-            </Text>
+            <Text color="fg.muted">unavailable</Text>
           </Center>
         )}
         {!isPending && !isError && data && (

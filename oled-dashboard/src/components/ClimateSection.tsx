@@ -49,15 +49,15 @@ function ClimateCard({
           ? MdAir
           : IoPowerOutline;
   const subLabel = isOff
-    ? "OFF"
+    ? "Off"
     : showTarget
       ? `→ ${targetTemp}°`
       : displayMode === "fan_only" || displayMode === "fan"
-        ? "FAN"
+        ? "Fan"
         : "";
 
   return (
-    <VStack gap="1vmin" align="center">
+    <VStack gap="2" align="center">
       <ThermostatDial
         as="button"
         aria-label={`${unit.name} thermostat`}
@@ -69,43 +69,25 @@ function ClimateCard({
         accent={accent}
         live={activeAction != null}
         target={showTarget ? targetTemp : null}
-        style={{ WebkitTapHighlightColor: "transparent" }}
       >
-        <VStack gap="0.4vmin" align="center" justify="center">
-          <Icon color={accent} boxSize="2.6vmin" opacity={isOff ? 0.45 : 1}>
+        <VStack gap="1" align="center">
+          <Icon color={accent} boxSize="5" opacity={isOff ? 0.5 : 1}>
             <ModeIcon />
           </Icon>
-          <Text
-            fontFamily="display"
-            fontSize="6.6vmin"
-            fontWeight="200"
-            lineHeight="1"
-            color="fg"
-            letterSpacing="-0.04em"
-          >
+          <Text textStyle="4xl" fontWeight="light" lineHeight="1">
             {currentTemp != null ? `${currentTemp}°` : "—"}
           </Text>
-          <Text
-            fontSize="1.5vmin"
-            color={accent}
-            fontWeight="600"
-            letterSpacing="0.18em"
-            textTransform="uppercase"
-            opacity={isOff ? 0.55 : 0.95}
-            minHeight="1.6vmin"
-          >
+          <Text textStyle="xs" fontWeight="semibold" color={accent} minH="1lh">
             {subLabel}
           </Text>
         </VStack>
       </ThermostatDial>
       <Text
-        fontSize="1.8vmin"
-        color="fg.faint"
-        fontWeight="500"
+        textStyle="sm"
+        color="fg.muted"
         textAlign="center"
         truncate
-        maxWidth="100%"
-        lineHeight="1.1"
+        maxW="100%"
       >
         {unit.name}
       </Text>
@@ -124,7 +106,7 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
       collapsible
       storageKey="climate"
       title={
-        <SectionTitle icon={<IoThermometerOutline />}>CLIMATE</SectionTitle>
+        <SectionTitle icon={<IoThermometerOutline />}>Climate</SectionTitle>
       }
     >
       {/* Measure this card, not the viewport.
@@ -137,14 +119,13 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
        * and in a wide desktop window alike. */}
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
         <Grid
-          templateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"
+          templateColumns="repeat(auto-fill, minmax(9rem, 1fr))"
           css={{
             [`@container (min-width: ${SINGLE_ROW_MIN_PX}px)`]: {
               gridTemplateColumns: `repeat(${climate.length}, minmax(0, 1fr))`,
             },
           }}
-          columnGap="2vmin"
-          rowGap="2vmin"
+          gap="4"
           width="100%"
         >
           {climate.map((unit) => (

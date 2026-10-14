@@ -43,7 +43,6 @@ export function Marquee() {
       width="100%"
       height="100%"
       minHeight="100vh"
-      bg="bg"
       position="relative"
       overflow="hidden"
     >
@@ -51,7 +50,6 @@ export function Marquee() {
         <MarqueeArt src={src} />
       ) : (
         <EmptyState
-          size="panel"
           position="absolute"
           inset={0}
           display="flex"
@@ -63,9 +61,8 @@ export function Marquee() {
       )}
 
       <IconButton
-        variant="glass"
+        variant="surface"
         size="lg"
-        borderRadius="full"
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
           toggleNavVisible();

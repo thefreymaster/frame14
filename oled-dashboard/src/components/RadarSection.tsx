@@ -32,15 +32,9 @@ export function RadarSection({
     <Board
       collapsible
       storageKey="radar"
-      title={<SectionTitle icon={<IoRainyOutline />}>RADAR</SectionTitle>}
+      title={<SectionTitle icon={<IoRainyOutline />}>Radar</SectionTitle>}
     >
-      <AspectRatio
-        ratio={16 / 10}
-        width="100%"
-        overflow="hidden"
-        borderRadius="chip"
-        bg="surface.chip"
-      >
+      <AspectRatio ratio={16 / 10} width="100%" overflow="hidden" rounded="l2">
         <iframe
           src={RADAR_URL}
           title="Radar"

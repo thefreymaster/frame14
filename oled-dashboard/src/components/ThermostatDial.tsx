@@ -108,7 +108,7 @@ export function ThermostatDial({
         justifyContent="center"
         overflow="hidden"
         bg="bg"
-        boxShadow={`inset 0 0 0 0.4vmin ${ring}`}
+        boxShadow={`inset 0 0 0 0.25rem ${ring}`}
         transition="box-shadow 400ms ease"
       >
         {live && (
@@ -117,8 +117,8 @@ export function ThermostatDial({
             inset="0"
             borderRadius="full"
             pointerEvents="none"
-            boxShadow={`inset 0 0 0 0.4vmin ${accent}`}
-            animation="ring-pulse 2.6s ease-in-out infinite"
+            boxShadow={`inset 0 0 0 0.25rem ${accent}`}
+            animation="pulse 2.6s ease-in-out infinite"
           />
         )}
         <Box
@@ -173,7 +173,6 @@ export function ThermostatDial({
                 aria-valuemin={control.min}
                 aria-valuemax={control.max}
                 aria-valuenow={target ?? undefined}
-                tabIndex={0}
                 style={{ pointerEvents: "stroke", cursor: "pointer" }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}

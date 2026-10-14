@@ -5,7 +5,6 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { micAvailable } from "../lib/voiceRecorder";
 import { DataListItem, DataListRoot } from "./ui/data-list";
 
-/** An Alert sized for the panel, in the card's own fill rather than a tint. */
 function Notice({
   status,
   title,
@@ -16,30 +15,11 @@ function Notice({
   children?: React.ReactNode;
 }) {
   return (
-    <Alert.Root
-      status={status}
-      variant="subtle"
-      bg="surface.chip"
-      borderRadius="chip"
-      px="chipX"
-      py="chipY"
-      gap="1.4vmin"
-    >
-      <Alert.Indicator boxSize="2.6vmin" />
-      <Alert.Content gap="0.6vmin">
-        <Alert.Title
-          fontSize="2.4vmin"
-          lineHeight="1.3"
-          fontWeight="400"
-          color="fg.dim"
-        >
-          {title}
-        </Alert.Title>
-        {children && (
-          <Alert.Description fontSize="2vmin" lineHeight="1.4" color="fg.faint">
-            {children}
-          </Alert.Description>
-        )}
+    <Alert.Root status={status}>
+      <Alert.Indicator />
+      <Alert.Content>
+        <Alert.Title>{title}</Alert.Title>
+        {children && <Alert.Description>{children}</Alert.Description>}
       </Alert.Content>
     </Alert.Root>
   );
@@ -57,17 +37,13 @@ export function VoiceStatusBoard() {
   const hasMic = micAvailable();
 
   return (
-    <Board title={<SectionTitle>VOICE</SectionTitle>}>
-      <VStack align="stretch" gap="1.2vmin">
-        {isPending && (
-          <Text fontSize="2.2vmin" color="fg.faint">
-            Checking…
-          </Text>
-        )}
+    <Board title={<SectionTitle>Voice</SectionTitle>}>
+      <VStack align="stretch" gap="4">
+        {isPending && <Text color="fg.muted">Checking…</Text>}
 
         {!isPending && data?.enabled && (
           <>
-            <DataListRoot orientation="horizontal" size="panel">
+            <DataListRoot orientation="horizontal">
               <DataListItem label="Pipeline" value={data.name ?? "—"} />
               <DataListItem
                 label="Speech to text"
@@ -83,7 +59,7 @@ export function VoiceStatusBoard() {
               )}
             </DataListRoot>
             {data.usingPreferred && (
-              <Text fontSize="2vmin" color="fg.faint" mt="0.6vmin">
+              <Text textStyle="sm" color="fg.muted">
                 Using Home Assistant's preferred pipeline. Set
                 `assist_pipeline_id` in the addon configuration to pin a
                 specific one.
@@ -102,11 +78,11 @@ export function VoiceStatusBoard() {
             </Text>
             {!!data.available?.length && (
               <>
-                <Text as="span" display="block" mt="0.8vmin">
+                <Text as="span" display="block" mt="2">
                   Available:
                 </Text>
                 {data.available.map((p) => (
-                  <Text as="span" display="block" key={p.id} fontSize="1.9vmin">
+                  <Text as="span" display="block" key={p.id}>
                     {p.name} — {p.id}
                   </Text>
                 ))}

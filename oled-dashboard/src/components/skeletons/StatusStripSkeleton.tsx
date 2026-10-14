@@ -12,13 +12,11 @@ export function StatusStripSkeleton({
     <Flex
       gridColumn={span === 2 ? "1 / -1" : undefined}
       width="100%"
-      minW="0"
-      gap="chipGap"
+      gap="2"
       wrap="wrap"
-      align="center"
     >
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} height="5.2vmin" width="26vmin" borderRadius="chip" />
+        <Skeleton key={i} height="9" width="10rem" rounded="l2" />
       ))}
     </Flex>
   );

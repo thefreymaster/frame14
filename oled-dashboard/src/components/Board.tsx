@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Card, Collapsible } from "@chakra-ui/react";
-import { FiChevronDown } from "react-icons/fi";
+import { LuChevronDown } from "react-icons/lu";
 
 const STORAGE_PREFIX = "board-collapsed:";
 
@@ -32,12 +32,11 @@ function writeOpen(key: string | undefined, open: boolean) {
 }
 
 /**
- * The raised tile every section sits on: Chakra's Card in the `raised`
- * variant (src/theme/recipes/card.ts), optionally collapsible.
+ * A section card: Chakra's Card, optionally collapsible.
  *
- * A collapsible board is a Collapsible whose trigger is the card header, so the
- * open/close animation and the chevron come from the library. Collapse state
- * persists per board in localStorage under `board-collapsed:<key>`.
+ * A collapsible board is a Collapsible whose trigger is the card header.
+ * Collapse state persists per board in localStorage under
+ * `board-collapsed:<key>`.
  */
 export const Board = ({
   children,
@@ -70,22 +69,18 @@ export const Board = ({
   const [open, setOpen] = useState(() => readOpen(fullKey, defaultOpen));
 
   const titleNode =
-    typeof title === "string" ? (
-      <Card.Title fontSize="sm" fontWeight="500" letterSpacing="normal">
-        {title}
-      </Card.Title>
-    ) : (
-      title
-    );
+    typeof title === "string" ? <Card.Title>{title}</Card.Title> : title;
 
-  const body = (
+  const hasBody = children != null && children !== false;
+  const body = hasBody ? (
     <Card.Body flex={fill ? "1" : undefined} minH={fill ? "0" : undefined}>
       {children}
     </Card.Body>
-  );
+  ) : null;
 
   return (
     <Card.Root
+      minW="0"
       flex={fill ? "1" : undefined}
       minH={fill ? "0" : undefined}
       gridColumn={span === 2 ? "1 / -1" : undefined}
@@ -104,29 +99,22 @@ export const Board = ({
             <Card.Header
               as="button"
               width="100%"
+              flexDirection="row"
+              alignItems="center"
               textAlign="start"
               cursor="pointer"
-              userSelect="none"
-              color="inherit"
-              transition="padding-bottom 280ms ease"
-              // A collapsed board pulls its header down onto the content edge,
-              // so the gap goes away with the content.
-              _closed={{ pb: "0" }}
-              style={{ WebkitTapHighlightColor: "transparent" }}
+              // Collapsed, the header is the whole card.
+              _closed={{ pb: "var(--card-padding)" }}
             >
-              <Box flex="1" minW="0" color="fg.dim">
+              <Box flex="1" minW="0">
                 {titleNode}
               </Box>
               <Collapsible.Indicator
-                color="fg.faint"
-                fontSize="20px"
-                display="flex"
-                alignItems="center"
-                transition="transform 280ms ease"
-                transform="rotate(-90deg)"
-                _open={{ transform: "rotate(0deg)" }}
+                color="fg.muted"
+                transition="transform 0.2s"
+                _closed={{ transform: "rotate(-90deg)" }}
               >
-                <FiChevronDown />
+                <LuChevronDown />
               </Collapsible.Indicator>
             </Card.Header>
           </Collapsible.Trigger>
@@ -135,8 +123,13 @@ export const Board = ({
       ) : (
         <>
           {title != null && (
-            <Card.Header>
-              <Box flex="1" minW="0" color="fg.dim">
+            <Card.Header
+              flexDirection="row"
+              alignItems="center"
+              // A title-only card (a page header) is all header.
+              pb={hasBody ? undefined : "var(--card-padding)"}
+            >
+              <Box flex="1" minW="0">
                 {titleNode}
               </Box>
             </Card.Header>

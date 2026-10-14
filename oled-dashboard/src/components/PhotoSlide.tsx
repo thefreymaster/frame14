@@ -1,4 +1,11 @@
+import { keyframes } from "@emotion/react";
 import { Box } from "@chakra-ui/react";
+
+// Ken Burns drift — no stock keyframe does a slow zoom.
+const slowZoom = keyframes`
+  from { transform: scale(1); }
+  to { transform: scale(1.2); }
+`;
 
 interface Props {
   assetId: string;
@@ -16,7 +23,7 @@ export function PhotoSlide({ assetId, visible }: Props) {
       backgroundRepeat="no-repeat"
       transition="opacity 1.5s ease-in-out"
       opacity={visible ? 1 : 0}
-      animation={visible ? "slow-zoom 30s linear forwards" : "none"}
+      animation={visible ? `${slowZoom} 30s linear forwards` : "none"}
     />
   );
 }

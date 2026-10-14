@@ -20,7 +20,6 @@ export function Football() {
     return (
       <PageShell fill>
         <EmptyState
-          size="panel"
           flex="1"
           display="flex"
           alignItems="center"
@@ -34,7 +33,7 @@ export function Football() {
 
   return (
     <PageShell fill>
-      <VStack align="stretch" gap="1.5vmin" flex="1" minH="0" width="100%">
+      <VStack align="stretch" gap="4" flex="1" minH="0" width="100%">
         {games.map((game) => (
           <FootballScoreboard key={game.entity_id} game={game} />
         ))}

@@ -1,4 +1,4 @@
-import { HStack, Progress, Text, VStack } from "@chakra-ui/react";
+import { Badge, HStack, Progress, Stack, Stat } from "@chakra-ui/react";
 import { TbVacuumCleaner } from "react-icons/tb";
 import NumberFlow from "@number-flow/react";
 import type { HomeVacuum } from "../hooks/useHomeData";
@@ -20,57 +20,36 @@ export function VacuumSection({ vacuum }: { vacuum: HomeVacuum[] }) {
     <Board
       collapsible
       storageKey="vacuum"
-      title={<SectionTitle icon={<TbVacuumCleaner />}>VACUUM</SectionTitle>}
+      title={<SectionTitle icon={<TbVacuumCleaner />}>Vacuum</SectionTitle>}
     >
-      <VStack gap="2vmin" align="stretch" width="100%">
+      <Stack gap="6">
         {active.map((v) => {
           const progress = Math.max(0, Math.min(100, v.progress ?? 0));
           return (
             <Progress.Root
               key={v.entity_id}
               value={progress}
-              variant="soft"
-              size="hair"
-              shape="full"
               colorPalette="green"
-              width="100%"
+              size="lg"
             >
-              <HStack width="100%" justify="space-between" align="baseline">
-                <VStack align="flex-start" gap="0.2vmin" flex="1" minW="0">
-                  <Progress.Label
-                    fontSize="3.8vmin"
-                    color="fg.dim"
-                    fontWeight="300"
-                    truncate
-                    display="block"
-                    maxW="45vmin"
-                  >
-                    {v.name}
-                  </Progress.Label>
-                  <Text
-                    fontSize="2.2vmin"
-                    color="fg.faint"
-                    letterSpacing="0.08em"
-                  >
-                    {STATE_LABEL[v.state] ?? v.state}
-                  </Text>
-                </VStack>
-                <Text
-                  textStyle="numeral"
-                  letterSpacing="normal"
-                  fontSize="5.5vmin"
-                  color="green.500"
-                >
-                  <NumberFlow value={progress} />%
-                </Text>
+              <HStack justify="space-between" align="end">
+                <Stat.Root>
+                  <Stat.Label>{v.name}</Stat.Label>
+                  <Stat.ValueText>
+                    <NumberFlow value={progress} />%
+                  </Stat.ValueText>
+                </Stat.Root>
+                <Badge colorPalette="green">
+                  {STATE_LABEL[v.state] ?? v.state}
+                </Badge>
               </HStack>
-              <Progress.Track mt="1.5vmin">
-                <Progress.Range transition="width 600ms ease" />
+              <Progress.Track mt="3">
+                <Progress.Range />
               </Progress.Track>
             </Progress.Root>
           );
         })}
-      </VStack>
+      </Stack>
     </Board>
   );
 }

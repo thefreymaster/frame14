@@ -47,13 +47,7 @@ export function StatusStrip({
   });
 
   return (
-    <Flex
-      width="100%"
-      minW="0"
-      gap="chipGap"
-      wrap="wrap"
-      align="center"
-    >
+    <Flex width="100%" minW="0" gap="2" wrap="wrap" align="center">
       {showPrinterChip && (
         <StatusChip icon={<IoPrintOutline />}>
           <ChipText>Printer idle</ChipText>

@@ -23,6 +23,7 @@ import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
+import { NAV_BAR_HEIGHT, NAV_RAIL_WIDTH } from "../lib/navMetrics";
 import { PiSolarRoof } from "react-icons/pi";
 
 type NavItem = {
@@ -156,6 +157,11 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         key={item.path}
         value={item.path}
         onClick={() => handleClick(item.path)}
+        flexDirection="column"
+        justifyContent="center"
+        height="auto"
+        py="2"
+        gap="1"
       >
         <Icon />
         {item.label}
@@ -176,26 +182,27 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
       <Box
         display={{ base: "block", _landscape: "none" }}
         position="fixed"
-        top="calc(var(--app-height, 100dvh) - {sizes.navBar} - env(safe-area-inset-bottom, 0px))"
+        top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_HEIGHT} - env(safe-area-inset-bottom, 0px))`}
         left={0}
         right={0}
-        height="navBar"
+        height={NAV_BAR_HEIGHT}
         bg="bg"
         borderTopWidth="1px"
-        borderColor="divider"
-        zIndex={100}
-        px="4px"
+        zIndex="sticky"
+        px="1"
+        py="1"
         transform={hidden ? "translateY(100%)" : "translateY(0)"}
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-        willChange="transform"
       >
         <Tabs.Root
-          variant="nav"
+          variant="subtle"
+          size="sm"
+          fitted
           value={activeView}
           activationMode="manual"
           height="100%"
         >
-          <Tabs.List>{portraitItems.map(renderItem)}</Tabs.List>
+          <Tabs.List height="100%">{portraitItems.map(renderItem)}</Tabs.List>
         </Tabs.Root>
       </Box>
 
@@ -206,25 +213,25 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         left={0}
         top={0}
         bottom={0}
-        width="navRail"
+        width={NAV_RAIL_WIDTH}
         height="100dvh"
         bg="bg"
         borderRightWidth="1px"
-        borderColor="divider"
-        zIndex={100}
-        py="12px"
+        zIndex="sticky"
+        px="1"
+        py="2"
         transform={hidden ? "translateX(-100%)" : "translateX(0)"}
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-        willChange="transform"
       >
         <Tabs.Root
-          variant="nav"
+          variant="subtle"
+          size="sm"
           orientation="vertical"
           value={activeView}
           activationMode="manual"
           height="100%"
         >
-          <Tabs.List>
+          <Tabs.List width="100%" height="100%">
             {visibleNavItems.map(renderItem)}
             <Spacer />
             {BOTTOM_NAV_ITEMS.map(renderItem)}

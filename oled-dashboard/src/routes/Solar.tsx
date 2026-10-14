@@ -7,6 +7,7 @@ import {
   Spinner,
   Stat,
   Text,
+  defaultSystem,
 } from "@chakra-ui/react";
 import { ResponsiveLine } from "@nivo/line";
 import { PiSolarRoof } from "react-icons/pi";
@@ -35,6 +36,9 @@ const MONTHS = [
 ];
 
 const FONT_BODY = "var(--chakra-fonts-body)";
+
+/** A palette colour as a literal — nivo mixes opacities, so CSS vars won't do. */
+const color = (path: string) => defaultSystem.token(`colors.${path}`) as string;
 
 function fmtKwh(n: number) {
   return n.toFixed(1);
@@ -92,28 +96,29 @@ export function Solar() {
   const { effectiveMode } = useThemeMode();
   const isDark = effectiveMode === "dark";
 
-  const consumptionColor = isDark ? "rgba(255,255,255,0.55)" : "#4A5568";
-  const temperatureColor = isDark ? "rgba(56,189,248,0.6)" : "#0284c7";
-  // Tooltip floats over the chart card, so it steps up one surface level.
-  const tooltipBg = "var(--chakra-colors-surface-chip)";
-  const tooltipFg = "var(--chakra-colors-fg)";
-  const crosshairColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
-  const tickColor = isDark ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.35)";
+  const productionColor = color("yellow.500");
+  const consumptionColor = isDark ? color("gray.400") : color("gray.600");
+  const temperatureColor = isDark ? color("blue.400") : color("blue.600");
+  const crosshairColor = isDark ? color("gray.700") : color("gray.300");
+  const tickColor = isDark ? color("gray.500") : color("gray.600");
+  // Chart text at Chakra's `xs`, which follows the page's root size.
+  const tickSize =
+    parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.75;
 
   const nivoTheme = useMemo(
     () => ({
       background: "transparent",
-      text: { fontFamily: FONT_BODY, fontSize: 10 },
+      text: { fontFamily: FONT_BODY, fontSize: tickSize },
       axis: {
         ticks: {
-          text: { fill: tickColor, fontFamily: FONT_BODY, fontSize: 10 },
+          text: { fill: tickColor, fontFamily: FONT_BODY, fontSize: tickSize },
           line: { stroke: "transparent" },
         },
         domain: { line: { stroke: "transparent" } },
       },
       crosshair: { line: { stroke: crosshairColor, strokeWidth: 1 } },
     }),
-    [isDark, tickColor, crosshairColor],
+    [tickColor, crosshairColor, tickSize],
   );
 
   const monthly = useEnergyMonthly(view === "month" ? monthParam : undefined);
@@ -174,21 +179,22 @@ export function Solar() {
   const consTotal =
     data?.find((s) => s.id === "runningConsumption")?.data.at(-1)?.y ?? 0;
   const pct = consTotal > 0 ? Math.round((prodTotal / consTotal) * 100) : 0;
-  const pctColor = pct >= 100 ? "#22c55e" : pct >= 60 ? "#eab308" : "fg.faint";
+  const pctColor =
+    pct >= 100 ? "green.fg" : pct >= 60 ? "yellow.fg" : "fg.muted";
 
   return (
     <PageShell fill>
       <PageHeader
         icon={<PiSolarRoof />}
         iconColor="yellow.500"
-        title="SOLAR"
+        title="Solar"
         actions={
-          <HStack gap="1.5vmin" rowGap="1vmin" wrap="wrap" align="center">
+          <HStack gap="3" rowGap="2" wrap="wrap">
             <SegmentedControl
-              size="compact"
+              size="sm"
               items={[
-                { value: "total", label: "TOTAL" },
-                { value: "daily", label: "DAILY" },
+                { value: "total", label: "Total" },
+                { value: "daily", label: "Daily" },
               ]}
               value={chartMode}
               aria-label="Chart"
@@ -198,10 +204,10 @@ export function Solar() {
             />
 
             <SegmentedControl
-              size="compact"
+              size="sm"
               items={[
-                { value: "month", label: "MONTH" },
-                { value: "year", label: "YEAR" },
+                { value: "month", label: "Month" },
+                { value: "year", label: "Year" },
               ]}
               value={view}
               aria-label="Period"
@@ -209,43 +215,29 @@ export function Solar() {
             />
 
             {/* prev / label / next */}
-            <HStack
-              gap="0.6vmin"
-              align="center"
-              layerStyle="chip"
-              px="1.2vmin"
-              py="0.6vmin"
-            >
+            <HStack gap="1">
               <IconButton
                 aria-label={
                   view === "month" ? "Previous month" : "Previous year"
                 }
-                variant="plain"
-                size="xs"
-                color="fg.dim"
-                minW="0"
-                _icon={{ width: "3vmin", height: "3vmin" }}
+                variant="ghost"
+                size="sm"
                 onClick={shiftBack}
               >
                 <FiChevronLeft />
               </IconButton>
               <Text
-                fontSize="2vmin"
-                fontWeight="400"
-                color="fg.dim"
-                letterSpacing="0.08em"
-                minW="11vmin"
+                textStyle="sm"
+                fontWeight="medium"
+                minW="5rem"
                 textAlign="center"
               >
                 {label}
               </Text>
               <IconButton
                 aria-label={view === "month" ? "Next month" : "Next year"}
-                variant="plain"
-                size="xs"
-                color="fg.dim"
-                minW="0"
-                _icon={{ width: "3vmin", height: "3vmin" }}
+                variant="ghost"
+                size="sm"
                 disabled={atNow}
                 onClick={shiftForward}
               >
@@ -259,27 +251,23 @@ export function Solar() {
       {/* Stats */}
       <Board>
         <HStack justify="space-between" align="flex-end" width="100%" minW="0">
-          <Stat.Root size="display" alignItems="flex-start">
-            <Stat.ValueText color="yellow.500">
+          <Stat.Root size="lg" alignItems="flex-start">
+            <Stat.Label>Produced</Stat.Label>
+            <Stat.ValueText color="yellow.fg">
               {fmtKwh(prodTotal as number)}
-              <Stat.ValueUnit color="yellow.700">kWh</Stat.ValueUnit>
+              <Stat.ValueUnit>kWh</Stat.ValueUnit>
             </Stat.ValueText>
-            <Stat.HelpText>PRODUCED</Stat.HelpText>
           </Stat.Root>
-
-          <Stat.Root size="display" alignItems="center">
-            <Stat.ValueText fontWeight="400" color={pctColor}>
-              {pct}%
-            </Stat.ValueText>
-            <Stat.HelpText>SOLAR</Stat.HelpText>
+          <Stat.Root size="lg" alignItems="center">
+            <Stat.Label>Solar</Stat.Label>
+            <Stat.ValueText color={pctColor}>{pct}%</Stat.ValueText>
           </Stat.Root>
-
-          <Stat.Root size="display" alignItems="flex-end">
-            <Stat.ValueText color="fg.dim">
+          <Stat.Root size="lg" alignItems="flex-end">
+            <Stat.Label>Consumed</Stat.Label>
+            <Stat.ValueText>
               {fmtKwh(consTotal as number)}
               <Stat.ValueUnit>kWh</Stat.ValueUnit>
             </Stat.ValueText>
-            <Stat.HelpText>CONSUMED</Stat.HelpText>
           </Stat.Root>
         </HStack>
       </Board>
@@ -289,14 +277,12 @@ export function Solar() {
         <Box height="100%" display="flex" flexDirection="column" minH="0">
           {isPending && (
             <Center height="100%">
-              <Spinner size="lg" color="fg.faint" aria-label="Loading" />
+              <Spinner size="lg" aria-label="Loading" />
             </Center>
           )}
           {isError && (
             <Center height="100%">
-              <Text fontSize="2.8vmin" color="fg.faint">
-                unavailable
-              </Text>
+              <Text color="fg.muted">unavailable</Text>
             </Center>
           )}
           {!isPending && !isError && chartData.length > 0 && (
@@ -309,7 +295,7 @@ export function Solar() {
               <ResponsiveLine
                 data={chartData}
                 theme={nivoTheme}
-                colors={["#fbbf24", consumptionColor, temperatureColor]}
+                colors={[productionColor, consumptionColor, temperatureColor]}
                 curve="monotoneX"
                 lineWidth={1.5}
                 enablePoints={false}
@@ -323,8 +309,8 @@ export function Solar() {
                     id: "solarProdArea",
                     type: "linearGradient",
                     colors: [
-                      { offset: 0, color: "#fbbf24", opacity: 0.22 },
-                      { offset: 100, color: "#fbbf24", opacity: 0 },
+                      { offset: 0, color: productionColor, opacity: 0.22 },
+                      { offset: 100, color: productionColor, opacity: 0 },
                     ],
                   },
                   {
@@ -339,8 +325,8 @@ export function Solar() {
                     id: "solarNoArea",
                     type: "linearGradient",
                     colors: [
-                      { offset: 0, color: "#000000", opacity: 0 },
-                      { offset: 100, color: "#000000", opacity: 0 },
+                      { offset: 0, color: productionColor, opacity: 0 },
+                      { offset: 100, color: productionColor, opacity: 0 },
                     ],
                   },
                 ]}
@@ -384,38 +370,33 @@ export function Solar() {
                     ? `${Math.round(tempByX.get(x) ?? 0)}°F`
                     : `${(point.data.y as number).toFixed(1)} kWh`;
                   const seriesLabel = isTemp
-                    ? "AVG TEMP"
+                    ? "Avg temp"
                     : String(point.seriesId)
                           .toLowerCase()
                           .includes("production")
-                      ? "PRODUCED"
-                      : "CONSUMED";
+                      ? "Produced"
+                      : "Consumed";
                   return (
                     <Box
-                      px="2.5vmin"
-                      py="1.5vmin"
-                      borderRadius="chip"
-                      style={{ pointerEvents: "none", background: tooltipBg }}
+                      bg="bg.panel"
+                      borderWidth="1px"
+                      shadow="md"
+                      rounded="l2"
+                      px="3"
+                      py="2"
+                      pointerEvents="none"
                     >
-                      <Text
-                        fontSize="2.2vmin"
-                        mb="0.5vmin"
-                        style={{ color: tooltipFg, opacity: 0.5 }}
-                      >
+                      <Text textStyle="xs" color="fg.muted">
                         {xLabel}
                       </Text>
                       <Text
-                        fontSize="3vmin"
-                        fontWeight="500"
+                        textStyle="lg"
+                        fontWeight="semibold"
                         style={{ color: point.seriesColor }}
                       >
                         {valueLabel}
                       </Text>
-                      <Text
-                        fontSize="2vmin"
-                        letterSpacing="0.08em"
-                        style={{ color: tooltipFg, opacity: 0.4 }}
-                      >
+                      <Text textStyle="xs" color="fg.muted">
                         {seriesLabel}
                       </Text>
                     </Box>
@@ -426,37 +407,41 @@ export function Solar() {
           )}
 
           {/* Legend */}
-          <HStack gap="5vmin" justify="center" mt="2vmin" flexShrink={0}>
-            <HStack gap="1.5vmin" align="center">
-              <Box w="4vmin" h="1.5px" bg="yellow.500" borderRadius="full" />
-              <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.1em">
-                PRODUCTION
-              </Text>
-            </HStack>
-            <HStack gap="1.5vmin" align="center">
-              {/* Same colour the series is drawn in, so the swatch tracks the
-                theme instead of staying white on the bright palette. */}
+          <HStack
+            gap="6"
+            justify="center"
+            mt="3"
+            flexShrink={0}
+            textStyle="sm"
+            color="fg.muted"
+          >
+            <HStack gap="2">
               <Box
-                w="4vmin"
-                h="1.5px"
-                borderRadius="full"
+                w="6"
+                h="0.5"
+                rounded="full"
+                style={{ background: productionColor }}
+              />
+              <Text>Production</Text>
+            </HStack>
+            <HStack gap="2">
+              <Box
+                w="6"
+                h="0.5"
+                rounded="full"
                 style={{ background: consumptionColor }}
               />
-              <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.1em">
-                CONSUMPTION
-              </Text>
+              <Text>Consumption</Text>
             </HStack>
             {chartMode === "daily" && (
-              <HStack gap="1.5vmin" align="center">
+              <HStack gap="2">
                 <Box
-                  w="4vmin"
-                  h="1.5px"
-                  borderRadius="full"
+                  w="6"
+                  h="0.5"
+                  rounded="full"
                   style={{ background: temperatureColor }}
                 />
-                <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.1em">
-                  TEMP
-                </Text>
+                <Text>Temp</Text>
               </HStack>
             )}
           </HStack>

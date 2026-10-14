@@ -1,12 +1,8 @@
 import { Flex } from "@chakra-ui/react";
 
 /**
- * The page ground every route sits on — the same one the home bento uses.
- *
- * Cards handle their own padding, so the shell only owns the outer gutter and
- * the gap between tiles. Both are the `gutter` token, which is what makes a
- * page read as part of the same app as /home rather than a differently-padded
- * island.
+ * The page every route sits on — the same gutter and card gap as /home, so a
+ * page reads as part of the same app.
  */
 export function PageShell({
   children,
@@ -29,15 +25,14 @@ export function PageShell({
       width="100%"
       minHeight="100%"
       height={fill ? "100%" : undefined}
-      bg="bg"
       direction="column"
       align={center ? "center" : undefined}
-      p="gutter"
+      p="4"
       overflow={fill ? "hidden" : undefined}
     >
       <Flex
         direction="column"
-        gap="gutter"
+        gap="4"
         width="100%"
         minW="0"
         minH="0"

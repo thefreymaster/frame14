@@ -44,25 +44,20 @@ export function HomeZone({
         data-targeted={targeted || undefined}
         display="flex"
         flexDirection="column"
-        gap="gutter"
+        gap="4"
         flex={flex}
         minW="0"
         {...(editing && {
-          minH: "12vmin",
-          borderRadius: "1vmin",
-          outline: targeted
-            ? "0.3vmin solid {colors.fg.dim}"
-            : "0.2vmin dashed {colors.divider}",
-          outlineOffset: "0.6vmin",
+          minH: "8rem",
+          rounded: "l3",
+          outlineWidth: "2px",
+          outlineStyle: targeted ? "solid" : "dashed",
+          outlineColor: targeted ? "colorPalette.solid" : "border.emphasized",
+          outlineOffset: "0.5rem",
         })}
       >
         {editing && (
-          <Text
-            fontSize="clamp(11px, 1.6vmin, 22px)"
-            letterSpacing="0.12em"
-            textTransform="uppercase"
-            color="fg.faint"
-          >
+          <Text textStyle="sm" fontWeight="medium" color="fg.muted">
             {label}
           </Text>
         )}
@@ -74,24 +69,13 @@ export function HomeZone({
         {editing && items.length === 0 && (
           <EmptyState.Root
             flex="1"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            minH="10vmin"
-            p="0"
-            borderRadius="card"
-            borderWidth="0.2vmin"
+            borderWidth="2px"
             borderStyle="dashed"
-            borderColor="fg.faint"
+            rounded="l3"
+            size="sm"
           >
             <EmptyState.Content>
-              <EmptyState.Title
-                fontSize="clamp(13px, 2vmin, 26px)"
-                fontWeight="400"
-                color="fg.faint"
-              >
-                Drag a card here
-              </EmptyState.Title>
+              <EmptyState.Title>Drag a card here</EmptyState.Title>
             </EmptyState.Content>
           </EmptyState.Root>
         )}

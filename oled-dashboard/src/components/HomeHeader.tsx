@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Text, HStack, Spacer, Alert } from "@chakra-ui/react";
+import { Text, HStack, Spacer, Alert } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { BirdSection } from "./BirdSection";
@@ -73,118 +73,75 @@ export function HomeHeader({
     ? (CONDITION_LABEL[weather.state] ?? weather.state)
     : "";
 
+  // The hero figures use the top of Chakra's type scale; landscape gives this
+  // card half the width, so it steps down one size there.
+  const hero = { base: "9xl", _landscape: "8xl" };
+
   return (
     <Board storageKey="time-weather">
-      {/* Size the header's type against this card, not the viewport.
-       *
-       * vmin tracks the viewport's short edge, but in landscape this card only
-       * gets half the width — so on a tall-ish landscape window (say 1200×980)
-       * 15vmin of clock plus 14vmin of temperature is wider than the card and
-       * the degree sign wraps onto its own line. cqi is a share of this box, so
-       * the two rows fit at every window size and still fill the frame in
-       * portrait, where the card spans both columns. */}
-      <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <HStack width="100%" align="baseline" mb="0.5vmin" minW="0">
-          <Text
-            fontSize="4.1cqi"
-            fontWeight="400"
-            letterSpacing="0.02em"
-            whiteSpace="nowrap"
-            minW="0"
-            truncate
-          >
-            {day}, {month} {date}
+      <HStack width="100%" align="baseline" textStyle="2xl" minW="0">
+        <Text truncate minW="0">
+          {day}, {month} {date}
+        </Text>
+        <Spacer />
+        {weather && (
+          <Text color="fg.muted" flexShrink={0}>
+            {label}
+            {weather.humidity != null && ` ${weather.humidity}%`}
           </Text>
-          <Spacer />
-          {weather && (
-            <HStack gap="1vmin" align="baseline" flexShrink={0}>
-              <Text
-                fontSize="4.1cqi"
-                color="fg.dim"
-                fontWeight="400"
-                whiteSpace="nowrap"
-              >
-                {label}
-              </Text>
-              {weather.humidity != null && (
-                <Text
-                  fontSize="4.1cqi"
-                  color="fg.dim"
-                  fontWeight="400"
-                  whiteSpace="nowrap"
-                >
-                  {weather.humidity}%
-                </Text>
-              )}
-            </HStack>
-          )}
-        </HStack>
-
-        {connected === false && (
-          <Alert.Root status="error" variant="solid" p="2">
-            <Alert.Indicator />
-            <Alert.Title>Offline!</Alert.Title>
-            <Alert.Description>Internet outage detected.</Alert.Description>
-          </Alert.Root>
         )}
+      </HStack>
 
-        {/* Row 2: time — temp */}
-        <HStack width="100%" align="baseline" minW="0">
-          <Text
-            fontFamily="display"
-            fontSize="16.3cqi"
-            fontWeight="300"
-            letterSpacing="-0.03em"
-            lineHeight="0.9"
-            whiteSpace="nowrap"
-            flexShrink={0}
-          >
-            <NumberFlow
-              digits={{ 2: { max: 2 } }}
-              value={hours}
-              prefix={hours < 10 ? "0" : ""}
-              trend={1}
-            />
-            :
-            <NumberFlow
-              digits={{ 2: { max: 2 } }}
-              value={minutes}
-              prefix={minutes < 10 ? "0" : ""}
-              trend={1}
-            />
-            <Text
-              as="span"
-              fontFamily="display"
-              fontSize="6.5cqi"
-              fontWeight="300"
-              color="fg.dim"
-              ml="1vmin"
-            >
-              {ampm}
-            </Text>
+      {connected === false && (
+        <Alert.Root status="error" mt="4">
+          <Alert.Indicator />
+          <Alert.Title>Offline</Alert.Title>
+          <Alert.Description>Internet outage detected.</Alert.Description>
+        </Alert.Root>
+      )}
+
+      <HStack width="100%" align="baseline" mt="2" minW="0">
+        <Text
+          fontSize={hero}
+          fontWeight="light"
+          lineHeight="1"
+          whiteSpace="nowrap"
+        >
+          <NumberFlow
+            digits={{ 2: { max: 2 } }}
+            value={hours}
+            prefix={hours < 10 ? "0" : ""}
+            trend={1}
+          />
+          :
+          <NumberFlow
+            digits={{ 2: { max: 2 } }}
+            value={minutes}
+            prefix={minutes < 10 ? "0" : ""}
+            trend={1}
+          />
+          <Text as="span" textStyle="4xl" color="fg.muted" ms="2">
+            {ampm}
           </Text>
-          <Spacer />
-          {weather && weather.temperature != null && (
-            <Text
-              fontFamily="display"
-              fontSize="15.2cqi"
-              fontWeight="300"
-              letterSpacing="-0.03em"
-              lineHeight="0.9"
-              whiteSpace="nowrap"
-              flexShrink={0}
-            >
-              <NumberFlow value={Math.round(weather.temperature)} />°
-            </Text>
-          )}
-        </HStack>
+        </Text>
+        <Spacer />
+        {weather && weather.temperature != null && (
+          <Text
+            fontSize={hero}
+            fontWeight="light"
+            lineHeight="1"
+            whiteSpace="nowrap"
+          >
+            <NumberFlow value={Math.round(weather.temperature)} />°
+          </Text>
+        )}
+      </HStack>
 
-        {/* Row 3: latest BirdNET-Go detection — renders nothing when there
-            hasn't been one, so the header keeps its old height. */}
-        <HStack width="100%" minW="0" mt="1.5vmin" _empty={{ display: "none" }}>
-          <BirdSection />
-        </HStack>
-      </Box>
+      {/* Latest BirdNET-Go detection — renders nothing when there hasn't been
+          one, so the header keeps its height. */}
+      <HStack width="100%" minW="0" mt="4" _empty={{ display: "none" }}>
+        <BirdSection />
+      </HStack>
     </Board>
   );
 }

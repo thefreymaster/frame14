@@ -1,0 +1,69 @@
+/* The one global scale knob. Chakra sizes everything in rem, so raising the
+   root size scales every component together and keeps its native
+   proportions: 1.75vmin is 28px on the 1600x2400 frame (1.75x a desktop
+   page), and it never drops below the browser's 16px on a phone. */
+html {
+  font-size: clamp(16px, 1.75vmin, 32px);
+}
+
+/* Full-height shell: the app owns scrolling inside Layout. */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* iOS PWA: force a viewport recalc on first load so env(safe-area-inset-*)
+   and 100dvh report correctly. */
+html {
+  min-height: calc(100% + env(safe-area-inset-top));
+}
+
+/* A display, not a document. */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Home layout (HomeBoard) — structural, not styling. A card that rendered
+   nothing (or only an empty box, like a status strip with no chips) takes no
+   room and no gap, and a zone or column pair left with nothing visible goes
+   too. Decided by CSS because only the DOM knows: each card chooses whether
+   to show from its own subscriptions. */
+.home-card,
+.home-card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.home-card:not([data-editing]):not(:has(> .home-card-body > :not(:empty))),
+.home-zone:not([data-editing]):not(:has(> .home-card > .home-card-body > :not(:empty))),
+.home-columns:not([data-editing]):not(:has(.home-card-body > :not(:empty))) {
+  display: none;
+}
+
+/* While arranging, card contents go inert so a drag never also taps a card. */
+.home-card[data-editing] {
+  position: relative;
+  cursor: grab;
+  touch-action: manipulation;
+}
+
+.home-card[data-editing] > .home-card-body {
+  pointer-events: none;
+}
+
+.home-card[data-dragging] {
+  opacity: 0.4;
+}
+
+.home-card-lifted {
+  cursor: grabbing;
+}
+
+/* The stand-in for a hidden card shows only while the card body is empty. */
+.home-card-body:has(> :not(:empty)) + .home-card-placeholder {
+  display: none;
+}

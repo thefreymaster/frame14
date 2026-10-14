@@ -38,7 +38,7 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
       <Grid
         width="100%"
         templateColumns={`repeat(${periods.length}, 1fr)`}
-        gap="chipGap"
+        gap="2"
         alignItems="stretch"
       >
         {periods.map((period, i) => {
@@ -47,43 +47,36 @@ export function WeatherForecast({ forecast, count = 5 }: Props) {
           return (
             <Button
               key={period.datetime ?? i}
-              variant="chip"
-              size="chip"
+              variant={soonest ? "subtle" : "outline"}
               aria-label={`Show forecast detail for ${formatHour(period.datetime)}`}
               onClick={() => {
                 setSelectedIndex(i);
                 setOpen(true);
               }}
               flexDirection="column"
-              gap="1vmin"
-              px="0.6vmin"
               height="auto"
-              bg={soonest ? "surface.on" : undefined}
-              color="fg"
-              _icon={{ width: "6vmin", height: "6vmin" }}
+              py="3"
+              px="1"
+              gap="1"
             >
-              <Text
-                fontSize="2.4vmin"
-                color={soonest ? "fg.dim" : "fg.faint"}
-                letterSpacing="0.05em"
-              >
+              <Text textStyle="sm" color="fg.muted">
                 {formatHour(period.datetime)}
               </Text>
-              <Icon color="fg.dim">
+              <Icon boxSize="8">
                 {weatherIcon(period.condition ?? "", period.datetime)}
               </Icon>
-              <Text fontSize="3.6vmin" fontWeight="300">
+              <Text textStyle="xl">
                 {period.temperature != null
                   ? `${Math.round(period.temperature)}°`
                   : "—"}
               </Text>
               {/* Always rendered so temps stay on one baseline across chips. */}
               <Text
-                fontSize="2.2vmin"
-                color="blue.400"
-                opacity={precip != null && precip > 0 ? 1 : 0}
+                textStyle="xs"
+                color="blue.fg"
+                visibility={precip != null && precip > 0 ? "visible" : "hidden"}
               >
-                {precip != null && precip > 0 ? `${precip}%` : " "}
+                {precip != null && precip > 0 ? `${precip}%` : "0%"}
               </Text>
             </Button>
           );

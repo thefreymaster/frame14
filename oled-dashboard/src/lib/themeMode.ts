@@ -9,10 +9,9 @@ const STORAGE_KEY = "theme-mode-preference";
 const DAYLIGHT_START_HOUR = 7;
 const DAYLIGHT_END_HOUR = 19;
 
-// The palettes themselves live in the Chakra system (src/theme/tokens.ts) as
-// semantic tokens with a `_dark` value. This module only decides which one is
-// live, by toggling the `dark` class on <html> — Chakra's dark condition — so
-// every token and every library component flips together.
+// Colours are Chakra's own light and dark modes. This module decides which
+// one is live (auto follows the daylight window) and syncs the choice across
+// panels; components/ui/provider.tsx hands it to Chakra's colour mode.
 
 export function isDaylight(date: Date = new Date()): boolean {
   const h = date.getHours();
@@ -28,7 +27,11 @@ export function computeEffectiveMode(
   return isDaylight(date) ? "bright" : "dark";
 }
 
-/** Make `mode` the live palette. (Name kept from when it wrote CSS vars.) */
+/**
+ * Mark `mode` on <html> before React mounts, so the first paint is already in
+ * the right mode; the colour-mode provider keeps it in step afterwards.
+ * (Name kept from when it wrote CSS vars.)
+ */
 export function applyThemeVars(mode: EffectiveThemeMode) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;

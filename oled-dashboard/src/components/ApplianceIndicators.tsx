@@ -56,15 +56,15 @@ export function ApplianceIndicators() {
   if (running.length === 0 && !printerActive) return null;
 
   return (
-    <HStack gap="6px" align="center">
+    <HStack gap="2" align="center">
       {running.map(({ id, Icon: ApplianceIcon, label }) => (
         <Tooltip
           key={id}
           content={`${label[0].toUpperCase()}${label.slice(1)} running`}
         >
           <Icon
-            boxSize="10px"
-            color="green.500"
+            boxSize="3.5"
+            color="fg.success"
             aria-label={`${label} running`}
           >
             <ApplianceIcon />
@@ -74,8 +74,8 @@ export function ApplianceIndicators() {
       {printerActive && (
         <Tooltip content="3D printer running">
           <Icon
-            boxSize="10px"
-            color="green.500"
+            boxSize="3.5"
+            color="fg.success"
             aria-label="3d printer running"
           >
             <PrinterNozzleIcon />

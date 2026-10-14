@@ -20,34 +20,14 @@ export function ForecastSection({ forecast, count = 6, span }: Props) {
       collapsible
       storageKey="forecast"
       title={
-        <HStack
-          justify="space-between"
-          align="baseline"
-          gap="2vmin"
-          width="100%"
-        >
-          <SectionTitle icon={<IoPartlySunnyOutline />}>FORECAST</SectionTitle>
+        <HStack justify="space-between" width="100%" gap="3">
+          <SectionTitle icon={<IoPartlySunnyOutline />}>Forecast</SectionTitle>
           {(high != null || low != null) && (
-            <HStack gap="2vmin">
-              {high != null && (
-                <Text
-                  fontSize="2.2vmin"
-                  color="fg"
-                  letterSpacing="0.1em"
-                >
-                  H {Math.round(high)}°
-                </Text>
-              )}
-              {low != null && (
-                <Text
-                  fontSize="2.2vmin"
-                  color="fg"
-                  letterSpacing="0.1em"
-                >
-                  L {Math.round(low)}°
-                </Text>
-              )}
-            </HStack>
+            <Text textStyle="sm" color="fg.muted">
+              {high != null && `H ${Math.round(high)}°`}
+              {high != null && low != null && "  "}
+              {low != null && `L ${Math.round(low)}°`}
+            </Text>
           )}
         </HStack>
       }

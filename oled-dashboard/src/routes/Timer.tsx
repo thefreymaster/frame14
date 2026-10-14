@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  Box,
   Center,
   HStack,
   IconButton,
@@ -73,50 +72,33 @@ export function Timer() {
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
 
-  // Idle uses the neutral face-marker gray rather than fg-faint: the ring is a
-  // large static element, so it wants the dimmest token that still reads, and
-  // fg-faint is both brighter and noticeably blue at this size.
-  const ringColor = finished ? "#c53030" : running ? "fg" : "marker.hour";
-
   const isPaused = !running && remaining < totalSeconds && remaining > 0;
   const isReady = !running && remaining === totalSeconds && remaining > 0;
 
   return (
     <PageShell fill>
       <Board fill>
-        <Box
-          height="100%"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          gap="4vmin"
-        >
+        <Center height="100%" flexDirection="column" gap="8">
           {/* Ring + time display: a ProgressCircle draining as time runs. */}
           <ProgressCircle.Root
-            size="timer"
             value={progress * 100}
+            colorPalette={finished ? "red" : "gray"}
             cursor="pointer"
             onClick={toggle}
-            _active={{ opacity: 0.7 }}
-            transition="opacity 0.1s"
-            animation={finished ? "blink 1s ease-in-out infinite" : undefined}
+            animation={finished ? "pulse 1s ease-in-out infinite" : undefined}
             aria-label="Timer"
           >
-            <ProgressCircle.Circle>
-              <ProgressCircle.Track stroke="surface.chip" />
+            <ProgressCircle.Circle
+              css={{ "--size": "22rem", "--thickness": "0.75rem" }}
+            >
+              <ProgressCircle.Track />
               <ProgressCircle.Range
-                stroke={ringColor}
                 strokeLinecap="round"
-                transition={
-                  running
-                    ? "stroke-dashoffset 1s linear, stroke-dasharray 1s linear, stroke 0.4s ease"
-                    : "stroke 0.4s ease"
-                }
+                transitionDuration={running ? "1s" : undefined}
+                transitionTimingFunction={running ? "linear" : undefined}
               />
             </ProgressCircle.Circle>
 
-            {/* Centered time */}
             <Center
               position="absolute"
               inset="0"
@@ -124,72 +106,52 @@ export function Timer() {
               pointerEvents="none"
             >
               <Text
-                fontFamily="display"
-                fontSize="16vmin"
-                fontWeight="200"
-                letterSpacing="-0.02em"
-                color={finished ? "#c53030" : "fg"}
+                textStyle="8xl"
+                fontWeight="light"
                 lineHeight="1"
                 fontVariantNumeric="tabular-nums"
                 whiteSpace="nowrap"
-                transition="color 0.4s ease"
+                color={finished ? "fg.error" : undefined}
               >
                 <NumberFlow value={minutes} prefix={minutes < 10 ? "0" : ""} />
-                <Text
-                  as="span"
-                  color={finished ? "#c53030" : "fg.dim"}
-                  transition="color 0.4s ease"
-                >
+                <Text as="span" color="fg.muted">
                   :
                 </Text>
                 <NumberFlow value={seconds} prefix={seconds < 10 ? "0" : ""} />
               </Text>
-
               <Text
-                fontSize="2.8vmin"
                 color="fg.muted"
-                fontWeight="300"
-                letterSpacing="0.12em"
-                mt="2.5vmin"
-                textTransform="uppercase"
-                opacity={finished ? 0 : 1}
-                transition="opacity 0.3s ease"
+                mt="4"
+                visibility={finished ? "hidden" : "visible"}
               >
-                {finished
-                  ? "\u00a0"
-                  : isPaused
-                    ? "paused"
-                    : isReady
-                      ? "tap to start"
-                      : "tap to pause"}
+                {isPaused
+                  ? "Paused"
+                  : isReady
+                    ? "Tap to start"
+                    : "Tap to pause"}
               </Text>
             </Center>
           </ProgressCircle.Root>
 
           {/* Controls */}
-          <HStack gap="2vmin" align="center">
+          <HStack gap="4">
             <IconButton
-              variant="chip"
-              size="chip"
+              variant="subtle"
+              size="2xl"
+              rounded="full"
               onClick={reset}
               aria-label="Reset timer"
-              px="3vmin"
-              py="2vmin"
-              color="fg.muted"
-              _icon={{ width: "3.4vmin", height: "3.4vmin" }}
             >
               <IoRefreshOutline />
             </IconButton>
             <IconButton
-              variant="chip"
-              size="chip"
+              variant="solid"
+              size="2xl"
+              rounded="full"
               onClick={toggle}
+              disabled={remaining === 0}
               aria-pressed={running}
               aria-label={running ? "Pause timer" : "Start timer"}
-              px="4vmin"
-              py="2vmin"
-              color={remaining === 0 ? "fg.muted" : "fg"}
-              _icon={{ width: "5vmin", height: "5vmin" }}
             >
               {running ? <IoPauseOutline /> : <IoPlayOutline />}
             </IconButton>
@@ -197,6 +159,7 @@ export function Timer() {
 
           {/* Presets */}
           <SegmentedControl
+            size="lg"
             items={PRESETS.map((min) => ({
               value: String(min),
               label: `${min}m`,
@@ -209,7 +172,7 @@ export function Timer() {
             aria-label="Duration"
             onValueChange={(e) => e.value && selectPreset(Number(e.value))}
           />
-        </Box>
+        </Center>
       </Board>
     </PageShell>
   );

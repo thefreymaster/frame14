@@ -59,7 +59,7 @@ export function FootballDetail({ game }: { game: Game }) {
       {lastPlay && (
         <Text
           fontSize="2.4vmin"
-          color="fg.faint"
+          color="fg.muted"
           letterSpacing="0.02em"
           textAlign="center"
           width="100%"

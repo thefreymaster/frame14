@@ -14,9 +14,7 @@ export function StatusBanner() {
   return (
     <HStack
       zIndex={1000}
-      bg="bg"
       borderBottomWidth="1px"
-      borderColor="divider"
       px="5"
       py="1"
       gap="3"
@@ -24,8 +22,8 @@ export function StatusBanner() {
     >
       <Tooltip content={connected ? "Connected" : "Disconnected"}>
         <Icon
-          boxSize="12px"
-          color={connected ? "green.500" : "red.500"}
+          boxSize="3.5"
+          color={connected ? "fg.success" : "fg.error"}
           flexShrink={0}
           aria-label={connected ? "Connected" : "Disconnected"}
         >
@@ -34,7 +32,7 @@ export function StatusBanner() {
       </Tooltip>
       <ApplianceIndicators />
       {version && (
-        <Text fontSize="10px" color="fg.muted" letterSpacing="0.05em">
+        <Text textStyle="xs" color="fg.muted">
           v{version}
         </Text>
       )}

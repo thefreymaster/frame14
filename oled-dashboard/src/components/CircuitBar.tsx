@@ -24,53 +24,32 @@ export function CircuitBar({
 }: Props) {
   const value = watts ?? 0;
   const pct = maxWatts > 0 ? Math.min(100, (value / maxWatts) * 100) : 0;
-  const active = value > 0;
 
   return (
     <Progress.Root
       value={pct}
-      variant="soft"
-      size="hair"
-      shape="full"
+      colorPalette={dim ? "gray" : "blue"}
       width="100%"
-      colorPalette="cyan"
     >
-      <HStack justify="space-between" align="baseline" mb="0.8vmin">
-        <Progress.Label
-          fontSize="2.4vmin"
-          fontWeight="400"
-          color={dim ? "fg.faint" : "fg.dim"}
-          letterSpacing="0.01em"
-          truncate
-          display="block"
-        >
+      <HStack justify="space-between" mb="2">
+        <Progress.Label color={dim ? "fg.muted" : undefined} truncate>
           {name}
         </Progress.Label>
-        <HStack gap="1.5vmin" align="baseline" flexShrink={0}>
+        <HStack gap="3" flexShrink={0}>
           {kwhToday != null && (
-            <Text fontSize="1.9vmin" color="fg.faint" letterSpacing="0.04em">
+            <Text textStyle="sm" color="fg.muted">
               {kwhToday.toFixed(1)} kWh
             </Text>
           )}
           <Progress.ValueText
-            fontSize="2.4vmin"
-            fontWeight="300"
-            lineHeight="1.5"
-            color={active && !dim ? "fg" : "fg.faint"}
-            minW="11vmin"
-            textAlign="right"
+            color={value > 0 && !dim ? undefined : "fg.muted"}
           >
             {fmtW(watts)}
           </Progress.ValueText>
         </HStack>
       </HStack>
       <Progress.Track>
-        <Progress.Range
-          // The themed fill rather than a white alpha — an rgba(255,255,255,…)
-          // fill disappears against the bright palette's near-white card.
-          bg={dim ? "fg.faint" : "#38BDF8"}
-          transition="width 0.6s ease"
-        />
+        <Progress.Range />
       </Progress.Track>
     </Progress.Root>
   );

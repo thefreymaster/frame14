@@ -1,4 +1,4 @@
-import { HStack, Icon, Stat } from "@chakra-ui/react";
+import { HStack, Stat } from "@chakra-ui/react";
 import { PiSolarRoof } from "react-icons/pi";
 import { IoFlash } from "react-icons/io5";
 
@@ -15,7 +15,7 @@ interface Props {
   homeWatts: number | null;
 }
 
-/** Solar | grid | home as three display-size Stats. */
+/** Solar | grid | home as three Stats. */
 export function PowerTotals({ production, homeWatts }: Props) {
   const prod = production ?? 0;
   const home = homeWatts ?? 0;
@@ -23,52 +23,39 @@ export function PowerTotals({ production, homeWatts }: Props) {
   const gridAbs = Math.abs(gridDraw);
   const isExporting = gridDraw < 0;
   const gridActive = gridAbs > GRID_ACTIVE_THRESHOLD;
-  const gridColor = isExporting ? "green.400" : "orange.400";
 
   return (
-    <HStack justify="space-between" align="flex-end" px="0.5vmin">
-      <Stat.Root size="display" alignItems="flex-start">
-        <Stat.ValueText color="yellow.500" gap="1.5vmin">
-          <Icon boxSize="3.5vmin" alignSelf="center">
-            <PiSolarRoof />
-          </Icon>
-          {fmtKw(production)}
-          <Stat.ValueUnit color="yellow.700">kW</Stat.ValueUnit>
+    <HStack justify="space-between" align="flex-end">
+      <Stat.Root size="lg" alignItems="flex-start">
+        <Stat.Label>
+          <PiSolarRoof /> Solar
+        </Stat.Label>
+        <Stat.ValueText color="yellow.fg">
+          {fmtKw(production)} <Stat.ValueUnit>kW</Stat.ValueUnit>
         </Stat.ValueText>
-        <Stat.HelpText>SOLAR</Stat.HelpText>
       </Stat.Root>
 
-      <Stat.Root size="display" alignItems="center">
+      <Stat.Root size="lg" alignItems="center">
+        <Stat.Label>
+          {gridActive ? (isExporting ? "Exporting" : "From grid") : "Grid idle"}
+        </Stat.Label>
         {gridActive ? (
-          <>
-            <Stat.ValueText color={gridColor}>
-              {isExporting ? "↑" : "↓"}
-              {fmtKw(gridAbs)}
-              <Stat.ValueUnit color={gridColor} opacity={0.6}>
-                kW
-              </Stat.ValueUnit>
-            </Stat.ValueText>
-            <Stat.HelpText>
-              {isExporting ? "EXPORTING" : "FROM GRID"}
-            </Stat.HelpText>
-          </>
+          <Stat.ValueText color={isExporting ? "green.fg" : "orange.fg"}>
+            {isExporting ? "↑" : "↓"}
+            {fmtKw(gridAbs)} <Stat.ValueUnit>kW</Stat.ValueUnit>
+          </Stat.ValueText>
         ) : (
-          <>
-            <Stat.ValueText color="fg.faint">—</Stat.ValueText>
-            <Stat.HelpText>GRID IDLE</Stat.HelpText>
-          </>
+          <Stat.ValueText color="fg.muted">—</Stat.ValueText>
         )}
       </Stat.Root>
 
-      <Stat.Root size="display" alignItems="flex-end">
-        <Stat.ValueText color="fg.dim" gap="1.5vmin">
-          <Icon boxSize="3.5vmin" alignSelf="center">
-            <IoFlash />
-          </Icon>
-          {fmtKw(homeWatts)}
-          <Stat.ValueUnit>kW</Stat.ValueUnit>
+      <Stat.Root size="lg" alignItems="flex-end">
+        <Stat.Label>
+          <IoFlash /> Home
+        </Stat.Label>
+        <Stat.ValueText>
+          {fmtKw(homeWatts)} <Stat.ValueUnit>kW</Stat.ValueUnit>
         </Stat.ValueText>
-        <Stat.HelpText>HOME</Stat.HelpText>
       </Stat.Root>
     </HStack>
   );

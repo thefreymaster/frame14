@@ -9,11 +9,13 @@ import { subscribeLevel } from "../lib/voiceRecorder";
  * re-render the overlay on every frame for no benefit, so this writes the
  * transform directly and smooths it in a rAF loop.
  */
-export function VoiceLevelRing({ size = "24vmin" }: { size?: string }) {
+export function VoiceLevelRing({ size = "10rem" }: { size?: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     if (reduced) return;
 
     let level = 0;
@@ -49,7 +51,7 @@ export function VoiceLevelRing({ size = "24vmin" }: { size?: string }) {
       width={size}
       height={size}
       borderRadius="full"
-      bg="surface.chip"
+      bg="colorPalette.muted"
       style={{ transform: "scale(1)", opacity: 0.25, willChange: "transform" }}
       pointerEvents="none"
     />

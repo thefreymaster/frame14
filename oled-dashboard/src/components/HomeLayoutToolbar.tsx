@@ -1,11 +1,11 @@
-import { Button, Text } from "@chakra-ui/react";
-import { ActionBarContent, ActionBarRoot } from "./ui/action-bar";
+import { ActionBar, Button, Portal, Text } from "@chakra-ui/react";
+import { NAV_BAR_HEIGHT } from "../lib/navMetrics";
 
 /**
  * The bar shown while arranging /home — Chakra's ActionBar, portalled to the
  * body (PageTransition leaves a transform on an ancestor, which would pin a
- * fixed bar to the page instead of the screen). Placement clears the portrait
- * nav bar; see src/theme/recipes/overlays.ts.
+ * fixed bar to the page instead of the screen). In portrait it is lifted
+ * clear of the bottom nav.
  *
  * Tapping and dragging cards is the whole point while it is open, so it never
  * closes on an outside press, and Escape is HomeBoard's (it must not end
@@ -21,39 +21,31 @@ export function HomeLayoutToolbar({
   onReset: () => void;
 }) {
   return (
-    <ActionBarRoot
+    <ActionBar.Root
       open={open}
       closeOnInteractOutside={false}
       closeOnEscape={false}
     >
-      <ActionBarContent>
-        <Text
-          display={{ base: "none", md: "block" }}
-          whiteSpace="nowrap"
-          fontSize="clamp(13px, 1.9vmin, 24px)"
-          color="fg.dim"
-          pr="clamp(4px, 1vmin, 14px)"
+      <Portal>
+        <ActionBar.Positioner
+          bottom={{
+            _portrait: `calc(${NAV_BAR_HEIGHT} + env(safe-area-inset-bottom, 0px) + 1rem)`,
+          }}
         >
-          Drag cards to rearrange
-        </Text>
-        <Button
-          size="toolbar"
-          variant="ghost"
-          color="fg.dim"
-          _hover={{ bg: "surface.card" }}
-          onClick={onReset}
-        >
-          Reset
-        </Button>
-        <Button
-          size="toolbar"
-          variant="solid"
-          colorPalette="gray"
-          onClick={onDone}
-        >
-          Done
-        </Button>
-      </ActionBarContent>
-    </ActionBarRoot>
+          <ActionBar.Content>
+            <Text display={{ base: "none", md: "block" }} textStyle="sm">
+              Drag cards to rearrange
+            </Text>
+            <ActionBar.Separator />
+            <Button variant="outline" size="sm" onClick={onReset}>
+              Reset
+            </Button>
+            <Button size="sm" onClick={onDone}>
+              Done
+            </Button>
+          </ActionBar.Content>
+        </ActionBar.Positioner>
+      </Portal>
+    </ActionBar.Root>
   );
 }

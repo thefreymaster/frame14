@@ -1,4 +1,4 @@
-import { Box, Grid, HStack, Icon, Stat, Text, VStack } from "@chakra-ui/react";
+import { HStack, Icon, SimpleGrid, Stat, Text, VStack } from "@chakra-ui/react";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
 import { weatherIcon } from "../lib/weatherIcons";
 import { PanelDialog } from "./PanelDialog";
@@ -55,13 +55,13 @@ interface Props {
   onClose: () => void;
 }
 
-/** One forecast period in full: a Dialog of Stat tiles. */
+/** One forecast period in full: a Dialog of Stats. */
 export function ForecastDetailModal({ period, open, onClose }: Props) {
   return (
     <PanelDialog
       open={open && period != null}
       onClose={onClose}
-      label="forecast detail"
+      title={period ? formatFullTime(period.datetime) : "Forecast"}
     >
       {period && <ForecastDetail period={period} />}
     </PanelDialog>
@@ -71,95 +71,54 @@ export function ForecastDetailModal({ period, open, onClose }: Props) {
 function ForecastDetail({ period }: { period: HomeForecastPeriod }) {
   return (
     <>
-      <VStack gap="1vmin" align="stretch">
-        <Text textStyle="eyebrow" color="fg.faint">
-          FORECAST
-        </Text>
-        <Text fontSize="3vmin" color="fg.dim">
-          {formatFullTime(period.datetime)}
-        </Text>
-      </VStack>
-
-      <HStack gap="3vmin" align="center">
-        <Icon color="fg.dim" boxSize="14vmin" flexShrink={0}>
+      <HStack gap="6">
+        <Icon boxSize="20" color="fg.muted">
           {weatherIcon(period.condition ?? "", period.datetime)}
         </Icon>
-        <VStack align="flex-start" gap="0.5vmin">
-          <Text textStyle="numeral" fontSize="11vmin">
+        <VStack align="start" gap="1">
+          <Text textStyle="6xl" fontWeight="light" lineHeight="1">
             {period.temperature != null
               ? `${Math.round(period.temperature)}°`
               : "—"}
           </Text>
-          <Text fontSize="2.6vmin" color="fg.faint" letterSpacing="0.06em">
-            {formatConditionLabel(period.condition)}
-          </Text>
+          <Text color="fg.muted">{formatConditionLabel(period.condition)}</Text>
         </VStack>
       </HStack>
 
-      <Box borderTopWidth="1px" borderColor="divider" pt="3vmin">
-        <Grid templateColumns="1fr 1fr" gap="2.5vmin">
-          <Detail
-            label="LOW"
-            value={
-              period.templow != null ? `${Math.round(period.templow)}°` : "—"
-            }
-          />
-          <Detail
-            label="PRECIP CHANCE"
-            value={
-              period.precipitationProbability != null
-                ? `${period.precipitationProbability}%`
-                : "—"
-            }
-            accent={
-              (period.precipitationProbability ?? 0) > 0
-                ? "blue.400"
-                : undefined
-            }
-          />
-          <Detail
-            label="PRECIP AMOUNT"
-            value={
-              period.precipitation != null ? `${period.precipitation} mm` : "—"
-            }
-          />
-          <Detail
-            label="WIND"
-            value={
-              period.windSpeed != null
-                ? `${Math.round(period.windSpeed)}${
-                    period.windBearing != null
-                      ? ` ${bearingToCardinal(period.windBearing)}`
-                      : ""
-                  }`
-                : "—"
-            }
-          />
-        </Grid>
-      </Box>
+      <SimpleGrid columns={2} gap="6" borderTopWidth="1px" pt="6">
+        <Stat.Root>
+          <Stat.Label>Low</Stat.Label>
+          <Stat.ValueText>
+            {period.templow != null ? `${Math.round(period.templow)}°` : "—"}
+          </Stat.ValueText>
+        </Stat.Root>
+        <Stat.Root>
+          <Stat.Label>Precip chance</Stat.Label>
+          <Stat.ValueText>
+            {period.precipitationProbability != null
+              ? `${period.precipitationProbability}%`
+              : "—"}
+          </Stat.ValueText>
+        </Stat.Root>
+        <Stat.Root>
+          <Stat.Label>Precip amount</Stat.Label>
+          <Stat.ValueText>
+            {period.precipitation != null ? `${period.precipitation} mm` : "—"}
+          </Stat.ValueText>
+        </Stat.Root>
+        <Stat.Root>
+          <Stat.Label>Wind</Stat.Label>
+          <Stat.ValueText>
+            {period.windSpeed != null
+              ? `${Math.round(period.windSpeed)}${
+                  period.windBearing != null
+                    ? ` ${bearingToCardinal(period.windBearing)}`
+                    : ""
+                }`
+              : "—"}
+          </Stat.ValueText>
+        </Stat.Root>
+      </SimpleGrid>
     </>
-  );
-}
-
-function Detail({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: string;
-}) {
-  return (
-    <Stat.Root size="panel">
-      <Stat.Label fontSize="1.8vmin">{label}</Stat.Label>
-      <Stat.ValueText
-        fontSize="4.2vmin"
-        lineHeight="1"
-        color={accent ?? "fg.dim"}
-      >
-        {value}
-      </Stat.ValueText>
-    </Stat.Root>
   );
 }

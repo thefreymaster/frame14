@@ -1,6 +1,5 @@
-import { Box, Skeleton, VStack } from "@chakra-ui/react";
+import { Box, Grid, Skeleton, SkeletonCircle, VStack } from "@chakra-ui/react";
 import { Board } from "../Board";
-
 import { SkeletonSectionTitle } from "./SkeletonSectionTitle";
 import { SINGLE_ROW_MIN_PX } from "../../lib/hvac";
 
@@ -13,27 +12,25 @@ export function ClimateSkeleton({
   span?: 1 | 2;
 }) {
   return (
-    <Board span={span} title={<SkeletonSectionTitle width="14vmin" />}>
+    <Board span={span} title={<SkeletonSectionTitle />}>
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <Box
-          display="grid"
-          gridTemplateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"
+        <Grid
+          templateColumns="repeat(auto-fill, minmax(9rem, 1fr))"
           css={{
             [`@container (min-width: ${SINGLE_ROW_MIN_PX}px)`]: {
               gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))`,
             },
           }}
-          columnGap="2vmin"
-          rowGap="2vmin"
+          gap="4"
           width="100%"
         >
           {Array.from({ length: count }).map((_, i) => (
-            <VStack key={i} gap="1vmin" align="center">
-              <Skeleton width="100%" aspectRatio="1" borderRadius="full" />
-              <Skeleton height="1.8vmin" width="70%" borderRadius="0.4vmin" />
+            <VStack key={i} gap="2">
+              <SkeletonCircle size="auto" width="100%" aspectRatio="1" />
+              <Skeleton height="4" width="70%" />
             </VStack>
           ))}
-        </Box>
+        </Grid>
       </Box>
     </Board>
   );

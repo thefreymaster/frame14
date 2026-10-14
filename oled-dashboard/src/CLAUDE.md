@@ -4,6 +4,12 @@ Scoped notes for the sports feature. Everything else in `src/` follows the root
 `CLAUDE.md`; this file exists because the football code is spread across five
 directories and has invariants that are easy to break from any one of them.
 
+On this branch the rest of the UI is stock Chakra UI (native theme, no custom
+palette — see "UI system" in the root `CLAUDE.md`). The score bug is one of the
+few hand-drawn graphics left: its surfaces use Chakra tokens (`bg.muted`,
+`bg.subtle`, `fg`, `fg.muted`), the team colours are data from the sensor, and
+its `vmin` sizes below are its own.
+
 ## What it is
 
 TeamTracker (HACS) publishes one sensor per tracked team. The state is the game

@@ -1,4 +1,4 @@
-import { Box, HStack, List, Text } from "@chakra-ui/react";
+import { Box, Card, HStack, Stack, Text } from "@chakra-ui/react";
 import { IoCalendarOutline } from "react-icons/io5";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -58,45 +58,42 @@ function EventList({
   max?: number;
 }) {
   return (
-    <List.Root variant="plain" gap="chipGap" width="100%">
+    <Stack gap="2" mt="3">
       {events.slice(0, max).map((event, i) => {
         const past = isPast(event);
         return (
-          <List.Item
+          <Card.Root
             key={i}
-            layerStyle="chip"
-            display="flex"
-            justifyContent="space-between"
-            alignItems="baseline"
-            width="100%"
-            minW="0"
-            opacity={past ? 0.55 : 1}
+            size="sm"
+            variant="subtle"
+            opacity={past ? 0.6 : 1}
           >
-            <Text
-              fontSize="3.2vmin"
-              fontWeight="300"
-              truncate
-              flex="1"
-              minW="0"
-              mr="1.5vmin"
-              textDecoration={past ? "line-through" : undefined}
-              color={past ? "fg.faint" : undefined}
+            <Card.Body
+              flexDirection="row"
+              justifyContent="space-between"
+              alignItems="baseline"
+              gap="4"
             >
-              {event.summary}
-            </Text>
-            <Text
-              fontSize="2.6vmin"
-              color={past ? "fg.faint" : "fg"}
-              fontWeight="300"
-              flexShrink={0}
-              textDecoration={past ? "line-through" : undefined}
-            >
-              {event.allDay ? "all day" : formatEventTime(event.start)}
-            </Text>
-          </List.Item>
+              <Text
+                textStyle="lg"
+                truncate
+                minW="0"
+                textDecoration={past ? "line-through" : undefined}
+              >
+                {event.summary}
+              </Text>
+              <Text
+                color="fg.muted"
+                flexShrink={0}
+                textDecoration={past ? "line-through" : undefined}
+              >
+                {event.allDay ? "all day" : formatEventTime(event.start)}
+              </Text>
+            </Card.Body>
+          </Card.Root>
         );
       })}
-    </List.Root>
+    </Stack>
   );
 }
 
@@ -112,26 +109,26 @@ export function CalendarSection({
       collapsible
       storageKey="calendar"
       title={
-        <HStack width="100%" align="center" gap="1.5vmin">
-          <SectionTitle icon={<IoCalendarOutline />}>CALENDAR</SectionTitle>
+        <HStack width="100%" gap="3">
+          <SectionTitle icon={<IoCalendarOutline />}>Calendar</SectionTitle>
           <Box flex="1" minW="0" />
-          <Text textStyle="meta" color="fg.dim">
+          <Text textStyle="sm" color="fg.muted">
             {eventCountLabel(today.length, "today")}
           </Text>
         </HStack>
       }
     >
-      <SectionTitle icon={<IoCalendarOutline />}>TODAY</SectionTitle>
+      <SectionTitle>Today</SectionTitle>
       {today.length > 0 ? (
         <EventList events={today} />
       ) : (
-        <Text fontSize="3.8vmin" fontWeight="300" color="fg.faint">
+        <Text color="fg.muted" mt="2">
           No events today
         </Text>
       )}
       {tomorrow.length > 0 && (
-        <Box mt="2.5vmin">
-          <SectionTitle icon={<IoCalendarOutline />}>TOMORROW</SectionTitle>
+        <Box mt="6">
+          <SectionTitle>Tomorrow</SectionTitle>
           <EventList events={tomorrow} />
         </Box>
       )}

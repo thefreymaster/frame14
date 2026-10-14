@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Badge, Box, HStack, Status, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, HStack, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { IoTrophyOutline } from "react-icons/io5";
 import { useGames } from "../hooks/useLiveGame";
@@ -144,7 +144,6 @@ function Score({ side }: { side: Side }) {
 
   return (
     <Text
-      fontFamily="display"
       fontSize="4.4vmin"
       fontWeight="500"
       lineHeight="1"
@@ -167,7 +166,7 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
       flex="1"
       minW="0"
       alignSelf="stretch"
-      bg="surface.chip"
+      bg="bg.muted"
       align="center"
       gap="1.2vmin"
       px="1.2vmin"
@@ -199,7 +198,7 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
         side.record && (
           <Text
             fontSize="2vmin"
-            color="fg.faint"
+            color="fg.muted"
             letterSpacing="0.04em"
             flexShrink={0}
           >
@@ -319,21 +318,18 @@ export function TeamTracker() {
       collapsible
       storageKey="teamtracker"
       title={
-        <HStack width="100%" align="center" gap="1.5vmin">
-          <SectionTitle icon={<IoTrophyOutline />}>TEAMS</SectionTitle>
+        <HStack width="100%" align="center" gap="3">
+          <SectionTitle icon={<IoTrophyOutline />}>Teams</SectionTitle>
           <Box flex="1" minW="0" />
           {anyLive && (
-            <Badge variant="glow" size="panel" colorPalette="red">
-              <Status.Root colorPalette="red" size="sm">
-                <Status.Indicator animation="blink 1.6s ease-in-out infinite" />
-              </Status.Root>
-              LIVE
+            <Badge colorPalette="red" variant="solid">
+              Live
             </Badge>
           )}
         </HStack>
       }
     >
-      <VStack align="stretch" gap="chipGap" width="100%">
+      <VStack align="stretch" gap="3" width="100%">
         {games.map((game) => (
           <Box
             key={game.entity_id}

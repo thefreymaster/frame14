@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import {
+  Badge,
   Box,
   Button,
+  Field,
   Flex,
-  Grid,
   HStack,
   IconButton,
-  Text,
+  SimpleGrid,
+  Stack,
 } from "@chakra-ui/react";
 import { MdSkipNext, MdRefresh, MdRadar, MdElectricBolt } from "react-icons/md";
 import {
@@ -166,61 +168,58 @@ export function Control() {
   }
 
   return (
-    <PageShell center maxW={{ portrait: "560px", landscape: "960px" }}>
+    <PageShell center maxW={{ portrait: "36rem", landscape: "60rem" }}>
       <PageHeader
         icon={<IoOptionsOutline />}
-        title="CONTROL"
+        title="Control"
         actions={
-          <Status
-            value="success"
-            size="panel"
-            colorPalette={connected ? "green" : "gray"}
-            color="fg.faint"
-            whiteSpace="nowrap"
-          >
-            {connected ? "CONNECTED" : "DISCONNECTED"}
+          <Status value={connected ? "success" : "error"}>
+            {connected ? "Connected" : "Disconnected"}
           </Status>
         }
       >
-        {/* Device mode */}
-        <SegmentedControl
-          fitted
-          mt="1.5vmin"
-          items={[...DEVICE_MODES]}
-          value={deviceMode}
-          aria-label="Device mode"
-          onValueChange={(e) => {
-            const mode = e.value as "frame" | "controller" | null;
-            if (!mode) return;
-            setDeviceMode(mode);
-            setDeviceModeState(mode);
-            if (mode === "frame") window.location.href = "/home";
-          }}
-        />
+        <Field.Root>
+          <Field.Label>Device mode</Field.Label>
+          <SegmentedControl
+            items={[...DEVICE_MODES]}
+            value={deviceMode}
+            aria-label="Device mode"
+            onValueChange={(e) => {
+              const mode = e.value as "frame" | "controller" | null;
+              if (!mode) return;
+              setDeviceMode(mode);
+              setDeviceModeState(mode);
+              if (mode === "frame") window.location.href = "/home";
+            }}
+          />
+        </Field.Root>
       </PageHeader>
 
       {/* Body: stacked portrait, side-by-side landscape */}
       <Flex
         direction={{ base: "column", _landscape: "row" }}
         align={{ _landscape: "flex-start" }}
-        gap="gutter"
+        gap="4"
       >
         {deviceMode !== "frame" && (
           <Box flex="1" minWidth="0">
-            <Board title={<SectionTitle>VIEWS</SectionTitle>}>
-              <Grid templateColumns="1fr 1fr 1fr" gap="chipGap" width="100%">
+            <Board title={<SectionTitle>Views</SectionTitle>}>
+              <SimpleGrid columns={3} gap="3">
                 {VIEWS.map((v) => {
                   const isActive = activeView === v.path;
                   const Icon = isActive ? v.activeIcon : v.icon;
                   return (
                     <Box key={v.path} position="relative" minW="0">
                       <Button
-                        variant="chip"
-                        size="tile"
-                        width="100%"
+                        variant={isActive ? "solid" : "outline"}
                         aria-pressed={isActive}
                         aria-label={v.label}
                         onClick={() => changeView(v.path)}
+                        width="100%"
+                        height="auto"
+                        aspectRatio="1"
+                        flexDirection="column"
+                        gap="2"
                       >
                         <Icon />
                         {v.label}
@@ -229,15 +228,11 @@ export function Control() {
                         <Tooltip content="Next photo" showArrow>
                           <IconButton
                             aria-label="Next photo"
-                            variant="plain"
+                            variant="ghost"
+                            size="xs"
                             position="absolute"
-                            top="0.6vmin"
-                            right="0.6vmin"
-                            minW="0"
-                            boxSize="5vmin"
-                            color="fg.faint"
-                            _hover={{ color: "fg" }}
-                            _icon={{ width: "2.8vmin", height: "2.8vmin" }}
+                            top="1"
+                            right="1"
                             onClick={nextPhoto}
                           >
                             <MdSkipNext />
@@ -247,73 +242,62 @@ export function Control() {
                     </Box>
                   );
                 })}
-              </Grid>
+              </SimpleGrid>
             </Board>
           </Box>
         )}
-        <Flex flex="1" minWidth="0" direction="column" gap="gutter">
+        <Flex flex="1" minWidth="0" direction="column" gap="4">
           {/* Display mode */}
           <Board
             title={
-              <HStack justify="space-between" align="baseline" width="100%">
-                <SectionTitle>DISPLAY</SectionTitle>
-                {preference === "auto" && (
-                  <Text fontSize="1.8vmin" color="fg.faint">
-                    auto · {effectiveMode}
-                  </Text>
-                )}
+              <HStack justify="space-between" width="100%">
+                <SectionTitle>Display</SectionTitle>
+                {preference === "auto" && <Badge>auto · {effectiveMode}</Badge>}
               </HStack>
             }
           >
-            <SegmentedControl
-              fitted
-              items={THEME_MODES}
-              value={preference}
-              aria-label="Theme"
-              onValueChange={(e) => {
-                if (e.value) setPreference(e.value as ThemeModePreference);
-              }}
-            />
+            <Stack gap="5">
+              <Field.Root>
+                <Field.Label>Theme</Field.Label>
+                <SegmentedControl
+                  items={THEME_MODES}
+                  value={preference}
+                  aria-label="Theme"
+                  onValueChange={(e) => {
+                    if (e.value) setPreference(e.value as ThemeModePreference);
+                  }}
+                />
+              </Field.Root>
 
-            {/* Refresh all frames */}
-            <Button
-              variant="chip"
-              size="chip"
-              width="100%"
-              mt="chipGap"
-              fontSize="2.4vmin"
-              onClick={() => {
-                socket.emit("refresh");
-                toaster.create({ title: "Refreshing displays", type: "info" });
-              }}
-            >
-              <MdRefresh />
-              Refresh displays
-            </Button>
+              <Switch
+                checked={navVisible}
+                onCheckedChange={(e) => setNavVisible(e.checked)}
+              >
+                Show navigation
+              </Switch>
 
-            {/* Show/hide nav */}
-            <Switch
-              size="panel"
-              colorPalette="teal"
-              checked={navVisible}
-              onCheckedChange={(e) => setNavVisible(e.checked)}
-              layerStyle="chip"
-              width="100%"
-              mt="chipGap"
-              justifyContent="space-between"
-              flexDirection="row-reverse"
-              color="fg.dim"
-            >
-              Show navigation
-            </Switch>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  socket.emit("refresh");
+                  toaster.create({
+                    title: "Refreshing displays",
+                    type: "info",
+                  });
+                }}
+              >
+                <MdRefresh />
+                Refresh displays
+              </Button>
+            </Stack>
           </Board>
 
           {/* Voice */}
           <VoiceStatusBoard />
 
           {/* Album */}
-          <Board title={<SectionTitle>ALBUM</SectionTitle>}>
-            <NativeSelectRoot variant="chip" size="panel">
+          <Board title={<SectionTitle>Album</SectionTitle>}>
+            <NativeSelectRoot>
               <NativeSelectField
                 aria-label="Photo album"
                 value={photosConfig?.defaultAlbumId ?? ""}

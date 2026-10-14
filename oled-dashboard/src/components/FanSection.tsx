@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {
+  Badge,
   Box,
   Button,
+  Circle,
   Dialog,
   Grid,
   HStack,
@@ -10,7 +12,6 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { PiFanFill } from "react-icons/pi";
-import { IoClose } from "react-icons/io5";
 import type { HomeFan } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
@@ -118,90 +119,41 @@ function FanControls({ fan }: { fan: HomeFan }) {
     }
   }
 
-  const ring = on
-    ? "color-mix(in srgb, var(--chakra-colors-hvac-fan) 85%, transparent)"
-    : "rgba(255,255,255,0.18)";
-  const glow = on
-    ? "color-mix(in srgb, var(--chakra-colors-hvac-fan) 22%, transparent)"
-    : "rgba(255,255,255,0.04)";
-
   return (
-    <HStack gap={{ base: "6vw", md: "5vmin" }} align="center">
-      <VStack gap={{ base: "3vw", md: "2vmin" }} align="center">
-        <Dialog.Title
-          fontSize={{ base: "3.4vw", md: "2.2vmin" }}
-          color="fg.faint"
-          fontWeight="500"
-          letterSpacing="0.08em"
-          textTransform="uppercase"
+    <HStack gap="8" align="center" justify="center">
+      <VStack gap="4" align="center">
+        <Circle
+          size="10rem"
+          bg={on ? "teal.subtle" : "bg.muted"}
+          color={on ? "teal.fg" : "fg.subtle"}
         >
-          {fan.name}
-        </Dialog.Title>
-        <Box
-          position="relative"
-          width={{ base: "44vw", md: "32vmin" }}
-          aspectRatio="1"
-          borderRadius="full"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          bg={`radial-gradient(circle at 50% 50%, ${glow} 0%, rgba(0,0,0,0.6) 55%, #000 100%)`}
-          boxShadow={`inset 0 0 0 0.5vmin ${ring}, inset 0 0 6vmin rgba(0,0,0,0.55), 0 0 8vmin ${ring}`}
-        >
-          <FanIcon
-            on={on}
-            percentage={pct}
-            size="min(28vw, 18vmin)"
-            color={on ? "hvac.fan" : "fg.faint"}
-          />
-        </Box>
-        <Text
-          fontSize={{ base: "10vw", md: "7vmin" }}
-          fontWeight="100"
-          lineHeight="1"
-          color="fg"
-          letterSpacing="-0.04em"
-        >
+          <FanIcon on={on} percentage={pct} size="6rem" color="inherit" />
+        </Circle>
+        <Text textStyle="5xl" fontWeight="light" lineHeight="1">
           {pct}
-          <Text
-            as="span"
-            fontSize={{ base: "4vw", md: "3vmin" }}
-            color="fg.faint"
-            ml="1vmin"
-          >
+          <Text as="span" textStyle="2xl" color="fg.muted" ms="1">
             %
           </Text>
         </Text>
         <Switch
-          size="panel"
           colorPalette="teal"
           checked={on}
           onCheckedChange={(e) => setPower(e.checked)}
-          color={on ? "hvac.fan" : "fg.faint"}
-          css={{
-            "& [data-part=label]": {
-              fontSize: { base: "3.4vw", md: "2vmin" },
-              fontWeight: "600",
-              letterSpacing: "0.14em",
-            },
-          }}
         >
-          {on ? "ON" : "OFF"}
+          {on ? "On" : "Off"}
         </Switch>
       </VStack>
 
       <Slider
         orientation="vertical"
-        variant="fill"
-        size="lever"
         colorPalette="teal"
         min={0}
         max={100}
         step={STEP}
         value={[pct]}
         aria-label={["Fan speed"]}
-        height={{ base: "60vh", md: "50vmin" }}
-        maxH="440px"
+        height="16rem"
+        marks={[0, 25, 50, 75, 100]}
         onValueChange={(d) => {
           setDragging(true);
           setPct(d.value[0]);
@@ -231,31 +183,23 @@ function FanDialog({
       onOpenChange={(e) => {
         if (!e.open) onClose();
       }}
-      variant="immersive"
+      placement="center"
       lazyMount
       unmountOnExit
     >
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content aria-label={`${fan?.name ?? "Fan"} controls`}>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>{fan?.name ?? "Fan"}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body pb="8">
+              {fan && <FanControls key={fan.entity_id} fan={fan} />}
+            </Dialog.Body>
             <Dialog.CloseTrigger asChild>
-              <CloseButton
-                variant="chrome"
-                size="chrome"
-                aria-label="Close fan controls"
-                width={{ base: "12vw", md: "7vmin" }}
-                height={{ base: "12vw", md: "7vmin" }}
-                _icon={{
-                  width: { base: "5.5vw", md: "3.4vmin" },
-                  height: { base: "5.5vw", md: "3.4vmin" },
-                }}
-                zIndex={1}
-              >
-                <IoClose />
-              </CloseButton>
+              <CloseButton size="sm" />
             </Dialog.CloseTrigger>
-            {fan && <FanControls key={fan.entity_id} fan={fan} />}
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>
@@ -267,45 +211,29 @@ function FanRow({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
   const on = fan.state === "on";
   return (
     <Button
-      variant="chip"
-      size="chip"
+      variant={on ? "subtle" : "outline"}
+      colorPalette={on ? "teal" : "gray"}
+      size="lg"
       aria-pressed={on}
       onClick={onTap}
       width="100%"
       justifyContent="space-between"
-      textAlign="start"
     >
-      <HStack gap="1.2vmin" align="center" flex="1" minW="0">
+      <HStack gap="2" minW="0">
         <FanIcon
           on={on}
           percentage={fan.percentage}
-          size="2.6vmin"
-          color={on ? "fg.dim" : "fg.faint"}
+          size="1.25rem"
+          color="inherit"
         />
-        <Text
-          fontSize="2vmin"
-          color={on ? "fg.dim" : "fg.faint"}
-          fontWeight="400"
-          truncate
-          flex="1"
-          minW="0"
-        >
-          {fan.name}
-        </Text>
+        <Text truncate>{fan.name}</Text>
       </HStack>
-      <Text
-        flexShrink={0}
-        color={on ? "hvac.fan" : "fg.faint"}
-        fontSize="1.8vmin"
-        fontWeight="600"
-        letterSpacing="0.06em"
-        lineHeight="1"
-      >
+      <Text>
         {on
           ? fan.percentage != null
             ? `${Math.round(fan.percentage)}%`
-            : "ON"
-          : "OFF"}
+            : "On"
+          : "Off"}
       </Text>
     </Button>
   );
@@ -324,32 +252,28 @@ export function FanSection({ fan }: { fan: HomeFan[] }) {
       collapsible
       storageKey="fan"
       title={
-        <HStack width="100%" align="center" gap="1.5vmin">
+        <HStack width="100%" align="center" gap="3">
           <SectionTitle
             icon={
               <FanIcon
                 on={anyOn}
                 percentage={null}
-                size="2vmin"
-                color="fg.dim"
+                size="1em"
+                color="inherit"
               />
             }
           >
-            FANS
+            Fans
           </SectionTitle>
           <Box flex="1" minW="0" />
-          {anyOn && (
-            <Text textStyle="meta" color="fg.dim">
-              {onCount} ON
-            </Text>
-          )}
+          {anyOn && <Badge colorPalette="teal">{onCount} on</Badge>}
         </HStack>
       }
     >
       {/* Chips wrap into columns so a wide card isn't one fan per band. */}
       <Grid
-        templateColumns="repeat(auto-fill, minmax(34vmin, 1fr))"
-        gap="chipGap"
+        templateColumns="repeat(auto-fill, minmax(14rem, 1fr))"
+        gap="3"
         width="100%"
       >
         {fan.map((f) => (

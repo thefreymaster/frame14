@@ -8,11 +8,12 @@ interface Props {
   grow?: boolean;
 }
 
-/** Fade + scale on route mount (`page-in` in src/theme/keyframes.ts). */
+/** Route mount animation: Chakra's own fade-in + scale-in. */
 export function PageTransition({ children, grow }: Props) {
   return (
     <Box
-      animation="page-in 0.35s ease-out both"
+      animationName="fade-in, scale-in"
+      animationDuration="slow"
       width="100%"
       height={grow ? "auto" : "100%"}
       minHeight={grow ? "100%" : undefined}

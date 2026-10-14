@@ -8,8 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm install          # Install dependencies
 npm run dev          # Vite dev server (port 3000, proxies /api and socket.io to :4000)
 node index.js        # Express server (port 4000)
-npm run build        # Chakra typegen (prebuild) + TypeScript check + Vite production build
-npm run typegen      # Regenerate Chakra's types for the custom theme (src/theme) — run after editing recipes/tokens
+npm run build        # TypeScript check + Vite production build
 npm run lint         # ESLint
 npm run preview      # Preview the production build
 ```
@@ -20,7 +19,7 @@ For full-stack development, run both `npm run dev` and `node index.js` concurren
 
 Two separate processes:
 
-**Client** (`src/`) — Vite + React 19 + TypeScript. Entry: `src/main.tsx`. Providers: `Provider` (`src/components/ui/provider.tsx` — `ChakraProvider` with the custom system from `src/theme`) + `QueryClientProvider` (TanStack Query), plus the Chakra `Toaster`. See "UI system" below. Built output (`dist/`) is served statically by Express in production.
+**Client** (`src/`) — Vite + React 19 + TypeScript. Entry: `src/main.tsx`. Providers: `Provider` (`src/components/ui/provider.tsx` — `ChakraProvider value={defaultSystem}` + Chakra's colour mode) + `QueryClientProvider` (TanStack Query), plus the Chakra `Toaster`. See "UI system" below. Built output (`dist/`) is served statically by Express in production.
 
 **Server** (`index.js`) — Express 5 + Socket.IO (JavaScript, not TypeScript). Config is read from `/data/options.json` (HA addon) with `.env` fallback via `config.js`. Entity IDs are read from `options.json` (HA addon) or `frame14.json` (local dev) via `entities.js`. Routes are split into `routes/` files and mounted in `index.js`. The OpenAPI document lives in `openapi.js`.
 
@@ -86,45 +85,32 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/football` | `Football` | Full-screen score bug + game detail; a preview before kickoff, a scoreboard during. Up all of game day (nav tab too); auto-routed on kickoff |
 | `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote) |
 
-## UI system (Chakra UI v3)
+## UI system (Chakra UI v3, native theme)
 
-The UI is built from Chakra UI v3's components — Card, Collapsible, Dialog,
-SegmentGroup, Slider, Switch, Tabs, Progress / ProgressCircle, Stat, Badge, Tag,
-Skeleton, EmptyState, Alert, ActionBar, DataList, NativeSelect, Status,
-Tooltip, Toaster, Button / IconButton / CloseButton — styled by a custom system
-rather than hand-written CSS. There is no global stylesheet.
+The UI is stock Chakra UI v3: `ChakraProvider value={defaultSystem}` with no
+custom tokens, recipes, variants or global styles. Components are used with
+their built-in variants, sizes and `colorPalette`s — Card, Collapsible, Dialog,
+Tabs, SegmentGroup, Slider, Switch, CheckboxCard, Progress / ProgressCircle,
+Stat, Badge, Tag, Skeleton, EmptyState, Alert, ActionBar, DataList,
+NativeSelect, Status, Tooltip, Toaster, Button / IconButton / CloseButton —
+with Chakra's own fonts, radii, shadows, borders and colours.
 
-```
-src/theme/
-  index.ts          — createSystem(defaultConfig, defineConfig({...})); the `system` ChakraProvider gets
-  tokens.ts         — vmin geometry (radii card/chip/modal, spacing gutter/cardX/cardY/chipX/chipY/chipGap/headerGap,
-                      sizes navBar/navRail, fonts body/display) and the palette as semantic tokens
-                      (bg, surface.card/chip/on/modal, fg/fg.dim/fg.muted/fg.faint, divider, accent.warm, marker.*,
-                      hvac.*, scrim, chrome.*, and a `warm` colour palette)
-  keyframes.ts      — page-in, slow-zoom, poster-in, fan-spin, ring-pulse, blink, rise-in, chart-reveal
-  styles.ts         — textStyles (section, meta, eyebrow, numeral) and layerStyles (chip, chipOn)
-  global-css.ts     — page ground, NumberFlow font, and the /home arranging rules (see "Home layout" there)
-  recipes/          — extensions of Chakra's own recipes: new variants/sizes in vmin (button chip/raised/chrome/glass,
-                      card raised, dialog panel/immersive/overlay, segmentGroup chip/pill, slider rail/fill, …)
-src/components/ui/  — Chakra CLI snippets (`npx @chakra-ui/cli snippet add <name>`) plus provider.tsx
-```
-
-Rules of thumb:
-
-- **Colour via tokens, never hex in a component.** `bg="surface.card"`, `color="fg.faint"`. Where a raw CSS
-  string is needed (SVG strokes, nivo, `color-mix`), use the variable: `var(--chakra-colors-fg-dim)`.
-- **The palette flips by class.** `lib/themeMode.ts` toggles `dark` on `<html>` (auto / bright / dark); every
-  semantic token has a `_dark` value. There is no colour-mode provider and no `next-themes`.
-- **Size in vmin.** Chakra's stock sizes are rem and read as a phone UI on the 1600x2400 panel. Use the recipe
-  sizes added in `src/theme/recipes` (`size="chip"`, `"panel"`, `"tile"`, …) or vmin style props.
-- **Custom variants need typegen.** `npm run build` runs `npm run typegen` first; run it yourself after editing
-  `src/theme` so the editor sees new variant names.
-- **Cascade layers.** Chakra puts global CSS in `@layer base` and recipes in `@layer recipes`; style props are
-  unlayered and win over both, whatever the specificity. A global rule that must beat a component's own props
-  needs `!important` (the /home hide-when-empty rules do).
-- **Chakra's `textStyle`s carry fixed rem line heights.** Components whose recipe sets one (dialog content, progress
-  root, card title, stat label, alert, toast) get a relative `lineHeight` in our recipes; if you size a part's text
-  in vmin and it has `truncate`, give it a relative line height too or the descenders clip.
+- **One scale knob.** `src/index.css` sets `html { font-size: clamp(16px, 1.75vmin, 32px) }`. Chakra sizes
+  everything in rem, so this scales the whole UI together (28px root on the 1600x2400 frame) and keeps native
+  proportions. Size things with Chakra's scales (`textStyle="2xl"`, `fontSize="9xl"`, `p="4"`, `size="lg"`),
+  not vmin or px. The rest of `index.css` is layout only: the full-height shell and the /home hide-when-empty
+  rules (see "Home layout" there).
+- **Colour mode.** `lib/themeMode.ts` keeps the Auto / Bright / Dark preference, the 07:00–19:00 daylight window
+  and the socket sync; `components/ui/provider.tsx` feeds the effective mode to Chakra's colour mode (the
+  `color-mode` snippet, next-themes, `forcedTheme`). Bright is Chakra's light mode, Dark is Chakra's dark mode.
+- **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
+  `colorPalette`. Where a raw CSS string is needed (SVG strokes in the thermostat dial and analog clock), use the
+  variable, e.g. `var(--chakra-colors-orange-solid)`; nivo needs literals, so Solar resolves palette colours with
+  `defaultSystem.token()`.
+- **Bespoke graphics stay hand-drawn**: the thermostat arc dial (`ThermostatDial`), the analog clock, the
+  TeamTracker / football score bug and the nivo chart. They take their colours from Chakra tokens; team colours
+  are data and stay as delivered.
+- `src/components/ui/` holds Chakra CLI snippets (`npx @chakra-ui/cli snippet add <name>`).
 
 ## Component Rules
 
@@ -136,8 +122,8 @@ Rules of thumb:
 
 ```
 src/
-  main.tsx                        — Provider (Chakra + src/theme) + QueryClientProvider + Toaster
-  theme/                          — the Chakra system: tokens, keyframes, text/layer styles, global CSS, recipes (see "UI system")
+  main.tsx                        — Provider (Chakra defaultSystem + colour mode) + QueryClientProvider + Toaster
+  index.css                       — the one global scale knob (root font-size) + full-height shell + /home hide-when-empty rules
   App.tsx                         — RouterProvider
   router.tsx                      — createBrowserRouter, Layout wraps all routes
   routes/
@@ -153,18 +139,18 @@ src/
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
-    LandscapeNav.tsx              — bottom bar (portrait) + left sidebar (landscape), each a Chakra Tabs list (`variant="nav"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
+    LandscapeNav.tsx              — bottom bar (portrait) + left sidebar (landscape), each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in
     SocketViewListener.tsx        — listens for change_view, navigates (skips /control)
-    WeatherForecast.tsx           — hourly forecast strip of chip Buttons; each opens ForecastDetailModal
+    WeatherForecast.tsx           — hourly forecast strip of Buttons; each opens ForecastDetailModal
     PhotoSlide.tsx                — full-bleed crossfade image slide
     MarqueeArt.tsx                — full-bleed poster, backgroundSize cover (absolute, not fixed — PageTransition leaves a transform on an ancestor)
     LightsSection.tsx             — renders a group of LightEntry controls
-    LightControl.tsx              — single light/switch tile: the whole tile is a Chakra Switch (warm palette), the switch control is the corner pip
+    LightControl.tsx              — single light/switch: a Chakra CheckboxCard (yellow palette); the whole card toggles
     EnergySection.tsx             — energy card (coverage Progress, grid Badge) + detail modal (PanelDialog, Stats)
     PrinterSection.tsx            — 3D printer card (Progress) + click-to-open detail modal (PanelDialog: temps, layers, ETA, filament as Stats)
-    PanelDialog.tsx               — shell of the detail modals: Chakra Dialog, `panel` variant, close button, `glow` tint on the scrim
+    PanelDialog.tsx               — shell of the detail modals: a stock Chakra Dialog with title, body and close button
     ForecastDetailModal.tsx       — one forecast period as a PanelDialog of Stats
     TeamTracker.tsx               — TeamTracker sports card; tapping a score bug opens /football; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND. Card-sized rendering only — the game model is in `src/lib/teamTracker.ts`
     FootballScoreboard.tsx        — the /football score bug at scoreboard scale; same anatomy as TeamTracker's chip, its own vmin sizes (the card's are tuned for a bento tile)
@@ -172,23 +158,23 @@ src/
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     RadarSection.tsx              — Windy radar card, collapsible (`board-collapsed:radar`), above energy in both layouts; renders only while the current weather condition is rain (rainy/pouring/lightning-rainy/snowy-rainy); iframe is pointer-events none so it can't trap page scroll
     ClimateSection.tsx            — thermostat cards (ThermostatDial as a button); opens ClimateDialog
-    ClimateDialog.tsx             — thermostat modal: Chakra Dialog (`immersive` variant) holding a draggable ThermostatDial, a SegmentGroup mode pill (HEAT/COOL/FAN/OFF, `pill` variant, indicator outlined in the mode's colour) and a fan-speed Slider; responsive sizing (vw on phone, vmin on landscape)
-    ThermostatDial.tsx            — the Nest-style face: ring, live pulse, 120° tick arc; with `control` the arc drags/taps and commits on pointerup. The one hand-drawn control (geometry in lib/thermostatArc.ts)
+    ClimateDialog.tsx             — thermostat modal: a stock Chakra Dialog holding a draggable ThermostatDial, a SegmentGroup (Heat / Cool / Fan / Off) and a fan-speed Slider
+    ThermostatDial.tsx            — the Nest-style face: ring, live pulse, 120° tick arc in the mode's Chakra palette colour; with `control` the arc drags/taps and commits on pointerup. The one hand-drawn control (geometry in lib/thermostatArc.ts)
     FanSpeedSlider.tsx            — Chakra Slider over a climate entity's fan_modes, commits on release
-    FanSection.tsx                — fan chips + modal (Dialog `immersive`: vertical Slider `fill` variant for speed, Switch for power)
+    FanSection.tsx                — fan Buttons + modal (stock Dialog: vertical Slider for speed, Switch for power)
     VoiceAssistButton.tsx         — fixed mic FAB; rendered from Layout so it exists on every view, hidden with the nav
-    VoiceAssistOverlay.tsx        — full-screen voice session UI, a Chakra Dialog (`overlay` variant), always mounted and open while a session runs; keeps the last live snapshot for the exit animation (listening / thinking / speaking / done / error); done swaps the mic for a checkmark
+    VoiceAssistOverlay.tsx        — full-screen voice session UI, a stock Chakra Dialog, always mounted and open while a session runs; keeps the last live snapshot for the exit animation (listening / thinking / speaking / done / error); done swaps the mic for a checkmark
     VoiceLevelRing.tsx            — mic level ring; writes transform in a rAF loop, never through React state
     VoiceStatusBoard.tsx          — read-only voice diagnostics on /control (DataList, Alerts)
     HomeBoard.tsx                 — /home's rearrangeable layout: press-and-hold enters arranging, dnd-kit multiple-containers drag between zones, saves via lib/homeLayout, Done/Escape/90s idle leaves. DragOverlay and toolbar are portalled to body (PageTransition's transform would offset fixed elements)
     HomeZone.tsx                  — one column or full-width band: SortableContext + its own droppable, so empty zones accept drops
     HomeCardSlot.tsx              — sortable wrapper per card; inert (no listeners, no transform) outside arranging
-    HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/theme/global-css.ts)
+    HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)
     HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging — a Chakra ActionBar that ignores outside presses and Escape (HomeBoard owns Escape)
-    Board.tsx                     — Chakra Card (`raised` variant) with an optional Collapsible header (touch-friendly 48px min); collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
-    StatusChip.tsx                — ambient chip (Chakra Tag, `chip` variant) for the status strip and the bird detection
-    skeletons/                    — /home loading placeholders built from Chakra Skeleton / SkeletonCircle (recipe pulses in the chip fill, not Chakra's light grey)
-    ui/                           — Chakra CLI snippets (action-bar, close-button, data-list, empty-state, native-select, segmented-control, slider, status, switch, toaster, tooltip, toggle-tip) + provider.tsx
+    Board.tsx                     — stock Chakra Card with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
+    StatusChip.tsx                — ambient chip (Chakra Tag, `surface` variant) for the status strip and the bird detection
+    skeletons/                    — /home loading placeholders built from stock Chakra Skeleton / SkeletonCircle
+    ui/                           — Chakra CLI snippets (close-button, color-mode, data-list, empty-state, native-select, provider, segmented-control, slider, status, switch, toaster, tooltip, toggle-tip)
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
     useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s
@@ -213,8 +199,9 @@ src/
     lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icon (domain-based) from entity IDs; no static registry
     deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
-    themeMode.ts                  — preference storage, socket sync, and the `dark` class on <html> the Chakra palette keys off; "auto" uses daylight window 07:00–19:00
-    hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (semantic tokens + Chakra palette), action detection
+    themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
+    navMetrics.ts                 — nav bar height / rail width in rem, shared by Layout, the mic button and the arranging bar
+    hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
     weatherIcons.ts               — HA weather condition → react-icons element (day/night)
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation, isMovie (the marquee's content-type gate, mirrored by the media watcher in ha-socket.js)
@@ -286,6 +273,11 @@ routes/
 
 ## Design Constraints (OLED)
 
+> **On this branch (ui/chakra) the UI follows Chakra UI's native theme.** The OLED palette rules below —
+> `#000000` background, no borders or dividers, the custom dim surface ladder — do **not** apply here: the page
+> uses Chakra's own light/dark colours (dark is Chakra's near-black `bg`), card borders and shadows. The portrait
+> layout guidance still applies.
+
 **The frame is a portrait panel — 1600x2400.** Design every view portrait-first
 and check it at that aspect before calling it done. A layout that reads well in
 a landscape browser window can be unusable on the device: a horizontal row of
@@ -326,7 +318,7 @@ to confirm landscape still works.
 - Background is always `#000000`
 - Avoid static bright elements — they cause burn-in
 - No dividers or decorative borders
-- Font: the platform's system UI stack — `fonts.body` / `fonts.display` tokens in `src/theme/tokens.ts`; nothing is fetched
+- Font: Chakra's default font stack (no webfont is loaded, so it resolves to the platform's system UI font)
 - All sizes on `/clock` use `vw` units to scale to any portrait resolution
 - `/clock` layout is portrait-optimised: clock fills the top, weather below
 

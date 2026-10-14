@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Box, Dialog, Icon, Portal, Spinner, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Dialog,
+  Icon,
+  Portal,
+  Spinner,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { IoCheckmark, IoMic } from "react-icons/io5";
 import { VoiceLevelRing } from "./VoiceLevelRing";
 import type { VoiceSnapshot } from "../lib/voiceAssist";
@@ -43,8 +51,8 @@ function sameView(a: View, b: View) {
 }
 
 /**
- * Full-screen session UI — a Dialog in the `overlay` variant, so tap-outside,
- * Escape and the exit animation come from the library.
+ * Session UI — a stock Chakra Dialog, so tap-outside, Escape and the exit
+ * animation come from the library.
  *
  * Always mounted: it opens whenever a session is running. The last live
  * snapshot is kept so the exit animation shows what was on screen, not the
@@ -73,84 +81,75 @@ export function VoiceAssistOverlay({
       onOpenChange={(e) => {
         if (!e.open) onDismiss();
       }}
-      variant="overlay"
-      motionPreset="scale"
+      placement="center"
     >
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content aria-label="Voice assistant">
-            <Box
-              position="relative"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              width="24vmin"
-              height="24vmin"
-            >
-              {listening && <VoiceLevelRing />}
-              {state === "thinking" && (
-                <Spinner
-                  position="absolute"
-                  color="fg.faint"
-                  borderWidth="0.3vmin"
-                  animationDuration="1.4s"
-                  css={{ "--spinner-size": "22vmin" }}
-                />
-              )}
-              <Icon
-                position="relative"
-                boxSize="8vmin"
-                color={state === "error" ? "fg.muted" : "fg.dim"}
-              >
-                {state === "done" ? <IoCheckmark /> : <IoMic />}
-              </Icon>
-            </Box>
+          <Dialog.Content>
+            <Dialog.Body py="10">
+              <VStack gap="4" textAlign="center">
+                <Box
+                  position="relative"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  boxSize="10rem"
+                >
+                  {listening && <VoiceLevelRing />}
+                  {state === "thinking" && (
+                    <Spinner
+                      position="absolute"
+                      size="xl"
+                      color="colorPalette.solid"
+                      css={{ "--spinner-size": "9rem" }}
+                    />
+                  )}
+                  <Icon
+                    position="relative"
+                    boxSize="12"
+                    color={state === "error" ? "fg.error" : "fg"}
+                  >
+                    {state === "done" ? <IoCheckmark /> : <IoMic />}
+                  </Icon>
+                </Box>
 
-            {status && (
-              <Text fontSize="2.4vmin" color="fg.faint" letterSpacing="0.08em">
-                {status}
-              </Text>
-            )}
+                {status && <Text color="fg.muted">{status}</Text>}
 
-            {transcript && (
-              <Dialog.Title
-                fontSize={reply ? "2.6vmin" : "4vmin"}
-                fontWeight="300"
-                color={reply ? "fg.muted" : "fg"}
-              >
-                {transcript}
-              </Dialog.Title>
-            )}
+                {transcript && (
+                  <Dialog.Title
+                    textStyle={reply ? "md" : "2xl"}
+                    fontWeight="normal"
+                    color={reply ? "fg.muted" : "fg"}
+                  >
+                    {transcript}
+                  </Dialog.Title>
+                )}
 
-            {reply && (
-              <Text fontSize="4.5vmin" fontWeight="300" color="fg">
-                {reply}
-              </Text>
-            )}
+                {reply && <Text textStyle="2xl">{reply}</Text>}
 
-            {errorMessage && (
-              <>
-                <Text fontSize="3.4vmin" fontWeight="300" color="fg.dim">
-                  {errorMessage}
-                </Text>
-                <Text fontSize="2.2vmin" color="fg.faint">
-                  Tap to try again
-                </Text>
-              </>
-            )}
+                {errorMessage && (
+                  <>
+                    <Text textStyle="xl">{errorMessage}</Text>
+                    <Text textStyle="sm" color="fg.muted">
+                      Tap outside to try again
+                    </Text>
+                  </>
+                )}
 
-            {hint && state === "thinking" && (
-              <Text fontSize="2.2vmin" color="fg.faint">
-                {hint}
-              </Text>
-            )}
+                {hint && state === "thinking" && (
+                  <Text textStyle="sm" color="fg.muted">
+                    {hint}
+                  </Text>
+                )}
 
-            {audioBlocked && reply && (
-              <Text fontSize="2.2vmin" color="fg.faint">
-                (couldn't speak that)
-              </Text>
-            )}
+                {audioBlocked && reply && (
+                  <Text textStyle="sm" color="fg.muted">
+                    (couldn't speak that)
+                  </Text>
+                )}
+              </VStack>
+            </Dialog.Body>
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>

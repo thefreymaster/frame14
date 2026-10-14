@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Box,
   Dialog,
   HStack,
   Portal,
@@ -9,7 +8,6 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { IoClose } from "react-icons/io5";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { callClimateService, type HvacMode } from "../lib/callService";
 import {
@@ -37,9 +35,9 @@ function remoteOf(unit: HomeClimate) {
 }
 
 /**
- * The thermostat modal: a Dialog in the `immersive` variant — the dial floats
- * on a blurred scrim. The arc is the one hand-drawn control (ThermostatDial);
- * the mode pill is a SegmentGroup and fan speed is a Slider.
+ * The thermostat modal: a stock Chakra Dialog. The arc is the one hand-drawn
+ * control (ThermostatDial); the mode selector is a SegmentGroup and fan speed
+ * is a Slider.
  */
 export function ClimateDialog({
   unit,
@@ -56,31 +54,24 @@ export function ClimateDialog({
       onOpenChange={(e) => {
         if (!e.open) onClose();
       }}
-      variant="immersive"
+      placement="center"
+      size="md"
       lazyMount
       unmountOnExit
     >
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content aria-label={`${unit?.name ?? "Thermostat"} controls`}>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>{unit?.name ?? "Thermostat"}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+              {unit && <ClimateControls key={unit.entity_id} unit={unit} />}
+            </Dialog.Body>
             <Dialog.CloseTrigger asChild>
-              <CloseButton
-                variant="chrome"
-                size="chrome"
-                aria-label="Close thermostat controls"
-                width={{ base: "12vw", md: "7vmin" }}
-                height={{ base: "12vw", md: "7vmin" }}
-                _icon={{
-                  width: { base: "5.5vw", md: "3.4vmin" },
-                  height: { base: "5.5vw", md: "3.4vmin" },
-                }}
-                zIndex={1}
-              >
-                <IoClose />
-              </CloseButton>
+              <CloseButton size="sm" />
             </Dialog.CloseTrigger>
-            {unit && <ClimateControls key={unit.entity_id} unit={unit} />}
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>
@@ -186,9 +177,10 @@ function ClimateControls({ unit }: { unit: HomeClimate }) {
   const { accent, ring, palette } = hvacPalette(activeAction ?? mode);
 
   return (
-    <>
+    <VStack gap="6" align="center">
       <ThermostatDial
-        width={{ base: "min(64vw, 44vh)", md: "min(44vmin, 48vh)" }}
+        width="18rem"
+        maxW="100%"
         ring={ring}
         accent={accent}
         live={activeAction != null}
@@ -206,81 +198,35 @@ function ClimateControls({ unit }: { unit: HomeClimate }) {
               }
         }
       >
-        <VStack gap="0.6vmin" align="center" justify="center">
-          <Dialog.Title
-            fontSize={{ base: "2.6vw", md: "1.8vmin" }}
-            color="fg.faint"
-            fontWeight="500"
-            letterSpacing="0.08em"
-          >
-            {unit.name}
-          </Dialog.Title>
-          <HStack
-            gap={{ base: "1.2vw", md: "0.8vmin" }}
-            color={accent}
-            fontSize={{ base: "2.2vw", md: "1.5vmin" }}
-            fontWeight="600"
-            letterSpacing="0.18em"
-            textTransform="uppercase"
-            opacity={isOff ? 0.55 : 0.95}
-          >
+        <VStack gap="1" align="center">
+          <HStack gap="1.5" color={accent} textStyle="xs" fontWeight="semibold">
             <AccentIcon />
             <Text as="span">{statusLabel}</Text>
           </HStack>
-          <Text
-            fontFamily="display"
-            fontSize={{ base: "19vw", md: "13.5vmin" }}
-            fontWeight="100"
-            lineHeight="1"
-            color="fg"
-            letterSpacing="-0.05em"
-          >
+          <Text textStyle="6xl" fontWeight="light" lineHeight="1">
             {displayedTemp}°
           </Text>
-          <Text
-            fontSize={{ base: "2.1vw", md: "1.4vmin" }}
-            color="fg.faint"
-            fontWeight="500"
-            letterSpacing="0.1em"
-            textTransform="uppercase"
-          >
+          <Text textStyle="xs" color="fg.muted">
             {displayLabel}
           </Text>
-          <Text
-            fontSize={{ base: "2vw", md: "1.3vmin" }}
-            color="fg.faint"
-            opacity={0.7}
-            mt={{ base: "1vw", md: "0.6vmin" }}
-          >
+          <Text textStyle="xs" color="fg.subtle">
             {detailLabel}
           </Text>
         </VStack>
       </ThermostatDial>
 
-      {/* The mode pill: a SegmentGroup whose indicator slides between modes,
-          outlined in the chosen mode's colour. */}
       <SegmentGroup.Root
-        variant="pill"
-        size="dial"
-        fitted
         value={mode}
         onValueChange={(e) => {
           if (e.value) applyMode(e.value as ClimateVisualMode);
         }}
-        width={{ base: "72vw", md: "38vmin" }}
-        maxW="380px"
         aria-label="Mode"
-        css={{ "--segment-accent": hvacPalette(mode).ring }}
       >
         <SegmentGroup.Indicator />
         {HVAC_MODES.map(({ key, label }) => {
           const ModeIcon = MODE_ICON[key];
           return (
-            <SegmentGroup.Item
-              key={key}
-              value={key}
-              css={{ "--item-accent": hvacPalette(key).accent }}
-            >
+            <SegmentGroup.Item key={key} value={key}>
               <ModeIcon />
               <SegmentGroup.ItemText>{label}</SegmentGroup.ItemText>
               <SegmentGroup.ItemHiddenInput />
@@ -290,20 +236,17 @@ function ClimateControls({ unit }: { unit: HomeClimate }) {
       </SegmentGroup.Root>
 
       {unit.fanModes.length > 0 && (
-        <Box width={{ base: "72vw", md: "38vmin" }} maxWidth="380px">
-          <FanSpeedSlider
-            modes={unit.fanModes}
-            value={fanMode}
-            accent={accent}
-            colorPalette={palette}
-            disabled={isOff}
-            onChange={setFanMode}
-            onCommit={commitFanMode}
-            onDragStart={() => setDraggingFan(true)}
-            onDragEnd={() => setDraggingFan(false)}
-          />
-        </Box>
+        <FanSpeedSlider
+          modes={unit.fanModes}
+          value={fanMode}
+          colorPalette={palette}
+          disabled={isOff}
+          onChange={setFanMode}
+          onCommit={commitFanMode}
+          onDragStart={() => setDraggingFan(true)}
+          onDragEnd={() => setDraggingFan(false)}
+        />
       )}
-    </>
+    </VStack>
   );
 }

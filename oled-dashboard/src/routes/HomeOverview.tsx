@@ -42,7 +42,6 @@ function Centered({ children }: { children: React.ReactNode }) {
     <Box
       width="100%"
       height="100vh"
-      bg="bg"
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -64,7 +63,6 @@ export function HomeOverview() {
     return (
       <Centered>
         <EmptyState
-          size="panel"
           icon={<IoCloudOfflineOutline />}
           title="unavailable"
           description="Home Assistant didn't answer."

@@ -40,31 +40,18 @@ export function HomeOverviewSkeleton({
         <Box
           width="100%"
           minHeight="100%"
-          bg="bg"
           display="flex"
           flexDirection="row"
           alignItems="flex-start"
-          gap="gutter"
-          p="gutter"
+          gap="4"
+          p="4"
         >
-          <Box
-            flex="1"
-            minW="0"
-            display="flex"
-            flexDirection="column"
-            gap="gutter"
-          >
+          <Box flex="1" minW="0" display="flex" flexDirection="column" gap="4">
             <HomeHeaderSkeleton />
             <EnergySkeleton />
           </Box>
 
-          <Box
-            flex="1"
-            minW="0"
-            display="flex"
-            flexDirection="column"
-            gap="gutter"
-          >
+          <Box flex="1" minW="0" display="flex" flexDirection="column" gap="4">
             <ClimateSkeleton count={climateCount} />
             {fanCount > 0 && <FanSkeleton count={fanCount} />}
             <CalendarSkeleton />
@@ -81,18 +68,17 @@ export function HomeOverviewSkeleton({
       <Box
         width="100%"
         minHeight="100%"
-        bg="bg"
         display="grid"
         gridTemplateColumns="1.15fr 1fr"
         alignContent="start"
-        gap="gutter"
-        p="gutter"
+        gap="4"
+        p="4"
       >
         <HomeHeaderSkeleton span={2} />
 
         <ClimateSkeleton count={climateCount} />
 
-        <Box display="flex" flexDirection="column" gap="gutter" minW="0">
+        <Box display="flex" flexDirection="column" gap="4" minW="0">
           <EnergySkeleton />
           <CalendarSkeleton />
         </Box>

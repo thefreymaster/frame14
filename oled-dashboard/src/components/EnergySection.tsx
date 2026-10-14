@@ -3,13 +3,12 @@ import {
   Badge,
   Box,
   Flex,
-  Grid,
   HStack,
   Icon,
   Progress,
+  SimpleGrid,
   Stat,
   Text,
-  VStack,
 } from "@chakra-ui/react";
 import { PiSolarRoof } from "react-icons/pi";
 import { IoFlash } from "react-icons/io5";
@@ -40,38 +39,22 @@ function grid(energy: HomeEnergy) {
   return { abs, exporting: draw < 0, active: abs > GRID_ACTIVE_THRESHOLD };
 }
 
-/** Import / export as a tinted pill: arrow and colour carry the direction. */
+/** Import / export: arrow and colour carry the direction. */
 function GridBadge({
   energy,
-  size = "panel",
-  showLabel = false,
+  size = "md",
 }: {
   energy: HomeEnergy;
-  size?: "panel" | "lg";
-  showLabel?: boolean;
+  size?: "md" | "lg";
 }) {
   const { abs, exporting } = grid(energy);
-  const big = size === "lg";
   return (
     <Badge
-      variant="glow"
-      size="panel"
+      size={size}
       colorPalette={exporting ? "green" : "orange"}
-      flexShrink={0}
-      fontSize={big ? "3.8vmin" : undefined}
-      fontWeight={big ? "300" : "500"}
-      px={big ? "2.5vmin" : undefined}
-      py={big ? "1.2vmin" : undefined}
-      gap={big ? "1.5vmin" : undefined}
       aria-label={`${exporting ? "Exporting" : "Importing"} ${fmtW(abs)}`}
     >
-      <span aria-hidden="true">{exporting ? "↑" : "↓"}</span>
-      {fmtW(abs)}
-      {showLabel && (
-        <Text as="span" fontSize="2vmin" letterSpacing="0.12em" opacity={0.7}>
-          {exporting ? "EXPORTING" : "IMPORTING"}
-        </Text>
-      )}
+      {exporting ? "↑" : "↓"} {fmtW(abs)}
     </Badge>
   );
 }
@@ -80,8 +63,7 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
   const [open, setOpen] = useState(false);
   const { productionToday, consumptionToday } = energy;
   const pct = coverage(energy);
-  const pctColor =
-    pct >= 100 ? "green.500" : pct >= 50 ? "yellow.500" : "fg.dim";
+  const palette = pct >= 100 ? "green" : "yellow";
 
   return (
     <>
@@ -90,19 +72,10 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
         collapsible
         storageKey="energy"
         title={
-          <Flex
-            align="center"
-            gap="1.5vmin"
-            rowGap="0.8vmin"
-            wrap="wrap"
-            width="100%"
-            minW="0"
-          >
-            <SectionTitle icon={<IoFlash />}>ENERGY</SectionTitle>
-            {/* Only the figure, so it stays on the header's first line in
-                the rail. */}
+          <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
+            <SectionTitle icon={<IoFlash />}>Energy</SectionTitle>
             {grid(energy).active && (
-              <Box ml="auto">
+              <Box ms="auto">
                 <GridBadge energy={energy} />
               </Box>
             )}
@@ -114,80 +87,35 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
           aria-label="Show energy detail"
           onClick={() => setOpen(true)}
           cursor="pointer"
-          width="100%"
-          minW="0"
         >
-          {/* Coverage leads; the two totals sit under it as a wrapping row, so
-            this reads the same in the narrow bento rail and at full width. */}
           <Progress.Root
             value={Math.min(100, Math.max(0, pct))}
-            variant="soft"
-            size="thick"
-            shape="full"
-            colorPalette={pct >= 100 ? "green" : "yellow"}
+            colorPalette={palette}
+            size="lg"
           >
-            <VStack align="stretch" gap="1.4vmin" width="100%" minW="0">
-              <HStack align="baseline" gap="1.4vmin" minW="0">
-                <Text
-                  textStyle="numeral"
-                  fontSize="7vmin"
-                  letterSpacing="normal"
-                  color={pctColor}
-                  flexShrink={0}
-                >
-                  {Math.round(pct)}%
-                </Text>
-                <Progress.Label
-                  fontSize="2vmin"
-                  fontWeight="400"
-                  letterSpacing="0.06em"
-                  color="fg.dim"
-                  truncate
-                  minW="0"
-                  display="block"
-                >
-                  solar coverage today
-                </Progress.Label>
-              </HStack>
-
-              <Progress.Track>
-                <Progress.Range
-                  borderRadius="full"
-                  transition="width 600ms ease, background-color 600ms ease"
-                />
-              </Progress.Track>
-
-              <Flex gap="1.5vmin" rowGap="0.8vmin" wrap="wrap" width="100%">
-                <HStack gap="1vmin" align="baseline" minW="0">
-                  <Icon color="yellow.500" boxSize="2.4vmin" flexShrink={0}>
-                    <PiSolarRoof />
-                  </Icon>
-                  <Text
-                    fontSize="3vmin"
-                    fontWeight="300"
-                    color="yellow.600"
-                    whiteSpace="nowrap"
-                  >
-                    {fmtKwh(productionToday)} kWh
-                  </Text>
-                </HStack>
-
-                <HStack gap="1vmin" align="baseline" minW="0" ml="auto">
-                  <Icon color="fg.dim" boxSize="2.4vmin" flexShrink={0}>
-                    <IoFlash />
-                  </Icon>
-                  <Text
-                    fontSize="3vmin"
-                    fontWeight="300"
-                    color="fg.dim"
-                    whiteSpace="nowrap"
-                  >
-                    {fmtKwh(consumptionToday)} kWh
-                  </Text>
-                </HStack>
-              </Flex>
-            </VStack>
+            <Stat.Root>
+              <Stat.Label>Solar coverage today</Stat.Label>
+              <Stat.ValueText>{Math.round(pct)}%</Stat.ValueText>
+            </Stat.Root>
+            <Progress.Track mt="3">
+              <Progress.Range />
+            </Progress.Track>
           </Progress.Root>
+
+          <Flex gap="4" rowGap="2" wrap="wrap" mt="4" textStyle="lg">
+            <HStack gap="2">
+              <Icon color="yellow.500">
+                <PiSolarRoof />
+              </Icon>
+              <Text>{fmtKwh(productionToday)} kWh</Text>
+            </HStack>
+            <HStack gap="2" ms="auto">
+              <Icon color="fg.muted">
+                <IoFlash />
+              </Icon>
+              <Text>{fmtKwh(consumptionToday)} kWh</Text>
+            </HStack>
+          </Flex>
         </Box>
       </Board>
     </>
@@ -209,121 +137,55 @@ function EnergyModal({
     productionToday,
     consumptionToday,
   } = energy;
-  const solarActive = currentProduction > 5;
   const pct = Math.round(coverage(energy));
-  const pctColor =
-    pct >= 100 ? "green.500" : pct >= 50 ? "yellow.500" : "fg.faint";
 
   return (
-    <PanelDialog
-      open={open}
-      onClose={onClose}
-      label="energy panel"
-      glow={
-        solarActive ? "rgba(251, 191, 36, 0.13)" : "rgba(251, 191, 36, 0.06)"
-      }
-    >
-      <VStack gap="2.5vmin" align="stretch">
-        <Text textStyle="eyebrow" color="fg.faint">
-          NOW
-        </Text>
+    <PanelDialog open={open} onClose={onClose} title="Energy">
+      <SimpleGrid columns={2} gap="6">
+        <Stat.Root>
+          <Stat.Label>
+            <PiSolarRoof /> Solar now
+          </Stat.Label>
+          <Stat.ValueText>{fmtW(currentProduction)}</Stat.ValueText>
+        </Stat.Root>
+        <Stat.Root>
+          <Stat.Label>
+            <IoFlash /> Home now
+          </Stat.Label>
+          <Stat.ValueText>{fmtW(currentConsumption)}</Stat.ValueText>
+        </Stat.Root>
+      </SimpleGrid>
 
-        <HStack gap="2vmin" align="baseline">
-          <Icon
-            color={solarActive ? "yellow.400" : "fg.faint"}
-            boxSize="4.5vmin"
-            flexShrink={0}
-          >
-            <PiSolarRoof />
-          </Icon>
-          <Text
-            textStyle="numeral"
-            fontSize="11vmin"
-            color={solarActive ? "yellow.300" : "fg.faint"}
-            textShadow={
-              solarActive ? "0 0 4vmin rgba(251,191,36,0.5)" : undefined
-            }
-          >
-            {fmtW(currentProduction)}
-          </Text>
-          <Text
-            fontSize="2.2vmin"
-            color="fg.faint"
-            letterSpacing="0.1em"
-            pb="1vmin"
-          >
-            SOLAR
-          </Text>
-        </HStack>
-
-        <HStack gap="2vmin" align="baseline">
-          <Icon color="fg.dim" boxSize="4.5vmin" flexShrink={0}>
-            <IoFlash />
-          </Icon>
-          <Text textStyle="numeral" fontSize="7.5vmin" letterSpacing="-0.03em">
-            {fmtW(currentConsumption)}
-          </Text>
-          <Text
-            fontSize="2.2vmin"
-            color="fg.faint"
-            letterSpacing="0.1em"
-            pb="0.5vmin"
-          >
-            HOME
-          </Text>
-        </HStack>
-
+      <Box>
         {grid(energy).active ? (
-          <Box alignSelf="flex-start">
-            <GridBadge energy={energy} size="lg" showLabel />
-          </Box>
+          <GridBadge energy={energy} size="lg" />
         ) : (
-          <Text fontSize="2.8vmin" color="fg.faint" letterSpacing="0.06em">
-            Grid idle
-          </Text>
+          <Text color="fg.muted">Grid idle</Text>
         )}
-      </VStack>
+      </Box>
 
-      <Box borderTopWidth="1px" borderColor="divider" pt="3.5vmin">
-        <Text textStyle="eyebrow" color="fg.faint" mb="2vmin">
-          TODAY
+      <Box borderTopWidth="1px" pt="6">
+        <Text textStyle="sm" fontWeight="medium" color="fg.muted" mb="3">
+          Today
         </Text>
-        <Grid templateColumns="1fr 1fr 1fr" gap="2vmin">
-          <Stat.Root size="panel" alignItems="flex-start">
-            <Stat.ValueText
-              fontFamily="display"
-              fontSize="5vmin"
-              lineHeight="1"
-              color="yellow.600"
-            >
-              {fmtKwh(productionToday)} kWh
+        <SimpleGrid columns={3} gap="6">
+          <Stat.Root>
+            <Stat.Label>Produced</Stat.Label>
+            <Stat.ValueText>
+              {fmtKwh(productionToday)} <Stat.ValueUnit>kWh</Stat.ValueUnit>
             </Stat.ValueText>
-            <Stat.HelpText letterSpacing="0.12em">PRODUCED</Stat.HelpText>
           </Stat.Root>
-          <Stat.Root size="panel" alignItems="center">
-            <Stat.ValueText
-              fontFamily="display"
-              fontSize="5vmin"
-              fontWeight="400"
-              lineHeight="1"
-              color={pctColor}
-            >
-              {pct}%
+          <Stat.Root>
+            <Stat.Label>Solar</Stat.Label>
+            <Stat.ValueText>{pct}%</Stat.ValueText>
+          </Stat.Root>
+          <Stat.Root>
+            <Stat.Label>Used</Stat.Label>
+            <Stat.ValueText>
+              {fmtKwh(consumptionToday)} <Stat.ValueUnit>kWh</Stat.ValueUnit>
             </Stat.ValueText>
-            <Stat.HelpText letterSpacing="0.12em">SOLAR</Stat.HelpText>
           </Stat.Root>
-          <Stat.Root size="panel" alignItems="flex-end">
-            <Stat.ValueText
-              fontFamily="display"
-              fontSize="5vmin"
-              lineHeight="1"
-              color="fg.dim"
-            >
-              {fmtKwh(consumptionToday)} kWh
-            </Stat.ValueText>
-            <Stat.HelpText letterSpacing="0.12em">USED</Stat.HelpText>
-          </Stat.Root>
-        </Grid>
+        </SimpleGrid>
       </Box>
     </PanelDialog>
   );

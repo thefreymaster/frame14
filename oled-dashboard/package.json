@@ -6,8 +6,6 @@
   "scripts": {
     "dev": "vite --host",
     "start": "node index.js",
-    "typegen": "chakra typegen src/theme/index.ts",
-    "prebuild": "npm run typegen",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -26,6 +24,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
+    "next-themes": "^0.4.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-icons": "^5.7.0",
@@ -36,7 +35,6 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
-    "@chakra-ui/cli": "^3.37.0",
     "@eslint/js": "^9.39.4",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",

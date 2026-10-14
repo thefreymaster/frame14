@@ -9,7 +9,7 @@ type Props = {
 export function LightsSection({ entries }: Props) {
   return (
     <Grid
-      gap="chipGap"
+      gap="3"
       width="100%"
       templateColumns={{
         base: "repeat(4, minmax(0, 1fr))",

@@ -60,7 +60,9 @@ export function HomeBoard({
   cards: Record<HomeCardId, React.ReactNode>;
 }) {
   const zones = HOME_ZONES[orientation];
-  const [layout, setLayout] = useState<HomeLayout>(() => loadHomeLayout(orientation));
+  const [layout, setLayout] = useState<HomeLayout>(() =>
+    loadHomeLayout(orientation),
+  );
   const [editing, setEditing] = useState(false);
   const [activeId, setActiveId] = useState<HomeCardId | null>(null);
   const [overZone, setOverZone] = useState<HomeZoneId | null>(null);
@@ -70,26 +72,36 @@ export function HomeBoard({
   const lastOverId = useRef<UniqueIdentifier | null>(null);
   const movedToNewZone = useRef(false);
 
-  const longPress = useLongPress(() => {
-    navigator.vibrate?.(15);
-    setEditing(true);
-  }, { enabled: !editing });
+  const longPress = useLongPress(
+    () => {
+      navigator.vibrate?.(15);
+      setEditing(true);
+    },
+    { enabled: !editing },
+  );
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     // A short hold before a touch drag, so a quick swipe still scrolls the page.
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const isZone = useCallback(
-    (id: UniqueIdentifier): id is HomeZoneId => zones.includes(id as HomeZoneId),
+    (id: UniqueIdentifier): id is HomeZoneId =>
+      zones.includes(id as HomeZoneId),
     [zones],
   );
 
   const zoneOf = useCallback(
     (id: UniqueIdentifier): HomeZoneId | undefined =>
-      isZone(id) ? id : zones.find((z) => layout[z]?.includes(id as HomeCardId)),
+      isZone(id)
+        ? id
+        : zones.find((z) => layout[z]?.includes(id as HomeCardId)),
     [isZone, layout, zones],
   );
 
@@ -98,7 +110,8 @@ export function HomeBoard({
   const collisionDetection: CollisionDetection = useCallback(
     (args) => {
       const pointerHits = pointerWithin(args);
-      const hits = pointerHits.length > 0 ? pointerHits : rectIntersection(args);
+      const hits =
+        pointerHits.length > 0 ? pointerHits : rectIntersection(args);
       let overId = getFirstCollision(hits, "id");
 
       if (overId != null) {
@@ -167,7 +180,9 @@ export function HomeBoard({
       if (!isZone(over.id)) {
         const overIndex = target.indexOf(over.id as HomeCardId);
         const translated = active.rect.current.translated;
-        const below = translated != null && translated.top > over.rect.top + over.rect.height / 2;
+        const below =
+          translated != null &&
+          translated.top > over.rect.top + over.rect.height / 2;
         if (overIndex >= 0) index = overIndex + (below ? 1 : 0);
       }
       movedToNewZone.current = true;
@@ -248,15 +263,16 @@ export function HomeBoard({
         data-editing={editing || undefined}
         width="100%"
         minHeight="100%"
-        bg="bg"
         display="flex"
         flexDirection={orientation === "portrait" ? "column" : "row"}
         alignItems={orientation === "portrait" ? undefined : "flex-start"}
-        gap="gutter"
-        p="gutter"
+        gap="4"
+        p="4"
         // Room to scroll the last card clear of the arranging bar.
-        pb={editing ? "calc(64px + 16vmin)" : "gutter"}
-        onPointerDownCapture={editing ? () => setActivity((n) => n + 1) : undefined}
+        pb={editing ? "12rem" : "4"}
+        onPointerDownCapture={
+          editing ? () => setActivity((n) => n + 1) : undefined
+        }
         {...longPress}
       >
         {orientation === "portrait" ? (
@@ -269,7 +285,7 @@ export function HomeBoard({
               className="home-columns"
               data-editing={editing || undefined}
               templateColumns="1.15fr 1fr"
-              gap="gutter"
+              gap="4"
             >
               {zone("left")}
               {zone("right")}
@@ -289,11 +305,16 @@ export function HomeBoard({
       {createPortal(
         <DragOverlay>
           {activeId && (
-            <div className="home-card home-card-lifted" data-editing>
+            <Box
+              className="home-card home-card-lifted"
+              data-editing
+              shadow="lg"
+              rounded="l3"
+            >
               <HomeCardFace id={activeId} editing>
                 {cards[activeId]}
               </HomeCardFace>
-            </div>
+            </Box>
           )}
         </DragOverlay>,
         document.body,

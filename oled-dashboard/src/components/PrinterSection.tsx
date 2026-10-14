@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
+  Badge,
   Box,
-  Grid,
   HStack,
   Progress,
+  SimpleGrid,
   Stat,
   Text,
-  VStack,
 } from "@chakra-ui/react";
 import { IoPrintOutline } from "react-icons/io5";
 import NumberFlow from "@number-flow/react";
@@ -64,13 +64,13 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
         collapsible
         storageKey="printer"
         title={
-          <HStack width="100%" align="center" gap="1.5vmin">
-            <SectionTitle icon={<IoPrintOutline />}>3D PRINTER</SectionTitle>
+          <HStack width="100%" gap="3">
+            <SectionTitle icon={<IoPrintOutline />}>3D printer</SectionTitle>
             <Box flex="1" minW="0" />
-            <Text textStyle="meta" color="green.500">
+            <Badge colorPalette="green">
               <NumberFlow value={printer.progress} />%
-            </Text>
-            <Text textStyle="meta" color="fg.dim">
+            </Badge>
+            <Text textStyle="sm" color="fg.muted">
               {fmtMins(printer.remainingTime)}
             </Text>
           </HStack>
@@ -81,43 +81,18 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
           aria-label="Show printer detail"
           onClick={() => setOpen(true)}
           cursor="pointer"
-          width="100%"
         >
-          <HStack width="100%" justify="space-between" align="baseline">
-            <Text
-              fontSize="3.8vmin"
-              color="fg.dim"
-              fontWeight="300"
-              truncate
-              maxW="45vmin"
-            >
-              {printer.taskName ?? "—"}
-            </Text>
-            <HStack align="baseline" gap="4vmin">
-              <Text
-                textStyle="numeral"
-                fontSize="5.5vmin"
-                letterSpacing="normal"
-                color="green.500"
-              >
+          <Progress.Root value={cardProgress} colorPalette="green" size="lg">
+            <HStack justify="space-between" align="baseline" gap="4">
+              <Progress.Label textStyle="lg" fontWeight="normal" truncate>
+                {printer.taskName ?? "—"}
+              </Progress.Label>
+              <Text textStyle="3xl" fontWeight="semibold">
                 <NumberFlow value={printer.progress} />%
               </Text>
-              <Text fontSize="4vmin" color="fg.dim" fontWeight="300">
-                {fmtMins(printer.remainingTime)}
-              </Text>
             </HStack>
-          </HStack>
-          <Progress.Root
-            value={cardProgress}
-            variant="soft"
-            size="hair"
-            shape="full"
-            colorPalette="green"
-            mt="1.5vmin"
-            aria-label="Print progress"
-          >
-            <Progress.Track>
-              <Progress.Range transition="width 600ms ease" />
+            <Progress.Track mt="3">
+              <Progress.Range />
             </Progress.Track>
           </Progress.Root>
         </Box>
@@ -152,81 +127,43 @@ function PrinterModal({
     <PanelDialog
       open={open}
       onClose={onClose}
-      label="printer details"
-      glow="rgba(34, 197, 94, 0.08)"
+      title={printer.taskName ?? "3D printer"}
     >
-      <VStack gap="1vmin" align="stretch" pe="6vmin">
-        <Text textStyle="eyebrow" color="fg.faint">
-          3D PRINTER · {stageLabel.toUpperCase()}
-        </Text>
-        <Text
-          fontSize="5vmin"
-          fontWeight="300"
-          letterSpacing="-0.02em"
-          lineHeight="1.1"
-        >
-          {printer.taskName ?? "—"}
-        </Text>
+      <Box>
+        <Badge colorPalette="green">{stageLabel}</Badge>
         {printer.gcodeFilename && (
-          <Text fontSize="2.2vmin" color="fg.faint" truncate>
+          <Text textStyle="sm" color="fg.muted" mt="2" truncate>
             {printer.gcodeFilename}
           </Text>
         )}
-      </VStack>
+      </Box>
 
-      <Progress.Root
-        value={progress}
-        variant="soft"
-        size="bar"
-        shape="full"
-        colorPalette="green"
-      >
-        <VStack gap="1.5vmin" align="stretch">
-          <HStack justify="space-between" align="baseline">
-            <Text textStyle="numeral" fontSize="11vmin" color="green.400">
+      <Progress.Root value={progress} colorPalette="green" size="lg">
+        <HStack justify="space-between" align="end">
+          <Stat.Root>
+            <Stat.Label>Progress</Stat.Label>
+            <Stat.ValueText>
               <NumberFlow value={progress} />%
-            </Text>
-            <VStack align="flex-end" gap="0.2vmin">
-              <Text fontSize="4.5vmin" fontWeight="300" lineHeight="1">
-                {fmtMins(printer.remainingTime)}
-              </Text>
-              <Progress.Label
-                fontSize="2vmin"
-                fontWeight="400"
-                letterSpacing="0.12em"
-                color="fg.faint"
-              >
-                REMAINING
-              </Progress.Label>
-            </VStack>
-          </HStack>
-          <Progress.Track>
-            <Progress.Range transition="width 600ms ease" />
-          </Progress.Track>
-          <HStack justify="space-between">
-            {startLabel && (
-              <Text fontSize="2.2vmin" color="fg.faint" letterSpacing="0.04em">
-                Started {startLabel}
-              </Text>
-            )}
-            {etaLabel && (
-              <Text
-                fontSize="2.2vmin"
-                color="fg.faint"
-                letterSpacing="0.04em"
-                ml="auto"
-              >
-                ETA {etaLabel}
-              </Text>
-            )}
-          </HStack>
-        </VStack>
+            </Stat.ValueText>
+          </Stat.Root>
+          <Stat.Root alignItems="end">
+            <Stat.Label>Remaining</Stat.Label>
+            <Stat.ValueText>{fmtMins(printer.remainingTime)}</Stat.ValueText>
+          </Stat.Root>
+        </HStack>
+        <Progress.Track mt="3">
+          <Progress.Range />
+        </Progress.Track>
+        <HStack justify="space-between" mt="2" textStyle="sm" color="fg.muted">
+          {startLabel && <Text>Started {startLabel}</Text>}
+          {etaLabel && <Text ms="auto">ETA {etaLabel}</Text>}
+        </HStack>
       </Progress.Root>
 
-      <Box borderTopWidth="1px" borderColor="divider" pt="3vmin">
-        <Grid templateColumns="1fr 1fr" gap="2.5vmin">
+      <Box borderTopWidth="1px" pt="6">
+        <SimpleGrid columns={2} gap="6">
           <StatTile
-            label="LAYER"
+            label="Layer"
             value={
               printer.currentLayer != null && printer.totalLayers != null
                 ? `${printer.currentLayer} / ${printer.totalLayers}${
@@ -236,20 +173,20 @@ function PrinterModal({
             }
           />
           <StatTile
-            label="SPEED"
+            label="Speed"
             value={printer.speedProfile ? titleCase(printer.speedProfile) : "—"}
           />
           <StatTile
-            label="NOZZLE"
+            label="Nozzle"
             value={`${fmtNum(printer.nozzleTemp)}° / ${fmtNum(printer.nozzleTarget)}°`}
           />
           <StatTile
-            label="BED"
+            label="Bed"
             value={`${fmtNum(printer.bedTemp)}° / ${fmtNum(printer.bedTarget)}°`}
           />
-          <StatTile label="FILAMENT" value={printer.activeTray ?? "—"} />
+          <StatTile label="Filament" value={printer.activeTray ?? "—"} />
           <StatTile
-            label="WEIGHT"
+            label="Weight"
             value={
               printer.printWeight != null
                 ? `${fmtNum(printer.printWeight, 1)} g`
@@ -257,15 +194,15 @@ function PrinterModal({
             }
           />
           <StatTile
-            label="LENGTH"
+            label="Length"
             value={
               printer.printLength != null
                 ? `${fmtNum(printer.printLength, 1)} m`
                 : "—"
             }
           />
-          <StatTile label="STAGE" value={stageLabel} />
-        </Grid>
+          <StatTile label="Stage" value={stageLabel} />
+        </SimpleGrid>
       </Box>
     </PanelDialog>
   );
@@ -273,7 +210,7 @@ function PrinterModal({
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <Stat.Root size="panel">
+    <Stat.Root size="sm">
       <Stat.Label>{label}</Stat.Label>
       <Stat.ValueText>{value}</Stat.ValueText>
     </Stat.Root>

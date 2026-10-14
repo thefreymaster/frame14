@@ -115,6 +115,7 @@ export function DoorbellCard() {
       width="22rem"
       maxWidth="90vw"
       overflow="hidden"
+      borderRadius="sm"
       variant="elevated"
       animationName="slide-from-bottom, fade-in"
       animationDuration="moderate"

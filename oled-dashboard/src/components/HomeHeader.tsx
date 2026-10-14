@@ -105,7 +105,7 @@ export function HomeHeader({
       </HStack>
 
       {connected === false && (
-        <Alert.Root status="error" mt="4">
+        <Alert.Root status="error" mt="4" borderRadius="sm">
           <Alert.Indicator />
           <Alert.Title>Offline</Alert.Title>
           <Alert.Description>Internet outage detected.</Alert.Description>

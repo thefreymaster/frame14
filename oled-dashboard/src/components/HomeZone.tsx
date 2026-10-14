@@ -71,7 +71,7 @@ export function HomeZone({
             flex="1"
             borderWidth="2px"
             borderStyle="dashed"
-            rounded="l3"
+            rounded="sm"
             size="sm"
           >
             <EmptyState.Content>

@@ -15,7 +15,7 @@ function Notice({
   children?: React.ReactNode;
 }) {
   return (
-    <Alert.Root status={status}>
+    <Alert.Root status={status} borderRadius="sm">
       <Alert.Indicator />
       <Alert.Content>
         <Alert.Title>{title}</Alert.Title>

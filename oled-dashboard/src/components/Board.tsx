@@ -40,6 +40,9 @@ function writeOpen(key: string | undefined, open: boolean) {
  *
  * Below Chakra's md breakpoint (768px, a phone) the card is size sm, so its
  * padding and header-to-body gap drop from spacing.6 to spacing.4.
+ *
+ * Every card uses Chakra's `sm` radius rather than the Card's own `l3` (md);
+ * tiles inside a card use `sm` too, so none is rounder than its card.
  */
 export const Board = ({
   children,
@@ -84,6 +87,7 @@ export const Board = ({
   return (
     <Card.Root
       size={{ base: "sm", md: "md" }}
+      borderRadius="sm"
       minW="0"
       flex={fill ? "1" : undefined}
       minH={fill ? "0" : undefined}

@@ -350,9 +350,8 @@ function ScoreBug({ game }: { game: Game }) {
       gap="0"
       minW="0"
       width="100%"
-      borderRadius="1.2vmin"
+      borderRadius="sm"
       overflow="hidden"
-      css={{ [NARROW]: { borderRadius: "l3" } }}
     >
       <HStack
         gap="0"

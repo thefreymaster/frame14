@@ -58,6 +58,7 @@ function ClimateTile({
       asChild
       size="sm"
       variant={isOff ? "outline" : "subtle"}
+      borderRadius="sm"
       cursor="pointer"
       focusVisibleRing="outside"
       _active={{ bg: "bg.emphasized" }}

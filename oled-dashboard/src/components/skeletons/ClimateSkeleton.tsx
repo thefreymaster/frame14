@@ -16,7 +16,7 @@ export function ClimateSkeleton({
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
         <Grid css={climateGridCss(count)} width="100%">
           {Array.from({ length: count }).map((_, i) => (
-            <Card.Root key={i} size="sm" variant="outline">
+            <Card.Root key={i} size="sm" variant="outline" borderRadius="sm">
               <Card.Body p="3">
                 <Stack gap="1">
                   <Skeleton height="5" width="60%" />

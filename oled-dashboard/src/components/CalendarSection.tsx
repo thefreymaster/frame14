@@ -66,6 +66,7 @@ function EventList({
             key={i}
             size="sm"
             variant="subtle"
+            borderRadius="sm"
             opacity={past ? 0.6 : 1}
           >
             <Card.Body

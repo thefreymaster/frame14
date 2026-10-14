@@ -311,7 +311,7 @@ export function HomeBoard({
               className="home-card home-card-lifted"
               data-editing
               shadow="lg"
-              rounded="l3"
+              rounded="sm"
             >
               <HomeCardFace id={activeId} editing>
                 {cards[activeId]}

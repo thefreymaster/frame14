@@ -13,6 +13,7 @@
 - Changed: on a phone (or any narrow Teams card), the score bug stacks the two teams one above the other with the game time between them, so names and scores are readable instead of tiny.
 - Fixed: on a narrow screen the Calendar card's event count ran past the edge of the card. It now moves under the title when there isn't room, and the loading placeholders stay inside their cards too.
 - Fixed: on a phone the last bird seen was cut off to "Blue …". The common name now stays whole and the Latin name is shortened instead.
+- Changed: cards have smaller, tighter rounded corners, and so do the tiles inside them (thermostats, calendar events, the score bug), so nothing inside a card is rounder than the card itself.
 - Changed: each light is a tile you tap to toggle; lit tiles are highlighted in yellow and show a check mark.
 - Changed: the navigation bar highlights the current page with a filled tab.
 - Changed: Settings uses segmented controls for device mode and theme, a switch for "Show navigation", and a status dot for the connection.

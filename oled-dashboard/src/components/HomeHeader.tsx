@@ -73,18 +73,14 @@ export function HomeHeader({
     ? (CONDITION_LABEL[weather.state] ?? weather.state)
     : "";
 
-  // The hero figures climb Chakra's type scale with the breakpoints, topping
-  // out at 9xl on the panel. Landscape gives this card half the width, so it
-  // climbs slower there. A fixed 9xl overflowed phones and crowded laptops.
-  // They are semibold with tight tracking and tabular digits, matching the
-  // shadcn build's clock, so the minutes don't shift as they tick.
-  const hero = {
-    base: "5xl",
-    sm: "6xl",
-    md: "8xl",
-    "2xl": "9xl",
-    _landscape: { base: "5xl", lg: "6xl", xl: "7xl", "2xl": "8xl" },
-  };
+  // The hero figures are sized from the width of their own row (cqi), not
+  // from breakpoints, so the clock and temperature fill the card at every
+  // size: the frame, half a landscape screen, a phone. "08:56 pm 74°" is
+  // about 5.5em wide with the am/pm at 0.35em, so 17cqi leaves a ~7% gap
+  // between them. They are semibold with tight tracking and tabular digits,
+  // matching the shadcn build's clock, so the minutes don't shift as they
+  // tick.
+  const hero = "17cqi";
 
   return (
     <Board storageKey="time-weather">
@@ -114,7 +110,13 @@ export function HomeHeader({
         </Alert.Root>
       )}
 
-      <HStack width="100%" align="baseline" mt="2" minW="0">
+      <HStack
+        width="100%"
+        align="baseline"
+        mt="2"
+        minW="0"
+        css={{ containerType: "inline-size" }}
+      >
         <Text
           fontSize={hero}
           fontWeight="semibold"
@@ -138,7 +140,7 @@ export function HomeHeader({
           />
           <Text
             as="span"
-            textStyle={{ base: "xl", md: "4xl" }}
+            fontSize="0.35em"
             fontWeight="medium"
             color="fg.muted"
             ms="2"

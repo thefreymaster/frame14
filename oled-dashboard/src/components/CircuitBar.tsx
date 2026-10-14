@@ -1,4 +1,4 @@
-import { Box, HStack, Text } from "@chakra-ui/react";
+import { HStack, Progress, Text } from "@chakra-ui/react";
 
 function fmtW(watts: number | null): string {
   if (watts == null || isNaN(watts)) return "--";
@@ -14,6 +14,7 @@ interface Props {
   dim?: boolean;
 }
 
+/** One circuit: a Progress bar scaled against the largest draw. */
 export function CircuitBar({
   name,
   watts,
@@ -23,67 +24,33 @@ export function CircuitBar({
 }: Props) {
   const value = watts ?? 0;
   const pct = maxWatts > 0 ? Math.min(100, (value / maxWatts) * 100) : 0;
-  const active = value > 0;
-
-  const labelColor = dim ? "var(--theme-fg-faint)" : "var(--theme-fg-dim)";
-  const valueColor =
-    active && !dim ? "var(--theme-fg)" : "var(--theme-fg-faint)";
-  // Themed rather than a white alpha — an rgba(255,255,255,…) fill disappears
-  // against the bright palette's near-white card.
-  const fillColor = dim ? "var(--theme-fg-faint)" : "#38BDF8";
 
   return (
-    <Box width="100%">
-      <HStack justify="space-between" align="baseline" mb="0.8vmin">
-        <Text
-          fontSize="2.4vmin"
-          fontWeight="400"
-          color={labelColor}
-          letterSpacing="0.01em"
-          truncate
-        >
+    <Progress.Root
+      value={pct}
+      colorPalette={dim ? "gray" : "blue"}
+      width="100%"
+    >
+      <HStack justify="space-between" mb="2">
+        <Progress.Label color={dim ? "fg.muted" : undefined} truncate>
           {name}
-        </Text>
-        <HStack gap="1.5vmin" align="baseline" flexShrink={0}>
+        </Progress.Label>
+        <HStack gap="3" flexShrink={0}>
           {kwhToday != null && (
-            <Text
-              fontSize="1.9vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.04em"
-            >
+            <Text textStyle="sm" color="fg.muted">
               {kwhToday.toFixed(1)} kWh
             </Text>
           )}
-          <Text
-            fontSize="2.4vmin"
-            fontWeight="300"
-            color={valueColor}
-            minW="11vmin"
-            textAlign="right"
+          <Progress.ValueText
+            color={value > 0 && !dim ? undefined : "fg.muted"}
           >
             {fmtW(watts)}
-          </Text>
+          </Progress.ValueText>
         </HStack>
       </HStack>
-      <Box
-        position="relative"
-        height="0.8vmin"
-        borderRadius="full"
-        bg="var(--theme-surface-2)"
-      >
-        <Box
-          position="absolute"
-          top="0"
-          left="0"
-          height="100%"
-          borderRadius="full"
-          style={{
-            width: `${pct}%`,
-            background: fillColor,
-            transition: "width 0.6s ease",
-          }}
-        />
-      </Box>
-    </Box>
+      <Progress.Track>
+        <Progress.Range />
+      </Progress.Track>
+    </Progress.Root>
   );
 }

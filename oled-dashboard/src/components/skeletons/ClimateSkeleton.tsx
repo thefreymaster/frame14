@@ -1,10 +1,9 @@
-import { Box, VStack } from "@chakra-ui/react";
+import { Box, Card, Grid, HStack, Skeleton, Stack } from "@chakra-ui/react";
 import { Board } from "../Board";
-import { SkeletonBlock } from "./SkeletonBlock";
 import { SkeletonSectionTitle } from "./SkeletonSectionTitle";
-import { SINGLE_ROW_MIN_PX } from "../ClimateSection";
+import { climateGridCss } from "../../lib/hvac";
 
-/** Placeholder for <ClimateSection>: one dial per configured thermostat. */
+/** Placeholder for <ClimateSection>: one tile per configured thermostat. */
 export function ClimateSkeleton({
   count,
   span,
@@ -13,31 +12,23 @@ export function ClimateSkeleton({
   span?: 1 | 2;
 }) {
   return (
-    <Board span={span} title={<SkeletonSectionTitle width="14vmin" />}>
+    <Board span={span} title={<SkeletonSectionTitle />}>
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <Box
-          display="grid"
-          gridTemplateColumns="repeat(auto-fill, minmax(20vmin, 1fr))"
-          css={{
-            [`@container (min-width: ${SINGLE_ROW_MIN_PX}px)`]: {
-              gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))`,
-            },
-          }}
-          columnGap="2vmin"
-          rowGap="2vmin"
-          width="100%"
-        >
+        <Grid css={climateGridCss(count)} width="100%">
           {Array.from({ length: count }).map((_, i) => (
-            <VStack key={i} gap="1vmin" align="center">
-              <SkeletonBlock width="100%" aspectRatio="1" borderRadius="full" />
-              <SkeletonBlock
-                height="1.8vmin"
-                width="70%"
-                borderRadius="0.4vmin"
-              />
-            </VStack>
+            <Card.Root key={i} size="sm" variant="outline" borderRadius="sm">
+              <Card.Body p="3">
+                <Stack gap="1">
+                  <Skeleton height="5" width="60%" />
+                  <HStack justify="space-between" gap="2">
+                    <Skeleton height="8" width="30%" />
+                    <Skeleton height="5" width="40%" />
+                  </HStack>
+                </Stack>
+              </Card.Body>
+            </Card.Root>
           ))}
-        </Box>
+        </Grid>
       </Box>
     </Board>
   );

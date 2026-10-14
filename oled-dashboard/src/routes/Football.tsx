@@ -1,7 +1,9 @@
-import { Box, Text, VStack } from "@chakra-ui/react";
+import { VStack } from "@chakra-ui/react";
+import { IoAmericanFootballOutline } from "react-icons/io5";
 import { PageShell } from "../components/PageShell";
 import { FootballScoreboard } from "../components/FootballScoreboard";
 import { useLiveGame } from "../hooks/useLiveGame";
+import { EmptyState } from "../components/ui/empty-state";
 
 /**
  * The whole panel given over to a game while one is on.
@@ -17,27 +19,21 @@ export function Football() {
   if (games.length === 0) {
     return (
       <PageShell fill>
-        <Box
+        <EmptyState
           flex="1"
           display="flex"
           alignItems="center"
           justifyContent="center"
-        >
-          <Text
-            fontSize="3vmin"
-            color="var(--theme-fg-faint)"
-            letterSpacing="0.1em"
-          >
-            no game in session
-          </Text>
-        </Box>
+          icon={<IoAmericanFootballOutline />}
+          title="no game in session"
+        />
       </PageShell>
     );
   }
 
   return (
     <PageShell fill>
-      <VStack align="stretch" gap="1.5vmin" flex="1" minH="0" width="100%">
+      <VStack align="stretch" gap="4" flex="1" minH="0" width="100%">
         {games.map((game) => (
           <FootballScoreboard key={game.entity_id} game={game} />
         ))}

@@ -23,7 +23,7 @@ export function Lights() {
       <PageHeader
         icon={<MdOutlineLightbulb />}
         iconColor="yellow.500"
-        title="LIGHTS"
+        title="Lights"
       />
 
       {sections.map((section) => {
@@ -43,9 +43,7 @@ export function Lights() {
               collapsible={named}
               storageKey={`lights-${slugify(section.title)}`}
               title={
-                named ? (
-                  <SectionTitle>{section.title.toUpperCase()}</SectionTitle>
-                ) : undefined
+                named ? <SectionTitle>{section.title}</SectionTitle> : undefined
               }
             >
               <LightsSection entries={section.entries} />

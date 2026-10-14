@@ -1,31 +1,17 @@
-import { Box, VStack } from "@chakra-ui/react";
+import { Skeleton, Stack } from "@chakra-ui/react";
 import { Board } from "../Board";
-import { CHIP_GAP, CHIP_RADIUS } from "../../lib/surfaces";
-import { SkeletonBlock } from "./SkeletonBlock";
 import { SkeletonSectionTitle } from "./SkeletonSectionTitle";
 
-const EVENT_WIDTHS = ["100%", "100%", "100%"];
-
-/** Placeholder for <CalendarSection>: the TODAY heading and a few event chips. */
+/** Placeholder for <CalendarSection>: the Today heading and a few events. */
 export function CalendarSkeleton({ span }: { span?: 1 | 2 }) {
   return (
-    <Board
-      span={span}
-      title={<SkeletonSectionTitle width="16vmin" meta="14vmin" />}
-    >
-      <Box mb="1.2vmin">
-        <SkeletonSectionTitle width="9vmin" />
-      </Box>
-      <VStack gap={CHIP_GAP} align="stretch" width="100%">
-        {EVENT_WIDTHS.map((width, i) => (
-          <SkeletonBlock
-            key={i}
-            width={width}
-            height="6.6vmin"
-            borderRadius={CHIP_RADIUS}
-          />
+    <Board span={span} title={<SkeletonSectionTitle meta="6rem" />}>
+      <Skeleton height="5" width="5rem" />
+      <Stack gap="2" mt="3">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} height="3.5rem" />
         ))}
-      </VStack>
+      </Stack>
     </Board>
   );
 }

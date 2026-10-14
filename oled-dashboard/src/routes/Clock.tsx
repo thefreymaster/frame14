@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { PageTransition } from "../components/PageTransition";
+import { HERO_SUFFIX_SIZE, HERO_TEXT, HOME_HERO_INSET } from "../lib/hero";
 
 type ClockStyle = "analog" | "digital";
 
@@ -27,10 +28,10 @@ function buildMarkers() {
     const outerR = 92;
     const innerR = isCardinal ? 78 : isHour ? 82 : 88;
     const strokeVar = isCardinal
-      ? "var(--theme-marker-cardinal)"
+      ? "var(--chakra-colors-fg-muted)"
       : isHour
-        ? "var(--theme-marker-hour)"
-        : "var(--theme-marker-minor)";
+        ? "var(--chakra-colors-border-emphasized)"
+        : "var(--chakra-colors-border)";
     const width = isCardinal ? 2.2 : isHour ? 1.4 : 0.6;
     markers.push(
       <line
@@ -119,7 +120,7 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY - 52}
-            style={{ stroke: "var(--theme-fg)" }}
+            style={{ stroke: "var(--chakra-colors-fg)" }}
             strokeWidth={3.5}
             strokeLinecap="round"
           />
@@ -131,7 +132,7 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY - 72}
-            style={{ stroke: "var(--theme-fg)" }}
+            style={{ stroke: "var(--chakra-colors-fg)" }}
             strokeWidth={2}
             strokeLinecap="round"
           />
@@ -143,7 +144,7 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY + 18}
-            stroke="#c53030"
+            stroke="var(--chakra-colors-red-solid)"
             strokeWidth={1.2}
             strokeLinecap="round"
           />
@@ -155,14 +156,24 @@ function AnalogClock() {
             y1={CY}
             x2={CX}
             y2={CY - 80}
-            stroke="#c53030"
+            stroke="var(--chakra-colors-red-solid)"
             strokeWidth={1.2}
             strokeLinecap="round"
           />
 
           {/* Center dot */}
-          <circle cx={CX} cy={CY} r={3.5} style={{ fill: "var(--theme-fg)" }} />
-          <circle cx={CX} cy={CY} r={1.8} fill="#c53030" />
+          <circle
+            cx={CX}
+            cy={CY}
+            r={3.5}
+            style={{ fill: "var(--chakra-colors-fg)" }}
+          />
+          <circle
+            cx={CX}
+            cy={CY}
+            r={1.8}
+            fill="var(--chakra-colors-red-solid)"
+          />
         </svg>
       </Box>
     </Box>
@@ -210,6 +221,8 @@ function DigitalClock() {
   const ampm = rawHours < 12 ? "am" : "pm";
 
   return (
+    // Padded like Home's clock row so the figures come out the same size as
+    // Home's; see lib/hero.ts.
     <Box
       width="100%"
       height="100%"
@@ -217,16 +230,10 @@ function DigitalClock() {
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
+      px={HOME_HERO_INSET}
+      css={{ containerType: "inline-size" }}
     >
-      <Text
-        className="display-numeral"
-        fontSize="24vmin"
-        fontWeight="200"
-        letterSpacing="-0.03em"
-        color="var(--theme-fg)"
-        lineHeight="1"
-        fontVariantNumeric="tabular-nums"
-      >
+      <Text {...HERO_TEXT} color="fg">
         <NumberFlow
           digits={{ 2: { max: 2 } }}
           value={hours}
@@ -242,11 +249,10 @@ function DigitalClock() {
         />
         <Text
           as="span"
-          className="display-numeral"
-          fontSize="10vmin"
-          fontWeight="200"
-          color="var(--theme-fg-dim)"
-          ml="1.5vmin"
+          fontSize={HERO_SUFFIX_SIZE}
+          fontWeight="medium"
+          color="fg.muted"
+          ms="3"
         >
           <NumberFlow
             digits={{ 2: { max: 2 } }}
@@ -257,23 +263,16 @@ function DigitalClock() {
         </Text>
         <Text
           as="span"
-          className="display-numeral"
-          fontSize="8vmin"
-          fontWeight="300"
-          color="var(--theme-fg-dim)"
-          ml="2vmin"
+          fontSize={HERO_SUFFIX_SIZE}
+          fontWeight="medium"
+          color="fg.muted"
+          ms="3"
         >
           {ampm}
         </Text>
       </Text>
 
-      <Text
-        fontSize="4vmin"
-        color="var(--theme-fg-muted)"
-        fontWeight="300"
-        letterSpacing="0.04em"
-        mt="3vmin"
-      >
+      <Text textStyle={{ base: "lg", md: "3xl" }} color="fg.muted" mt="6">
         {DAYS[now.getDay()]}, {MONTHS[now.getMonth()]} {now.getDate()}
       </Text>
     </Box>
@@ -298,7 +297,6 @@ export function Clock() {
       position="relative"
       width="100%"
       height="100vh"
-      bg="var(--theme-bg)"
       overflow="hidden"
       display="flex"
       alignItems="center"

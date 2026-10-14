@@ -17,14 +17,7 @@ export function CircuitBreakdown({ circuits, balanceWatts }: Props) {
 
   return (
     <Box display="flex" flexDirection="column" height="100%" minH="0">
-      <VStack
-        align="stretch"
-        gap="2.2vmin"
-        flex="1"
-        minH="0"
-        overflowY="auto"
-        pr="1vmin"
-      >
+      <VStack align="stretch" gap="5" flex="1" minH="0" overflowY="auto" pr="2">
         {circuits.map((c) => (
           <CircuitBar
             key={c.name}

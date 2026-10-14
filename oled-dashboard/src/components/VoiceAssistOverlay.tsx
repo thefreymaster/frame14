@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
-import { Box, Text, VStack } from "@chakra-ui/react";
+import { useState } from "react";
+import {
+  Box,
+  Dialog,
+  Icon,
+  Portal,
+  Spinner,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { IoCheckmark, IoMic } from "react-icons/io5";
 import { VoiceLevelRing } from "./VoiceLevelRing";
 import type { VoiceSnapshot } from "../lib/voiceAssist";
-
-const EXIT_MS = 220;
 
 const STATUS: Record<string, string> = {
   arming: "",
@@ -19,16 +25,38 @@ const STATUS: Record<string, string> = {
 const SLOW_HINT: Record<string, string> = {
   none: "",
   "still-thinking": "still thinking…",
-  "waking-model": "the model is waking up — this can take a minute the first time",
+  "waking-model":
+    "the model is waking up — this can take a minute the first time",
 };
 
+type View = Pick<
+  VoiceSnapshot,
+  | "state"
+  | "transcript"
+  | "reply"
+  | "errorMessage"
+  | "audioBlocked"
+  | "slowHint"
+>;
+
+function sameView(a: View, b: View) {
+  return (
+    a.state === b.state &&
+    a.transcript === b.transcript &&
+    a.reply === b.reply &&
+    a.errorMessage === b.errorMessage &&
+    a.audioBlocked === b.audioBlocked &&
+    a.slowHint === b.slowHint
+  );
+}
+
 /**
- * Full-screen session UI, following the same shape as the other modals in the
- * app: fixed inset-0, rendered inline, click-outside and Escape to dismiss,
- * with an isClosing state so the exit animation gets to play.
+ * Session UI — a stock Chakra Dialog, so tap-outside, Escape and the exit
+ * animation come from the library.
  *
- * No backdropFilter here, unlike FanSection's modal — blur is expensive on this
- * panel and it lifts the black off true #000.
+ * Always mounted: it opens whenever a session is running. The last live
+ * snapshot is kept so the exit animation shows what was on screen, not the
+ * blank idle state the session has already returned to.
  */
 export function VoiceAssistOverlay({
   snapshot,
@@ -37,115 +65,94 @@ export function VoiceAssistOverlay({
   snapshot: VoiceSnapshot;
   onDismiss: () => void;
 }) {
-  const [isClosing, setIsClosing] = useState(false);
+  const open = snapshot.state !== "idle";
+  const [shown, setShown] = useState<View>(snapshot);
+  if (open && !sameView(shown, snapshot)) setShown(snapshot);
 
-  function close() {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(onDismiss, EXIT_MS);
-  }
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
-
-  const { state, transcript, reply, errorMessage, audioBlocked, slowHint } = snapshot;
+  const { state, transcript, reply, errorMessage, audioBlocked, slowHint } =
+    shown;
   const listening = state === "listening" || state === "transcribing";
   const status = STATUS[state] ?? "";
   const hint = SLOW_HINT[slowHint] ?? "";
 
   return (
-    <Box
-      className="voice-overlay"
-      position="fixed"
-      inset="0"
-      zIndex={200}
-      bg="rgba(0, 0, 0, 0.94)"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      onClick={close}
-      style={{
-        opacity: isClosing ? 0 : 1,
-        transition: `opacity ${EXIT_MS}ms ease`,
-        WebkitTapHighlightColor: "transparent",
+    <Dialog.Root
+      open={open}
+      onOpenChange={(e) => {
+        if (!e.open) onDismiss();
       }}
+      placement="center"
     >
-      <VStack
-        gap="3vmin"
-        px="8vmin"
-        maxW="90vw"
-        textAlign="center"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Box
-          position="relative"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          width="24vmin"
-          height="24vmin"
-        >
-          {listening && <VoiceLevelRing />}
-          <Box
-            position="relative"
-            fontSize="8vmin"
-            display="flex"
-            color={state === "error" ? "var(--theme-fg-muted)" : "var(--theme-fg-dim)"}
-          >
-            {state === "done" ? <IoCheckmark /> : <IoMic />}
-          </Box>
-        </Box>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Body py="10">
+              <VStack gap="4" textAlign="center">
+                <Box
+                  position="relative"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  boxSize="10rem"
+                >
+                  {listening && <VoiceLevelRing />}
+                  {state === "thinking" && (
+                    <Spinner
+                      position="absolute"
+                      size="xl"
+                      color="colorPalette.solid"
+                      css={{ "--spinner-size": "9rem" }}
+                    />
+                  )}
+                  <Icon
+                    position="relative"
+                    boxSize="12"
+                    color={state === "error" ? "fg.error" : "fg"}
+                  >
+                    {state === "done" ? <IoCheckmark /> : <IoMic />}
+                  </Icon>
+                </Box>
 
-        {status && (
-          <Text fontSize="2.4vmin" color="var(--theme-fg-faint)" letterSpacing="0.08em">
-            {status}
-          </Text>
-        )}
+                {status && <Text color="fg.muted">{status}</Text>}
 
-        {transcript && (
-          <Text
-            fontSize={reply ? "2.6vmin" : "4vmin"}
-            fontWeight="300"
-            color={reply ? "var(--theme-fg-muted)" : "var(--theme-fg)"}
-          >
-            {transcript}
-          </Text>
-        )}
+                {transcript && (
+                  <Dialog.Title
+                    textStyle={reply ? "md" : "2xl"}
+                    fontWeight="normal"
+                    color={reply ? "fg.muted" : "fg"}
+                  >
+                    {transcript}
+                  </Dialog.Title>
+                )}
 
-        {reply && (
-          <Text fontSize="4.5vmin" fontWeight="300" color="var(--theme-fg)">
-            {reply}
-          </Text>
-        )}
+                {reply && <Text textStyle="2xl">{reply}</Text>}
 
-        {errorMessage && (
-          <>
-            <Text fontSize="3.4vmin" fontWeight="300" color="var(--theme-fg-dim)">
-              {errorMessage}
-            </Text>
-            <Text fontSize="2.2vmin" color="var(--theme-fg-faint)">
-              Tap to try again
-            </Text>
-          </>
-        )}
+                {errorMessage && (
+                  <>
+                    <Text textStyle="xl">{errorMessage}</Text>
+                    <Text textStyle="sm" color="fg.muted">
+                      Tap outside to try again
+                    </Text>
+                  </>
+                )}
 
-        {hint && state === "thinking" && (
-          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)">
-            {hint}
-          </Text>
-        )}
+                {hint && state === "thinking" && (
+                  <Text textStyle="sm" color="fg.muted">
+                    {hint}
+                  </Text>
+                )}
 
-        {audioBlocked && reply && (
-          <Text fontSize="2.2vmin" color="var(--theme-fg-faint)">
-            (couldn't speak that)
-          </Text>
-        )}
-      </VStack>
-    </Box>
+                {audioBlocked && reply && (
+                  <Text textStyle="sm" color="fg.muted">
+                    (couldn't speak that)
+                  </Text>
+                )}
+              </VStack>
+            </Dialog.Body>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   );
 }

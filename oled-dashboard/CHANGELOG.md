@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.50.0
+
+- Changed: light and switch tiles no longer show a checkbox; the lit icon and the yellow tile show what's on. On a phone the tiles sit three across instead of four, and long names wrap instead of being cut off.
+- Changed: every button is fully rounded: text buttons are pills and icon buttons are circles, and the segmented controls (such as heat / cool / fan / off) have a pill-shaped track.
+- Changed: the digital clock on the Clock page and the time and temperature over Photos now match Home's clock: the same heavy semibold figures, with a smaller am/pm (and seconds on the Clock page). The Clock page is the same size as Home; Photos is about half that size so the picture shows.
+- Changed: the clock and outside temperature on Home are larger and use a heavier semibold weight with tighter spacing. They grow with the width of their card, so they fill it on the frame, on a phone and in landscape, and the digits keep a fixed width so the time doesn't shift as it ticks.
+- Changed: the dashboard now uses the standard Chakra UI look throughout. Cards have Chakra's own borders and rounded corners, text uses Chakra's type scale, and controls are stock Chakra buttons, tabs, switches, sliders and segmented controls. Card and page layout, and everything the dashboard does, are unchanged.
+- Changed: dark mode is Chakra's own dark theme (a near-black background with soft grey cards) rather than pure black, and Bright is Chakra's light theme. Auto still switches between them at 7:00 and 19:00.
+- Changed: everything is scaled up as one, so the frame reads like a large tablet page; phones are unaffected.
+- Changed: every pop-up — thermostat, fan, energy, 3D printer, forecast and the voice assistant — is a standard Chakra dialog with a title and a close button. Tap outside or press Escape to close it.
+- Changed: the thermostat mode selector is a segmented control (Heat / Cool / Fan / Off) and fan speed is a slider. The temperature arc itself still works the same way.
+- Changed: the thermostats on Home are compact tiles instead of big round dials, so the Climate card takes about half the room. Each tile shows the unit's name, the room temperature and what it is doing; tap a tile to open the thermostat window.
+- Changed: on phones (screens narrower than 768px) cards have tighter padding, the same as Chakra's small card, so more fits on screen. Tablets, desktops and the frame are unchanged.
+- Changed: on phones, Home is one column. Every card takes the full width, in the same order as before, instead of being squeezed into two narrow columns. The thermostats there show as two rows of two.
+- Changed: on a phone (or any narrow Teams card), the score bug stacks the two teams one above the other with the game time between them, so names and scores are readable instead of tiny.
+- Fixed: on a narrow screen the Calendar card's event count ran past the edge of the card. It now moves under the title when there isn't room, and the loading placeholders stay inside their cards too.
+- Fixed: on a phone the last bird seen was cut off to "Blue …". The common name now stays whole and the Latin name is shortened instead.
+- Changed: cards have smaller, tighter rounded corners, and so do the tiles inside them (thermostats, calendar events, the score bug), so nothing inside a card is rounder than the card itself.
+- Changed: a thermostat that is on now has a thick border in its colour around its tile, like the ring in the thermostat window — orange for heat, blue for cool, teal for fan — with its icon and status in that colour. The tile says "Heating to 70°" while it is running and "Heat · set 70°" while it is idle; an off thermostat keeps a plain tile with a grey "Off".
+- Changed: the navigation icons are larger and the selected view has a grey highlight.
+- Changed: Settings uses segmented controls for device mode and theme, a switch for "Show navigation", and a status dot for the connection.
+- Added: a short notification when you refresh displays, change the photo album, or reset the Home layout.
+- Added: a red LIVE badge on the Teams card while a game is on, and hover labels on the status icons at the top of Home.
+- Changed: the doorbell camera card now shows above an open pop-up instead of underneath it.
+
 ## 0.49.0
 
 - Added: rearrange the Home screen. Press and hold any card until the outlines appear, then drag cards to reorder them or move them between columns — in portrait, also into the full-width bands above and below the columns. Tap Done when finished (or leave it; it finishes itself after 90 seconds). Reset puts the original layout back.

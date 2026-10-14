@@ -1,4 +1,4 @@
-import { Box, Text, HStack, VStack } from "@chakra-ui/react";
+import { Badge, HStack, Progress, Stack, Stat } from "@chakra-ui/react";
 import { TbVacuumCleaner } from "react-icons/tb";
 import NumberFlow from "@number-flow/react";
 import type { HomeVacuum } from "../hooks/useHomeData";
@@ -12,11 +12,7 @@ const STATE_LABEL: Record<string, string> = {
   returning: "Returning",
 };
 
-export function VacuumSection({
-  vacuum,
-}: {
-  vacuum: HomeVacuum[];
-}) {
+export function VacuumSection({ vacuum }: { vacuum: HomeVacuum[] }) {
   const active = vacuum.filter((v) => ACTIVE_STATES.has(v.state));
   if (active.length === 0) return null;
 
@@ -24,48 +20,36 @@ export function VacuumSection({
     <Board
       collapsible
       storageKey="vacuum"
-      title={<SectionTitle icon={<TbVacuumCleaner />}>VACUUM</SectionTitle>}
+      title={<SectionTitle icon={<TbVacuumCleaner />}>Vacuum</SectionTitle>}
     >
-      <VStack gap="2vmin" align="stretch" width="100%">
+      <Stack gap="6">
         {active.map((v) => {
           const progress = Math.max(0, Math.min(100, v.progress ?? 0));
           return (
-            <Box key={v.entity_id} width="100%">
-              <HStack width="100%" justify="space-between" align="baseline">
-                <VStack align="flex-start" gap="0.2vmin" flex="1" minW="0">
-                  <Text
-                    fontSize="3.8vmin"
-                    color="var(--theme-fg-dim)"
-                    fontWeight="300"
-                    overflow="hidden"
-                    whiteSpace="nowrap"
-                    textOverflow="ellipsis"
-                    maxW="45vmin"
-                  >
-                    {v.name}
-                  </Text>
-                  <Text
-                    fontSize="2.2vmin"
-                    color="var(--theme-fg-faint)"
-                    letterSpacing="0.08em"
-                  >
-                    {STATE_LABEL[v.state] ?? v.state}
-                  </Text>
-                </VStack>
-                <Text
-                  className="display-numeral"
-                  fontSize="5.5vmin"
-                  color="green.500"
-                  fontWeight="300"
-                  lineHeight="1"
-                >
-                  <NumberFlow value={progress} />%
-                </Text>
+            <Progress.Root
+              key={v.entity_id}
+              value={progress}
+              colorPalette="green"
+              size="lg"
+            >
+              <HStack justify="space-between" align="end">
+                <Stat.Root>
+                  <Stat.Label>{v.name}</Stat.Label>
+                  <Stat.ValueText>
+                    <NumberFlow value={progress} />%
+                  </Stat.ValueText>
+                </Stat.Root>
+                <Badge colorPalette="green">
+                  {STATE_LABEL[v.state] ?? v.state}
+                </Badge>
               </HStack>
-            </Box>
+              <Progress.Track mt="3">
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
           );
         })}
-      </VStack>
+      </Stack>
     </Board>
   );
 }

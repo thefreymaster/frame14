@@ -1,6 +1,4 @@
-import { Flex } from "@chakra-ui/react";
-import { CHIP_GAP, CHIP_RADIUS } from "../../lib/surfaces";
-import { SkeletonBlock } from "./SkeletonBlock";
+import { Flex, Skeleton } from "@chakra-ui/react";
 
 /** Placeholder for <StatusStrip> — the idle printer / vacuum chips. */
 export function StatusStripSkeleton({
@@ -14,18 +12,11 @@ export function StatusStripSkeleton({
     <Flex
       gridColumn={span === 2 ? "1 / -1" : undefined}
       width="100%"
-      minW="0"
-      gap={CHIP_GAP}
+      gap="2"
       wrap="wrap"
-      align="center"
     >
       {Array.from({ length: count }).map((_, i) => (
-        <SkeletonBlock
-          key={i}
-          height="5.2vmin"
-          width="26vmin"
-          borderRadius={CHIP_RADIUS}
-        />
+        <Skeleton key={i} height="9" width="10rem" rounded="l2" />
       ))}
     </Flex>
   );

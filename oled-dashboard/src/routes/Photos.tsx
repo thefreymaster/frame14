@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { Box, Text, Spinner } from "@chakra-ui/react";
-import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
+import { Box, IconButton, Spinner, Text } from "@chakra-ui/react";
+import {
+  IoEyeOutline,
+  IoEyeOffOutline,
+  IoImagesOutline,
+} from "react-icons/io5";
 import { PhotoSlide } from "../components/PhotoSlide";
 import { PixelShift } from "../components/PixelShift";
 import { useAlbumPhotos } from "../hooks/useAlbumPhotos";
@@ -10,6 +14,13 @@ import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
+import { EmptyState } from "../components/ui/empty-state";
+import {
+  HERO_SUFFIX_SIZE,
+  HERO_TEXT,
+  HOME_HERO_INSET,
+  PHOTOS_HERO_SIZE,
+} from "../lib/hero";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -38,41 +49,40 @@ function PhotoOverlay({ assetId }: OverlayProps) {
   const rawHours = now.getHours();
   const hours = pad(rawHours % 12 || 12);
   const minutes = pad(now.getMinutes());
-  const ampm = rawHours < 12 ? "AM" : "PM";
+  const ampm = rawHours < 12 ? "am" : "pm";
 
   return (
     <PixelShift>
+      {/* Inset like Home's clock row and styled like Home's clock, a size
+          smaller so the photo shows; see lib/hero.ts. */}
       <Box
         position="absolute"
-        top="5vmin"
-        left="5vmin"
-        right="5vmin"
+        top="8"
+        left={HOME_HERO_INSET}
+        right={HOME_HERO_INSET}
         textAlign="left"
         pointerEvents="none"
       >
         <Box
           display="flex"
           justifyContent="space-between"
-          alignItems="flex-end"
+          alignItems="baseline"
           width="100%"
+          css={{ containerType: "inline-size" }}
         >
           <Text
-            className="display-numeral"
-            fontSize="14vmin"
-            fontWeight="300"
-            letterSpacing="-0.03em"
+            {...HERO_TEXT}
+            fontSize={PHOTOS_HERO_SIZE}
             color={color}
-            lineHeight="0.9"
             style={{ transition: "color 1s ease" }}
           >
             {hours}:{minutes}
             <Text
               as="span"
-              className="display-numeral"
-              fontSize="5.5vmin"
-              fontWeight="300"
+              fontSize={HERO_SUFFIX_SIZE}
+              fontWeight="medium"
               color={color}
-              ml="1.5vmin"
+              ms="2"
               style={{ transition: "color 1s ease" }}
             >
               {ampm}
@@ -80,12 +90,9 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           </Text>
           {weather && (
             <Text
-              className="display-numeral"
-              fontSize="14vmin"
-              fontWeight="300"
-              letterSpacing="-0.03em"
+              {...HERO_TEXT}
+              fontSize={PHOTOS_HERO_SIZE}
               color={color}
-              lineHeight="0.9"
               style={{ transition: "color 1s ease" }}
             >
               {Math.round(weather.temperature)}°
@@ -131,10 +138,12 @@ export function Photos() {
     return () => clearInterval(id);
   }, [album]);
 
-  // Reset index when album changes
-  useEffect(() => {
+  // Reset index when album changes (derived during render, not in an effect).
+  const [indexAlbumId, setIndexAlbumId] = useState(activeAlbumId);
+  if (indexAlbumId !== activeAlbumId) {
+    setIndexAlbumId(activeAlbumId);
     setCurrentIndex(0);
-  }, [activeAlbumId]);
+  }
 
   // Advance to a random photo
   function advancePhoto() {
@@ -186,12 +195,11 @@ export function Photos() {
       <Box
         width="100%"
         height="100vh"
-        bg="var(--theme-bg)"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Spinner size="lg" color="var(--theme-fg-muted)" />
+        <Spinner size="lg" />
       </Box>
     );
   }
@@ -201,14 +209,15 @@ export function Photos() {
       <Box
         width="100%"
         height="100vh"
-        bg="var(--theme-bg)"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Text color="var(--theme-fg-faint)" fontSize="sm">
-          no album configured
-        </Text>
+        <EmptyState
+          icon={<IoImagesOutline />}
+          title="no album configured"
+          description="Pick one under Album on the Settings page."
+        />
       </Box>
     );
   }
@@ -217,7 +226,6 @@ export function Photos() {
     <Box
       width="100%"
       height="100vh"
-      bg="var(--theme-bg)"
       position="relative"
       overflow="hidden"
       onClick={advancePhoto}
@@ -231,7 +239,7 @@ export function Photos() {
           alignItems="center"
           justifyContent="center"
         >
-          <Spinner size="lg" color="var(--theme-fg-muted)" />
+          <Spinner size="lg" />
         </Box>
       )}
 
@@ -245,8 +253,9 @@ export function Photos() {
 
       <PhotoOverlay assetId={album?.assets[currentIndex]?.id ?? null} />
 
-      <Box
-        as="button"
+      <IconButton
+        variant="surface"
+        size="lg"
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
           toggleNavVisible();
@@ -254,26 +263,11 @@ export function Photos() {
         position="fixed"
         bottom="calc(16px + env(safe-area-inset-bottom, 0px))"
         right="calc(16px + env(safe-area-inset-right, 0px))"
-        width="44px"
-        height="44px"
-        borderRadius="full"
-        bg="rgba(0,0,0,0.4)"
-        color="rgba(255,255,255,0.85)"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        backdropFilter="blur(8px)"
-        border="1px solid rgba(255,255,255,0.15)"
-        _active={{ opacity: 0.5 }}
         zIndex={200}
         aria-label={navVisible ? "Hide navigation" : "Show navigation"}
       >
-        {navVisible ? (
-          <IoEyeOffOutline size={20} />
-        ) : (
-          <IoEyeOutline size={20} />
-        )}
-      </Box>
+        {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
+      </IconButton>
     </Box>
   );
 }

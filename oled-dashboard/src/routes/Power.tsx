@@ -1,4 +1,4 @@
-import { Box, Text } from "@chakra-ui/react";
+import { Center, Spinner, Text } from "@chakra-ui/react";
 import { MdElectricBolt } from "react-icons/md";
 import { useCircuits } from "../hooks/useCircuits";
 import { useEnergy } from "../hooks/useEnergy";
@@ -17,11 +17,7 @@ export function Power() {
 
   return (
     <PageShell fill>
-      <PageHeader
-        icon={<MdElectricBolt />}
-        iconColor="cyan.400"
-        title="POWER"
-      />
+      <PageHeader icon={<MdElectricBolt />} iconColor="blue.fg" title="Power" />
 
       <Board>
         <PowerTotals
@@ -34,28 +30,22 @@ export function Power() {
         fill
         title={
           <SectionTitle>
-            CIRCUITS
+            Circuits
             {totalWatts != null
               ? ` · ${(totalWatts / 1000).toFixed(1)} kW`
               : ""}
           </SectionTitle>
         }
       >
-        {(isPending || isError) && (
-          <Box
-            height="100%"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text
-              fontSize="2.8vmin"
-              color="var(--theme-fg-faint)"
-              letterSpacing="0.1em"
-            >
-              {isError ? "unavailable" : "loading"}
-            </Text>
-          </Box>
+        {isPending && (
+          <Center height="100%">
+            <Spinner size="lg" aria-label="Loading circuits" />
+          </Center>
+        )}
+        {isError && (
+          <Center height="100%">
+            <Text color="fg.muted">unavailable</Text>
+          </Center>
         )}
         {!isPending && !isError && data && (
           <CircuitBreakdown

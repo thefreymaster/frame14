@@ -1,8 +1,7 @@
-import { Box, Text } from "@chakra-ui/react";
+import { CheckboxCard, Icon } from "@chakra-ui/react";
 import type { IconType } from "react-icons";
 import { useEntity } from "../hooks/useEntity";
 import { callService } from "../lib/callService";
-import { CHIP_RADIUS } from "../lib/surfaces";
 
 type Props = {
   entity_id: string;
@@ -14,7 +13,12 @@ type LightAttrs = {
   friendly_name?: string;
 };
 
-export function LightControl({ entity_id, name, Icon }: Props) {
+/**
+ * One light or switch as a Chakra CheckboxCard: the whole card is the toggle,
+ * and the checked state is Chakra's own (yellow palette). There is no
+ * checkbox indicator; the lit icon and the card's yellow surface show it's on.
+ */
+export function LightControl({ entity_id, name, Icon: LightIcon }: Props) {
   const { data } = useEntity<LightAttrs>(entity_id);
   const state = data?.state;
   const isOn = state === "on";
@@ -23,80 +27,36 @@ export function LightControl({ entity_id, name, Icon }: Props) {
 
   if (unavailable) return null;
 
-  const handleClick = () => {
-    callService(entity_id, "toggle");
-  };
-
-  // Amber on black, a darker amber on white — see --theme-accent-warm.
-  const ON_ACCENT = "var(--theme-accent-warm)";
-
   return (
-    <Box
-      as="button"
-      onClick={handleClick}
+    <CheckboxCard.Root
       data-light-entry=""
-      position="relative"
-      aspectRatio="1"
-      borderRadius={CHIP_RADIUS}
-      // Raised fill like every other chip; "on" is the same fill with an amber
-      // wash composited over it, so the lit state survives the bright/dark swap
-      // instead of relying on a border that vanishes on white.
-      bg="var(--theme-surface-2)"
-      backgroundImage={
-        isOn
-          ? "linear-gradient(rgba(255, 200, 87, 0.18), rgba(255, 200, 87, 0.18))"
-          : undefined
-      }
-      boxShadow={isOn ? `0 0 2.4vmin rgba(255, 200, 87, 0.18)` : "none"}
-      cursor="pointer"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      gap="1vmin"
-      px="1.2vmin"
-      transform="scale(1)"
-      transformOrigin="center"
-      willChange="transform"
-      _active={{ transform: "scale(0.94)", opacity: 0.85 }}
-      transition="transform 80ms cubic-bezier(0.2, 0, 0.2, 1), background-color 140ms ease, box-shadow 180ms ease, opacity 140ms ease"
-      style={{ WebkitTapHighlightColor: "transparent" }}
+      checked={isOn}
+      onCheckedChange={() => callService(entity_id, "toggle")}
+      colorPalette="yellow"
+      variant="surface"
+      // Chakra's small card on phones, so a name gets most of the tile.
+      size={{ base: "sm", md: "md" }}
+      orientation="vertical"
+      align="center"
+      minW="0"
     >
-      <Box
-        position="absolute"
-        top="1.2vmin"
-        right="1.2vmin"
-        width="1.2vmin"
-        height="1.2vmin"
-        borderRadius="full"
-        bg={isOn ? ON_ACCENT : "var(--theme-surface-1)"}
-        boxShadow={isOn ? `0 0 1vmin ${ON_ACCENT}` : "none"}
-        transition="background-color 140ms ease, box-shadow 180ms ease"
-      />
-      <Box
-        color={isOn ? ON_ACCENT : "var(--theme-fg-faint)"}
-        fontSize="5.5vmin"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        transition="color 200ms ease"
-      >
-        <Icon />
-      </Box>
-      <Text
-        fontSize="2vmin"
-        fontWeight={isOn ? "500" : "300"}
-        color={isOn ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
-        letterSpacing="0.01em"
-        textAlign="center"
-        overflow="hidden"
-        whiteSpace="nowrap"
-        textOverflow="ellipsis"
-        maxWidth="100%"
-        transition="color 200ms ease, font-weight 200ms ease"
-      >
-        {label}
-      </Text>
-    </Box>
+      <CheckboxCard.HiddenInput />
+      <CheckboxCard.Control>
+        <Icon boxSize="8" color={isOn ? "colorPalette.fg" : "fg.muted"}>
+          <LightIcon />
+        </Icon>
+        <CheckboxCard.Content minW="0" maxW="100%">
+          {/* Wraps before it cuts off (three lines on a phone, two above):
+              long names like "Dining Room Chandelier" keep their last word. */}
+          <CheckboxCard.Label
+            lineClamp={{ base: "3", md: "2" }}
+            maxW="100%"
+            textAlign="center"
+          >
+            {label}
+          </CheckboxCard.Label>
+        </CheckboxCard.Content>
+      </CheckboxCard.Control>
+    </CheckboxCard.Root>
   );
 }

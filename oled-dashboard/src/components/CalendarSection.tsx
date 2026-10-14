@@ -1,14 +1,8 @@
-import { Box, HStack, VStack, Text } from "@chakra-ui/react";
+import { Box, Card, Flex, Stack, Text } from "@chakra-ui/react";
 import { IoCalendarOutline } from "react-icons/io5";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
-import {
-  CHIP_GAP,
-  CHIP_PADDING_X,
-  CHIP_PADDING_Y,
-  CHIP_RADIUS,
-} from "../lib/surfaces";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -64,49 +58,43 @@ function EventList({
   max?: number;
 }) {
   return (
-    <VStack gap={CHIP_GAP} align="stretch" width="100%">
+    <Stack gap="2" mt="3">
       {events.slice(0, max).map((event, i) => {
         const past = isPast(event);
         return (
-          <HStack
+          <Card.Root
             key={i}
-            justify="space-between"
-            align="baseline"
-            width="100%"
-            minW="0"
-            bg="var(--theme-surface-2)"
-            borderRadius={CHIP_RADIUS}
-            px={CHIP_PADDING_X}
-            py={CHIP_PADDING_Y}
-            opacity={past ? 0.55 : 1}
+            size="sm"
+            variant="subtle"
+            borderRadius="sm"
+            opacity={past ? 0.6 : 1}
           >
-            <Text
-              fontSize="3.2vmin"
-              fontWeight="300"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
-              flex="1"
-              minW="0"
-              mr="1.5vmin"
-              textDecoration={past ? "line-through" : undefined}
-              color={past ? "var(--theme-fg-faint)" : undefined}
+            <Card.Body
+              flexDirection="row"
+              justifyContent="space-between"
+              alignItems="baseline"
+              gap="4"
             >
-              {event.summary}
-            </Text>
-            <Text
-              fontSize="2.6vmin"
-              color={past ? "var(--theme-fg-faint)" : "var(--theme-fg)"}
-              fontWeight="300"
-              flexShrink={0}
-              textDecoration={past ? "line-through" : undefined}
-            >
-              {event.allDay ? "all day" : formatEventTime(event.start)}
-            </Text>
-          </HStack>
+              <Text
+                textStyle="lg"
+                truncate
+                minW="0"
+                textDecoration={past ? "line-through" : undefined}
+              >
+                {event.summary}
+              </Text>
+              <Text
+                color="fg.muted"
+                flexShrink={0}
+                textDecoration={past ? "line-through" : undefined}
+              >
+                {event.allDay ? "all day" : formatEventTime(event.start)}
+              </Text>
+            </Card.Body>
+          </Card.Root>
         );
       })}
-    </VStack>
+    </Stack>
   );
 }
 
@@ -122,31 +110,27 @@ export function CalendarSection({
       collapsible
       storageKey="calendar"
       title={
-        <HStack width="100%" align="center" gap="1.5vmin">
-          <SectionTitle icon={<IoCalendarOutline />}>CALENDAR</SectionTitle>
-          <Box flex="1" minW="0" />
-          <Text
-            fontSize="1.8vmin"
-            color="var(--theme-fg-dim)"
-            letterSpacing="0.06em"
-            fontWeight="500"
-          >
+        // Wraps the count under the title when the card is too narrow for
+        // both, like the Energy card's badge.
+        <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
+          <SectionTitle icon={<IoCalendarOutline />}>Calendar</SectionTitle>
+          <Text textStyle="sm" color="fg.muted" ms="auto">
             {eventCountLabel(today.length, "today")}
           </Text>
-        </HStack>
+        </Flex>
       }
     >
-      <SectionTitle icon={<IoCalendarOutline />}>TODAY</SectionTitle>
+      <SectionTitle>Today</SectionTitle>
       {today.length > 0 ? (
         <EventList events={today} />
       ) : (
-        <Text fontSize="3.8vmin" fontWeight="300" color="var(--theme-fg-faint)">
+        <Text color="fg.muted" mt="2">
           No events today
         </Text>
       )}
       {tomorrow.length > 0 && (
-        <Box mt="2.5vmin">
-          <SectionTitle icon={<IoCalendarOutline />}>TOMORROW</SectionTitle>
+        <Box mt="6">
+          <SectionTitle>Tomorrow</SectionTitle>
           <EventList events={tomorrow} />
         </Box>
       )}

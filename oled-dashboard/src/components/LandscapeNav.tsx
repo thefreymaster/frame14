@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, HStack, VStack, Spacer, Flex, Text } from "@chakra-ui/react";
+import { Box, Spacer, Tabs } from "@chakra-ui/react";
 import type { IconType } from "react-icons";
 import { useLocation, useNavigate } from "react-router";
 import {
@@ -23,6 +23,7 @@ import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
+import { NAV_BAR_HEIGHT, NAV_RAIL_WIDTH } from "../lib/navMetrics";
 import { PiSolarRoof } from "react-icons/pi";
 
 type NavItem = {
@@ -118,12 +119,14 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState(location.pathname);
+  // Follow route changes (derived during render rather than in an effect).
+  const [routePath, setRoutePath] = useState(location.pathname);
+  if (routePath !== location.pathname) {
+    setRoutePath(location.pathname);
+    setActiveView(location.pathname);
+  }
   const isFrame = getDeviceMode() === "frame";
   const { games } = useLiveGame();
-
-  useEffect(() => {
-    setActiveView(location.pathname);
-  }, [location.pathname]);
 
   useEffect(() => {
     function onChangeView(view: string) {
@@ -143,69 +146,32 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
     setActiveView(path);
   }
 
+  // Each nav entry is a Tabs trigger: the selected tab is the view on screen.
+  // Navigation happens on click rather than onValueChange, so tapping the tab
+  // you are already on still re-sends it to the other frames, as before.
   function renderItem(item: NavItem) {
     const isActive = activeView === item.path;
     const Icon = isActive ? item.activeIcon : item.icon;
     return (
-      <Box
+      <Tabs.Trigger
         key={item.path}
-        as="button"
+        value={item.path}
         onClick={() => handleClick(item.path)}
-        display="flex"
         flexDirection="column"
-        alignItems="center"
         justifyContent="center"
-        gap="2px"
-        flex="1"
-        height="100%"
-        bg="transparent"
-        color={isActive ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
-        _active={{ opacity: 0.4 }}
-        transition="color 0.15s, opacity 0.1s"
+        height="auto"
+        px="1"
+        py="2"
+        gap="1"
+        // 20px icons on a phone and a little larger wherever the type scale
+        // grows, and a neutral grey fill (gray.100 / gray.800) on the
+        // selected entry rather than the subtle tab's near-black.
+        _icon={{ boxSize: { base: "5", md: "1.375rem" } }}
+        _selected={{ bg: { _light: "gray.100", _dark: "gray.800" } }}
       >
-        <Icon size={26} />
-        <Text
-          fontSize="10px"
-          lineHeight="1"
-          fontWeight={isActive ? "600" : "500"}
-          letterSpacing="0.01em"
-        >
-          {item.label}
-        </Text>
-      </Box>
-    );
-  }
-
-  function renderItemVertical(item: NavItem) {
-    const isActive = activeView === item.path;
-    const Icon = isActive ? item.activeIcon : item.icon;
-    return (
-      <Box
-        key={item.path}
-        as="button"
-        onClick={() => handleClick(item.path)}
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        gap="2px"
-        width="100%"
-        py="6px"
-        bg="transparent"
-        color={isActive ? "var(--theme-fg)" : "var(--theme-fg-muted)"}
-        _active={{ opacity: 0.4 }}
-        transition="color 0.15s, opacity 0.1s"
-      >
-        <Icon size={24} />
-        <Text
-          fontSize="9px"
-          lineHeight="1"
-          fontWeight={isActive ? "600" : "500"}
-          letterSpacing="0.01em"
-        >
-          {item.label}
-        </Text>
-      </Box>
+        <Icon />
+        {item.label}
+      </Tabs.Trigger>
     );
   }
 
@@ -220,57 +186,63 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
     <>
       {/* Portrait: bottom horizontal bar */}
       <Box
-        css={{
-          display: "block",
-          "@media (orientation: landscape)": { display: "none" },
-        }}
+        display={{ base: "block", _landscape: "none" }}
         position="fixed"
-        top="calc(var(--app-height, 100dvh) - 64px - env(safe-area-inset-bottom, 0px))"
+        top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_HEIGHT} - env(safe-area-inset-bottom, 0px))`}
         left={0}
         right={0}
-        height="64px"
-        bg="var(--theme-bg)"
-        borderTop="1px solid"
-        borderColor="var(--theme-divider)"
-        zIndex={100}
+        height={NAV_BAR_HEIGHT}
+        bg="bg"
+        borderTopWidth="1px"
+        zIndex="sticky"
+        px="2"
         transform={hidden ? "translateY(100%)" : "translateY(0)"}
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-        willChange="transform"
       >
-        <HStack gap="0" align="stretch" height="64px" px="4px">
-          {portraitItems.map(renderItem)}
-        </HStack>
+        <Tabs.Root
+          variant="subtle"
+          size="sm"
+          fitted
+          value={activeView}
+          activationMode="manual"
+          height="100%"
+        >
+          <Tabs.List height="100%" alignItems="center" gap="1">
+            {portraitItems.map(renderItem)}
+          </Tabs.List>
+        </Tabs.Root>
       </Box>
 
       {/* Landscape: left vertical sidebar */}
       <Box
-        css={{
-          display: "none",
-          "@media (orientation: landscape)": { display: "block" },
-        }}
+        display={{ base: "none", _landscape: "block" }}
         position="fixed"
         left={0}
         top={0}
         bottom={0}
-        width="68px"
-        bg="var(--theme-bg)"
-        borderRight="1px solid"
-        borderColor="var(--theme-divider)"
-        zIndex={100}
+        width={NAV_RAIL_WIDTH}
         height="100dvh"
+        bg="bg"
+        borderRightWidth="1px"
+        zIndex="sticky"
+        p="2"
         transform={hidden ? "translateX(-100%)" : "translateX(0)"}
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-        willChange="transform"
       >
-        <Flex direction="column" align="stretch" height="100%" py="12px">
-          <VStack gap="4px" align="stretch">
-            {visibleNavItems.map(renderItemVertical)}
-          </VStack>
-          <Spacer />
-          <VStack gap="4px" align="stretch">
-            {BOTTOM_NAV_ITEMS.map(renderItemVertical)}
-          </VStack>
-        </Flex>
+        <Tabs.Root
+          variant="subtle"
+          size="sm"
+          orientation="vertical"
+          value={activeView}
+          activationMode="manual"
+          height="100%"
+        >
+          <Tabs.List width="100%" height="100%" gap="1">
+            {visibleNavItems.map(renderItem)}
+            <Spacer />
+            {BOTTOM_NAV_ITEMS.map(renderItem)}
+          </Tabs.List>
+        </Tabs.Root>
       </Box>
     </>
   );

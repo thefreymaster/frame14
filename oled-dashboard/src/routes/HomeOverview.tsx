@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Box, Text } from "@chakra-ui/react";
+import { useSyncExternalStore } from "react";
+import { Box } from "@chakra-ui/react";
+import { IoCloudOfflineOutline } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
 import { StatusBanner } from "../components/StatusBanner";
 import { EnergySection } from "../components/EnergySection";
@@ -15,21 +16,23 @@ import { StatusStrip } from "../components/StatusStrip";
 import { HomeOverviewSkeleton } from "../components/skeletons/HomeOverviewSkeleton";
 import { HomeBoard } from "../components/HomeBoard";
 import type { HomeCardId } from "../lib/homeLayout";
+import { EmptyState } from "../components/ui/empty-state";
 
 // ── Orientation hook ─────────────────────────────────────────────────────────
 
+const LANDSCAPE = "(orientation: landscape)";
+
+function subscribeOrientation(onChange: () => void) {
+  const mql = window.matchMedia(LANDSCAPE);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
+
 function useIsLandscape() {
-  const [landscape, setLandscape] = useState(
-    () => window.innerWidth > window.innerHeight,
+  return useSyncExternalStore(
+    subscribeOrientation,
+    () => window.matchMedia(LANDSCAPE).matches,
   );
-  useEffect(() => {
-    const mql = window.matchMedia("(orientation: landscape)");
-    const handler = (e: MediaQueryListEvent) => setLandscape(e.matches);
-    mql.addEventListener("change", handler);
-    setLandscape(mql.matches);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
-  return landscape;
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -39,7 +42,6 @@ function Centered({ children }: { children: React.ReactNode }) {
     <Box
       width="100%"
       height="100vh"
-      bg="var(--theme-bg)"
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -60,9 +62,11 @@ export function HomeOverview() {
   if (isError || !data) {
     return (
       <Centered>
-        <Text fontSize="3vmin" color="var(--theme-fg-faint)">
-          unavailable
-        </Text>
+        <EmptyState
+          icon={<IoCloudOfflineOutline />}
+          title="unavailable"
+          description="Home Assistant didn't answer."
+        />
       </Centered>
     );
   }

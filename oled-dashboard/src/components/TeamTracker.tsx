@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, HStack, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { IoTrophyOutline } from "react-icons/io5";
 import { useGames } from "../hooks/useLiveGame";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
-import { CHIP_GAP } from "../lib/surfaces";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import {
@@ -29,6 +28,17 @@ import {
  * away) lives in lib/teamTracker.ts, shared with the /football route.
  */
 
+/**
+ * Sized against the card, not the viewport. Narrower than this — a phone, or
+ * a small landscape window — the card can't hold the broadcast row, so the bug
+ * re-flows the way the /football scoreboard does in portrait: one team per
+ * full-width row, cap first, with the clock as a band between them. Same DOM
+ * both ways. The props below are the row, sized in vmin for the frame; each
+ * part's `css` holds only what changes when stacked, in rem, because a phone's
+ * vmin is a quarter of the frame's.
+ */
+const NARROW = "@container (max-width: 36rem)";
+
 /** Colour cap with a helmet stripe of the school's second colour. */
 function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
   const [broken, setBroken] = useState(false);
@@ -38,6 +48,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
       position="relative"
       flexShrink={0}
       width="8vmin"
+      gridArea={edge === "left" ? "awayCap" : "homeCap"}
       alignSelf="stretch"
       bg={side.color}
       display="flex"
@@ -46,6 +57,10 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
       px="1vmin"
       opacity={side.lost ? 0.45 : 1}
       transition="opacity 400ms ease"
+      css={{
+        "--logo-h": "5.4vmin",
+        [NARROW]: { width: "3rem", px: "1.5", "--logo-h": "2rem" },
+      }}
     >
       {side.logo && !broken ? (
         // Plain <img>: Chakra v3's polymorphic Box drops the img-only props.
@@ -53,7 +68,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
           src={side.logo}
           alt={side.abbr}
           style={{
-            maxHeight: "5.4vmin",
+            maxHeight: "var(--logo-h)",
             maxWidth: "100%",
             objectFit: "contain",
           }}
@@ -65,6 +80,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
           fontWeight="700"
           color="#FFFFFF"
           letterSpacing="0.04em"
+          css={{ [NARROW]: { fontSize: "sm" } }}
         >
           {side.abbr}
         </Text>
@@ -76,6 +92,8 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
         width="0.5vmin"
         bg={side.trim}
         {...(edge === "left" ? { right: 0 } : { left: 0 })}
+        // Stacked, both caps lead their rows, so both stripes face the name.
+        css={{ [NARROW]: { width: "1", left: "auto", right: 0 } }}
       />
     </Box>
   );
@@ -92,6 +110,7 @@ function Rank({ side }: { side: Side }) {
       letterSpacing="0.02em"
       mr="0.6vmin"
       verticalAlign="0.3vmin"
+      css={{ [NARROW]: { fontSize: "xs", mr: "1", verticalAlign: "0.1em" } }}
     >
       #{side.rank}
     </Text>
@@ -105,7 +124,13 @@ function Rank({ side }: { side: Side }) {
 function StatusBar({ side }: { side: Side }) {
   if (side.down) {
     return (
-      <Box bg={side.color} borderRadius="0.2vmin" px="0.8vmin" py="0.2vmin">
+      <Box
+        bg={side.color}
+        borderRadius="0.2vmin"
+        px="0.8vmin"
+        py="0.2vmin"
+        css={{ [NARROW]: { borderRadius: "l1", px: "1.5", py: "0.5" } }}
+      >
         <Text
           fontSize="1.5vmin"
           fontWeight="600"
@@ -113,6 +138,7 @@ function StatusBar({ side }: { side: Side }) {
           letterSpacing="0.08em"
           textAlign="center"
           whiteSpace="nowrap"
+          css={{ [NARROW]: { fontSize: "xs" } }}
         >
           {side.down}
         </Text>
@@ -122,7 +148,11 @@ function StatusBar({ side }: { side: Side }) {
 
   if (side.timeouts != null) {
     return (
-      <HStack gap="0.4vmin" height="0.8vmin">
+      <HStack
+        gap="0.4vmin"
+        height="0.8vmin"
+        css={{ [NARROW]: { gap: "1", height: "1.5" } }}
+      >
         {[0, 1, 2].map((i) => (
           <Box
             key={i}
@@ -131,13 +161,21 @@ function StatusBar({ side }: { side: Side }) {
             borderRadius="0.2vmin"
             bg={side.color}
             opacity={i < side.timeouts! ? 1 : 0.25}
+            css={{ [NARROW]: { borderRadius: "l1" } }}
           />
         ))}
       </HStack>
     );
   }
 
-  return <Box height="0.8vmin" borderRadius="0.2vmin" bg={side.color} />;
+  return (
+    <Box
+      height="0.8vmin"
+      borderRadius="0.2vmin"
+      bg={side.color}
+      css={{ [NARROW]: { height: "1.5", borderRadius: "l1" } }}
+    />
+  );
 }
 
 function Score({ side }: { side: Side }) {
@@ -145,14 +183,14 @@ function Score({ side }: { side: Side }) {
 
   return (
     <Text
-      className="display-numeral"
       fontSize="4.4vmin"
       fontWeight="500"
       lineHeight="1"
-      color="var(--theme-fg)"
+      color="fg"
       opacity={side.lost ? 0.5 : 1}
       transition="opacity 400ms ease"
       flexShrink={0}
+      css={{ [NARROW]: { fontSize: "2xl" } }}
     >
       {/* Digits roll the way a stadium scoreboard flips them. */}
       {Number.isFinite(n) ? <NumberFlow value={n} /> : side.score}
@@ -160,6 +198,10 @@ function Score({ side }: { side: Side }) {
   );
 }
 
+/**
+ * In the row the home side mirrors so both scores face the clock; stacked,
+ * both rows read left to right, like a scoreboard.
+ */
 function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
   const right = align === "right";
 
@@ -168,18 +210,28 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
       flex="1"
       minW="0"
       alignSelf="stretch"
-      bg="var(--theme-surface-2)"
+      bg="bg.muted"
       align="center"
       gap="1.2vmin"
       px="1.2vmin"
       py="1vmin"
       flexDirection={right ? "row-reverse" : "row"}
+      gridArea={right ? "home" : "away"}
+      css={{
+        [NARROW]: { gap: "3", px: "3", py: "2", flexDirection: "row" },
+      }}
     >
-      <VStack flex="1" minW="0" align="stretch" gap="0.6vmin">
+      <VStack
+        flex="1"
+        minW="0"
+        align="stretch"
+        gap="0.6vmin"
+        css={{ [NARROW]: { gap: "1.5" } }}
+      >
         <Text
           fontSize="1.9vmin"
           fontWeight="600"
-          color="var(--theme-fg)"
+          color="fg"
           letterSpacing="0.03em"
           textAlign={align}
           opacity={side.lost ? 0.5 : 1}
@@ -187,6 +239,7 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
           overflow="hidden"
           whiteSpace="nowrap"
           textOverflow="ellipsis"
+          css={{ [NARROW]: { fontSize: "sm", textAlign: "left" } }}
         >
           {side.rank && <Rank side={side} />}
           {side.name}
@@ -200,9 +253,10 @@ function TeamPanel({ side, align }: { side: Side; align: "left" | "right" }) {
         side.record && (
           <Text
             fontSize="2vmin"
-            color="var(--theme-fg-faint)"
+            color="fg.muted"
             letterSpacing="0.04em"
             flexShrink={0}
+            css={{ [NARROW]: { fontSize: "sm" } }}
           >
             {side.record}
           </Text>
@@ -220,17 +274,20 @@ function CenterBlock({ game }: { game: Game }) {
       alignSelf="stretch"
       justify="center"
       gap="0.4vmin"
-      bg="var(--theme-bg)"
+      bg="bg"
       px="1.4vmin"
       py="1vmin"
       minW="12vmin"
+      gridArea="clock"
+      css={{ [NARROW]: { px: "3", py: "1", minW: "0" } }}
     >
       <Text
         fontSize="2vmin"
         fontWeight="500"
-        color="var(--theme-fg)"
+        color="fg"
         letterSpacing="0.08em"
         whiteSpace="nowrap"
+        css={{ [NARROW]: { fontSize: "xs" } }}
       >
         {stateLabel(game)}
       </Text>
@@ -253,7 +310,12 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
   const awayPct = Math.round((awayProb / total) * 100);
 
   return (
-    <Box position="relative" height="0.7vmin" width="100%">
+    <Box
+      position="relative"
+      height="0.7vmin"
+      width="100%"
+      css={{ [NARROW]: { height: "1" } }}
+    >
       <HStack gap="0" height="100%" width="100%">
         <Box
           width={`${awayPct}%`}
@@ -271,8 +333,9 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
         left={`${awayPct}%`}
         width="0.4vmin"
         ml="-0.2vmin"
-        bg="var(--theme-bg)"
+        bg="bg"
         transition="left 900ms ease"
+        css={{ [NARROW]: { width: "1", ml: "-0.5" } }}
       />
     </Box>
   );
@@ -287,10 +350,21 @@ function ScoreBug({ game }: { game: Game }) {
       gap="0"
       minW="0"
       width="100%"
-      borderRadius="1.2vmin"
+      borderRadius="sm"
       overflow="hidden"
     >
-      <HStack gap="0" align="stretch" minW="0">
+      <HStack
+        gap="0"
+        align="stretch"
+        minW="0"
+        css={{
+          [NARROW]: {
+            display: "grid",
+            gridTemplateColumns: "auto minmax(0, 1fr)",
+            gridTemplateAreas: `"awayCap away" "clock clock" "homeCap home"`,
+          },
+        }}
+      >
         <LogoCap side={away} edge="left" />
         <TeamPanel side={away} align="left" />
         <CenterBlock game={game} />
@@ -320,23 +394,24 @@ export function TeamTracker() {
       collapsible
       storageKey="teamtracker"
       title={
-        <HStack width="100%" align="center" gap="1.5vmin">
-          <SectionTitle icon={<IoTrophyOutline />}>TEAMS</SectionTitle>
+        <HStack width="100%" align="center" gap="3">
+          <SectionTitle icon={<IoTrophyOutline />}>Teams</SectionTitle>
           <Box flex="1" minW="0" />
           {anyLive && (
-            <Text
-              fontSize="1.8vmin"
-              color="var(--theme-fg-dim)"
-              letterSpacing="0.06em"
-              fontWeight="500"
-            >
-              LIVE
-            </Text>
+            <Badge colorPalette="red" variant="solid">
+              Live
+            </Badge>
           )}
         </HStack>
       }
     >
-      <VStack align="stretch" gap={CHIP_GAP} width="100%">
+      {/* The score bugs measure this, not the viewport — see NARROW. */}
+      <VStack
+        align="stretch"
+        gap="3"
+        width="100%"
+        css={{ containerType: "inline-size" }}
+      >
         {games.map((game) => (
           <Box
             key={game.entity_id}

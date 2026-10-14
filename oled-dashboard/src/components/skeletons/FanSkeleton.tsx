@@ -1,23 +1,16 @@
-import { Box } from "@chakra-ui/react";
+import { Grid, Skeleton } from "@chakra-ui/react";
 import { Board } from "../Board";
-import { CHIP_GAP, CHIP_RADIUS } from "../../lib/surfaces";
-import { SkeletonBlock } from "./SkeletonBlock";
 import { SkeletonSectionTitle } from "./SkeletonSectionTitle";
 
-/** Placeholder for <FanSection>: one chip per configured fan. */
+/** Placeholder for <FanSection>: one button per configured fan. */
 export function FanSkeleton({ count, span }: { count: number; span?: 1 | 2 }) {
   return (
-    <Board span={span} title={<SkeletonSectionTitle width="10vmin" />}>
-      <Box
-        display="grid"
-        gridTemplateColumns="repeat(auto-fill, minmax(34vmin, 1fr))"
-        gap={CHIP_GAP}
-        width="100%"
-      >
+    <Board span={span} title={<SkeletonSectionTitle width="5rem" />}>
+      <Grid templateColumns="repeat(auto-fill, minmax(14rem, 1fr))" gap="3">
         {Array.from({ length: count }).map((_, i) => (
-          <SkeletonBlock key={i} height="6.6vmin" borderRadius={CHIP_RADIUS} />
+          <Skeleton key={i} height="11" />
         ))}
-      </Box>
+      </Grid>
     </Board>
   );
 }

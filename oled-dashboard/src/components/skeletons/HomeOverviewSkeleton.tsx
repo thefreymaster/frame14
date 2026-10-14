@@ -1,6 +1,5 @@
 import { Box } from "@chakra-ui/react";
 import { useEntitiesConfig } from "../../hooks/useEntitiesConfig";
-import { GRID_GAP } from "../../lib/surfaces";
 import { StatusBanner } from "../StatusBanner";
 import { CalendarSkeleton } from "./CalendarSkeleton";
 import { ClimateSkeleton } from "./ClimateSkeleton";
@@ -17,7 +16,7 @@ const DEFAULT_CHIPS = 2;
  * replaced by its placeholder, so the page doesn't jump when the data lands.
  *
  * Counts come from /api/entities (cached with staleTime: Infinity, so it is
- * usually already resolved) — that gets the number of thermostat dials and fan
+ * usually already resolved) — that gets the number of thermostat tiles and fan
  * chips right instead of guessing. Printer, vacuum and team sections are
  * active-only in the real page, so they're represented by the status strip's
  * chips rather than tiles that would vanish on load.
@@ -41,31 +40,18 @@ export function HomeOverviewSkeleton({
         <Box
           width="100%"
           minHeight="100%"
-          bg="var(--theme-bg)"
           display="flex"
           flexDirection="row"
           alignItems="flex-start"
-          gap={GRID_GAP}
-          padding={GRID_GAP}
+          gap="4"
+          p="4"
         >
-          <Box
-            flex="1"
-            minW="0"
-            display="flex"
-            flexDirection="column"
-            gap={GRID_GAP}
-          >
+          <Box flex="1" minW="0" display="flex" flexDirection="column" gap="4">
             <HomeHeaderSkeleton />
             <EnergySkeleton />
           </Box>
 
-          <Box
-            flex="1"
-            minW="0"
-            display="flex"
-            flexDirection="column"
-            gap={GRID_GAP}
-          >
+          <Box flex="1" minW="0" display="flex" flexDirection="column" gap="4">
             <ClimateSkeleton count={climateCount} />
             {fanCount > 0 && <FanSkeleton count={fanCount} />}
             <CalendarSkeleton />
@@ -82,18 +68,21 @@ export function HomeOverviewSkeleton({
       <Box
         width="100%"
         minHeight="100%"
-        bg="var(--theme-bg)"
         display="grid"
-        gridTemplateColumns="1.15fr 1fr"
+        // One column on a phone, as HomeBoard does.
+        gridTemplateColumns={{ base: "minmax(0, 1fr)", md: "1.15fr 1fr" }}
         alignContent="start"
-        gap={GRID_GAP}
-        padding={GRID_GAP}
+        // Each card ends below its content, as on the live page — the climate
+        // tiles are shorter than the column beside them.
+        alignItems="start"
+        gap="4"
+        p="4"
       >
         <HomeHeaderSkeleton span={2} />
 
         <ClimateSkeleton count={climateCount} />
 
-        <Box display="flex" flexDirection="column" gap={GRID_GAP} minW="0">
+        <Box display="flex" flexDirection="column" gap="4" minW="0">
           <EnergySkeleton />
           <CalendarSkeleton />
         </Box>

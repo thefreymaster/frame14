@@ -59,49 +59,30 @@ export function BirdSection() {
       grow
       label={`Last bird detection: ${name}`}
     >
-      <Text
-        fontSize="2.4vmin"
-        color="var(--theme-fg-dim)"
-        fontWeight="300"
-        overflow="hidden"
-        whiteSpace="nowrap"
-        textOverflow="ellipsis"
-        minW="0"
-      >
+      <Text textStyle="md" truncate minW="0">
         {name}
       </Text>
+      {/* The Latin name only takes the room that's left, so on a narrow
+          header it gives way before the common name does. */}
       {scientificName && (
         <Text
-          fontSize="2vmin"
-          color="var(--theme-fg-faint)"
+          textStyle="sm"
+          color="fg.muted"
           fontStyle="italic"
-          letterSpacing="0.04em"
-          overflow="hidden"
-          whiteSpace="nowrap"
-          textOverflow="ellipsis"
+          truncate
+          flex="1"
           minW="0"
         >
           {scientificName}
         </Text>
       )}
       {confidencePct != null && (
-        <Text
-          fontSize="2.2vmin"
-          color="var(--theme-fg-faint)"
-          fontWeight="300"
-          flexShrink={0}
-          ml="auto"
-        >
+        <Text textStyle="sm" color="fg.muted" flexShrink={0} ms="auto">
           {confidencePct}%
         </Text>
       )}
       {seen && (
-        <Text
-          fontSize="2vmin"
-          color="var(--theme-fg-faint)"
-          letterSpacing="0.08em"
-          flexShrink={0}
-        >
+        <Text textStyle="sm" color="fg.muted" flexShrink={0}>
           {seen}
         </Text>
       )}

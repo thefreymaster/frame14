@@ -26,7 +26,8 @@ export function MarqueeArt({ src }: Props) {
       backgroundSize="cover"
       backgroundPosition="center"
       backgroundRepeat="no-repeat"
-      style={{ animation: "marqueeArtIn 1s ease-out both" }}
+      animationName="scale-in, fade-in"
+      animationDuration="slowest"
     />
   );
 }

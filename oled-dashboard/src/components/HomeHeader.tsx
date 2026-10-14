@@ -89,7 +89,7 @@ export function HomeHeader({
       <HStack
         width="100%"
         align="baseline"
-        textStyle={{ base: "lg", md: "2xl" }}
+        textStyle={{ base: "md", sm: "lg", md: "2xl" }}
         minW="0"
       >
         <Text truncate minW="0">

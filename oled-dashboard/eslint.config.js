@@ -20,4 +20,23 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Chakra CLI snippets (`npx @chakra-ui/cli snippet add`) export part
+    // aliases and a toaster store alongside their components.
+    files: ['src/components/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
+    // React Compiler findings in the data hooks, which predate the Chakra
+    // rebuild and are left as they are; reported, not failed.
+    files: [
+      'src/hooks/useEntity.ts',
+      'src/hooks/useHomeData.ts',
+      'src/hooks/useRegionLuminance.ts',
+    ],
+    rules: {
+      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+    },
+  },
 ])

@@ -25,7 +25,12 @@ export function HomeCardFace({
       <div className="home-card-body">{children}</div>
       {editing && (
         <>
-          <Card.Root className="home-card-placeholder" borderStyle="dashed">
+          {/* Sized like Board, so a stand-in matches the cards around it. */}
+          <Card.Root
+            className="home-card-placeholder"
+            size={{ base: "sm", md: "md" }}
+            borderStyle="dashed"
+          >
             <Card.Body>
               <Card.Title>{label}</Card.Title>
               {hiddenHint && (

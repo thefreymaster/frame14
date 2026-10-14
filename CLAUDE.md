@@ -171,7 +171,7 @@ src/
     HomeCardSlot.tsx              — sortable wrapper per card; inert (no listeners, no transform) outside arranging
     HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)
     HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging — a Chakra ActionBar that ignores outside presses and Escape (HomeBoard owns Escape)
-    Board.tsx                     — stock Chakra Card with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
+    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones; md above) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
     StatusChip.tsx                — ambient chip (Chakra Tag, `surface` variant) for the status strip and the bird detection
     skeletons/                    — /home loading placeholders built from stock Chakra Skeleton / SkeletonCircle
     ui/                           — Chakra CLI snippets (close-button, color-mode, data-list, empty-state, native-select, provider, segmented-control, slider, status, switch, toaster, tooltip, toggle-tip)

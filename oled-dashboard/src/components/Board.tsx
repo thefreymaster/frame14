@@ -37,6 +37,9 @@ function writeOpen(key: string | undefined, open: boolean) {
  * A collapsible board is a Collapsible whose trigger is the card header.
  * Collapse state persists per board in localStorage under
  * `board-collapsed:<key>`.
+ *
+ * Below Chakra's md breakpoint (768px, a phone) the card is size sm, so its
+ * padding and header-to-body gap drop from spacing.6 to spacing.4.
  */
 export const Board = ({
   children,
@@ -80,6 +83,7 @@ export const Board = ({
 
   return (
     <Card.Root
+      size={{ base: "sm", md: "md" }}
       minW="0"
       flex={fill ? "1" : undefined}
       minH={fill ? "0" : undefined}

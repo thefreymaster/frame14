@@ -8,6 +8,7 @@
 - Changed: every pop-up — thermostat, fan, energy, 3D printer, forecast and the voice assistant — is a standard Chakra dialog with a title and a close button. Tap outside or press Escape to close it.
 - Changed: the thermostat mode selector is a segmented control (Heat / Cool / Fan / Off) and fan speed is a slider. The temperature arc itself still works the same way.
 - Changed: the thermostats on Home are compact tiles instead of big round dials, so the Climate card takes about half the room. Each tile shows the room temperature and a coloured label for what the unit is doing, such as "Heating → 70°" (filled in while it is actively heating or cooling) or "Off"; tap a tile to open the thermostat pop-up as before.
+- Changed: on phones (screens narrower than 768px) cards have tighter padding, the same as Chakra's small card, so more fits on screen. Tablets, desktops and the frame are unchanged.
 - Changed: each light is a tile you tap to toggle; lit tiles are highlighted in yellow and show a check mark.
 - Changed: the navigation bar highlights the current page with a filled tab.
 - Changed: Settings uses segmented controls for device mode and theme, a switch for "Show navigation", and a status dot for the connection.

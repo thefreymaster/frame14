@@ -73,13 +73,25 @@ export function HomeHeader({
     ? (CONDITION_LABEL[weather.state] ?? weather.state)
     : "";
 
-  // The hero figures use the top of Chakra's type scale; landscape gives this
-  // card half the width, so it steps down one size there.
-  const hero = { base: "9xl", _landscape: "8xl" };
+  // The hero figures climb Chakra's type scale with the breakpoints, topping
+  // out at 9xl on the panel. Landscape gives this card half the width, so it
+  // climbs slower there. A fixed 9xl overflowed phones and crowded laptops.
+  const hero = {
+    base: "5xl",
+    sm: "6xl",
+    md: "8xl",
+    "2xl": "9xl",
+    _landscape: { base: "5xl", lg: "6xl", xl: "7xl", "2xl": "8xl" },
+  };
 
   return (
     <Board storageKey="time-weather">
-      <HStack width="100%" align="baseline" textStyle="2xl" minW="0">
+      <HStack
+        width="100%"
+        align="baseline"
+        textStyle={{ base: "lg", md: "2xl" }}
+        minW="0"
+      >
         <Text truncate minW="0">
           {day}, {month} {date}
         </Text>
@@ -120,7 +132,12 @@ export function HomeHeader({
             prefix={minutes < 10 ? "0" : ""}
             trend={1}
           />
-          <Text as="span" textStyle="4xl" color="fg.muted" ms="2">
+          <Text
+            as="span"
+            textStyle={{ base: "xl", md: "4xl" }}
+            color="fg.muted"
+            ms="2"
+          >
             {ampm}
           </Text>
         </Text>

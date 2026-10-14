@@ -10,6 +10,12 @@
 /** Font size for the hero figures, relative to their row. */
 export const HERO_SIZE = "17cqi";
 
+/**
+ * Photos lays the figures over a picture, where Home's size covers too much of
+ * it, so they run at about 70% of Home's there.
+ */
+export const PHOTOS_HERO_SIZE = "12cqi";
+
 /** am/pm, seconds and other suffixes, relative to the hero figure. */
 export const HERO_SUFFIX_SIZE = "0.35em";
 

@@ -15,7 +15,12 @@ import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
 import { EmptyState } from "../components/ui/empty-state";
-import { HERO_SUFFIX_SIZE, HERO_TEXT, HOME_HERO_INSET } from "../lib/hero";
+import {
+  HERO_SUFFIX_SIZE,
+  HERO_TEXT,
+  HOME_HERO_INSET,
+  PHOTOS_HERO_SIZE,
+} from "../lib/hero";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -48,8 +53,8 @@ function PhotoOverlay({ assetId }: OverlayProps) {
 
   return (
     <PixelShift>
-      {/* Inset and sized like Home's clock row, so the figures match Home's;
-          see lib/hero.ts. */}
+      {/* Inset like Home's clock row and styled like Home's clock, a size
+          smaller so the photo shows; see lib/hero.ts. */}
       <Box
         position="absolute"
         top="8"
@@ -67,6 +72,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
         >
           <Text
             {...HERO_TEXT}
+            fontSize={PHOTOS_HERO_SIZE}
             color={color}
             style={{ transition: "color 1s ease" }}
           >
@@ -85,6 +91,7 @@ function PhotoOverlay({ assetId }: OverlayProps) {
           {weather && (
             <Text
               {...HERO_TEXT}
+              fontSize={PHOTOS_HERO_SIZE}
               color={color}
               style={{ transition: "color 1s ease" }}
             >

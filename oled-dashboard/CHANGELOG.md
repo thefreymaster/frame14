@@ -14,6 +14,7 @@
 - Fixed: on a narrow screen the Calendar card's event count ran past the edge of the card. It now moves under the title when there isn't room, and the loading placeholders stay inside their cards too.
 - Fixed: on a phone the last bird seen was cut off to "Blue …". The common name now stays whole and the Latin name is shortened instead.
 - Changed: cards have smaller, tighter rounded corners, and so do the tiles inside them (thermostats, calendar events, the score bug), so nothing inside a card is rounder than the card itself.
+- Changed: a thermostat that is on now fills its whole tile with its colour — orange for heat, blue for cool, teal for fan — instead of colouring only its label. The tile says "Heating to 70°" (with the icon pulsing) while it is running and "Heat · set 70°" while it is waiting; off thermostats look the same as before.
 - Changed: each light is a tile you tap to toggle; lit tiles are highlighted in yellow and show a check mark.
 - Changed: the navigation bar highlights the current page with a filled tab.
 - Changed: Settings uses segmented controls for device mode and theme, a switch for "Show navigation", and a status dot for the connection.

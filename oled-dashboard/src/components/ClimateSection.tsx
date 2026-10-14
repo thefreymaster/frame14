@@ -23,10 +23,12 @@ const RUNNING: Record<string, { mode: ClimateVisualMode; label: string }> = {
 
 /**
  * One thermostat as a Stat tile: the name and a mode icon, then the room
- * temperature beside a Badge saying what it's doing. The badge is solid while
- * the unit is heating or cooling right now, subtle on standby, and grey when
- * it's off; an off tile also drops to the outline card. The whole tile is the
- * button that opens the dialog.
+ * temperature and what it's doing. A unit that's on fills the whole tile with
+ * its mode's solid colour (orange heat, blue cool, teal fan) and every word on
+ * it takes the palette's contrast colour; the status line says whether it's
+ * running now ("Heating to 70°", with the icon pulsing) or idle ("Heat · set
+ * 70°"). An off unit is the plain outline card with a grey "Off" Badge. The
+ * whole tile is the button that opens the dialog.
  */
 function ClimateTile({
   unit,
@@ -38,7 +40,7 @@ function ClimateTile({
   const mode = normalizeClimateMode(unit.hvacMode ?? unit.state);
   const running = unit.hvacAction ? RUNNING[unit.hvacAction] : undefined;
   const shown = running?.mode ?? mode;
-  const isOff = shown === "off";
+  const on = shown !== "off";
   const { palette } = hvacPalette(shown);
   const ModeIcon = MODE_ICON[shown];
   const currentTemp = fmtClimateTemp(unit.currentTemp);
@@ -50,18 +52,31 @@ function ClimateTile({
       ? targetTemp
       : null;
   const reading = currentTemp != null ? `${currentTemp}°` : "—";
-  const status = target != null ? `${label} → ${target}°` : label;
-  const spoken = target != null ? `${label} to ${target}°` : label;
+  const status =
+    target == null
+      ? label
+      : running
+        ? `${label} to ${target}°`
+        : `${label} · set ${target}°`;
+  const spoken =
+    target == null
+      ? label
+      : running
+        ? `${label} to ${target}°`
+        : `${label}, set to ${target}°`;
 
   return (
     <Card.Root
       asChild
       size="sm"
-      variant={isOff ? "outline" : "subtle"}
+      variant={on ? "subtle" : "outline"}
+      colorPalette={palette}
+      bg={on ? "colorPalette.solid" : undefined}
+      color={on ? "colorPalette.contrast" : undefined}
       borderRadius="sm"
       cursor="pointer"
       focusVisibleRing="outside"
-      _active={{ bg: "bg.emphasized" }}
+      _active={{ bg: on ? "colorPalette.solid/80" : "bg.emphasized" }}
     >
       <button
         type="button"
@@ -73,26 +88,41 @@ function ClimateTile({
             {/* A narrow tile (a phone, or four across in landscape) wraps the
                 name rather than cutting it off. */}
             <HStack justify="space-between" align="start" gap="2">
-              <Stat.Label minW="0" lineClamp="2">
+              <Stat.Label
+                minW="0"
+                lineClamp="2"
+                color={on ? "inherit" : undefined}
+              >
                 {unit.name}
               </Stat.Label>
-              <Icon color={isOff ? "fg.subtle" : `${palette}.fg`} boxSize="5">
+              <Icon
+                color={on ? "inherit" : "fg.subtle"}
+                boxSize="5"
+                animation={
+                  running ? "pulse 2s ease-in-out infinite" : undefined
+                }
+              >
                 <ModeIcon />
               </Icon>
             </HStack>
             <HStack justify="space-between" gap="2" wrap="wrap">
               <Stat.ValueText
                 lineHeight="1"
-                color={isOff ? "fg.muted" : undefined}
+                color={on ? undefined : "fg.muted"}
               >
                 {reading}
               </Stat.ValueText>
-              <Badge
-                colorPalette={palette}
-                variant={running ? "solid" : "subtle"}
-              >
-                {status}
-              </Badge>
+              {on ? (
+                <Stat.HelpText
+                  color="inherit"
+                  textStyle="xs"
+                  fontWeight="semibold"
+                >
+                  {status}
+                </Stat.HelpText>
+              ) : (
+                <Badge colorPalette="gray">{status}</Badge>
+              )}
             </HStack>
           </Stat.Root>
         </Card.Body>

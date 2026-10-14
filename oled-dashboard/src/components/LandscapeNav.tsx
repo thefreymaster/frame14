@@ -160,12 +160,14 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         flexDirection="column"
         justifyContent="center"
         height="auto"
+        px="1"
         py="2"
         gap="1"
-        // Icons and the selected fill follow the shadcn build's nav: 20px
-        // icons on a phone, a step up wherever the type scale grows, and a
-        // neutral grey fill (gray.100 / gray.800) on the selected entry.
-        _icon={{ boxSize: { base: "5", md: "6" } }}
+        // Padding, icons and the selected fill follow the shadcn build's nav:
+        // 20px icons on a phone and a little larger wherever the type scale
+        // grows, and a neutral grey fill (gray.100 / gray.800) on the
+        // selected entry.
+        _icon={{ boxSize: { base: "5", md: "1.375rem" } }}
         _selected={{ bg: { _light: "gray.100", _dark: "gray.800" } }}
       >
         <Icon />
@@ -194,8 +196,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         bg="bg"
         borderTopWidth="1px"
         zIndex="sticky"
-        px="1"
-        py="1"
+        px="2"
         transform={hidden ? "translateY(100%)" : "translateY(0)"}
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
       >
@@ -207,7 +208,9 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           activationMode="manual"
           height="100%"
         >
-          <Tabs.List height="100%">{portraitItems.map(renderItem)}</Tabs.List>
+          <Tabs.List height="100%" alignItems="center" gap="1">
+            {portraitItems.map(renderItem)}
+          </Tabs.List>
         </Tabs.Root>
       </Box>
 
@@ -223,8 +226,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         bg="bg"
         borderRightWidth="1px"
         zIndex="sticky"
-        px="1"
-        py="2"
+        p="2"
         transform={hidden ? "translateX(-100%)" : "translateX(0)"}
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
       >
@@ -236,7 +238,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           activationMode="manual"
           height="100%"
         >
-          <Tabs.List width="100%" height="100%">
+          <Tabs.List width="100%" height="100%" gap="1">
             {visibleNavItems.map(renderItem)}
             <Spacer />
             {BOTTOM_NAV_ITEMS.map(renderItem)}

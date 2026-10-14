@@ -5,4 +5,4 @@
 export const NAV_BAR_HEIGHT = "4rem";
 
 /** Width of the landscape side rail. */
-export const NAV_RAIL_WIDTH = "4.75rem";
+export const NAV_RAIL_WIDTH = "5rem";

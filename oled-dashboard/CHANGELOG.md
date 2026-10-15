@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.50.1
+
+- Fixed: in the iPhone home-screen app, the page no longer shows through below the navigation bar. The bar now runs down to the bottom edge of the screen.
+- Fixed: in the iPhone home-screen app, content scrolled up no longer shows behind the clock and notch at the top of the screen.
+- Changed: the view buttons on Control are rounded rectangles instead of circles.
+
 ## 0.50.0
 
 - Changed: light and switch tiles no longer show a checkbox; the lit icon and the yellow tile show what's on. On a phone the tiles sit three across instead of four, and long names wrap instead of being cut off.

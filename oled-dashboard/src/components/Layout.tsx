@@ -44,6 +44,23 @@ export function Layout() {
     <>
       <SocketViewListener />
 
+      {/* Behind the status bar. The page's top padding clears it at rest, but
+          in an iPhone home-screen app (black-translucent status bar) content
+          scrolled up would show through under the clock and notch; this strip
+          masks it. Zero height everywhere else. */}
+      {showNav && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          height="env(safe-area-inset-top, 0px)"
+          bg="bg"
+          zIndex="sticky"
+          pointerEvents="none"
+        />
+      )}
+
       <HStack gap="0" align="stretch">
         <LandscapeNav hidden={!showNav} />
         <Box

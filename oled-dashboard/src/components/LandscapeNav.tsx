@@ -184,14 +184,18 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
 
   return (
     <>
-      {/* Portrait: bottom horizontal bar */}
+      {/* Portrait: bottom horizontal bar. Its background runs on through the
+          home-indicator inset to the bottom edge, so in an iPhone home-screen
+          app the page doesn't show through underneath it; the entries keep to
+          the NAV_BAR_HEIGHT above the inset. */}
       <Box
         display={{ base: "block", _landscape: "none" }}
         position="fixed"
         top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_HEIGHT} - env(safe-area-inset-bottom, 0px))`}
         left={0}
         right={0}
-        height={NAV_BAR_HEIGHT}
+        height={`calc(${NAV_BAR_HEIGHT} + env(safe-area-inset-bottom, 0px))`}
+        pb="env(safe-area-inset-bottom, 0px)"
         bg="bg"
         borderTopWidth="1px"
         zIndex="sticky"

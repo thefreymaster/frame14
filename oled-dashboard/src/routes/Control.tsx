@@ -217,7 +217,10 @@ export function Control() {
                         onClick={() => changeView(v.path)}
                         width="100%"
                         height="auto"
-                        aspectRatio="1"
+                        // A rounded rectangle, not the pill every other button
+                        // is: a square tile at full radius is a circle.
+                        aspectRatio="4 / 3"
+                        borderRadius="xl"
                         flexDirection="column"
                         gap="2"
                       >

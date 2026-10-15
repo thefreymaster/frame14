@@ -28,9 +28,8 @@ body {
 
 /* Home layout (HomeBoard) — structural, not styling. A card that rendered
    nothing (or only an empty box, like a status strip with no chips) takes no
-   room and no gap, and a zone or column pair left with nothing visible goes
-   too. Decided by CSS because only the DOM knows: each card chooses whether
-   to show from its own subscriptions. */
+   room in the grid. Decided by CSS because only the DOM knows: each card
+   chooses whether to show from its own subscriptions. */
 .home-card,
 .home-card-body {
   display: flex;
@@ -38,9 +37,7 @@ body {
   min-width: 0;
 }
 
-.home-card:not([data-editing]):not(:has(> .home-card-body > :not(:empty))),
-.home-zone:not([data-editing]):not(:has(> .home-card > .home-card-body > :not(:empty))),
-.home-columns:not([data-editing]):not(:has(.home-card-body > :not(:empty))) {
+.home-card:not([data-editing]):not(:has(> .home-card-body > :not(:empty))) {
   display: none;
 }
 

@@ -75,7 +75,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 |---|---|---|
 | `/` | redirect | → `/home` |
 | `/clock` | `Clock` | Portrait display: clock + NWS weather |
-| `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar. Cards are rearrangeable per device (press and hold) — see `HomeBoard` |
+| `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar. Cards are rearrangeable and resizable per device (press and hold) — see `HomeBoard` |
 | `/lights` | `Lights` | Light + switch controls |
 | `/blank` | `Blank` | Pure black screen (motion off) |
 | `/photos` | `Photos` | Immich photo slideshow |
@@ -128,7 +128,7 @@ src/
   router.tsx                      — createBrowserRouter, Layout wraps all routes
   routes/
     Clock.tsx                     — clock + weather page
-    HomeOverview.tsx              — home overview page; builds the card map and hands it to HomeBoard (keyed by orientation)
+    HomeOverview.tsx              — home overview page; builds the card map and hands it to HomeBoard, keyed by the column count (`useHomeColumns`: 4 / 2 / 1 from the media queries in lib/homeLayout)
     Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
     Photos.tsx                    — Immich slideshow
@@ -166,9 +166,9 @@ src/
     VoiceAssistOverlay.tsx        — full-screen voice session UI, a stock Chakra Dialog, always mounted and open while a session runs; keeps the last live snapshot for the exit animation (listening / thinking / speaking / done / error); done swaps the mic for a checkmark
     VoiceLevelRing.tsx            — mic level ring; writes transform in a rAF loop, never through React state
     VoiceStatusBoard.tsx          — read-only voice diagnostics on /control (DataList, Alerts)
-    HomeBoard.tsx                 — /home's rearrangeable layout (portrait's two columns stack into one below Chakra's md, i.e. on phones): press-and-hold enters arranging, dnd-kit multiple-containers drag between zones, saves via lib/homeLayout, Done/Escape/90s idle leaves. DragOverlay and toolbar are portalled to body (PageTransition's transform would offset fixed elements)
-    HomeZone.tsx                  — one column or full-width band: SortableContext + its own droppable, so empty zones accept drops
-    HomeCardSlot.tsx              — sortable wrapper per card; inert (no listeners, no transform) outside arranging
+    HomeBoard.tsx                 — /home's rearrangeable layout: one CSS grid of `columns` equal columns (4 desktop / landscape tablet, 2 frame portrait, 1 phone), each card spanning its saved width, packed by height with `usePackedRows`. Press-and-hold enters arranging; dnd-kit sorts the single list live in onDragOver (no sortable transforms — the grid re-packs and shows the landing spot), with a travel threshold so two cards don't flip back and forth; dashed lanes show the columns. Saves via lib/homeLayout; Done/Escape/90s idle leaves. DragOverlay and toolbar are portalled to body (PageTransition's transform would offset fixed elements)
+    HomeCardSlot.tsx              — sortable grid item per card (`grid-column: span n`); inert (no listeners) outside arranging; carries the width picker while arranging on 2+ columns
+    HomeCardWidthPicker.tsx       — the width SegmentedControl (¼ ½ ¾ Full / ½ Full) straddling a card's bottom edge; stops pointer and key events so it never starts a drag
     HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)
     HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging — a Chakra ActionBar that ignores outside presses and Escape (HomeBoard owns Escape)
     Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones; md above; `borderRadius="sm"`, which every card and the tiles inside cards share) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
@@ -188,6 +188,7 @@ src/
     useAlbumPhotos.ts             — fetches /api/photos/albums/:id
     usePhotosConfig.ts            — fetches /api/photos/config (pinned album ID)
     useLongPress.ts               — press-and-hold pointer handlers; movement cancels, ignores portal events, swallows the release click
+    usePackedRows.ts              — masonry packing for a CSS grid: 2px auto rows, each child measured (ResizeObserver) and given `grid-row-end: span n`; used by HomeBoard and its skeleton
     useVoiceAssist.ts             — voice session snapshot + start/cancel (useSyncExternalStore over lib/voiceAssist)
     useAssistConfig.ts            — fetches /api/assist/config, staleTime: Infinity
     useSocket.ts                  — socket.io-client connection status
@@ -209,7 +210,7 @@ src/
     callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
     voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
     voiceAssist.ts                — voice session state machine + socket protocol (module store, like navVisibility)
-    homeLayout.ts                 — /home card ids, zones per orientation (portrait: top/left/right/bottom, landscape: left/right), defaults, and localStorage `home-layout:<orientation>`; written only after a card is moved, normalised on read (unknown ids dropped, missing cards return to their default zone)
+    homeLayout.ts                 — /home card ids, column rules (`homeColumnsFor` and its media queries), widths per grid (`HOME_WIDTHS`), default layouts for 2 and 4 columns (a phone reads the 2-column one at full width), and localStorage `home-layout:<2|4>col` as an ordered list of `{ id, span }`; written only after a card is moved or resized, normalised on read (unknown ids dropped, spans clamped, missing cards appended at their default width); a pre-0.51 zone layout (`home-layout:portrait|landscape`) is converted on read
     voiceCue.ts                   — synthesised success/failure tones (Web Audio, no asset files) that stand in for a spoken reply
 ```
 

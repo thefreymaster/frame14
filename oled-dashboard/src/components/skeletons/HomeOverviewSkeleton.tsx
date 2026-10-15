@@ -1,5 +1,13 @@
-import { Box } from "@chakra-ui/react";
+import { useRef } from "react";
+import { Box, Grid } from "@chakra-ui/react";
 import { useEntitiesConfig } from "../../hooks/useEntitiesConfig";
+import { PACKED_ROW_PX, usePackedRows } from "../../hooks/usePackedRows";
+import {
+  homeGridFor,
+  loadHomeLayout,
+  type HomeCardId,
+  type HomeColumns,
+} from "../../lib/homeLayout";
 import { StatusBanner } from "../StatusBanner";
 import { CalendarSkeleton } from "./CalendarSkeleton";
 import { ClimateSkeleton } from "./ClimateSkeleton";
@@ -12,20 +20,17 @@ const DEFAULT_CLIMATE = 2;
 const DEFAULT_CHIPS = 2;
 
 /**
- * Loading state for /home — the same bento as HomeOverview with every tile
- * replaced by its placeholder, so the page doesn't jump when the data lands.
+ * Loading state for /home — this device's saved arrangement (order and
+ * widths, packed the same way as HomeBoard) with every card replaced by its
+ * placeholder, so the page doesn't jump when the data lands.
  *
  * Counts come from /api/entities (cached with staleTime: Infinity, so it is
  * usually already resolved) — that gets the number of thermostat tiles and fan
- * chips right instead of guessing. Printer, vacuum and team sections are
+ * chips right instead of guessing. Printer, vacuum, team and radar cards are
  * active-only in the real page, so they're represented by the status strip's
- * chips rather than tiles that would vanish on load.
+ * chips rather than placeholders that would vanish on load.
  */
-export function HomeOverviewSkeleton({
-  isLandscape,
-}: {
-  isLandscape: boolean;
-}) {
+export function HomeOverviewSkeleton({ columns }: { columns: HomeColumns }) {
   const { data: config } = useEntitiesConfig();
   const climateCount = config?.climate?.length || DEFAULT_CLIMATE;
   const fanCount = config?.fans?.length ?? 0;
@@ -33,63 +38,48 @@ export function HomeOverviewSkeleton({
     ? (config.printer ? 1 : 0) + (config.vacuums?.length ?? 0)
     : DEFAULT_CHIPS;
 
-  if (isLandscape) {
-    return (
-      <>
-        <StatusBanner />
-        <Box
-          width="100%"
-          minHeight="100%"
-          display="flex"
-          flexDirection="row"
-          alignItems="flex-start"
-          gap="4"
-          p="4"
-        >
-          <Box flex="1" minW="0" display="flex" flexDirection="column" gap="4">
-            <HomeHeaderSkeleton />
-            <EnergySkeleton />
-          </Box>
+  const placeholders: Partial<Record<HomeCardId, React.ReactNode>> = {
+    header: <HomeHeaderSkeleton />,
+    climate: <ClimateSkeleton count={climateCount} />,
+    energy: <EnergySkeleton />,
+    calendar: <CalendarSkeleton />,
+    ...(fanCount > 0 && { fan: <FanSkeleton count={fanCount} /> }),
+    ...(chipCount > 0 && {
+      statusStrip: <StatusStripSkeleton count={chipCount} />,
+    }),
+  };
+  const cards = loadHomeLayout(homeGridFor(columns)).filter(
+    (card) => placeholders[card.id],
+  );
 
-          <Box flex="1" minW="0" display="flex" flexDirection="column" gap="4">
-            <ClimateSkeleton count={climateCount} />
-            {fanCount > 0 && <FanSkeleton count={fanCount} />}
-            <CalendarSkeleton />
-            {chipCount > 0 && <StatusStripSkeleton count={chipCount} />}
-          </Box>
-        </Box>
-      </>
-    );
-  }
+  const gridRef = useRef<HTMLDivElement>(null);
+  usePackedRows(gridRef, [cards.map((card) => card.id).join(), columns]);
 
   return (
     <>
       <StatusBanner />
-      <Box
-        width="100%"
-        minHeight="100%"
-        display="grid"
-        // One column on a phone, as HomeBoard does.
-        gridTemplateColumns={{ base: "minmax(0, 1fr)", md: "1.15fr 1fr" }}
-        alignContent="start"
-        // Each card ends below its content, as on the live page — the climate
-        // tiles are shorter than the column beside them.
-        alignItems="start"
-        gap="4"
-        p="4"
-      >
-        <HomeHeaderSkeleton span={2} />
-
-        <ClimateSkeleton count={climateCount} />
-
-        <Box display="flex" flexDirection="column" gap="4" minW="0">
-          <EnergySkeleton />
-          <CalendarSkeleton />
-        </Box>
-
-        {fanCount > 0 && <FanSkeleton span={2} count={fanCount} />}
-
-        {chipCount > 0 && <StatusStripSkeleton span={2} count={chipCount} />}
+      <Box width="100%" minHeight="100%" p="4">
+        <Grid
+          ref={gridRef}
+          templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
+          autoRows={`${PACKED_ROW_PX}px`}
+          autoFlow="row dense"
+          columnGap="4"
+          rowGap="0"
+          alignItems="start"
+        >
+          {cards.map((card) => (
+            <Box
+              key={card.id}
+              gridColumn={`span ${Math.min(card.span, columns)}`}
+              display="flex"
+              flexDirection="column"
+              minW="0"
+            >
+              {placeholders[card.id]}
+            </Box>
+          ))}
+        </Grid>
       </Box>
     </>
   );

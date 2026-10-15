@@ -13,10 +13,13 @@ import { NAV_BAR_HEIGHT } from "../lib/navMetrics";
  */
 export function HomeLayoutToolbar({
   open,
+  resizable,
   onDone,
   onReset,
 }: {
   open: boolean;
+  /** Cards also take a width here (not on a one-column phone). */
+  resizable: boolean;
   onDone: () => void;
   onReset: () => void;
 }) {
@@ -34,7 +37,9 @@ export function HomeLayoutToolbar({
         >
           <ActionBar.Content>
             <Text display={{ base: "none", md: "block" }} textStyle="sm">
-              Drag cards to rearrange
+              {resizable
+                ? "Drag cards to move them · pick a width under each"
+                : "Drag cards to rearrange"}
             </Text>
             <ActionBar.Separator />
             <Button variant="outline" size="sm" onClick={onReset}>

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.51.0
+
+- Added: cards on Home can be made wider or narrower. Press and hold a card to start arranging, then pick a width under each card: ¼, ½, ¾ or full on a desktop or a tablet held sideways (four columns), ½ or full on the frame in portrait (two columns). A phone always shows one card per row. The columns show as dashed lanes while you arrange.
+- Changed: Home is one grid instead of fixed columns and full-width bands. Cards pack under each other by height, so a short card doesn't leave a gap beside a tall one. Each device remembers its own arrangement for four and for two columns, and an arrangement you made before this version carries over.
+- Changed: Reset in the arranging bar puts every card back in its default place and width.
+
 ## 0.50.1
 
 - Fixed: in the iPhone home-screen app, the page no longer shows through below the navigation bar. The bar now runs down to the bottom edge of the screen.

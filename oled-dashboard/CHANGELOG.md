@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.51.2
+
+- Fixed: since cards turned lighter grey in 0.51.1, some things inside them blended into the card in dark mode: the loading placeholders, the outlines of the view buttons and Refresh displays on Control, and the edges of switches, dropdowns and the thermostat tiles. They are one shade lighter again inside cards.
+
 ## 0.51.1
 
 - Changed: in dark mode cards are a lighter grey, so they stand out from the page on the frame's screen instead of nearly blending into it. Rows and buttons inside a card stay darker.

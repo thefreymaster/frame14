@@ -31,6 +31,20 @@ function writeOpen(key: string | undefined, open: boolean) {
   }
 }
 
+// Chakra's dark-mode shades that equal the raised card's gray.800, one step up
+// for everything inside it. See Board.
+const DARK_RAISED = {
+  "--chakra-colors-bg-emphasized": "colors.gray.700",
+  "--chakra-colors-border": "colors.gray.700",
+  "--chakra-colors-border-emphasized": "colors.gray.600",
+  "--chakra-colors-gray-muted": "colors.gray.700",
+  "--chakra-colors-gray-border": "colors.gray.700",
+  "--chakra-colors-gray-emphasized": "colors.gray.600",
+  "--chakra-colors-color-palette-muted": "colors.gray.700",
+  "--chakra-colors-color-palette-border": "colors.gray.700",
+  "--chakra-colors-color-palette-emphasized": "colors.gray.600",
+};
+
 /**
  * A section card: Chakra's Card, optionally collapsible.
  *
@@ -44,10 +58,14 @@ function writeOpen(key: string | undefined, open: boolean) {
  * Every card uses Chakra's `sm` radius rather than the Card's own `l3` (md);
  * tiles inside a card use `sm` too, so none is rounder than its card.
  *
- * In dark mode the card is `bg.emphasized` (gray.800) rather than the Card's
- * `bg.panel` (gray.950): on the frame's matte NXTPAPER screen gray.950 sat so
- * close to the page that the cards disappeared. Rows and buttons inside a card
- * stay `bg.muted`, so they read as wells in it.
+ * In dark mode the card is gray.800 rather than the Card's `bg.panel`
+ * (gray.950): on the frame's matte NXTPAPER screen gray.950 sat so close to
+ * the page that the cards disappeared. gray.800 is also what Chakra's
+ * `bg.emphasized`, `border` and the gray palette's `muted` / `border` are in
+ * dark mode, so inside the card those step up one shade (DARK_RAISED) —
+ * otherwise skeleton bars, switch tracks, outline buttons and field borders
+ * vanish into it. Rows and tiles inside a card stay `bg.muted` / `bg.panel`
+ * and read as wells.
  */
 export const Board = ({
   children,
@@ -92,7 +110,9 @@ export const Board = ({
   return (
     <Card.Root
       size={{ base: "sm", md: "md" }}
-      bg={{ _dark: "bg.emphasized" }}
+      bg={{ _dark: "gray.800" }}
+      borderColor={{ _dark: "gray.800" }}
+      css={{ _dark: DARK_RAISED }}
       borderRadius="sm"
       minW="0"
       flex={fill ? "1" : undefined}

@@ -43,6 +43,11 @@ function writeOpen(key: string | undefined, open: boolean) {
  *
  * Every card uses Chakra's `sm` radius rather than the Card's own `l3` (md);
  * tiles inside a card use `sm` too, so none is rounder than its card.
+ *
+ * In dark mode the card is `bg.emphasized` (gray.800) rather than the Card's
+ * `bg.panel` (gray.950): on the frame's matte NXTPAPER screen gray.950 sat so
+ * close to the page that the cards disappeared. Rows and buttons inside a card
+ * stay `bg.muted`, so they read as wells in it.
  */
 export const Board = ({
   children,
@@ -87,6 +92,7 @@ export const Board = ({
   return (
     <Card.Root
       size={{ base: "sm", md: "md" }}
+      bg={{ _dark: "bg.emphasized" }}
       borderRadius="sm"
       minW="0"
       flex={fill ? "1" : undefined}

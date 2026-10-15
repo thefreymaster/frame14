@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.51.1
+
+- Changed: in dark mode cards are a lighter grey, so they stand out from the page on the frame's screen instead of nearly blending into it. Rows and buttons inside a card stay darker.
+
 ## 0.51.0
 
 - Added: cards on Home can be made wider or narrower. Press and hold a card to start arranging, then pick a width under each card: ¼, ½, ¾ or full on a desktop or a tablet held sideways (four columns), ½ or full on the frame in portrait (two columns). A phone always shows one card per row. The columns show as dashed lanes while you arrange.

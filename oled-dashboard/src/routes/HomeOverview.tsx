@@ -15,23 +15,33 @@ import { CalendarSection } from "../components/CalendarSection";
 import { StatusStrip } from "../components/StatusStrip";
 import { HomeOverviewSkeleton } from "../components/skeletons/HomeOverviewSkeleton";
 import { HomeBoard } from "../components/HomeBoard";
-import type { HomeCardId } from "../lib/homeLayout";
+import {
+  HOME_FOUR_COLUMN_QUERY,
+  HOME_ONE_COLUMN_QUERY,
+  homeColumnsFor,
+  type HomeCardId,
+  type HomeColumns,
+} from "../lib/homeLayout";
 import { EmptyState } from "../components/ui/empty-state";
 
-// ── Orientation hook ─────────────────────────────────────────────────────────
+// ── Columns hook ─────────────────────────────────────────────────────────────
 
-const LANDSCAPE = "(orientation: landscape)";
-
-function subscribeOrientation(onChange: () => void) {
-  const mql = window.matchMedia(LANDSCAPE);
-  mql.addEventListener("change", onChange);
-  return () => mql.removeEventListener("change", onChange);
+function subscribeColumns(onChange: () => void) {
+  const queries = [HOME_ONE_COLUMN_QUERY, HOME_FOUR_COLUMN_QUERY].map((q) =>
+    window.matchMedia(q),
+  );
+  queries.forEach((mql) => mql.addEventListener("change", onChange));
+  return () =>
+    queries.forEach((mql) => mql.removeEventListener("change", onChange));
 }
 
-function useIsLandscape() {
-  return useSyncExternalStore(
-    subscribeOrientation,
-    () => window.matchMedia(LANDSCAPE).matches,
+/** Four columns on a desktop, two on the frame, one on a phone. */
+function useHomeColumns(): HomeColumns {
+  return useSyncExternalStore(subscribeColumns, () =>
+    homeColumnsFor(
+      window.matchMedia(HOME_ONE_COLUMN_QUERY).matches,
+      window.matchMedia(HOME_FOUR_COLUMN_QUERY).matches,
+    ),
   );
 }
 
@@ -53,10 +63,10 @@ function Centered({ children }: { children: React.ReactNode }) {
 
 export function HomeOverview() {
   const { data, isError, isPending } = useHomeData();
-  const isLandscape = useIsLandscape();
+  const columns = useHomeColumns();
 
   if (isPending) {
-    return <HomeOverviewSkeleton isLandscape={isLandscape} />;
+    return <HomeOverviewSkeleton columns={columns} />;
   }
 
   if (isError || !data) {
@@ -91,13 +101,11 @@ export function HomeOverview() {
     statusStrip: <StatusStrip printer={data.printer} vacuum={data.vacuum} />,
   };
 
-  const orientation = isLandscape ? "landscape" : "portrait";
-
   return (
     <>
       <StatusBanner />
-      {/* Keyed so each orientation loads its own saved arrangement. */}
-      <HomeBoard key={orientation} orientation={orientation} cards={cards} />
+      {/* Keyed so each grid loads its own saved arrangement. */}
+      <HomeBoard key={columns} columns={columns} cards={cards} />
     </>
   );
 }

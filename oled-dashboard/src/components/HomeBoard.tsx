@@ -5,72 +5,82 @@ import {
   closestCenter,
   DndContext,
   DragOverlay,
-  getFirstCollision,
   KeyboardSensor,
   MeasuringStrategy,
   MouseSensor,
   pointerWithin,
-  rectIntersection,
   TouchSensor,
   useSensor,
   useSensors,
   type CollisionDetection,
-  type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
-  type UniqueIdentifier,
 } from "@dnd-kit/core";
-import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { HomeZone } from "./HomeZone";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { HomeCardSlot } from "./HomeCardSlot";
 import { HomeCardFace } from "./HomeCardFace";
 import { HomeLayoutToolbar } from "./HomeLayoutToolbar";
 import { toaster } from "./ui/toaster";
 import { useLongPress } from "../hooks/useLongPress";
+import { PACKED_ROW_PX, usePackedRows } from "../hooks/usePackedRows";
 import {
   clearHomeLayout,
   defaultHomeLayout,
-  HOME_ZONE_LABELS,
-  HOME_ZONES,
+  homeGridFor,
   loadHomeLayout,
   saveHomeLayout,
   type HomeCardId,
+  type HomeColumns,
   type HomeLayout,
-  type HomeOrientation,
-  type HomeZoneId,
 } from "../lib/homeLayout";
 
 // A wall panel left mid-arrange would sit there with dashed outlines until
 // someone noticed. Quietly finish instead.
 const EDIT_IDLE_MS = 90_000;
 
+// After a card trades places mid-drag, the grid re-packs under the finger and
+// can put the card it just passed back beneath it. Wait for this much travel
+// before trading again, or the two flip back and forth.
+const SWAP_TRAVEL_PX = 32;
+
+// The board never animates a card into place, so sortable has nothing to do.
+const noTransforms = () => null;
+
 /**
  * The /home cards, rearrangeable. Press and hold any card to start arranging;
- * cards then drag between columns and full-width bands, and the result is
- * saved for this device and orientation (lib/homeLayout.ts).
+ * cards then drag to a new place and, on a grid of more than one column, take
+ * a width from the picker under each card. The result is saved for this
+ * device and grid (lib/homeLayout.ts).
  *
- * The drag logic is dnd-kit's multiple-containers pattern: a card crossing into
- * another zone is moved there while still in the air (onDragOver), so the zone
- * opens a gap for it, and the order within the zone is settled on drop.
+ * The page is one grid of `columns` equal columns. Cards differ in height, and
+ * a plain grid would make every card in a row as tall as the tallest, leaving
+ * gaps under the short ones, so the grid is packed (hooks/usePackedRows): cards
+ * stack under each other column by column, as the old fixed columns did,
+ * while any card can span any number of them.
+ *
+ * Dragging reorders the real list while the card is in the air (onDragOver),
+ * so the grid packs around it and shows exactly where it will land.
  */
 export function HomeBoard({
-  orientation,
+  columns,
   cards,
 }: {
-  orientation: HomeOrientation;
+  columns: HomeColumns;
   cards: Record<HomeCardId, React.ReactNode>;
 }) {
-  const zones = HOME_ZONES[orientation];
-  const [layout, setLayout] = useState<HomeLayout>(() =>
-    loadHomeLayout(orientation),
-  );
+  const grid = homeGridFor(columns);
+  const [layout, setLayout] = useState<HomeLayout>(() => loadHomeLayout(grid));
   const [editing, setEditing] = useState(false);
   const [activeId, setActiveId] = useState<HomeCardId | null>(null);
-  const [overZone, setOverZone] = useState<HomeZoneId | null>(null);
   const [activity, setActivity] = useState(0);
 
+  const gridRef = useRef<HTMLDivElement>(null);
   const beforeDrag = useRef<HomeLayout | null>(null);
-  const lastOverId = useRef<UniqueIdentifier | null>(null);
-  const movedToNewZone = useRef(false);
+  const lastSwapAt = useRef<{ x: number; y: number } | null>(null);
 
   const longPress = useLongPress(
     () => {
@@ -91,60 +101,16 @@ export function HomeBoard({
     }),
   );
 
-  const isZone = useCallback(
-    (id: UniqueIdentifier): id is HomeZoneId =>
-      zones.includes(id as HomeZoneId),
-    [zones],
-  );
+  // Whatever the finger is over wins; between cards, the nearest one.
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    const hits = pointerWithin(args);
+    return hits.length > 0 ? hits : closestCenter(args);
+  }, []);
 
-  const zoneOf = useCallback(
-    (id: UniqueIdentifier): HomeZoneId | undefined =>
-      isZone(id)
-        ? id
-        : zones.find((z) => layout[z]?.includes(id as HomeCardId)),
-    [isZone, layout, zones],
-  );
+  const order = layout.map((card) => card.id);
+  const orderKey = order.join();
 
-  // Pointer first: whatever the finger is over wins. Over a zone but between
-  // its cards, take the nearest card in that zone; over an empty zone, the zone.
-  const collisionDetection: CollisionDetection = useCallback(
-    (args) => {
-      const pointerHits = pointerWithin(args);
-      const hits =
-        pointerHits.length > 0 ? pointerHits : rectIntersection(args);
-      let overId = getFirstCollision(hits, "id");
-
-      if (overId != null) {
-        if (isZone(overId)) {
-          const zoneItems = layout[overId] ?? [];
-          if (zoneItems.length > 0) {
-            overId =
-              closestCenter({
-                ...args,
-                droppableContainers: args.droppableContainers.filter((c) =>
-                  zoneItems.includes(c.id as HomeCardId),
-                ),
-              })[0]?.id ?? overId;
-          }
-        }
-        lastOverId.current = overId;
-        return [{ id: overId }];
-      }
-
-      // Moving a card into a new zone reflows the page under the pointer for a
-      // frame; hold the last answer rather than flicker back to the old zone.
-      if (movedToNewZone.current) lastOverId.current = activeId;
-      return lastOverId.current != null ? [{ id: lastOverId.current }] : [];
-    },
-    [activeId, isZone, layout],
-  );
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      movedToNewZone.current = false;
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [layout]);
+  usePackedRows(gridRef, [orderKey, columns, editing]);
 
   useEffect(() => {
     if (!editing) return;
@@ -161,52 +127,36 @@ export function HomeBoard({
 
   function onDragStart({ active }: DragStartEvent) {
     beforeDrag.current = layout;
+    lastSwapAt.current = null;
     setActiveId(active.id as HomeCardId);
-    setOverZone(zoneOf(active.id) ?? null);
     setActivity((n) => n + 1);
   }
 
   function onDragOver({ active, over }: DragOverEvent) {
-    if (!over) return;
-    const from = zoneOf(active.id);
-    const to = zoneOf(over.id);
-    if (!from || !to) return;
-    setOverZone(to);
-    if (from === to) return;
-
+    if (!over || over.id === active.id) return;
+    const rect = active.rect.current.translated;
+    const at = rect
+      ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+      : null;
+    const last = lastSwapAt.current;
+    if (
+      last &&
+      at &&
+      Math.hypot(at.x - last.x, at.y - last.y) < SWAP_TRAVEL_PX
+    ) {
+      return;
+    }
+    lastSwapAt.current = at;
     setLayout((prev) => {
-      const target = prev[to] ?? [];
-      let index = target.length;
-      if (!isZone(over.id)) {
-        const overIndex = target.indexOf(over.id as HomeCardId);
-        const translated = active.rect.current.translated;
-        const below =
-          translated != null &&
-          translated.top > over.rect.top + over.rect.height / 2;
-        if (overIndex >= 0) index = overIndex + (below ? 1 : 0);
-      }
-      movedToNewZone.current = true;
-      const id = active.id as HomeCardId;
-      return {
-        ...prev,
-        [from]: (prev[from] ?? []).filter((c) => c !== id),
-        [to]: [...target.slice(0, index), id, ...target.slice(index)],
-      };
+      const from = prev.findIndex((card) => card.id === active.id);
+      const to = prev.findIndex((card) => card.id === over.id);
+      return from < 0 || to < 0 ? prev : arrayMove(prev, from, to);
     });
   }
 
-  function onDragEnd({ active, over }: DragEndEvent) {
-    let next = layout;
-    const zone = zoneOf(active.id);
-    if (zone && over && zoneOf(over.id) === zone && !isZone(over.id)) {
-      const items = layout[zone] ?? [];
-      const from = items.indexOf(active.id as HomeCardId);
-      const to = items.indexOf(over.id as HomeCardId);
-      if (from !== to) next = { ...layout, [zone]: arrayMove(items, from, to) };
-    }
-    setLayout(next);
-    if (JSON.stringify(next) !== JSON.stringify(beforeDrag.current)) {
-      saveHomeLayout(orientation, next);
+  function onDragEnd() {
+    if (JSON.stringify(layout) !== JSON.stringify(beforeDrag.current)) {
+      saveHomeLayout(grid, layout);
     }
     endDrag();
   }
@@ -218,35 +168,33 @@ export function HomeBoard({
 
   function endDrag() {
     beforeDrag.current = null;
-    lastOverId.current = null;
+    lastSwapAt.current = null;
     setActiveId(null);
-    setOverZone(null);
+    setActivity((n) => n + 1);
+  }
+
+  function setSpan(id: HomeCardId, span: number) {
+    const next = layout.map((card) =>
+      card.id === id ? { ...card, span } : card,
+    );
+    setLayout(next);
+    saveHomeLayout(grid, next);
     setActivity((n) => n + 1);
   }
 
   function reset() {
-    clearHomeLayout(orientation);
-    setLayout(defaultHomeLayout(orientation));
+    clearHomeLayout(grid);
+    setLayout(defaultHomeLayout(grid));
     setActivity((n) => n + 1);
     toaster.create({
       title: "Layout reset",
-      description: `Cards are back in their default ${orientation} places.`,
+      description: "Cards are back in their default places and widths.",
       type: "info",
     });
   }
 
-  const zone = (id: HomeZoneId, props: { flex?: string } = {}) => (
-    <HomeZone
-      key={id}
-      id={id}
-      label={HOME_ZONE_LABELS[id]}
-      items={layout[id] ?? []}
-      cards={cards}
-      editing={editing}
-      targeted={activeId != null && overZone === id}
-      {...props}
-    />
-  );
+  // A phone shows the two-column order, every card full width.
+  const spanOf = (span: number) => Math.min(span, columns);
 
   return (
     <DndContext
@@ -261,45 +209,68 @@ export function HomeBoard({
       <Box
         className="home-board"
         data-editing={editing || undefined}
+        position="relative"
         width="100%"
         minHeight="100%"
-        display="flex"
-        flexDirection={orientation === "portrait" ? "column" : "row"}
-        alignItems={orientation === "portrait" ? undefined : "flex-start"}
-        gap="4"
         p="4"
-        // Room to scroll the last card clear of the arranging bar.
+        // Room to scroll the last card (and its width picker) clear of the
+        // arranging bar.
         pb={editing ? "12rem" : "4"}
         onPointerDownCapture={
           editing ? () => setActivity((n) => n + 1) : undefined
         }
         {...longPress}
       >
-        {orientation === "portrait" ? (
-          <>
-            {zone("top")}
-            {/* Climate takes the wider left cell while the right stacks in a
-                narrower rail, so no two tiles share a size and the page stops
-                reading as a flat stack. On a phone (below Chakra's md) two
-                columns are too narrow to read, so the zones stack instead —
-                every card full width, in its saved order. */}
-            <Grid
-              className="home-columns"
-              data-editing={editing || undefined}
-              templateColumns={{ base: "minmax(0, 1fr)", md: "1.15fr 1fr" }}
-              gap="4"
-            >
-              {zone("left")}
-              {zone("right")}
-            </Grid>
-            {zone("bottom")}
-          </>
-        ) : (
-          <>
-            {zone("left", { flex: "1" })}
-            {zone("right", { flex: "1" })}
-          </>
+        {/* While arranging, the columns themselves show as dashed lanes, so
+            a width reads as "this many of these". */}
+        {editing && columns > 1 && (
+          <Grid
+            aria-hidden
+            position="absolute"
+            inset="4"
+            templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
+            columnGap="4"
+            pointerEvents="none"
+          >
+            {Array.from({ length: columns }, (_, i) => (
+              <Box
+                key={i}
+                rounded="sm"
+                borderWidth="2px"
+                borderStyle="dashed"
+                borderColor="border.emphasized"
+              />
+            ))}
+          </Grid>
         )}
+
+        <SortableContext items={order} strategy={noTransforms}>
+          <Grid
+            ref={gridRef}
+            className="home-grid"
+            position="relative"
+            templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
+            autoRows={`${PACKED_ROW_PX}px`}
+            autoFlow="row dense"
+            columnGap="4"
+            rowGap="0"
+            alignItems="start"
+          >
+            {layout.map((card) => (
+              <HomeCardSlot
+                key={card.id}
+                id={card.id}
+                editing={editing}
+                span={spanOf(card.span)}
+                grid={grid}
+                resizable={columns > 1}
+                onSpanChange={(span) => setSpan(card.id, span)}
+              >
+                {cards[card.id]}
+              </HomeCardSlot>
+            ))}
+          </Grid>
+        </SortableContext>
       </Box>
 
       {/* Portalled for the same reason as the toolbar: a fixed overlay under
@@ -324,6 +295,7 @@ export function HomeBoard({
 
       <HomeLayoutToolbar
         open={editing}
+        resizable={columns > 1}
         onDone={() => setEditing(false)}
         onReset={reset}
       />

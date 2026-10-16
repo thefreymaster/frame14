@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Text, HStack, Spacer, Alert } from "@chakra-ui/react";
+import { Text, HStack, Spacer, Alert, Skeleton } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { BirdSection } from "./BirdSection";
@@ -49,12 +49,19 @@ const CONDITION_LABEL: Record<string, string> = {
   "windy-variant": "Windy",
 };
 
+/**
+ * The date, the clock and the weather now. The clock is the device's own, so
+ * it shows at once; while the weather is loading its two figures are
+ * placeholders.
+ */
 export function HomeHeader({
   internet: { connected = true },
   weather,
+  loading = false,
 }: {
   internet: HomeInternet;
   weather?: HomeWeather | null;
+  loading?: boolean;
 }) {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -86,6 +93,7 @@ export function HomeHeader({
           {day}, {month} {date}
         </Text>
         <Spacer />
+        {loading && <Skeleton height="1em" width="6em" flexShrink={0} />}
         {weather && (
           <Text color="fg.muted" flexShrink={0}>
             {label}
@@ -135,6 +143,16 @@ export function HomeHeader({
           </Text>
         </Text>
         <Spacer />
+        {loading && (
+          <Text {...HERO_TEXT}>
+            <Skeleton
+              as="span"
+              display="inline-block"
+              height="0.75em"
+              width="1.6em"
+            />
+          </Text>
+        )}
         {weather && weather.temperature != null && (
           <Text {...HERO_TEXT}>
             <NumberFlow value={Math.round(weather.temperature)} />°

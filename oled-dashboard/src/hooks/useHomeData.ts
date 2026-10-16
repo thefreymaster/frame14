@@ -95,6 +95,22 @@ export interface HomeInternet {
   connected: boolean;
 }
 
+/**
+ * Which parts of HomeData have not landed yet, so each card can show its own
+ * placeholder while the rest of the page is already live. True only before the
+ * first answer — a background refetch keeps the data it has.
+ */
+export interface HomeLoading {
+  weather: boolean;
+  climate: boolean;
+  energy: boolean;
+  calendar: boolean;
+  /** Only while fans are configured; with none the card never shows. */
+  fan: boolean;
+  /** Only while vacuums are configured; feeds the status strip's chips. */
+  vacuum: boolean;
+}
+
 export interface HomeData {
   weather: HomeWeather | null;
   climate: HomeClimate[];
@@ -207,6 +223,11 @@ function parseFloatOrNull(
 
 function parseFloatOrZero(value: string | undefined | null): number {
   return parseFloatOrNull(value) ?? 0;
+}
+
+/** Every entity has pushed a live state, so the REST snapshot isn't needed. */
+function allLive(states: { data?: unknown }[]): boolean {
+  return states.length > 0 && states.every((state) => state.data != null);
 }
 
 interface ClimateResponse {
@@ -636,8 +657,8 @@ export function useHomeData() {
     currentProduction: liveWatts("currentProduction", energyQuery.data?.currentProduction ?? 0),
     currentConsumption: liveWatts("currentConsumption", energyQuery.data?.currentConsumption ?? 0),
     // /api/energy is the authority for the daily totals — it derives them from
-    // the lifetime counters' statistics. The raw "today" sensors are only a
-    // fallback for when that request has not landed yet.
+    // the lifetime counters' statistics. The card waits for it (see loading);
+    // the raw "today" sensors are only a fallback for when that request fails.
     productionToday:
       energyQuery.data?.production ??
       parseFloatOrNull(liveEnergyByKey.get("productionToday")?.state) ??
@@ -678,11 +699,24 @@ export function useHomeData() {
     ],
   );
 
-  const isPending = weatherQuery.isPending;
+  // A card is ready as soon as its own data is: the REST snapshot, or live
+  // socket states for every one of its entities, whichever comes first. The
+  // energy card waits for /api/energy alone — its daily totals come from there.
+  const loading: HomeLoading = {
+    weather: homeWeather == null && weatherQuery.isPending,
+    climate: climateQuery.isPending && !allLive(climateStates),
+    energy: energyQuery.isPending,
+    calendar: calendarQuery.isPending,
+    fan: fanEntityIds.length > 0 && fanQuery.isPending && !allLive(fanStates),
+    vacuum:
+      vacuumEntityIds.length > 0 &&
+      vacuumQuery.isPending &&
+      !allLive(vacuumStates),
+  };
 
   return {
     data,
-    isPending,
+    loading,
     isError: false,
   };
 }

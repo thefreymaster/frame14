@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.52.0
+
+- Changed: Home no longer turns into one big loading placeholder while it waits for data. Each card shows its own placeholder and fills in as soon as its own data arrives, so the weather can show while the thermostats are still loading. The clock and date show straight away.
+- Fixed: a collapsed card no longer opens to a full-size placeholder while Home loads and then snaps shut.
+
 ## 0.51.2
 
 - Fixed: since cards turned lighter grey in 0.51.1, some things inside them blended into the card in dark mode: the loading placeholders, the outlines of the view buttons and Refresh displays on Control, and the edges of switches, dropdowns and the thermostat tiles. They are one shade lighter again inside cards.

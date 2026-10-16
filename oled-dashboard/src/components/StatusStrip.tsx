@@ -3,6 +3,7 @@ import { IoPrintOutline } from "react-icons/io5";
 import { TbVacuumCleaner } from "react-icons/tb";
 import type { HomePrinter, HomeVacuum } from "../hooks/useHomeData";
 import { StatusChip } from "./StatusChip";
+import { StatusStripSkeleton } from "./skeletons/StatusStripSkeleton";
 
 const PRINTER_ACTIVE = new Set(["running", "printing", "pause"]);
 const VACUUM_ACTIVE = new Set(["cleaning", "returning"]);
@@ -32,10 +33,15 @@ function ChipText({ children }: { children: React.ReactNode }) {
 export function StatusStrip({
   printer,
   vacuum,
+  loading = false,
 }: {
   printer: HomePrinter;
   vacuum: HomeVacuum[];
+  /** The vacuums haven't answered yet: placeholder chips. */
+  loading?: boolean;
 }) {
+  if (loading) return <StatusStripSkeleton />;
+
   const printerStatus = printer.status?.trim().toLowerCase() ?? "";
   // The printer keeps its own tile while active, and says nothing at all when
   // it can't be reached — the chip is only for "here, idle".

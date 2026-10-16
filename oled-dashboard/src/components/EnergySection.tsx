@@ -16,6 +16,7 @@ import type { HomeEnergy } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 import { PanelDialog } from "./PanelDialog";
+import { EnergySkeleton } from "./skeletons/EnergySkeleton";
 
 function fmtKwh(n: number) {
   return isNaN(n) ? "--" : n.toFixed(0);
@@ -59,7 +60,14 @@ function GridBadge({
   );
 }
 
-export function EnergySection({ energy }: { energy: HomeEnergy }) {
+export function EnergySection({
+  energy,
+  loading = false,
+}: {
+  energy: HomeEnergy;
+  /** Today's totals haven't landed: a placeholder body under the real header. */
+  loading?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const { productionToday, consumptionToday } = energy;
   const pct = coverage(energy);
@@ -82,41 +90,45 @@ export function EnergySection({ energy }: { energy: HomeEnergy }) {
           </Flex>
         }
       >
-        <Box
-          role="button"
-          aria-label="Show energy detail"
-          onClick={() => setOpen(true)}
-          cursor="pointer"
-        >
-          <Progress.Root
-            value={Math.min(100, Math.max(0, pct))}
-            colorPalette={palette}
-            size="lg"
+        {loading ? (
+          <EnergySkeleton />
+        ) : (
+          <Box
+            role="button"
+            aria-label="Show energy detail"
+            onClick={() => setOpen(true)}
+            cursor="pointer"
           >
-            <Stat.Root>
-              <Stat.Label>Solar coverage today</Stat.Label>
-              <Stat.ValueText>{Math.round(pct)}%</Stat.ValueText>
-            </Stat.Root>
-            <Progress.Track mt="3">
-              <Progress.Range />
-            </Progress.Track>
-          </Progress.Root>
+            <Progress.Root
+              value={Math.min(100, Math.max(0, pct))}
+              colorPalette={palette}
+              size="lg"
+            >
+              <Stat.Root>
+                <Stat.Label>Solar coverage today</Stat.Label>
+                <Stat.ValueText>{Math.round(pct)}%</Stat.ValueText>
+              </Stat.Root>
+              <Progress.Track mt="3">
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
 
-          <Flex gap="4" rowGap="2" wrap="wrap" mt="4" textStyle="lg">
-            <HStack gap="2">
-              <Icon color="yellow.500">
-                <PiSolarRoof />
-              </Icon>
-              <Text>{fmtKwh(productionToday)} kWh</Text>
-            </HStack>
-            <HStack gap="2" ms="auto">
-              <Icon color="fg.muted">
-                <IoFlash />
-              </Icon>
-              <Text>{fmtKwh(consumptionToday)} kWh</Text>
-            </HStack>
-          </Flex>
-        </Box>
+            <Flex gap="4" rowGap="2" wrap="wrap" mt="4" textStyle="lg">
+              <HStack gap="2">
+                <Icon color="yellow.500">
+                  <PiSolarRoof />
+                </Icon>
+                <Text>{fmtKwh(productionToday)} kWh</Text>
+              </HStack>
+              <HStack gap="2" ms="auto">
+                <Icon color="fg.muted">
+                  <IoFlash />
+                </Icon>
+                <Text>{fmtKwh(consumptionToday)} kWh</Text>
+              </HStack>
+            </Flex>
+          </Box>
+        )}
       </Board>
     </>
   );

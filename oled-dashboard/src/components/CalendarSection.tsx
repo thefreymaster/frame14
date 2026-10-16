@@ -1,8 +1,9 @@
-import { Box, Card, Flex, Stack, Text } from "@chakra-ui/react";
+import { Box, Card, Flex, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { IoCalendarOutline } from "react-icons/io5";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
+import { CalendarSkeleton } from "./skeletons/CalendarSkeleton";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -101,9 +102,12 @@ function EventList({
 export function CalendarSection({
   today,
   tomorrow,
+  loading = false,
 }: {
   today: HomeCalendarEvent[];
   tomorrow: HomeCalendarEvent[];
+  /** The calendars haven't answered: placeholders for the count and events. */
+  loading?: boolean;
 }) {
   return (
     <Board
@@ -114,25 +118,41 @@ export function CalendarSection({
         // both, like the Energy card's badge.
         <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
           <SectionTitle icon={<IoCalendarOutline />}>Calendar</SectionTitle>
-          <Text textStyle="sm" color="fg.muted" ms="auto">
-            {eventCountLabel(today.length, "today")}
-          </Text>
+          {loading ? (
+            <Skeleton
+              height="4"
+              width="6rem"
+              ms="auto"
+              flexShrink="1"
+              minW="0"
+            />
+          ) : (
+            <Text textStyle="sm" color="fg.muted" ms="auto">
+              {eventCountLabel(today.length, "today")}
+            </Text>
+          )}
         </Flex>
       }
     >
-      <SectionTitle>Today</SectionTitle>
-      {today.length > 0 ? (
-        <EventList events={today} />
+      {loading ? (
+        <CalendarSkeleton />
       ) : (
-        <Text color="fg.muted" mt="2">
-          No events today
-        </Text>
-      )}
-      {tomorrow.length > 0 && (
-        <Box mt="6">
-          <SectionTitle>Tomorrow</SectionTitle>
-          <EventList events={tomorrow} />
-        </Box>
+        <>
+          <SectionTitle>Today</SectionTitle>
+          {today.length > 0 ? (
+            <EventList events={today} />
+          ) : (
+            <Text color="fg.muted" mt="2">
+              No events today
+            </Text>
+          )}
+          {tomorrow.length > 0 && (
+            <Box mt="6">
+              <SectionTitle>Tomorrow</SectionTitle>
+              <EventList events={tomorrow} />
+            </Box>
+          )}
+        </>
       )}
     </Board>
   );

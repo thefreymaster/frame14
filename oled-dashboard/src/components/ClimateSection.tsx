@@ -5,6 +5,7 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { Board } from "./Board";
 import { ClimateDialog } from "./ClimateDialog";
+import { ClimateSkeleton } from "./skeletons/ClimateSkeleton";
 import {
   climateGridCss,
   fmtClimateTemp,
@@ -131,7 +132,14 @@ function ClimateTile({
   );
 }
 
-export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
+export function ClimateSection({
+  climate,
+  loading = false,
+}: {
+  climate: HomeClimate[];
+  /** No thermostat has answered yet: placeholder tiles under the real header. */
+  loading?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const selectedUnit =
@@ -152,20 +160,24 @@ export function ClimateSection({ climate }: { climate: HomeClimate[] }) {
        * the bento. The container query asks how wide this card actually is,
        * which is right on the frame, on a phone and in a wide desktop window
        * alike. See climateGridCss for the columns. */}
-      <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <Grid css={climateGridCss(climate.length)} width="100%">
-          {climate.map((unit) => (
-            <ClimateTile
-              key={unit.entity_id || unit.name}
-              unit={unit}
-              onTap={() => {
-                setSelectedEntityId(unit.entity_id);
-                setOpen(true);
-              }}
-            />
-          ))}
-        </Grid>
-      </Box>
+      {loading ? (
+        <ClimateSkeleton />
+      ) : (
+        <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
+          <Grid css={climateGridCss(climate.length)} width="100%">
+            {climate.map((unit) => (
+              <ClimateTile
+                key={unit.entity_id || unit.name}
+                unit={unit}
+                onTap={() => {
+                  setSelectedEntityId(unit.entity_id);
+                  setOpen(true);
+                }}
+              />
+            ))}
+          </Grid>
+        </Box>
+      )}
       <ClimateDialog
         unit={selectedUnit}
         open={open}

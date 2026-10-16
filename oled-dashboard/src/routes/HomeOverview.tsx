@@ -13,7 +13,6 @@ import { RadarSection } from "../components/RadarSection";
 import { HomeHeader } from "../components/HomeHeader";
 import { CalendarSection } from "../components/CalendarSection";
 import { StatusStrip } from "../components/StatusStrip";
-import { HomeOverviewSkeleton } from "../components/skeletons/HomeOverviewSkeleton";
 import { HomeBoard } from "../components/HomeBoard";
 import {
   HOME_FOUR_COLUMN_QUERY,
@@ -62,12 +61,10 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 export function HomeOverview() {
-  const { data, isError, isPending } = useHomeData();
+  // Each card shows its own placeholder until its data lands; the board and
+  // every card that is ready render straight away.
+  const { data, isError, loading } = useHomeData();
   const columns = useHomeColumns();
-
-  if (isPending) {
-    return <HomeOverviewSkeleton columns={columns} />;
-  }
 
   if (isError || !data) {
     return (
@@ -82,23 +79,38 @@ export function HomeOverview() {
   }
 
   const cards: Record<HomeCardId, React.ReactNode> = {
-    header: <HomeHeader internet={data.internet} weather={data.weather} />,
+    header: (
+      <HomeHeader
+        internet={data.internet}
+        weather={data.weather}
+        loading={loading.weather}
+      />
+    ),
     teamTracker: <TeamTracker />,
     radar: <RadarSection condition={data.weather?.state} />,
-    energy: <EnergySection energy={data.energy} />,
-    climate: <ClimateSection climate={data.climate} />,
-    fan: <FanSection fan={data.fan} />,
+    energy: <EnergySection energy={data.energy} loading={loading.energy} />,
+    climate: (
+      <ClimateSection climate={data.climate} loading={loading.climate} />
+    ),
+    fan: <FanSection fan={data.fan} loading={loading.fan} />,
     calendar: (
       <CalendarSection
         today={data.calendar?.today ?? []}
         tomorrow={data.calendar?.tomorrow ?? []}
+        loading={loading.calendar}
       />
     ),
     // Active-only sections: they claim a tile while running, and report as
     // chips in the status strip when they aren't.
     printer: <PrinterSection printer={data.printer} />,
     vacuum: <VacuumSection vacuum={data.vacuum} />,
-    statusStrip: <StatusStrip printer={data.printer} vacuum={data.vacuum} />,
+    statusStrip: (
+      <StatusStrip
+        printer={data.printer}
+        vacuum={data.vacuum}
+        loading={loading.vacuum}
+      />
+    ),
   };
 
   return (

@@ -15,6 +15,7 @@ import { PiFanFill } from "react-icons/pi";
 import type { HomeFan } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
+import { FanSkeleton } from "./skeletons/FanSkeleton";
 import { CloseButton } from "./ui/close-button";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
@@ -239,10 +240,17 @@ function FanRow({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
   );
 }
 
-export function FanSection({ fan }: { fan: HomeFan[] }) {
+export function FanSection({
+  fan,
+  loading = false,
+}: {
+  fan: HomeFan[];
+  /** Fans are configured but none has answered: placeholder buttons. */
+  loading?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
-  if (fan.length === 0) return null;
+  if (!loading && fan.length === 0) return null;
   const onCount = fan.filter((f) => f.state === "on").length;
   const anyOn = onCount > 0;
   const selected = fan.find((f) => f.entity_id === selectedEntityId) ?? null;
@@ -271,22 +279,26 @@ export function FanSection({ fan }: { fan: HomeFan[] }) {
       }
     >
       {/* Chips wrap into columns so a wide card isn't one fan per band. */}
-      <Grid
-        templateColumns="repeat(auto-fill, minmax(14rem, 1fr))"
-        gap="3"
-        width="100%"
-      >
-        {fan.map((f) => (
-          <FanRow
-            key={f.entity_id}
-            fan={f}
-            onTap={() => {
-              setSelectedEntityId(f.entity_id);
-              setOpen(true);
-            }}
-          />
-        ))}
-      </Grid>
+      {loading ? (
+        <FanSkeleton />
+      ) : (
+        <Grid
+          templateColumns="repeat(auto-fill, minmax(14rem, 1fr))"
+          gap="3"
+          width="100%"
+        >
+          {fan.map((f) => (
+            <FanRow
+              key={f.entity_id}
+              fan={f}
+              onTap={() => {
+                setSelectedEntityId(f.entity_id);
+                setOpen(true);
+              }}
+            />
+          ))}
+        </Grid>
+      )}
       <FanDialog fan={selected} open={open} onClose={() => setOpen(false)} />
     </Board>
   );

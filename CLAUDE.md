@@ -65,7 +65,7 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
 }
 ```
 
-The `printer` field is the printer's `print_status` sensor entity ID; all sibling printer sensors (progress, temps, layers, …) are derived from its prefix in `src/lib/printerEntities.ts`. Empty string disables the printer card.
+The `printer` field is the printer's status sensor entity ID: ha-bambulab's `sensor.xxx_print_status` or Bambuddy's `sensor.xxx_status`. The suffix picks the integration, and all sibling printer sensors (progress, temps, layers, …) are derived from its prefix with that integration's names in `src/lib/printerEntities.ts`; fields an integration lacks stay empty. Empty string disables the printer card.
 
 In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` including the optional `energy_lifetime_production`/`energy_lifetime_consumption`, `media_player_entity`, `printer_status_entity`, `team_tracker_entities` fields in `config.yaml`).
 

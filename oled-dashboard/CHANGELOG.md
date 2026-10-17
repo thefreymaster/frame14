@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.53.0
+
+- Added: the 3D printer card works with Bambuddy. Set `printer_status_entity` to Bambuddy's status sensor (for example `sensor.h2s_xxx_status`) and the card, its progress bar, the detail dialog and the printer indicator follow it. ha-bambulab's `sensor.xxx_print_status` keeps working as before.
+- Fixed: the printer card and indicator now show while printing when the status is reported in capitals (`RUNNING`, `PAUSE`).
+- Changed: with Bambuddy, the detail dialog shows "—" for speed, filament, weight, length and start/end time, which Bambuddy doesn't provide.
+
 ## 0.52.0
 
 - Changed: Home no longer turns into one big loading placeholder while it waits for data. Each card shows its own placeholder and fills in as soon as its own data arrives, so the weather can show while the thermostats are still loading. The clock and date show straight away.

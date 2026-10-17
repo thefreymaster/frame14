@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEntitiesConfig } from "./useEntitiesConfig";
 import { useEntities, useEntity, type HAState } from "./useEntity";
-import { printerBaseId, printerEntityId } from "../lib/printerEntities";
+import { printerEntityIds } from "../lib/printerEntities";
 
 export interface HomeForecastPeriod {
   datetime: string;
@@ -189,23 +189,6 @@ const PRINTER_EXTRA_KEYS = [
 ] as const;
 
 type PrinterExtraKey = (typeof PRINTER_EXTRA_KEYS)[number];
-
-const PRINTER_EXTRA_SUFFIXES: Record<PrinterExtraKey, string> = {
-  nozzleTemp: "nozzle_temperature",
-  nozzleTarget: "nozzle_target_temperature",
-  bedTemp: "bed_temperature",
-  bedTarget: "bed_target_temperature",
-  currentLayer: "current_layer",
-  totalLayers: "total_layer_count",
-  currentStage: "current_stage",
-  endTime: "end_time",
-  startTime: "start_time",
-  printLength: "print_length",
-  printWeight: "print_weight",
-  activeTray: "active_tray",
-  speedProfile: "speed_profile",
-  gcodeFilename: "gcode_filename",
-};
 
 function cleanString(value: string | undefined | null): string | null {
   if (!value) return null;
@@ -470,24 +453,25 @@ export function useHomeData() {
   const personEvan = useEntity(PERSON_ENTITIES[0].id);
   const personElizabeth = useEntity(PERSON_ENTITIES[1].id);
 
-  // Printer — entity IDs derived from the configured print_status sensor
-  const printerBase = printerBaseId(entitiesQuery.data?.printer);
-  const printerExtraIds = useMemo(
-    () =>
-      PRINTER_EXTRA_KEYS.map((key) =>
-        printerEntityId(printerBase, PRINTER_EXTRA_SUFFIXES[key]),
-      ),
-    [printerBase],
+  // Printer — entity IDs derived from the configured status sensor
+  // (ha-bambulab or Bambuddy naming, see lib/printerEntities)
+  const printerIds = useMemo(
+    () => printerEntityIds(entitiesQuery.data?.printer),
+    [entitiesQuery.data?.printer],
   );
-  const printerStatus = useEntity(printerEntityId(printerBase, "print_status"));
-  const printerProgress = useEntity(
-    printerEntityId(printerBase, "print_progress"),
+  // useEntities drops empty IDs from its results, so only ask for the fields
+  // this integration has; results then line up with printerExtraKeys.
+  const printerExtraKeys = useMemo(
+    () => PRINTER_EXTRA_KEYS.filter((key) => printerIds[key]),
+    [printerIds],
   );
-  const printerRemaining = useEntity(
-    printerEntityId(printerBase, "remaining_time"),
+  const printerStatus = useEntity(printerIds.status);
+  const printerProgress = useEntity(printerIds.progress);
+  const printerRemaining = useEntity(printerIds.remainingTime);
+  const printerTask = useEntity(printerIds.taskName);
+  const printerExtras = useEntities(
+    printerExtraKeys.map((key) => printerIds[key]),
   );
-  const printerTask = useEntity(printerEntityId(printerBase, "task_name"));
-  const printerExtras = useEntities(printerExtraIds);
 
   // Internet
   const ping = useEntity("binary_sensor.1_1_1_1");
@@ -612,7 +596,7 @@ export function useHomeData() {
   );
 
   const printerExtraStateByKey: Record<PrinterExtraKey, string | undefined> =
-    PRINTER_EXTRA_KEYS.reduce(
+    printerExtraKeys.reduce(
       (acc, key, index) => {
         acc[key] = printerExtras[index]?.data?.state;
         return acc;
@@ -620,7 +604,8 @@ export function useHomeData() {
       {} as Record<PrinterExtraKey, string | undefined>,
     );
   const homePrinter: HomePrinter = {
-    status: printerStatus.data?.state ?? "unknown",
+    // Bambuddy reports RUNNING / PAUSE; ha-bambulab running / pause.
+    status: printerStatus.data?.state?.toLowerCase() ?? "unknown",
     progress: parseFloatOrZero(printerProgress.data?.state),
     remainingTime: parseFloatOrZero(printerRemaining.data?.state),
     taskName: cleanString(printerTask.data?.state),

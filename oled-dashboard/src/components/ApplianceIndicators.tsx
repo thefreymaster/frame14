@@ -4,7 +4,7 @@ import { TbWashMachine, TbWashTumbleDry, TbBowlSpoon } from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useEntities, useEntity } from "../hooks/useEntity";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
-import { printerBaseId, printerEntityId } from "../lib/printerEntities";
+import { printerEntityIds } from "../lib/printerEntities";
 
 function PrinterNozzleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -48,10 +48,10 @@ export function ApplianceIndicators() {
   const queries = useEntities(APPLIANCES.map((a) => a.id));
   const running = APPLIANCES.filter((_, i) => queries[i].data?.state === "on");
   const entitiesQuery = useEntitiesConfig();
-  const printer = useEntity(
-    printerEntityId(printerBaseId(entitiesQuery.data?.printer), "print_status"),
+  const printer = useEntity(printerEntityIds(entitiesQuery.data?.printer).status);
+  const printerActive = PRINTER_ACTIVE_STATES.has(
+    printer.data?.state?.toLowerCase() ?? "",
   );
-  const printerActive = PRINTER_ACTIVE_STATES.has(printer.data?.state ?? "");
 
   if (running.length === 0 && !printerActive) return null;
 

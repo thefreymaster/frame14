@@ -60,6 +60,17 @@ export function normalizeClimateMode(
   return "off";
 }
 
+const NOT_ON = new Set(["off", "unavailable", "unknown"]);
+
+/**
+ * Whether a thermostat is on in any mode. Wider than normalizeClimateMode: a
+ * unit in auto or dry counts, though its tile draws it as off.
+ */
+export function isClimateOn(unit: HomeClimate): boolean {
+  const mode = unit.hvacMode ?? unit.state;
+  return mode != null && !NOT_ON.has(mode);
+}
+
 export function fmtClimateTemp(temp: number | null | undefined) {
   return temp == null ? null : Math.round(temp);
 }

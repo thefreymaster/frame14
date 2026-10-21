@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Card, Collapsible } from "@chakra-ui/react";
+import { Box, Card, chakra, Collapsible } from "@chakra-ui/react";
 import { LuChevronDown } from "react-icons/lu";
 
 const STORAGE_PREFIX = "board-collapsed:";
@@ -52,6 +52,11 @@ const DARK_RAISED = {
  * Collapse state persists per board in localStorage under
  * `board-collapsed:<key>`.
  *
+ * An `action` sits at the right of the header, before the chevron. It can't
+ * live inside the trigger (a button in a button), so the trigger wraps only
+ * the title and stretches an ::after over the whole header; the action is
+ * raised above that, and a tap anywhere else in the header still toggles.
+ *
  * Below Chakra's md breakpoint (768px, a phone) the card is size sm, so its
  * padding and header-to-body gap drop from spacing.6 to spacing.4.
  *
@@ -71,6 +76,7 @@ export const Board = ({
   children,
   onClick,
   title,
+  action,
   collapsible = false,
   defaultOpen = true,
   storageKey,
@@ -80,6 +86,8 @@ export const Board = ({
   children: React.ReactNode;
   onClick?: () => void;
   title?: React.ReactNode;
+  /** A control at the right of the header, e.g. a button. */
+  action?: React.ReactNode;
   collapsible?: boolean;
   defaultOpen?: boolean;
   storageKey?: string;
@@ -99,6 +107,13 @@ export const Board = ({
 
   const titleNode =
     typeof title === "string" ? <Card.Title>{title}</Card.Title> : title;
+
+  const actionNode =
+    action != null && action !== false ? (
+      <Box position="relative" zIndex="1" flexShrink={0}>
+        {action}
+      </Box>
+    ) : null;
 
   const hasBody = children != null && children !== false;
   const body = hasBody ? (
@@ -129,29 +144,45 @@ export const Board = ({
             writeOpen(fullKey, e.open);
           }}
         >
-          <Collapsible.Trigger asChild>
-            <Card.Header
-              as="button"
-              width="100%"
-              flexDirection="row"
-              alignItems="center"
-              textAlign="start"
-              cursor="pointer"
-              // Collapsed, the header is the whole card.
-              _closed={{ pb: "var(--card-padding)" }}
-            >
-              <Box flex="1" minW="0">
-                {titleNode}
-              </Box>
-              <Collapsible.Indicator
-                color="fg.muted"
-                transition="transform 0.2s"
-                _closed={{ transform: "rotate(-90deg)" }}
+          <Card.Header
+            position="relative"
+            flexDirection="row"
+            alignItems="center"
+            gap="3"
+            // Collapsed, the header is the whole card.
+            pb={open ? undefined : "var(--card-padding)"}
+          >
+            <Collapsible.Trigger asChild>
+              <chakra.button
+                type="button"
+                flex="1"
+                minW="0"
+                textAlign="start"
+                cursor="pointer"
+                _after={{ content: '""', position: "absolute", inset: "0" }}
+                // The ring goes round the whole header, like the tap target.
+                _focusVisible={{
+                  outline: "none",
+                  _after: {
+                    outline: "2px solid",
+                    outlineColor: "colorPalette.focusRing",
+                    outlineOffset: "-2px",
+                    borderRadius: "sm",
+                  },
+                }}
               >
-                <LuChevronDown />
-              </Collapsible.Indicator>
-            </Card.Header>
-          </Collapsible.Trigger>
+                {titleNode}
+              </chakra.button>
+            </Collapsible.Trigger>
+            {actionNode}
+            <Collapsible.Indicator
+              color="fg.muted"
+              transition="transform 0.2s"
+              _closed={{ transform: "rotate(-90deg)" }}
+            >
+              <LuChevronDown />
+            </Collapsible.Indicator>
+          </Card.Header>
           <Collapsible.Content>{body}</Collapsible.Content>
         </Collapsible.Root>
       ) : (
@@ -166,6 +197,7 @@ export const Board = ({
               <Box flex="1" minW="0">
                 {titleNode}
               </Box>
+              {actionNode}
             </Card.Header>
           )}
           {body}

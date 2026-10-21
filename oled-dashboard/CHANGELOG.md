@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.54.0
+
+- Added: an "All off" button in the Climate card's header turns off every thermostat that's on. It shows only while at least one is on (in any mode, including auto and dry) and works with the card collapsed too.
+- Fixed: on Home, the card under the time and weather no longer sits almost flush against it. Cards measured while the page was still animating in came out short, which took away the gap below them; every card is now evenly spaced.
+
 ## 0.53.0
 
 - Added: the 3D printer card works with Bambuddy. Set `printer_status_entity` to Bambuddy's status sensor (for example `sensor.h2s_xxx_status`) and the card, its progress bar, the detail dialog and the printer indicator follow it. ha-bambulab's `sensor.xxx_print_status` keeps working as before.

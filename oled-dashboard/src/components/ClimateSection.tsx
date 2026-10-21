@@ -4,6 +4,7 @@ import { IoThermometerOutline } from "react-icons/io5";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { Board } from "./Board";
+import { ClimateAllOffButton } from "./ClimateAllOffButton";
 import { ClimateDialog } from "./ClimateDialog";
 import { ClimateSkeleton } from "./skeletons/ClimateSkeleton";
 import {
@@ -11,6 +12,7 @@ import {
   fmtClimateTemp,
   HVAC_MODES,
   hvacPalette,
+  isClimateOn,
   MODE_ICON,
   normalizeClimateMode,
   type ClimateVisualMode,
@@ -144,6 +146,7 @@ export function ClimateSection({
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const selectedUnit =
     climate.find((unit) => unit.entity_id === selectedEntityId) ?? null;
+  const onIds = climate.filter(isClimateOn).map((unit) => unit.entity_id);
 
   return (
     <Board
@@ -151,6 +154,9 @@ export function ClimateSection({
       storageKey="climate"
       title={
         <SectionTitle icon={<IoThermometerOutline />}>Climate</SectionTitle>
+      }
+      action={
+        onIds.length > 0 ? <ClimateAllOffButton entityIds={onIds} /> : null
       }
     >
       {/* Measure this card, not the viewport.

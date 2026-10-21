@@ -157,7 +157,8 @@ src/
     FootballDetail.tsx            — band under the scoreboard: full down & distance, last play, network/venue, records. Dim by design — it sits still for three hours
     VacuumSection.tsx             — vacuum card; renders only when a vacuum is active (cleaning/returning); shows name + cleaning progress %
     RadarSection.tsx              — Windy radar card, collapsible (`board-collapsed:radar`), above energy in both layouts; renders only while the current weather condition is rain (rainy/pouring/lightning-rainy/snowy-rainy); iframe is pointer-events none so it can't trap page scroll
-    ClimateSection.tsx            — one compact tile per thermostat: a Card rendered as a button holding a Stat (name, mode icon, room temperature, status line). A unit that's on gets the dialog's ring, a 0.25rem border in `hvacPalette`'s ring colour, with the icon and status line in its accent ("Heating to 70°" with a pulsing icon while running, "Heat · set 70°" idle); an off unit is the outline card with a grey "Off" Badge; columns come from the card's width (container query, `climateGridCss`); a tap opens ClimateDialog
+    ClimateSection.tsx            — one compact tile per thermostat: a Card rendered as a button holding a Stat (name, mode icon, room temperature, status line). A unit that's on gets the dialog's ring, a 0.25rem border in `hvacPalette`'s ring colour, with the icon and status line in its accent ("Heating to 70°" with a pulsing icon while running, "Heat · set 70°" idle); an off unit is the outline card with a grey "Off" Badge; columns come from the card's width (container query, `climateGridCss`); a tap opens ClimateDialog. While any unit is on (`isClimateOn`: any mode but off, so auto and dry count), the header carries ClimateAllOffButton
+    ClimateAllOffButton.tsx       — the climate card's header action: sets every unit that's on to off; spins until HA reports them off (10s cap)
     ClimateDialog.tsx             — thermostat modal: a stock Chakra Dialog holding a draggable ThermostatDial, a SegmentGroup (Heat / Cool / Fan / Off) and a fan-speed Slider
     ThermostatDial.tsx            — ClimateDialog's Nest-style face: ring, live pulse, 120° tick arc in the mode's Chakra palette colour; with `control` the arc drags/taps and commits on pointerup. The one hand-drawn control (geometry in lib/thermostatArc.ts)
     FanSpeedSlider.tsx            — Chakra Slider over a climate entity's fan_modes, commits on release
@@ -171,7 +172,7 @@ src/
     HomeCardWidthPicker.tsx       — the width SegmentedControl (¼ ½ ¾ Full / ½ Full) straddling a card's bottom edge; stops pointer and key events so it never starts a drag
     HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)
     HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging — a Chakra ActionBar that ignores outside presses and Escape (HomeBoard owns Escape)
-    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones; md above; `borderRadius="sm"`, which every card and the tiles inside cards share) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed
+    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones; md above; `borderRadius="sm"`, which every card and the tiles inside cards share) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed, and an `action` (a control at the right of the header, before the chevron). On a collapsible board only the title is the trigger button, stretched over the header with ::after, so the action isn't a button inside a button and a tap anywhere else still toggles
     StatusChip.tsx                — ambient chip (Chakra Tag, `surface` variant) for the status strip and the bird detection
     skeletons/                    — per-card loading placeholders for /home, built from stock Chakra Skeleton: each is a card's body, shown under the card's real (collapsible) header while that card's `loading` flag from useHomeData is set. Thermostat, fan and chip counts come from /api/entities
     ui/                           — Chakra CLI snippets (close-button, color-mode, data-list, empty-state, native-select, provider, segmented-control, slider, status, switch, toaster, tooltip, toggle-tip)
@@ -188,7 +189,7 @@ src/
     useAlbumPhotos.ts             — fetches /api/photos/albums/:id
     usePhotosConfig.ts            — fetches /api/photos/config (pinned album ID)
     useLongPress.ts               — press-and-hold pointer handlers; movement cancels, ignores portal events, swallows the release click
-    usePackedRows.ts              — masonry packing for a CSS grid: 2px auto rows, each child measured (ResizeObserver) and given `grid-row-end: span n`; used by HomeBoard
+    usePackedRows.ts              — masonry packing for a CSS grid: 2px auto rows, each child measured (ResizeObserver) and given `grid-row-end: span n`; used by HomeBoard. Measures `offsetHeight`, never getBoundingClientRect: /home mounts under PageTransition's scale-in, and a transformed measurement comes out short and eats the gap below the card
     useVoiceAssist.ts             — voice session snapshot + start/cancel (useSyncExternalStore over lib/voiceAssist)
     useAssistConfig.ts            — fetches /api/assist/config, staleTime: Infinity
     useSocket.ts                  — socket.io-client connection status
@@ -202,7 +203,7 @@ src/
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
     navMetrics.ts                 — nav bar height / rail width in rem, shared by Layout, the mic button and the arranging bar
-    hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, and the card's tile columns (`climateGridCss`)
+    hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
     weatherIcons.ts               — HA weather condition → react-icons element (day/night)
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation, isMovie (the marquee's content-type gate, mirrored by the media watcher in ha-socket.js)

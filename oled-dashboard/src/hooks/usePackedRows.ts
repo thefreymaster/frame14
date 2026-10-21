@@ -27,7 +27,10 @@ export function usePackedRows(
     if (!grid) return;
     const gapPx = parseFloat(getComputedStyle(grid).columnGap) || 0;
     const fit = (el: HTMLElement) => {
-      const height = el.getBoundingClientRect().height;
+      // Layout height, not getBoundingClientRect: that one is scaled by
+      // transforms, and /home mounts mid PageTransition's scale-in, so a card
+      // measured then came out short and ate the gap below it.
+      const height = el.offsetHeight;
       el.style.gridRowEnd =
         height > 0 ? `span ${Math.ceil((height + gapPx) / PACKED_ROW_PX)}` : "";
     };

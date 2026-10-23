@@ -1,10 +1,10 @@
 // Nav and header geometry, in rem so it scales with the page (see index.css).
-// Layout, the mic button and the arranging bar clear the nav by these amounts,
+// Layout and the arranging bar clear the nav by these amounts,
 // and Layout pads the page down by the header's.
 
 /**
  * The page's padding around the cards: the theme's spacing.gutter, the same as
- * the gap between them (md, xs on a phone). The header's icons and the
+ * the gap between them (md, sm on a phone). The header's icons and the
  * landscape rail keep to it too, so they line up with the cards.
  */
 export const PAGE_GUTTER = "var(--chakra-spacing-gutter)";

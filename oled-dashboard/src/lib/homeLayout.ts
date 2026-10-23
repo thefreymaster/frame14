@@ -63,7 +63,7 @@ export const HOME_FOUR_COLUMN_QUERY =
 
 /**
  * A phone: the one-column screens. The theme's `phone` condition, which
- * narrows spacing.gutter (between and around cards) from md to xs.
+ * narrows spacing.gutter (between and around cards) from md to sm.
  */
 export const PHONE_MEDIA = `@media ${HOME_ONE_COLUMN_QUERY}`;
 

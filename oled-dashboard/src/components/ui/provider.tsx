@@ -28,10 +28,10 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  *
  * Dialog backdrops blur the page behind them as well as dimming it.
  *
- * Spacing has a named `xs` (0.25rem, 4px at the base size) and `md` (1rem), and
- * `gutter`, the page's padding around the cards and the gap between them — the
- * same, always: md, or xs on a phone (the `phone` condition, PHONE_MEDIA: the
- * one-column screens).
+ * Spacing has a named `xs` (0.25rem, 4px at the base size), `sm` (0.5rem) and
+ * `md` (1rem), and `gutter`, the page's padding around the cards and the gap
+ * between them — the same, always: md, or sm on a phone (the `phone`
+ * condition, PHONE_MEDIA: the one-column screens).
  */
 const system = createSystem(
   defaultConfig,
@@ -41,6 +41,7 @@ const system = createSystem(
       tokens: {
         spacing: {
           xs: { value: "0.25rem" },
+          sm: { value: "0.5rem" },
           md: { value: "1rem" },
         },
         radii: { surface: { value: "0.75rem" } },
@@ -58,7 +59,7 @@ const system = createSystem(
           },
         },
         spacing: {
-          gutter: { value: { base: "{spacing.md}", _phone: "{spacing.xs}" } },
+          gutter: { value: { base: "{spacing.md}", _phone: "{spacing.sm}" } },
         },
       },
       recipes: {

@@ -6,6 +6,7 @@ import {
   HEADER_HEIGHT,
   HEADER_ICON_SIZE,
   HEADER_TOP,
+  NAV_BAR_INSET,
   PAGE_GUTTER,
   STATUS_BAR_CLEARANCE,
 } from "../lib/navMetrics";
@@ -15,15 +16,16 @@ import { useDesktop } from "../hooks/useDesktop";
 import { Tooltip } from "./ui/tooltip";
 
 /**
- * The header across the top of every view: the app's icon and name (and, off
- * a phone, the mic) at the left; running appliances, the connection and (on a desktop) the time at the
- * right. (The version is on the Settings page.)
+ * The header across the top of every view: the app's icon, name and mic at
+ * the left; running appliances, the connection and (on a desktop) the time at
+ * the right. (The version is on the Settings page.)
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). A slim bar floating like the navs, on their
  * surface (FLOATING_SURFACE: the cards' colour, edge and `surface` corners),
- * inset from the top and sides by the cards' PAGE_GUTTER so its edges line up
- * with theirs; in landscape the floating rail starts a gutter below it. The
+ * a PAGE_GUTTER below the top. Its sides line up with the bottom bar's in
+ * portrait (NAV_BAR_INSET) and with the cards' in landscape (PAGE_GUTTER),
+ * where the floating rail starts a gutter below it. The
  * page scrolls under it, and Layout pads the page down by HEADER_CLEARANCE. A
  * plain band covers the status-bar inset above it (STATUS_BAR_CLEARANCE, zero
  * except in an iPhone home-screen app), so nothing scrolls under the clock and
@@ -34,7 +36,7 @@ export function StatusBanner({
   voice,
 }: {
   hidden?: boolean;
-  /** The header mic (desktop and the frame), beside the name. */
+  /** The mic, beside the name. */
   voice?: React.ReactNode;
 }) {
   const { connected } = useSocket();
@@ -59,8 +61,14 @@ export function StatusBanner({
       <HStack
         {...FLOATING_SURFACE}
         top={HEADER_TOP}
-        left={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
-        right={`calc(env(safe-area-inset-right, 0px) + ${PAGE_GUTTER})`}
+        left={{
+          _portrait: `calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`,
+          _landscape: `calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`,
+        }}
+        right={{
+          _portrait: `calc(env(safe-area-inset-right, 0px) + ${NAV_BAR_INSET})`,
+          _landscape: `calc(env(safe-area-inset-right, 0px) + ${PAGE_GUTTER})`,
+        }}
         height={HEADER_HEIGHT}
         px="3"
         py="0"

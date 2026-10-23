@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.61.1
+
+- Changed: on phones, the space between and around cards is a little wider (8px instead of 4px).
+- Changed: on phones, the mic is in the header beside the name, like on the frame and desktop, instead of a floating button.
+- Changed: in portrait, the header is inset from the sides by the same amount as the bottom navigation bar.
+
 ## 0.61.0
 
 - Changed: the header floats like the navigation, a slim bar with the cards' rounded corners, inset from the top and sides by the same space as the cards.

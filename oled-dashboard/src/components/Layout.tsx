@@ -1,12 +1,11 @@
 import { Outlet, useLocation } from "react-router";
-import { Box, HStack, useMediaQuery } from "@chakra-ui/react";
+import { Box, HStack } from "@chakra-ui/react";
 import { SocketViewListener } from "./SocketViewListener";
 import { PageTransition } from "./PageTransition";
 import { LandscapeNav } from "./LandscapeNav";
 import { DoorbellCard } from "./DoorbellCard";
 import { LightStrip } from "./LightStrip";
 import { useDesktop } from "../hooks/useDesktop";
-import { HOME_ONE_COLUMN_QUERY } from "../lib/homeLayout";
 import { StatusBanner } from "./StatusBanner";
 import { VoiceAssistButton } from "./VoiceAssistButton";
 import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
@@ -43,7 +42,6 @@ export function Layout() {
   // hidden — which keeps /blank black and keeps it off photos and posters.
   const showVoice = showNav && micAvailable() && assistConfig?.enabled === true;
   const voiceTap = voice.state === "idle" ? voice.start : voice.cancel;
-  const [phone] = useMediaQuery([HOME_ONE_COLUMN_QUERY]);
   const desktop = useDesktop();
 
   const content = (
@@ -61,14 +59,8 @@ export function Layout() {
       <StatusBanner
         hidden={!showNav}
         voice={
-          showVoice &&
-          !phone && (
-            <VoiceAssistButton
-              placement="header"
-              onTap={voiceTap}
-              state={voice.state}
-              navVisible={showNav}
-            />
+          showVoice && (
+            <VoiceAssistButton onTap={voiceTap} state={voice.state} />
           )
         }
       />
@@ -98,15 +90,6 @@ export function Layout() {
       </HStack>
 
       {!isControl && <DoorbellCard />}
-
-      {/* A phone's mic floats; elsewhere it is in the header. */}
-      {showVoice && phone && (
-        <VoiceAssistButton
-          onTap={voiceTap}
-          state={voice.state}
-          navVisible={showNav}
-        />
-      )}
 
       {desktop && <LightStrip hidden={!showNav} />}
 

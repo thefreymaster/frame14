@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.57.1
+
+- Changed: Radar works like Photos: on a desktop it sits inside the page like a card (the same spacing around it, rounded corners, a thin border); on the frame and on phones it fills the screen edge to edge.
+- Changed: the header clock no longer shows seconds.
+- Changed: the default `weather_temperature_entity` (the temperature line on the Solar month and year charts) is now `sensor.weatherkit_temperature`, replacing the OpenWeatherMap sensor. This only changes the default for new installs: an existing install keeps its saved setting, so set it in the add-on's Configuration tab.
+
 ## 0.57.0
 
 - Fixed: the temperature at the top right of Photos shows again. When the weather forecast entity (`weather_forecast_entity`) fails, the current weather is still sent and only the forecast is left out, with the reason in the add-on log. Before, the whole weather request failed, which hid the Photos temperature and the hourly forecast.

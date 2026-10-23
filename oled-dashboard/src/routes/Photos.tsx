@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Box,
-  IconButton,
-  Spinner,
-  Text,
-  useMediaQuery,
-} from "@chakra-ui/react";
+import { Box, IconButton, Spinner, Text } from "@chakra-ui/react";
 import {
   IoEyeOutline,
   IoEyeOffOutline,
@@ -20,8 +14,7 @@ import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
-import { getDeviceMode } from "../lib/deviceMode";
-import { HOME_FOUR_COLUMN_QUERY } from "../lib/homeLayout";
+import { useFramedPage } from "../hooks/useFramedPage";
 import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
 import { EmptyState } from "../components/ui/empty-state";
 import {
@@ -121,10 +114,7 @@ export function Photos() {
   const activeAlbumId = config?.defaultAlbumId ?? null;
   const [currentIndex, setCurrentIndex] = useState(0);
   const navVisible = useNavVisible();
-  const [desktop] = useMediaQuery([HOME_FOUR_COLUMN_QUERY]);
-  // Framed (a card in the page) on a desktop; full-screen on the frame
-  // (whatever its orientation) and on phones.
-  const framed = desktop && getDeviceMode() !== "frame";
+  const framed = useFramedPage();
 
   const { data: album, isPending: photosPending } =
     useAlbumPhotos(activeAlbumId);

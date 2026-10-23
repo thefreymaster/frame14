@@ -22,7 +22,7 @@
   "weather": {
     "current": "weather.systems_weatherkit",
     "forecast": "weather.systems_weatherkit",
-    "temperature": "sensor.openweathermap_temperature"
+    "temperature": "sensor.weatherkit_temperature"
   },
   "climate": [
     "climate.1st_floor_ac",

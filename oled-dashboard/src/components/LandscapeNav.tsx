@@ -23,13 +23,22 @@ import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
-import { ENTRY_RADIUS, FLOATING_SURFACE } from "../lib/floatingSurface";
+import {
+  ENTRY_RADIUS,
+  FLOATING_SURFACE,
+  NAV_PAD,
+} from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
   NAV_BAR_BOTTOM,
+  NAV_BAR_BOTTOM_RADIUS,
   NAV_BAR_CLEARANCE,
+  NAV_BAR_END_ENTRY_RADIUS,
   NAV_BAR_HEIGHT,
   NAV_BAR_INSET,
+  NAV_BAR_LIFT,
+  NAV_BAR_SIDE_ROOM,
+  NAV_BAR_TOP_RADIUS,
   NAV_RAIL_BOTTOM,
   NAV_RAIL_WIDTH,
   PAGE_GUTTER,
@@ -192,6 +201,12 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         justifyContent="center"
         height={inBar ? "100%" : "auto"}
         rounded={ENTRY_RADIUS}
+        _first={
+          inBar ? { roundedBottomLeft: NAV_BAR_END_ENTRY_RADIUS } : undefined
+        }
+        _last={
+          inBar ? { roundedBottomRight: NAV_BAR_END_ENTRY_RADIUS } : undefined
+        }
         px="1"
         py={inBar ? "0" : "2"}
         gap="1"
@@ -218,16 +233,20 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   return (
     <>
       {/* Portrait: a floating bar, like Apple Music's tab bar but opaque (no
-          glass) and with the cards' corners. It is inset from the sides and
-          sits just above the home indicator, and the page scrolls on
-          underneath and around it. */}
+          glass). It is inset from the sides and sits just above the home
+          indicator, and the page scrolls on underneath and around it. On an
+          iPhone its bottom corners follow the screen's and its top is flat;
+          elsewhere it has the cards' corners (NAV_BAR_TOP_RADIUS). */}
       <Box
         {...FLOATING_SURFACE}
+        rounded={`${NAV_BAR_TOP_RADIUS} ${NAV_BAR_TOP_RADIUS} ${NAV_BAR_BOTTOM_RADIUS} ${NAV_BAR_BOTTOM_RADIUS}`}
         display={{ base: "block", _landscape: "none" }}
         top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_CLEARANCE})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`}
         right={`calc(env(safe-area-inset-right, 0px) + ${NAV_BAR_INSET})`}
-        height={NAV_BAR_HEIGHT}
+        height={`calc(${NAV_BAR_HEIGHT} + ${NAV_BAR_LIFT})`}
+        px={`calc(${NAV_PAD} + ${NAV_BAR_SIDE_ROOM})`}
+        pb={`calc(${NAV_PAD} + ${NAV_BAR_LIFT})`}
         // Down past the screen edge, shadow and all.
         transform={
           hidden

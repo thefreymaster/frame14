@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.63.3
+
+- Changed: on an iPhone, the bottom navigation bar sits close in to the screen's edges, has a flat top, and its bottom corners follow the curve of the screen's corners. Its buttons sit a little higher, above the home indicator, so the Home and Settings labels stay clear of the curve. On the frame and in a browser window it's unchanged.
+
 ## 0.63.2
 
 - Changed: the mic button in the header moved from beside the Frame14 name to the right, after the status icons. On a desktop it sits just before the time.

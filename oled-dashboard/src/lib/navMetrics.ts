@@ -58,8 +58,11 @@ export const NAV_RAIL_WIDTH = "5rem";
  */
 export const NAV_RAIL_BOTTOM = `max(${PAGE_GUTTER}, calc(env(safe-area-inset-bottom, 0px) - 0.75rem))`;
 
-/** Height of the desktop lights strip along the bottom (LightStrip). */
-export const LIGHT_STRIP_HEIGHT = "3.25rem";
+/**
+ * Height of the desktop lights strip along the bottom (LightStrip): the
+ * portrait bar's, since its buttons are the same icon over a name.
+ */
+export const LIGHT_STRIP_HEIGHT = NAV_BAR_HEIGHT;
 
 /**
  * Distance from the bottom of the screen to the top of the lights strip: it

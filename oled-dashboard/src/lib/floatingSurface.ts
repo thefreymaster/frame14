@@ -1,5 +1,6 @@
-// The floating surface the navs and the desktop lights strip share, and the
-// dark-mode shades for anything sitting on gray.800 (these and the cards).
+// The floating surface the navs and the desktop lights strip share, its
+// entries' corners, and the dark-mode shades for anything sitting on gray.800
+// (the cards).
 
 /** Space between a floating surface's edge and its entries. */
 export const NAV_PAD = "0.375rem";
@@ -19,6 +20,15 @@ export const FLOATING_SURFACE = {
   zIndex: "sticky",
   p: NAV_PAD,
 } as const;
+
+/**
+ * Corner radius of an entry on a floating surface (the navs' entries, the
+ * lights strip's buttons): the surface's (the theme's `surface`, the cards'
+ * too), less the border and padding between them, so the two corners share a
+ * centre — an inner outline offset from the outer one, as a slicer offsets a
+ * print's walls. An equal radius would look fatter than the corner around it.
+ */
+export const ENTRY_RADIUS = `calc(var(--chakra-radii-surface) - 1px - ${NAV_PAD})`;
 
 /**
  * Chakra's dark-mode shades that equal gray.800 — the cards' and these

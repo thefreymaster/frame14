@@ -1,13 +1,15 @@
-import { HStack, Icon, Text } from "@chakra-ui/react";
+import { Icon, Toggle } from "@chakra-ui/react";
 import { useEntity } from "../hooks/useEntity";
 import { callService } from "../lib/callService";
+import { ENTRY_RADIUS } from "../lib/floatingSurface";
 import { lightColor, rgba, type LightAttrs } from "../lib/lightModel";
 import type { LightEntry } from "../lib/lightsConfig";
-import { Switch } from "./ui/switch";
 
 /**
- * One light or switch in the desktop lights strip: an on/off Switch, then the
- * bulb (lit, in the light's own colour, while on) and the name, on one line.
+ * One light or switch in the desktop lights strip: an on/off button drawn like
+ * a side rail entry, the bulb over the name. While on it's filled like the
+ * rail's selected entry and the bulb is lit in the light's own colour. Never
+ * narrower than a rail entry; a long name widens it rather than wrapping.
  * Unavailable entities don't show.
  */
 export function LightStripItem({
@@ -26,28 +28,38 @@ export function LightStripItem({
   const BulbIcon = on ? ActiveIcon : LightIcon;
 
   return (
-    <Switch
-      size="sm"
-      colorPalette="yellow"
-      checked={on}
-      onCheckedChange={(e) =>
-        callService(entity_id, e.checked ? "turn_on" : "turn_off")
+    <Toggle.Root
+      pressed={on}
+      onPressedChange={(pressed) =>
+        callService(entity_id, pressed ? "turn_on" : "turn_off")
       }
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
       flexShrink={0}
+      height="100%"
+      minW="4.25rem"
+      rounded={ENTRY_RADIUS}
+      px="3"
+      gap="1"
+      textStyle="sm"
+      fontWeight="medium"
+      whiteSpace="nowrap"
+      color="fg.muted"
       cursor="pointer"
+      transition="background 150ms ease"
+      focusVisibleRing="inside"
+      _pressed={{ bg: { _light: "gray.100", _dark: "gray.700" }, color: "fg" }}
     >
-      <HStack gap="1.5" whiteSpace="nowrap">
-        <Icon
-          boxSize="4"
-          color={color ? rgba(color) : "fg.muted"}
-          transition="color 300ms ease"
-        >
-          <BulbIcon />
-        </Icon>
-        <Text textStyle="sm" color={on ? "fg" : "fg.muted"}>
-          {label}
-        </Text>
-      </HStack>
-    </Switch>
+      <Icon
+        boxSize="1.375rem"
+        color={color ? rgba(color) : undefined}
+        transition="color 300ms ease"
+      >
+        <BulbIcon />
+      </Icon>
+      {label}
+    </Toggle.Root>
   );
 }

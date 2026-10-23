@@ -23,7 +23,7 @@ import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
-import { FLOATING_SURFACE, NAV_PAD } from "../lib/floatingSurface";
+import { ENTRY_RADIUS, FLOATING_SURFACE } from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
   NAV_BAR_BOTTOM,
@@ -120,15 +120,6 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
     activeIcon: IoSettings,
   },
 ];
-
-/**
- * The selected entry's corner radius: the nav's (the theme's `surface`, the
- * cards' too), less the border and padding between them, so the two corners
- * share a centre — an inner outline offset from the outer one, as a slicer
- * offsets a print's walls. An equal radius would look fatter than the corner
- * around it.
- */
-const ENTRY_RADIUS = `calc(var(--chakra-radii-surface) - 1px - ${NAV_PAD})`;
 
 interface LandscapeNavProps {
   hidden?: boolean;

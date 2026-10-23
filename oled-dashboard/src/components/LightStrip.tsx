@@ -1,7 +1,7 @@
 import { Box, HStack } from "@chakra-ui/react";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { buildLightSections } from "../lib/lightsConfig";
-import { DARK_RAISED, FLOATING_SURFACE } from "../lib/floatingSurface";
+import { FLOATING_SURFACE } from "../lib/floatingSurface";
 import {
   LIGHT_STRIP_HEIGHT,
   NAV_RAIL_BOTTOM,
@@ -15,8 +15,8 @@ const EMPTY: string[] = [];
 
 /**
  * Desktop only (Layout decides): every configured light and switch as an
- * on/off Switch with its bulb and name, in one row along the bottom of the
- * screen — the floating rail's surface laid on its side. It runs from the
+ * on/off button drawn like a rail entry, bulb over name, in one row along the
+ * bottom of the screen — the floating rail's surface laid on its side. It runs from the
  * rail's edge to the right of the page inside the page gutter, its bottom in
  * line with the rail's. One row, never wrapping: past the width it scrolls
  * sideways (the scrollbar is hidden; a trackpad or shift-scroll moves it).
@@ -35,8 +35,6 @@ export function LightStrip({ hidden = false }: { hidden?: boolean }) {
       right={`calc(env(safe-area-inset-right, 0px) + ${PAGE_GUTTER})`}
       bottom={NAV_RAIL_BOTTOM}
       height={LIGHT_STRIP_HEIGHT}
-      px="4"
-      py="0"
       // Down past the screen edge, shadow and all.
       transform={
         hidden
@@ -44,12 +42,10 @@ export function LightStrip({ hidden = false }: { hidden?: boolean }) {
           : "translateY(0)"
       }
       transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-      // gray.800 like a card: lift the off switches' tracks off it.
-      css={{ _dark: DARK_RAISED }}
     >
       <HStack
         height="100%"
-        gap="6"
+        gap="1"
         overflowX="auto"
         css={{
           scrollbarWidth: "none",

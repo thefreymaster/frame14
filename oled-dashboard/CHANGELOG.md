@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.59.1
+
+- Changed: on a desktop, the lights strip along the bottom is a row of buttons like the side navigation's, each with the bulb over the light's name, instead of on/off switches. Click one to turn it on or off; a light that's on is highlighted like the selected navigation entry, its bulb lit in the light's colour. The strip is a little taller to fit them.
+
 ## 0.59.0
 
 - Added: the doorbell pop-up plays the camera's live video through Home Assistant's own live stream (the same one Home Assistant's camera view plays), instead of the still-picture stream, which an RTSP camera without a still-image URL can't produce. If the live stream can't start, it falls back to still pictures and then "Camera unavailable".

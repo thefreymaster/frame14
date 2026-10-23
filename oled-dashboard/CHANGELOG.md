@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.57.0
+
+- Fixed: the temperature at the top right of Photos shows again. When the weather forecast entity (`weather_forecast_entity`) fails, the current weather is still sent and only the forecast is left out, with the reason in the add-on log. Before, the whole weather request failed, which hid the Photos temperature and the hourly forecast.
+- Changed: on a desktop (or a tablet held sideways), Photos sits inside the page like a card: the same spacing around it, rounded corners and a thin border. On the frame and on phones it stays full-screen.
+- Changed: when a dialog is open (a thermostat, a light, a fan, the forecast, voice), the page behind it is blurred as well as dimmed.
+
 ## 0.56.3
 
 - Added: the header's clock shows seconds, each digit rolling over as it changes.

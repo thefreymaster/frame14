@@ -78,7 +78,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar. Cards are rearrangeable and resizable per device (press and hold) — see `HomeBoard` |
 | `/lights` | `Lights` | Light + switch tiles (tap toggles, press and hold a dimmable light for brightness / white / colour); header shows how many are on + All off |
 | `/blank` | `Blank` | Pure black screen (motion off) |
-| `/photos` | `Photos` | Immich photo slideshow |
+| `/photos` | `Photos` | Immich photo slideshow: full-screen on the frame and phones, a card inside the page gutter (`surface` corners, edge) on a desktop |
 | `/radar` | `Radar` | Radar view — frame-only nav item |
 | `/timer` | `Timer` | Timer — frame-only nav item |
 | `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed. Movies only — an episode (`tvshow`) or live TV (`video`/`channel`) never routes here and shows "movies only" if you navigate in |
@@ -96,7 +96,8 @@ for their 1px edge (gray.200 / gray.700) (tiles inside cards set
 between cards and the page's padding around them, always equal — xs, or md under
 the theme's `desktop` condition (`DESKTOP_MEDIA` in lib/homeLayout, the
 four-column screens). /home (HomeBoard), PageShell and /control use `gutter`;
-`PAGE_GUTTER` in lib/navMetrics is its CSS var for the header and rail. No other custom tokens, variants or global styles. Components are used with
+`PAGE_GUTTER` in lib/navMetrics is its CSS var for the header and rail. Dialog backdrops also blur the page (`backdropFilter` on the dialog recipe's
+backdrop). No other custom tokens, variants or global styles. Components are used with
 their built-in variants, sizes and `colorPalette`s — Card, Collapsible, Dialog,
 Tabs, SegmentGroup, Slider, Switch, CheckboxCard, Progress / ProgressCircle,
 Stat, Badge, Tag, Skeleton, EmptyState, Alert, ActionBar, DataList,
@@ -139,7 +140,7 @@ src/
     HomeOverview.tsx              — home overview page; builds the card map and hands it to HomeBoard, keyed by the column count (`useHomeColumns`: 4 / 2 / 1 from the media queries in lib/homeLayout)
     Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
-    Photos.tsx                    — Immich slideshow
+    Photos.tsx                    — Immich slideshow; `framed` (desktop media query and not frame mode) wraps it in a `data-page-fill` gutter box with card corners
     Radar.tsx                     — radar view (frame-only)
     Timer.tsx                     — timer (frame-only)
     Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; movies only (`isMovie`), hides nav on mount (local only), eye button restores it
@@ -260,6 +261,7 @@ routes/
 - `GET /api/entities` — returns entity ID config (from options.json or frame14.json)
 - `GET /api/weather` — current weather + forecast from HA (entity from `ENTITIES.weather`)
 - `GET /api/home/weather` — weather used by HomeOverview
+- Both weather routes fail only when the current-conditions entity does: a failing `get_forecasts` on the forecast entity is logged and leaves the forecast empty (the Photos/Clock temperature must not depend on it)
 - `GET /api/home/climate` — climate states for all entities in `ENTITIES.climate`
 - `GET /api/home/vacuum` — vacuum states for all entities in `ENTITIES.vacuums` (state, cleaning_progress, battery_level)
 - `GET /api/home/calendar` — today + tomorrow calendar events from all HA calendars

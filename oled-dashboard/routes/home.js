@@ -117,15 +117,27 @@ router.get("/weather", async (_req, res) => {
         },
       ),
     ]);
-    if (!currentRes.ok || !forecastRes.ok) {
-      res.status(502).json({ error: "HA weather fetch failed" });
+    if (!currentRes.ok) {
+      res
+        .status(502)
+        .json({ error: `HA weather state responded with ${currentRes.status}` });
       return;
     }
     const current = await currentRes.json();
-    const forecastData = await forecastRes.json();
     const attrs = current.attributes ?? {};
-    const forecastList =
-      forecastData?.service_response?.[weatherForecast]?.forecast ?? [];
+    // A failing forecast entity costs only the forecast: the current
+    // conditions still go out.
+    let forecastList = [];
+    if (forecastRes.ok) {
+      const forecastData = await forecastRes.json();
+      forecastList =
+        forecastData?.service_response?.[weatherForecast]?.forecast ?? [];
+    } else {
+      console.warn(
+        `Home weather: get_forecasts for ${weatherForecast} responded with ${forecastRes.status}:`,
+        (await forecastRes.text()).slice(0, 200),
+      );
+    }
     res.json({
       state: current.state,
       temperature: attrs.temperature,

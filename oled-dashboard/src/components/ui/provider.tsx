@@ -6,13 +6,17 @@ import {
   defaultConfig,
   defineConfig,
 } from "@chakra-ui/react";
-import { cardAnatomy, segmentGroupAnatomy } from "@chakra-ui/react/anatomy";
+import {
+  cardAnatomy,
+  dialogAnatomy,
+  segmentGroupAnatomy,
+} from "@chakra-ui/react/anatomy";
 import { ColorModeProvider } from "./color-mode";
 import { DESKTOP_MEDIA } from "../../lib/homeLayout";
 import { useThemeMode } from "../../hooks/useThemeMode";
 
 /**
- * Chakra's stock system with three additions.
+ * Chakra's stock system with a few additions.
  *
  * Buttons are fully rounded: the button recipe also drives IconButton and
  * CloseButton, so text buttons are pills and icon buttons are circles;
@@ -21,6 +25,8 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * Cards have `surface` corners (0.75rem) and a 1px `border.surface` edge, both
  * floating navs' too; the corners replace the Card recipe's `l3`. Tiles inside a card set Chakra's smaller `sm`
  * themselves, so none is rounder than its card.
+ *
+ * Dialog backdrops blur the page behind them as well as dimming it.
  *
  * Spacing has a named `xs` (0.25rem, 4px at the base size) and `md` (1rem), and
  * `gutter`, the page's padding around the cards and the gap between them — the
@@ -62,6 +68,11 @@ const system = createSystem(
         card: {
           slots: cardAnatomy.keys(),
           base: { root: { borderRadius: "surface" } },
+        },
+        // Every modal blurs the page behind its dimmed backdrop.
+        dialog: {
+          slots: dialogAnatomy.keys(),
+          base: { backdrop: { backdropFilter: "blur(4px)" } },
         },
         segmentGroup: {
           slots: segmentGroupAnatomy.keys(),

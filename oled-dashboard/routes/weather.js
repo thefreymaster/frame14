@@ -37,17 +37,27 @@ router.get("/", async (_req, res) => {
       },
     );
 
-    if (!response.ok || !forcastResponse.ok) {
+    if (!response.ok) {
       res.status(502).json({ error: `HA responded with ${response.status}` });
       return;
     }
 
     const data = await response.json();
-    const forecastData = await forcastResponse.json();
     const attrs = data.attributes ?? {};
 
-    const forecastList =
-      forecastData?.service_response?.[weatherForecast]?.forecast ?? [];
+    // A failing forecast entity costs only the forecast: the current
+    // conditions (the Photos and Clock temperature) still go out.
+    let forecastList = [];
+    if (forcastResponse.ok) {
+      const forecastData = await forcastResponse.json();
+      forecastList =
+        forecastData?.service_response?.[weatherForecast]?.forecast ?? [];
+    } else {
+      console.warn(
+        `Weather: get_forecasts for ${weatherForecast} responded with ${forcastResponse.status}:`,
+        (await forcastResponse.text()).slice(0, 200),
+      );
+    }
     const mapForecast = (f) => ({
       datetime: f.datetime,
       temperature: f.temperature,

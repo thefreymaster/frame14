@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Box, IconButton, Spinner, Text } from "@chakra-ui/react";
+import {
+  Box,
+  IconButton,
+  Spinner,
+  Text,
+  useMediaQuery,
+} from "@chakra-ui/react";
 import {
   IoEyeOutline,
   IoEyeOffOutline,
@@ -14,6 +20,8 @@ import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
+import { getDeviceMode } from "../lib/deviceMode";
+import { HOME_FOUR_COLUMN_QUERY } from "../lib/homeLayout";
 import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
 import { EmptyState } from "../components/ui/empty-state";
 import {
@@ -113,6 +121,10 @@ export function Photos() {
   const activeAlbumId = config?.defaultAlbumId ?? null;
   const [currentIndex, setCurrentIndex] = useState(0);
   const navVisible = useNavVisible();
+  const [desktop] = useMediaQuery([HOME_FOUR_COLUMN_QUERY]);
+  // Framed (a card in the page) on a desktop; full-screen on the frame
+  // (whatever its orientation) and on phones.
+  const framed = desktop && getDeviceMode() !== "frame";
 
   const { data: album, isPending: photosPending } =
     useAlbumPhotos(activeAlbumId);
@@ -223,14 +235,18 @@ export function Photos() {
     );
   }
 
-  return (
+  const slideshow = (
     <Box
       width="100%"
-      height="100vh"
+      height={framed ? "100%" : "100vh"}
       position="relative"
       overflow="hidden"
       onClick={advancePhoto}
       cursor="pointer"
+      // Framed, it is a card: the cards' corners and edge.
+      rounded={framed ? "surface" : undefined}
+      borderWidth={framed ? "1px" : undefined}
+      borderColor={framed ? "border.surface" : undefined}
     >
       {photosPending && (
         <Box
@@ -276,5 +292,16 @@ export function Photos() {
         {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
       </IconButton>
     </Box>
+  );
+
+  // On a desktop the slideshow sits in the page like a card, inside the
+  // gutter; data-page-fill gives it the page's height even where the layout
+  // scrolls (see PageTransition). The frame and phones stay full-screen.
+  return framed ? (
+    <Box data-page-fill="" width="100%" height="100%" p="gutter">
+      {slideshow}
+    </Box>
+  ) : (
+    slideshow
   );
 }

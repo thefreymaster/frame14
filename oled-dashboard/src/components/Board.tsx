@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Box, Card, chakra, Collapsible } from "@chakra-ui/react";
 import { LuChevronDown } from "react-icons/lu";
+import { DARK_RAISED } from "../lib/floatingSurface";
 
 const STORAGE_PREFIX = "board-collapsed:";
 
@@ -30,20 +31,6 @@ function writeOpen(key: string | undefined, open: boolean) {
     // ignore
   }
 }
-
-// Chakra's dark-mode shades that equal the raised card's gray.800, one step up
-// for everything inside it. See Board.
-const DARK_RAISED = {
-  "--chakra-colors-bg-emphasized": "colors.gray.700",
-  "--chakra-colors-border": "colors.gray.700",
-  "--chakra-colors-border-emphasized": "colors.gray.600",
-  "--chakra-colors-gray-muted": "colors.gray.700",
-  "--chakra-colors-gray-border": "colors.gray.700",
-  "--chakra-colors-gray-emphasized": "colors.gray.600",
-  "--chakra-colors-color-palette-muted": "colors.gray.700",
-  "--chakra-colors-color-palette-border": "colors.gray.700",
-  "--chakra-colors-color-palette-emphasized": "colors.gray.600",
-};
 
 /**
  * A section card: Chakra's Card, optionally collapsible.

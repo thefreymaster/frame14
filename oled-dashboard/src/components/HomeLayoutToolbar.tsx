@@ -1,5 +1,6 @@
 import { ActionBar, Button, Portal, Text } from "@chakra-ui/react";
-import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
+import { LIGHT_STRIP_CLEARANCE, NAV_BAR_CLEARANCE } from "../lib/navMetrics";
+import { useDesktop } from "../hooks/useDesktop";
 
 /**
  * The bar shown while arranging /home — Chakra's ActionBar, portalled to the
@@ -23,6 +24,8 @@ export function HomeLayoutToolbar({
   onDone: () => void;
   onReset: () => void;
 }) {
+  const desktop = useDesktop();
+
   return (
     <ActionBar.Root
       open={open}
@@ -33,6 +36,10 @@ export function HomeLayoutToolbar({
         <ActionBar.Positioner
           bottom={{
             _portrait: `calc(${NAV_BAR_CLEARANCE} + 1rem)`,
+            // Above the desktop lights strip.
+            _landscape: desktop
+              ? `calc(${LIGHT_STRIP_CLEARANCE} + 1rem)`
+              : undefined,
           }}
         >
           <ActionBar.Content>

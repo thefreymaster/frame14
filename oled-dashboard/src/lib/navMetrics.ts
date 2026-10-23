@@ -58,5 +58,14 @@ export const NAV_RAIL_WIDTH = "5rem";
  */
 export const NAV_RAIL_BOTTOM = `max(${PAGE_GUTTER}, calc(env(safe-area-inset-bottom, 0px) - 0.75rem))`;
 
+/** Height of the desktop lights strip along the bottom (LightStrip). */
+export const LIGHT_STRIP_HEIGHT = "3.25rem";
+
+/**
+ * Distance from the bottom of the screen to the top of the lights strip: it
+ * sits on the rail's bottom gap, so the two line up.
+ */
+export const LIGHT_STRIP_CLEARANCE = `calc(${LIGHT_STRIP_HEIGHT} + ${NAV_RAIL_BOTTOM})`;
+
 /** Distance from the left of the screen to the right edge of the landscape rail. */
 export const NAV_RAIL_CLEARANCE = `calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER} + ${NAV_RAIL_WIDTH})`;

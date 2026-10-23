@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.58.0
+
+- Added: on a desktop, a lights strip along the bottom of the screen: every light and switch as an on/off switch with its bulb and name, in one row (it scrolls sideways when they don't all fit). It sits inside the page spacing and lines up with the side navigation.
+- Changed: on a desktop and on the frame, the mic is a button in the header, next to the name, instead of a floating button. Phones keep the floating mic.
+- Changed: the voice window no longer writes out the reply; it's spoken (or a tone plays). The text still shows if the reply couldn't be played, so it isn't lost.
+
 ## 0.57.3
 
 - Fixed: on a desktop browser, Photos and Radar now sit inside the page like cards, and the header shows the clock. A desktop browser starts in frame mode, and these were wrongly treated as the frame and left full-screen. The kitchen frame (an Android tablet) and phones stay full-screen, with no header clock.

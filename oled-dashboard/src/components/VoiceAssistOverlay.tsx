@@ -74,6 +74,7 @@ export function VoiceAssistOverlay({
   const listening = state === "listening" || state === "transcribing";
   const status = STATUS[state] ?? "";
   const hint = SLOW_HINT[slowHint] ?? "";
+  const replyShown = Boolean(reply) && audioBlocked;
 
   return (
     <Dialog.Root
@@ -118,15 +119,17 @@ export function VoiceAssistOverlay({
 
                 {transcript && (
                   <Dialog.Title
-                    textStyle={reply ? "md" : "2xl"}
+                    textStyle={replyShown ? "md" : "2xl"}
                     fontWeight="normal"
-                    color={reply ? "fg.muted" : "fg"}
+                    color={replyShown ? "fg.muted" : "fg"}
                   >
                     {transcript}
                   </Dialog.Title>
                 )}
 
-                {reply && <Text textStyle="2xl">{reply}</Text>}
+                {/* The reply is spoken (or a tone plays), not written out —
+                    except when it couldn't be played, so it isn't lost. */}
+                {replyShown && <Text textStyle="2xl">{reply}</Text>}
 
                 {errorMessage && (
                   <>
@@ -143,7 +146,7 @@ export function VoiceAssistOverlay({
                   </Text>
                 )}
 
-                {audioBlocked && reply && (
+                {replyShown && (
                   <Text textStyle="sm" color="fg.muted">
                     (couldn't speak that)
                   </Text>

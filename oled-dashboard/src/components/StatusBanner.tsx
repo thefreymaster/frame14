@@ -13,8 +13,8 @@ import { useDesktop } from "../hooks/useDesktop";
 import { Tooltip } from "./ui/tooltip";
 
 /**
- * The header across the top of every view: the app's icon and name at the
- * left; running appliances, the connection and (on a desktop) the time at the
+ * The header across the top of every view: the app's icon and name (and, off
+ * a phone, the mic) at the left; running appliances, the connection and (on a desktop) the time at the
  * right. (The version is on the Settings page.)
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
@@ -26,7 +26,14 @@ import { Tooltip } from "./ui/tooltip";
  * floating rail starts below it. The side padding is the cards' PAGE_GUTTER,
  * so the icons line up with the cards' edges.
  */
-export function StatusBanner({ hidden = false }: { hidden?: boolean }) {
+export function StatusBanner({
+  hidden = false,
+  voice,
+}: {
+  hidden?: boolean;
+  /** The header mic (desktop and the frame), beside the name. */
+  voice?: React.ReactNode;
+}) {
   const { connected } = useSocket();
   // The clock only on a desktop: a phone shows its own, and the frame has
   // the big one on Home and /clock.
@@ -62,6 +69,7 @@ export function StatusBanner({ hidden = false }: { hidden?: boolean }) {
         <Text textStyle={{ base: "md", md: "lg" }} fontWeight="semibold">
           Frame14
         </Text>
+        {voice}
       </HStack>
       <Spacer />
       <ApplianceIndicators />

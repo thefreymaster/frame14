@@ -23,6 +23,7 @@ import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
+import { FLOATING_SURFACE, NAV_PAD } from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
   NAV_BAR_BOTTOM,
@@ -120,9 +121,6 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
   },
 ];
 
-/** Space between a floating nav's edge and its entries. */
-const NAV_PAD = "0.375rem";
-
 /**
  * The selected entry's corner radius: the nav's (the theme's `surface`, the
  * cards' too), less the border and padding between them, so the two corners
@@ -131,22 +129,6 @@ const NAV_PAD = "0.375rem";
  * around it.
  */
 const ENTRY_RADIUS = `calc(var(--chakra-radii-surface) - 1px - ${NAV_PAD})`;
-
-/**
- * The surface both navs share: the cards' colour (gray.800 in dark mode) and
- * corners (the theme's `surface` radius), set apart from a card passing
- * beneath by a border and shadow.
- */
-const FLOATING_NAV = {
-  position: "fixed",
-  bg: { _light: "bg.panel", _dark: "gray.800" },
-  borderWidth: "1px",
-  borderColor: "border.surface",
-  rounded: "surface",
-  shadow: "lg",
-  zIndex: "sticky",
-  p: NAV_PAD,
-} as const;
 
 interface LandscapeNavProps {
   hidden?: boolean;
@@ -234,7 +216,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           sits just above the home indicator, and the page scrolls on
           underneath and around it. */}
       <Box
-        {...FLOATING_NAV}
+        {...FLOATING_SURFACE}
         display={{ base: "block", _landscape: "none" }}
         top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_CLEARANCE})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`}
@@ -265,7 +247,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
       {/* Landscape: the same floating surface down the left, on the cards'
           PAGE_GUTTER: its top lines up with the first card's. */}
       <Box
-        {...FLOATING_NAV}
+        {...FLOATING_SURFACE}
         display={{ base: "none", _landscape: "block" }}
         top={`calc(${HEADER_CLEARANCE} + ${PAGE_GUTTER})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}

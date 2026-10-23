@@ -15,7 +15,7 @@ import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
 import { useDesktop } from "../hooks/useDesktop";
-import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
+import { NAV_BAR_CLEARANCE, PAGE_GUTTER } from "../lib/navMetrics";
 import { EmptyState } from "../components/ui/empty-state";
 import {
   HERO_SUFFIX_SIZE,
@@ -270,13 +270,21 @@ export function Photos() {
         }}
         position="fixed"
         // In portrait it rides above the floating nav bar while that is up.
+        // Framed, it moves in by the gutter so it sits inside the card's
+        // corner rather than on it.
         bottom={{
-          _landscape: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          _landscape: framed
+            ? `calc(${PAGE_GUTTER} + 16px)`
+            : "calc(16px + env(safe-area-inset-bottom, 0px))",
           _portrait: navVisible
             ? `calc(${NAV_BAR_CLEARANCE} + 1rem)`
             : "calc(16px + env(safe-area-inset-bottom, 0px))",
         }}
-        right="calc(16px + env(safe-area-inset-right, 0px))"
+        right={
+          framed
+            ? `calc(${PAGE_GUTTER} + 16px)`
+            : "calc(16px + env(safe-area-inset-right, 0px))"
+        }
         zIndex={200}
         aria-label={navVisible ? "Hide navigation" : "Show navigation"}
       >

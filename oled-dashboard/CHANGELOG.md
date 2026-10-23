@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.57.3
+
+- Fixed: on a desktop browser, Photos and Radar now sit inside the page like cards, and the header shows the clock. A desktop browser starts in frame mode, and these were wrongly treated as the frame and left full-screen. The kitchen frame (an Android tablet) and phones stay full-screen, with no header clock.
+- Fixed: on a framed Photos page, the show/hide navigation button sits inside the card's corner instead of on it.
+
 ## 0.57.2
 
 - Changed: the header clock shows only on a desktop (or a tablet held sideways that isn't the frame). Phones have their own clock, and the frame has the large one on Home and Clock.

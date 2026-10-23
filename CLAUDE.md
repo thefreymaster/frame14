@@ -192,7 +192,7 @@ src/
     ui/                           — Chakra CLI snippets (close-button, color-mode, data-list, empty-state, native-select, provider, segmented-control, slider, status, switch, toaster, tooltip, toggle-tip)
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
-    useDesktop.ts                 — a desktop: HOME_FOUR_COLUMN_QUERY and not frame mode. Photos and Radar are framed like cards there, and the header shows HeaderClock
+    useDesktop.ts                 — a desktop: HOME_FOUR_COLUMN_QUERY and not a phone/Android user agent (`isMobileUserAgent` in lib/deviceMode; the kitchen frame is an Android tablet). Not device mode: desktop browsers default to frame mode. Photos and Radar are framed like cards there, and the header shows HeaderClock
     useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s. Returns `loading` per data source (weather, climate, energy, calendar, fan, vacuum), true only until the first answer — the REST snapshot, or live socket states for every entity; energy waits for /api/energy. There is no page-wide loading state: /home renders the board at once and each card shows its own placeholder
     useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
     useEntity.ts                  — subscribes to a single HA entity via Socket.IO room

@@ -18,7 +18,7 @@ process.on("unhandledRejection", (reason) => {
   process.exit(1);
 });
 
-import { PORT } from "./config.js";
+import { INGRESS_PORT, PORT } from "./config.js";
 import {
   startHaSocket,
   getState,
@@ -42,6 +42,7 @@ import fanRouter from "./routes/fan.js";
 import marqueeRouter from "./routes/marquee.js";
 import cameraRouter from "./routes/camera.js";
 import assistRouter, { attachAssistSocket } from "./routes/assist.js";
+import ingressRouter from "./routes/ingress.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -160,3 +161,18 @@ httpServer.listen(PORT, () => {
   io.emit("ready");
   startHaSocket(io);
 });
+
+// Home Assistant's ingress (the add-on's Open Web UI button and sidebar
+// entry) gets its own port, which only sends the browser on to web_ui_url.
+// Failing to bind it must not take the dashboard down with it.
+if (INGRESS_PORT) {
+  const ingressApp = express();
+  ingressApp.use(ingressRouter);
+  createServer(ingressApp)
+    .on("error", (err) => {
+      console.error(`[ingress] can't listen on port ${INGRESS_PORT}:`, err.message);
+    })
+    .listen(INGRESS_PORT, () => {
+      console.log(`Ingress page listening on port ${INGRESS_PORT}`);
+    });
+}

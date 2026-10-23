@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.60.0
+
+- Added: a `web_ui_url` option on the Configuration tab, the address you open Frame14 at (it starts as `https://frame.unserver23.net`). The add-on's **Open Web UI** button and its sidebar entry now take the whole tab there.
+- Fixed: **Open Web UI** and the sidebar entry showed a "Bad gateway" error, because nothing answered on the port Home Assistant opens them through. If `web_ui_url` is empty, they now say how to set it.
+
 ## 0.59.1
 
 - Changed: on a desktop, the lights strip along the bottom is a row of buttons like the side navigation's, each with the bulb over the light's name, instead of on/off switches. Click one to turn it on or off; a light that's on is highlighted like the selected navigation entry, its bulb lit in the light's colour. The strip is a little taller to fit them.

@@ -47,17 +47,28 @@ export const ASSIST_PIPELINE_ID = get("assist_pipeline_id", "ASSIST_PIPELINE_ID"
 // panel itself, which is the normal case.
 export const ASSIST_SPEAKER = get("assist_speaker", "ASSIST_SPEAKER", "");
 
-function loadAddonVersion() {
+// A top-level scalar from the add-on's config.yaml (version, ingress_port).
+function loadManifestValue(key) {
   try {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const yamlPath = path.join(__dirname, "config.yaml");
     if (!fs.existsSync(yamlPath)) return "";
     const text = fs.readFileSync(yamlPath, "utf-8");
-    const match = text.match(/^version:\s*["']?([^"'\s]+)["']?/m);
+    const match = text.match(new RegExp(`^${key}:\\s*["']?([^"'\\s]+)["']?`, "m"));
     return match ? match[1] : "";
   } catch {
     return "";
   }
 }
 
-export const VERSION = loadAddonVersion();
+export const VERSION = loadManifestValue("version");
+
+// Where Home Assistant's "Open Web UI" button and the add-on's sidebar entry
+// send the browser (routes/ingress.js). Empty = they say how to set it.
+export const WEB_UI_URL = get("web_ui_url", "WEB_UI_URL", "");
+
+// The port Home Assistant's ingress proxies to (config.yaml's ingress_port).
+// Only the add-on listens on it; 0 in local dev.
+export const INGRESS_PORT = options
+  ? Number(loadManifestValue("ingress_port")) || 0
+  : 0;

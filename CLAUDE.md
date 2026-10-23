@@ -40,6 +40,7 @@ Priority: `/data/options.json` (HA addon) → `.env` file (local dev). See `.env
 | `PORT` | Express server port (default 4000) |
 | `ASSIST_PIPELINE_ID` | (Optional) Assist pipeline the mic button runs; empty uses HA's preferred pipeline |
 | `ASSIST_SPEAKER` | (Optional) `media_player` to also speak the assist reply on |
+| `WEB_UI_URL` | (Optional) Where the add-on's Open Web UI button and sidebar entry send the browser (`web_ui_url`; see "Home Assistant Addon") |
 
 ### Entity IDs (`entities.js`)
 Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
@@ -258,6 +259,7 @@ routes/
   marquee.js      — GET /api/marquee/art (full-res poster from Plex via media_content_id when PLEX_URL/PLEX_TOKEN are set; falls back to proxying the media player's entity_picture from the HA state cache)
   camera.js       — GET /api/camera/hls (WebSocket camera/stream, format hls → our proxy URL), GET /api/camera/hls/:token/*file (HA's HLS files only: playlists, init.mp4, segment/<n>[.<part>].m4s; only _HLS_msn/_HLS_part forwarded; no bearer), GET /api/camera/snapshot (camera_proxy), GET /api/camera/stream (camera_proxy_stream MJPEG, unused by the client: HA builds it from stills, which an RTSP-only Generic camera lacks)
   assist.js       — GET /api/assist/config, GET /api/assist/tts/:id, plus attachAssistSocket() for the voice session
+  ingress.js      — not under /api: index.js serves it alone on INGRESS_PORT. Every request gets a page that moves the whole tab (`window.top.location.replace`) to `web_ui_url`, or says how to set it
   views.js        — GET /api/change/:view (broadcasts change_view via io from app.locals)
   videos.js       — GET /api/videos/list, GET /videos/:file
 ```
@@ -351,6 +353,7 @@ to confirm landscape still works.
 ## Home Assistant Addon
 
 - `config.yaml` — addon manifest (arch, ports, options schema including all entity ID fields)
+- Ingress (`ingress: true`, `ingress_port: 8099`) is only a doorway: HA's Open Web UI button and the sidebar entry load the add-on in an iframe under `/api/hassio_ingress/<token>/`, and the dashboard can't run under that prefix (root-relative assets, API and socket). So index.js listens on `ingress_port` (read from config.yaml by `config.js`, add-on only) with `routes/ingress.js`, which sends the tab on to the `web_ui_url` option. With `host_network: true` that port is on the HA host itself; nothing listening there is what gave the Cloudflare "Bad gateway" before 0.60.0
 - `CHANGELOG.md` — addon changelog, rendered in the Home Assistant addon UI
 - `run.sh` — entry point; exports scalar env vars via bashio (arrays read directly from options.json by entities.js)
 - `Dockerfile` — multi-stage build; copies `entities.js` and `frame14.json` into image

@@ -1,5 +1,5 @@
 import { ActionBar, Button, Portal, Text } from "@chakra-ui/react";
-import { NAV_BAR_HEIGHT } from "../lib/navMetrics";
+import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
 
 /**
  * The bar shown while arranging /home — Chakra's ActionBar, portalled to the
@@ -32,7 +32,7 @@ export function HomeLayoutToolbar({
       <Portal>
         <ActionBar.Positioner
           bottom={{
-            _portrait: `calc(${NAV_BAR_HEIGHT} + env(safe-area-inset-bottom, 0px) + 1rem)`,
+            _portrait: `calc(${NAV_BAR_CLEARANCE} + 1rem)`,
           }}
         >
           <ActionBar.Content>

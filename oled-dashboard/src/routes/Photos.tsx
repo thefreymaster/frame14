@@ -14,6 +14,7 @@ import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
+import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
 import { EmptyState } from "../components/ui/empty-state";
 import {
   HERO_SUFFIX_SIZE,
@@ -261,7 +262,13 @@ export function Photos() {
           toggleNavVisible();
         }}
         position="fixed"
-        bottom="calc(16px + env(safe-area-inset-bottom, 0px))"
+        // In portrait it rides above the floating nav bar while that is up.
+        bottom={{
+          _landscape: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          _portrait: navVisible
+            ? `calc(${NAV_BAR_CLEARANCE} + 1rem)`
+            : "calc(16px + env(safe-area-inset-bottom, 0px))",
+        }}
         right="calc(16px + env(safe-area-inset-right, 0px))"
         zIndex={200}
         aria-label={navVisible ? "Hide navigation" : "Show navigation"}

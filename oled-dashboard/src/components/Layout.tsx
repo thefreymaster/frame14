@@ -13,7 +13,7 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
 import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
-import { NAV_BAR_HEIGHT, NAV_RAIL_WIDTH } from "../lib/navMetrics";
+import { NAV_BAR_CLEARANCE, NAV_RAIL_WIDTH } from "../lib/navMetrics";
 
 export function Layout() {
   useThemeMode();
@@ -68,8 +68,9 @@ export function Layout() {
           overflow={scrollable ? "auto" : "hidden"}
           pt={showNav ? "env(safe-area-inset-top, 0px)" : 0}
           transition="padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-          // Room for the nav: a rail on the left in landscape, a bar along the
-          // bottom in portrait.
+          // Room for the nav: a rail on the left in landscape, the floating bar
+          // in portrait. The page scrolls on under the bar, but its end stops
+          // above it.
           minW={{ _landscape: "100vw", _portrait: "100%" }}
           pl={{
             _landscape: showNav
@@ -78,7 +79,7 @@ export function Layout() {
           }}
           pb={{
             _portrait: showNav
-              ? `calc(${NAV_BAR_HEIGHT} + env(safe-area-inset-bottom, 0px))`
+              ? NAV_BAR_CLEARANCE
               : "0px",
           }}
         >

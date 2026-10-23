@@ -23,7 +23,13 @@ import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
-import { NAV_BAR_HEIGHT, NAV_RAIL_WIDTH } from "../lib/navMetrics";
+import {
+  NAV_BAR_BOTTOM,
+  NAV_BAR_CLEARANCE,
+  NAV_BAR_HEIGHT,
+  NAV_BAR_INSET,
+  NAV_RAIL_WIDTH,
+} from "../lib/navMetrics";
 import { PiSolarRoof } from "react-icons/pi";
 
 type NavItem = {
@@ -149,7 +155,11 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   // Each nav entry is a Tabs trigger: the selected tab is the view on screen.
   // Navigation happens on click rather than onValueChange, so tapping the tab
   // you are already on still re-sends it to the other frames, as before.
-  function renderItem(item: NavItem) {
+  // `floating` is the portrait capsule: entries fill its height, the selected
+  // one is a capsule a shade above the bar's gray.800, and on a phone the
+  // labels drop to xs, Apple Music's small captions, so a sixth entry (game
+  // day) still fits inside the inset bar.
+  function renderItem(item: NavItem, floating = false) {
     const isActive = activeView === item.path;
     const Icon = isActive ? item.activeIcon : item.icon;
     return (
@@ -159,15 +169,19 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         onClick={() => handleClick(item.path)}
         flexDirection="column"
         justifyContent="center"
-        height="auto"
+        height={floating ? "100%" : "auto"}
+        rounded={floating ? "full" : undefined}
         px="1"
-        py="2"
+        py={floating ? "0" : "2"}
         gap="1"
+        textStyle={floating ? { base: "xs", md: "sm" } : undefined}
         // 20px icons on a phone and a little larger wherever the type scale
         // grows, and a neutral grey fill (gray.100 / gray.800) on the
         // selected entry rather than the subtle tab's near-black.
         _icon={{ boxSize: { base: "5", md: "1.375rem" } }}
-        _selected={{ bg: { _light: "gray.100", _dark: "gray.800" } }}
+        _selected={{
+          bg: { _light: "gray.100", _dark: floating ? "gray.700" : "gray.800" },
+        }}
       >
         <Icon />
         {item.label}
@@ -184,23 +198,32 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
 
   return (
     <>
-      {/* Portrait: bottom horizontal bar. Its background runs on through the
-          home-indicator inset to the bottom edge, so in an iPhone home-screen
-          app the page doesn't show through underneath it; the entries keep to
-          the NAV_BAR_HEIGHT above the inset. */}
+      {/* Portrait: a floating capsule, like Apple Music's tab bar but opaque
+          (no glass). It is inset from the sides and sits just above the home
+          indicator, and the page scrolls on underneath and around it. It is
+          the cards' surface (gray.800 in dark mode), set apart from a card
+          passing beneath by its border and shadow. The selected entry is a
+          capsule inside it, one shade up. */}
       <Box
         display={{ base: "block", _landscape: "none" }}
         position="fixed"
-        top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_HEIGHT} - env(safe-area-inset-bottom, 0px))`}
-        left={0}
-        right={0}
-        height={`calc(${NAV_BAR_HEIGHT} + env(safe-area-inset-bottom, 0px))`}
-        pb="env(safe-area-inset-bottom, 0px)"
-        bg="bg"
-        borderTopWidth="1px"
+        top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_CLEARANCE})`}
+        left={`calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`}
+        right={`calc(env(safe-area-inset-right, 0px) + ${NAV_BAR_INSET})`}
+        height={NAV_BAR_HEIGHT}
+        bg={{ _light: "bg.panel", _dark: "gray.800" }}
+        borderWidth="1px"
+        borderColor={{ _light: "gray.200", _dark: "gray.700" }}
+        rounded="full"
+        shadow="lg"
         zIndex="sticky"
-        px="2"
-        transform={hidden ? "translateY(100%)" : "translateY(0)"}
+        p="1.5"
+        // Down past the screen edge, shadow and all.
+        transform={
+          hidden
+            ? `translateY(calc(100% + ${NAV_BAR_BOTTOM} + 1rem))`
+            : "translateY(0)"
+        }
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
       >
         <Tabs.Root
@@ -211,8 +234,8 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           activationMode="manual"
           height="100%"
         >
-          <Tabs.List height="100%" alignItems="center" gap="1">
-            {portraitItems.map(renderItem)}
+          <Tabs.List height="100%" gap="1">
+            {portraitItems.map((item) => renderItem(item, true))}
           </Tabs.List>
         </Tabs.Root>
       </Box>
@@ -242,9 +265,9 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           height="100%"
         >
           <Tabs.List width="100%" height="100%" gap="1">
-            {visibleNavItems.map(renderItem)}
+            {visibleNavItems.map((item) => renderItem(item))}
             <Spacer />
-            {BOTTOM_NAV_ITEMS.map(renderItem)}
+            {BOTTOM_NAV_ITEMS.map((item) => renderItem(item))}
           </Tabs.List>
         </Tabs.Root>
       </Box>

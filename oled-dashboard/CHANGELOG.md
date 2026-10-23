@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.55.0
+
+- Changed: in portrait the bottom navigation bar floats, like Apple Music's tab bar. It is a rounded capsule set in from the sides of the screen and sitting just above the bottom edge (on an iPhone, just above the home indicator), and the page scrolls on underneath it. The bar is solid, not see-through, and the selected tab is a rounded pill. The landscape side rail is unchanged.
+- Changed: on phones the tab labels are a size smaller, so a sixth tab (Football on game day) still fits.
+- Fixed: in portrait, the hide/show navigation button on Photos and the movie poster was tucked under the nav bar while the bar was showing. It now sits above the bar.
+
 ## 0.54.0
 
 - Added: an "All off" button in the Climate card's header turns off every thermostat that's on. It shows only while at least one is on (in any mode, including auto and dry) and works with the card collapsed too.

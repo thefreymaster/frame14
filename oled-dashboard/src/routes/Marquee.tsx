@@ -12,6 +12,7 @@ import {
   useNavVisible,
 } from "../lib/navVisibility";
 import { EmptyState } from "../components/ui/empty-state";
+import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
 
 export function Marquee() {
   const { data: entities } = useEntitiesConfig();
@@ -68,7 +69,13 @@ export function Marquee() {
           toggleNavVisible();
         }}
         position="fixed"
-        bottom="calc(16px + env(safe-area-inset-bottom, 0px))"
+        // In portrait it rides above the floating nav bar while that is up.
+        bottom={{
+          _landscape: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          _portrait: navVisible
+            ? `calc(${NAV_BAR_CLEARANCE} + 1rem)`
+            : "calc(16px + env(safe-area-inset-bottom, 0px))",
+        }}
         right="calc(16px + env(safe-area-inset-right, 0px))"
         zIndex={200}
         aria-label={navVisible ? "Hide navigation" : "Show navigation"}

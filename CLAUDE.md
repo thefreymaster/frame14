@@ -139,7 +139,7 @@ src/
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
-    LandscapeNav.tsx              — bottom bar (portrait) + left sidebar (landscape), each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
+    LandscapeNav.tsx              — floating bottom bar (portrait: an opaque capsule inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + left sidebar (landscape), each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in
     SocketViewListener.tsx        — listens for change_view, navigates (skips /control)
@@ -202,7 +202,7 @@ src/
     deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
-    navMetrics.ts                 — nav bar height / rail width in rem, shared by Layout, the mic button and the arranging bar
+    navMetrics.ts                 — nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the mic button, the arranging bar and the Photos/Marquee eye button
     hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
     weatherIcons.ts               — HA weather condition → react-icons element (day/night)

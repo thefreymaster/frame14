@@ -116,6 +116,9 @@ export function DoorbellCard() {
       maxWidth="90vw"
       overflow="hidden"
       variant="elevated"
+      // The 1px edge every card and the navs share.
+      borderWidth="1px"
+      borderColor="border.surface"
       animationName="slide-from-bottom, fade-in"
       animationDuration="moderate"
       cursor="pointer"

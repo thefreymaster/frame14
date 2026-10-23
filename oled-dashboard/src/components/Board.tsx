@@ -65,6 +65,9 @@ const DARK_RAISED = {
  * shared with the floating side rail); tiles inside a card use the smaller
  * `sm`, so none is rounder than its card.
  *
+ * Its 1px edge is the theme's `border.surface` (gray.700 in dark mode), the
+ * same as the floating navs'.
+ *
  * In dark mode the card is gray.800 rather than the Card's `bg.panel`
  * (gray.950): on the frame's matte NXTPAPER screen gray.950 sat so close to
  * the page that the cards disappeared. gray.800 is also what Chakra's
@@ -128,7 +131,7 @@ export const Board = ({
     <Card.Root
       size={{ base: "sm", md: "md" }}
       bg={{ _dark: "gray.800" }}
-      borderColor={{ _dark: "gray.800" }}
+      borderColor="border.surface"
       css={{ _dark: DARK_RAISED, "--card-padding": { mdDown: "spacing.3" } }}
       minW="0"
       flex={fill ? "1" : undefined}

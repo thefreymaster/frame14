@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.56.3
+
+- Added: the header's clock shows seconds, each digit rolling over as it changes.
+- Added: the Frame14 icon next to the name in the header, at the size of the status icons.
+- Changed: every card has the same thin border as the side navigation, so cards stand out from the page in dark mode too.
+
 ## 0.56.2
 
 - Changed: the space around the cards now always matches the space between them: 16px on a desktop (and a tablet held sideways), 4px on phones and the frame. The header's icons and the side navigation line up with it.

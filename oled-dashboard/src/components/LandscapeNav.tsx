@@ -141,7 +141,7 @@ const FLOATING_NAV = {
   position: "fixed",
   bg: { _light: "bg.panel", _dark: "gray.800" },
   borderWidth: "1px",
-  borderColor: { _light: "gray.200", _dark: "gray.700" },
+  borderColor: "border.surface",
   rounded: "surface",
   shadow: "lg",
   zIndex: "sticky",

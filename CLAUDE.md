@@ -90,7 +90,8 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 The UI is stock Chakra UI v3 — `createSystem(defaultConfig, …)` in
 `components/ui/provider.tsx` with only three additions: buttons (and segmented
 controls) are fully rounded; a `surface` radius (0.75rem) that the Card recipe
-uses for every card and both floating navs share (tiles inside cards set
+uses for every card and both floating navs share, and a `border.surface` colour
+for their 1px edge (gray.200 / gray.700) (tiles inside cards set
 `sm` themselves); and spacings `xs` (0.25rem), `md` (1rem) and the semantic `gutter`: the gap
 between cards and the page's padding around them, always equal — xs, or md under
 the theme's `desktop` condition (`DESKTOP_MEDIA` in lib/homeLayout, the
@@ -146,8 +147,8 @@ src/
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition; renders the StatusBanner header and the nav, and pads the page clear of both (HEADER_CLEARANCE on top; the rail or bar)
-    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: "Frame14" at the left; running appliances, connection icon and HeaderClock at the right (the version is on /control).
-    HeaderClock.tsx               — the header's "1:45 PM", the device's time; ticks each second, re-renders only when the minute changes. Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
+    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: the app icon (`/favicon-96x96.png`, status-icon size) and "Frame14" at the left; running appliances, connection icon and HeaderClock at the right (the version is on /control).
+    HeaderClock.tsx               — the header's "1:45:07 PM", the device's time: hours, minutes and seconds as NumberFlows in a NumberFlowGroup (two-digit minutes/seconds via `minimumIntegerDigits`, tens digit `max: 5`), ticking each second Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
     LandscapeNav.tsx              — floating bottom bar (portrait: an opaque bar with the cards' `surface` corners, inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface, from under the header to the bottom gap); in both, the selected entry's radius is `surface` less the border and padding, so the corners are concentric, each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in

@@ -1,4 +1,4 @@
-import { HStack, Icon, Spacer, Text } from "@chakra-ui/react";
+import { HStack, Icon, Image, Spacer, Text } from "@chakra-ui/react";
 import { MdWifi, MdWifiOff } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
 import {
@@ -12,9 +12,9 @@ import { HeaderClock } from "./HeaderClock";
 import { Tooltip } from "./ui/tooltip";
 
 /**
- * The header across the top of every view: the app's name at the left; running
- * appliances, the connection and the time at the right. (The version is on the
- * Settings page.)
+ * The header across the top of every view: the app's icon and name at the
+ * left; running appliances, the connection and the time at the right. (The
+ * version is on the Settings page.)
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -46,9 +46,19 @@ export function StatusBanner({ hidden = false }: { hidden?: boolean }) {
       transform={hidden ? "translateY(-100%)" : "translateY(0)"}
       transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
     >
-      <Text textStyle={{ base: "md", md: "lg" }} fontWeight="semibold">
-        Frame14
-      </Text>
+      <HStack gap="2">
+        {/* The app icon, at the status icons' size. */}
+        <Image
+          src="/favicon-96x96.png"
+          alt=""
+          boxSize={HEADER_ICON_SIZE}
+          rounded="sm"
+          flexShrink={0}
+        />
+        <Text textStyle={{ base: "md", md: "lg" }} fontWeight="semibold">
+          Frame14
+        </Text>
+      </HStack>
       <Spacer />
       <ApplianceIndicators />
       <Tooltip content={connected ? "Connected" : "Disconnected"}>

@@ -18,8 +18,8 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * CloseButton, so text buttons are pills and icon buttons are circles;
  * segmented controls (a row of buttons) get the same pill track and indicator.
  *
- * Cards have `surface` corners (0.75rem), both floating navs' too, in place
- * of the Card recipe's `l3`. Tiles inside a card set Chakra's smaller `sm`
+ * Cards have `surface` corners (0.75rem) and a 1px `border.surface` edge, both
+ * floating navs' too; the corners replace the Card recipe's `l3`. Tiles inside a card set Chakra's smaller `sm`
  * themselves, so none is rounder than its card.
  *
  * Spacing has a named `xs` (0.25rem, 4px at the base size) and `md` (1rem), and
@@ -40,6 +40,17 @@ const system = createSystem(
         radii: { surface: { value: "0.75rem" } },
       },
       semanticTokens: {
+        colors: {
+          border: {
+            // The 1px edge every card and both floating navs share.
+            surface: {
+              value: {
+                _light: "{colors.gray.200}",
+                _dark: "{colors.gray.700}",
+              },
+            },
+          },
+        },
         spacing: {
           gutter: { value: { base: "{spacing.xs}", _desktop: "{spacing.md}" } },
         },

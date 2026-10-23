@@ -5,6 +5,7 @@ import type { IconType } from "react-icons";
 import { useEntities, useEntity } from "../hooks/useEntity";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { printerEntityIds } from "../lib/printerEntities";
+import { HEADER_ICON_SIZE } from "../lib/navMetrics";
 
 function PrinterNozzleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -56,14 +57,14 @@ export function ApplianceIndicators() {
   if (running.length === 0 && !printerActive) return null;
 
   return (
-    <HStack gap="2" align="center">
+    <HStack gap="3" align="center">
       {running.map(({ id, Icon: ApplianceIcon, label }) => (
         <Tooltip
           key={id}
           content={`${label[0].toUpperCase()}${label.slice(1)} running`}
         >
           <Icon
-            boxSize="3.5"
+            boxSize={HEADER_ICON_SIZE}
             color="fg.success"
             aria-label={`${label} running`}
           >
@@ -74,7 +75,7 @@ export function ApplianceIndicators() {
       {printerActive && (
         <Tooltip content="3D printer running">
           <Icon
-            boxSize="3.5"
+            boxSize={HEADER_ICON_SIZE}
             color="fg.success"
             aria-label="3d printer running"
           >

@@ -24,11 +24,14 @@ import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
 import {
+  HEADER_CLEARANCE,
   NAV_BAR_BOTTOM,
   NAV_BAR_CLEARANCE,
   NAV_BAR_HEIGHT,
   NAV_BAR_INSET,
+  NAV_RAIL_BOTTOM,
   NAV_RAIL_WIDTH,
+  PAGE_GUTTER,
 } from "../lib/navMetrics";
 import { PiSolarRoof } from "react-icons/pi";
 
@@ -117,6 +120,33 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
   },
 ];
 
+/** Space between a floating nav's edge and its entries. */
+const NAV_PAD = "0.375rem";
+
+/**
+ * The selected entry's corner radius in the rail: the rail's, less the border
+ * and padding between them, so the two corners share a centre — an inner
+ * outline offset from the outer one, as a slicer offsets a print's walls. An
+ * equal radius would look fatter than the corner around it.
+ */
+const RAIL_ENTRY_RADIUS = `calc(var(--chakra-radii-surface) - 1px - ${NAV_PAD})`;
+
+/**
+ * The surface both navs share: the cards' colour (gray.800 in dark mode), set
+ * apart from a card passing beneath by a border and shadow. Fully rounded for
+ * the bar; the rail swaps in the theme's `surface` radius.
+ */
+const FLOATING_NAV = {
+  position: "fixed",
+  bg: { _light: "bg.panel", _dark: "gray.800" },
+  borderWidth: "1px",
+  borderColor: { _light: "gray.200", _dark: "gray.700" },
+  rounded: "full",
+  shadow: "lg",
+  zIndex: "sticky",
+  p: NAV_PAD,
+} as const;
+
 interface LandscapeNavProps {
   hidden?: boolean;
 }
@@ -155,13 +185,16 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   // Each nav entry is a Tabs trigger: the selected tab is the view on screen.
   // Navigation happens on click rather than onValueChange, so tapping the tab
   // you are already on still re-sends it to the other frames, as before.
-  // `floating` is the portrait capsule: entries fill its height, the selected
-  // one is a capsule a shade above the bar's gray.800, and on a phone the
-  // labels drop to xs, Apple Music's small captions, so a sixth entry (game
-  // day) still fits inside the inset bar.
-  function renderItem(item: NavItem, floating = false) {
+  // Both navs float, and the selected entry is a shade above the nav's
+  // gray.800, its corners following the nav's: a capsule in the bar, and in
+  // the rail concentric with the rail's corners (RAIL_ENTRY_RADIUS). In the
+  // portrait bar entries fill its height, and on a phone the labels drop to
+  // xs, Apple Music's small captions, so a sixth entry (game day) still fits
+  // inside the inset bar.
+  function renderItem(item: NavItem, placement: "bar" | "rail") {
     const isActive = activeView === item.path;
     const Icon = isActive ? item.activeIcon : item.icon;
+    const inBar = placement === "bar";
     return (
       <Tabs.Trigger
         key={item.path}
@@ -169,19 +202,17 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         onClick={() => handleClick(item.path)}
         flexDirection="column"
         justifyContent="center"
-        height={floating ? "100%" : "auto"}
-        rounded={floating ? "full" : undefined}
+        height={inBar ? "100%" : "auto"}
+        rounded={inBar ? "full" : RAIL_ENTRY_RADIUS}
         px="1"
-        py={floating ? "0" : "2"}
+        py={inBar ? "0" : "2"}
         gap="1"
-        textStyle={floating ? { base: "xs", md: "sm" } : undefined}
+        textStyle={inBar ? { base: "xs", md: "sm" } : undefined}
         // 20px icons on a phone and a little larger wherever the type scale
-        // grows, and a neutral grey fill (gray.100 / gray.800) on the
+        // grows, and a neutral grey fill (gray.100 / gray.700) on the
         // selected entry rather than the subtle tab's near-black.
         _icon={{ boxSize: { base: "5", md: "1.375rem" } }}
-        _selected={{
-          bg: { _light: "gray.100", _dark: floating ? "gray.700" : "gray.800" },
-        }}
+        _selected={{ bg: { _light: "gray.100", _dark: "gray.700" } }}
       >
         <Icon />
         {item.label}
@@ -200,24 +231,14 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
     <>
       {/* Portrait: a floating capsule, like Apple Music's tab bar but opaque
           (no glass). It is inset from the sides and sits just above the home
-          indicator, and the page scrolls on underneath and around it. It is
-          the cards' surface (gray.800 in dark mode), set apart from a card
-          passing beneath by its border and shadow. The selected entry is a
-          capsule inside it, one shade up. */}
+          indicator, and the page scrolls on underneath and around it. */}
       <Box
+        {...FLOATING_NAV}
         display={{ base: "block", _landscape: "none" }}
-        position="fixed"
         top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_CLEARANCE})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`}
         right={`calc(env(safe-area-inset-right, 0px) + ${NAV_BAR_INSET})`}
         height={NAV_BAR_HEIGHT}
-        bg={{ _light: "bg.panel", _dark: "gray.800" }}
-        borderWidth="1px"
-        borderColor={{ _light: "gray.200", _dark: "gray.700" }}
-        rounded="full"
-        shadow="lg"
-        zIndex="sticky"
-        p="1.5"
         // Down past the screen edge, shadow and all.
         transform={
           hidden
@@ -235,25 +256,28 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           height="100%"
         >
           <Tabs.List height="100%" gap="1">
-            {portraitItems.map((item) => renderItem(item, true))}
+            {portraitItems.map((item) => renderItem(item, "bar"))}
           </Tabs.List>
         </Tabs.Root>
       </Box>
 
-      {/* Landscape: left vertical sidebar */}
+      {/* Landscape: the same floating surface down the left, less rounded,
+          on the cards' PAGE_GUTTER: its top lines up with the first card's. */}
       <Box
+        {...FLOATING_NAV}
+        // The cards' corners (the theme's surface radius), not a capsule.
+        rounded="surface"
         display={{ base: "none", _landscape: "block" }}
-        position="fixed"
-        left={0}
-        top={0}
-        bottom={0}
+        top={`calc(${HEADER_CLEARANCE} + ${PAGE_GUTTER})`}
+        left={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
         width={NAV_RAIL_WIDTH}
-        height="100dvh"
-        bg="bg"
-        borderRightWidth="1px"
-        zIndex="sticky"
-        p="2"
-        transform={hidden ? "translateX(-100%)" : "translateX(0)"}
+        height={`calc(var(--app-height, 100dvh) - ${HEADER_CLEARANCE} - ${PAGE_GUTTER} - ${NAV_RAIL_BOTTOM})`}
+        // Off past the screen edge, shadow and all.
+        transform={
+          hidden
+            ? `translateX(calc(-100% - ${PAGE_GUTTER} - env(safe-area-inset-left, 0px) - 1rem))`
+            : "translateX(0)"
+        }
         transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
       >
         <Tabs.Root
@@ -265,9 +289,9 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           height="100%"
         >
           <Tabs.List width="100%" height="100%" gap="1">
-            {visibleNavItems.map((item) => renderItem(item))}
+            {visibleNavItems.map((item) => renderItem(item, "rail"))}
             <Spacer />
-            {BOTTOM_NAV_ITEMS.map((item) => renderItem(item))}
+            {BOTTOM_NAV_ITEMS.map((item) => renderItem(item, "rail"))}
           </Tabs.List>
         </Tabs.Root>
       </Box>

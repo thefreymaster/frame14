@@ -9,6 +9,7 @@ import {
   IconButton,
   SimpleGrid,
   Stack,
+  Text,
 } from "@chakra-ui/react";
 import { MdSkipNext, MdRefresh, MdRadar, MdElectricBolt } from "react-icons/md";
 import {
@@ -32,6 +33,7 @@ import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "../hooks/useSocket";
+import { useVersion } from "../hooks/useVersion";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
@@ -117,6 +119,7 @@ function nextPhoto() {
 
 export function Control() {
   const { connected } = useSocket();
+  const version = useVersion();
   const { preference, effectiveMode, setPreference } = useThemeMode();
   const { data: photosConfig } = usePhotosConfig();
   const { data: albums } = useImmichAlbums();
@@ -173,9 +176,16 @@ export function Control() {
         icon={<IoOptionsOutline />}
         title="Control"
         actions={
-          <Status value={connected ? "success" : "error"}>
-            {connected ? "Connected" : "Disconnected"}
-          </Status>
+          <>
+            {version && (
+              <Text textStyle="sm" color="fg.muted">
+                v{version}
+              </Text>
+            )}
+            <Status value={connected ? "success" : "error"}>
+              {connected ? "Connected" : "Disconnected"}
+            </Status>
+          </>
         }
       >
         <Field.Root>
@@ -199,7 +209,7 @@ export function Control() {
       <Flex
         direction={{ base: "column", _landscape: "row" }}
         align={{ _landscape: "flex-start" }}
-        gap="4"
+        gap="xs"
       >
         {deviceMode !== "frame" && (
           <Box flex="1" minWidth="0">
@@ -249,7 +259,7 @@ export function Control() {
             </Board>
           </Box>
         )}
-        <Flex flex="1" minWidth="0" direction="column" gap="4">
+        <Flex flex="1" minWidth="0" direction="column" gap="xs">
           {/* Display mode */}
           <Board
             title={

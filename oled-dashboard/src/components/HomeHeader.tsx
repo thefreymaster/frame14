@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Text, HStack, Spacer, Alert, Skeleton } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
-import { BirdSection } from "./BirdSection";
+// Bird badge switched off for now; see the commented-out block below.
+// import { BirdSection } from "./BirdSection";
 import { Board } from "./Board";
 import { HERO_SUFFIX_SIZE, HERO_TEXT } from "../lib/hero";
+import { conditionLabel } from "../lib/weatherIcons";
 
 const DAYS = [
   "Sunday",
@@ -30,24 +32,6 @@ const MONTHS = [
   "November",
   "December",
 ];
-
-const CONDITION_LABEL: Record<string, string> = {
-  "clear-night": "Clear",
-  cloudy: "Cloudy",
-  exceptional: "Exceptional",
-  fog: "Fog",
-  hail: "Hail",
-  lightning: "Lightning",
-  "lightning-rainy": "Storms",
-  partlycloudy: "Partly Cloudy",
-  pouring: "Heavy Rain",
-  rainy: "Rain",
-  snowy: "Snow",
-  "snowy-rainy": "Sleet",
-  sunny: "Sunny",
-  windy: "Windy",
-  "windy-variant": "Windy",
-};
 
 /**
  * The date, the clock and the weather now. The clock is the device's own, so
@@ -77,9 +61,7 @@ export function HomeHeader({
   const month = MONTHS[now.getMonth()];
   const date = now.getDate();
 
-  const label = weather
-    ? (CONDITION_LABEL[weather.state] ?? weather.state)
-    : "";
+  const label = weather ? conditionLabel(weather.state) : "";
 
   return (
     <Board storageKey="time-weather">
@@ -160,11 +142,13 @@ export function HomeHeader({
         )}
       </HStack>
 
-      {/* Latest BirdNET-Go detection — renders nothing when there hasn't been
-          one, so the header keeps its height. */}
+      {/* Switched off for now.
+          Latest BirdNET-Go detection — renders nothing when there hasn't been
+          one, so the header keeps its height.
       <HStack width="100%" minW="0" mt="4" _empty={{ display: "none" }}>
         <BirdSection />
       </HStack>
+      */}
     </Board>
   );
 }

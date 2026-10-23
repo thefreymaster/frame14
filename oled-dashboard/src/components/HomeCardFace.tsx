@@ -29,7 +29,6 @@ export function HomeCardFace({
           <Card.Root
             className="home-card-placeholder"
             size={{ base: "sm", md: "md" }}
-            borderRadius="sm"
             borderStyle="dashed"
           >
             <Card.Body>

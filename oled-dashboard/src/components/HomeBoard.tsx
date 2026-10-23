@@ -212,7 +212,7 @@ export function HomeBoard({
         position="relative"
         width="100%"
         minHeight="100%"
-        p="4"
+        p="xs"
         // Room to scroll the last card (and its width picker) clear of the
         // arranging bar.
         pb={editing ? "12rem" : "4"}
@@ -227,15 +227,16 @@ export function HomeBoard({
           <Grid
             aria-hidden
             position="absolute"
-            inset="4"
+            inset="xs"
             templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
-            columnGap="4"
+            columnGap="xs"
             pointerEvents="none"
           >
             {Array.from({ length: columns }, (_, i) => (
               <Box
                 key={i}
-                rounded="sm"
+                // The cards' radius (the theme's surface, on the Card recipe).
+                rounded="surface"
                 borderWidth="2px"
                 borderStyle="dashed"
                 borderColor="border.emphasized"
@@ -252,7 +253,7 @@ export function HomeBoard({
             templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
             autoRows={`${PACKED_ROW_PX}px`}
             autoFlow="row dense"
-            columnGap="4"
+            columnGap="xs"
             rowGap="0"
             alignItems="start"
           >
@@ -282,7 +283,7 @@ export function HomeBoard({
               className="home-card home-card-lifted"
               data-editing
               shadow="lg"
-              rounded="sm"
+              rounded="surface"
             >
               <HomeCardFace id={activeId} editing>
                 {cards[activeId]}

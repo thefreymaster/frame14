@@ -57,11 +57,13 @@ const DARK_RAISED = {
  * the title and stretches an ::after over the whole header; the action is
  * raised above that, and a tap anywhere else in the header still toggles.
  *
- * Below Chakra's md breakpoint (768px, a phone) the card is size sm, so its
- * padding and header-to-body gap drop from spacing.6 to spacing.4.
+ * Below Chakra's md breakpoint (768px, a phone) the card is size sm, and its
+ * padding and header-to-body gap drop further, from sm's spacing.4 to
+ * spacing.3, to give a phone's narrow column more room (spacing.6 above md).
  *
- * Every card uses Chakra's `sm` radius rather than the Card's own `l3` (md);
- * tiles inside a card use `sm` too, so none is rounder than its card.
+ * Every card has the theme's `surface` corners (set on the Card recipe, and
+ * shared with the floating side rail); tiles inside a card use the smaller
+ * `sm`, so none is rounder than its card.
  *
  * In dark mode the card is gray.800 rather than the Card's `bg.panel`
  * (gray.950): on the frame's matte NXTPAPER screen gray.950 sat so close to
@@ -127,8 +129,7 @@ export const Board = ({
       size={{ base: "sm", md: "md" }}
       bg={{ _dark: "gray.800" }}
       borderColor={{ _dark: "gray.800" }}
-      css={{ _dark: DARK_RAISED }}
-      borderRadius="sm"
+      css={{ _dark: DARK_RAISED, "--card-padding": { mdDown: "spacing.3" } }}
       minW="0"
       flex={fill ? "1" : undefined}
       minH={fill ? "0" : undefined}
@@ -167,7 +168,7 @@ export const Board = ({
                     outline: "2px solid",
                     outlineColor: "colorPalette.focusRing",
                     outlineOffset: "-2px",
-                    borderRadius: "sm",
+                    borderRadius: "surface",
                   },
                 }}
               >

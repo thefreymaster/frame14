@@ -37,6 +37,27 @@ export function callClimateService(
   });
 }
 
+/**
+ * light.turn_on with a brightness and/or a colour — a white temperature or an
+ * RGB colour, never both (Home Assistant rejects that). Turns the light on if
+ * it is off.
+ */
+export function callLightService(
+  entityId: string,
+  params: {
+    brightness_pct?: number;
+    color_temp_kelvin?: number;
+    rgb_color?: [number, number, number];
+  },
+) {
+  socket.emit("entity:call", {
+    domain: "light",
+    service: "turn_on",
+    entity_id: entityId,
+    ...params,
+  });
+}
+
 export function callFanService(
   entityId: string,
   service: "turn_on" | "turn_off" | "set_percentage",

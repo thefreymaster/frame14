@@ -65,3 +65,26 @@ export function weatherIcon(condition: string, datetime: string): ReactElement {
   const map = isNight(datetime) ? NIGHT_ICONS : DAY_ICONS;
   return createElement(map[condition] ?? WiNa);
 }
+
+const CONDITION_LABEL: Record<string, string> = {
+  "clear-night": "Clear",
+  cloudy: "Cloudy",
+  exceptional: "Exceptional",
+  fog: "Fog",
+  hail: "Hail",
+  lightning: "Lightning",
+  "lightning-rainy": "Storms",
+  partlycloudy: "Partly Cloudy",
+  pouring: "Heavy Rain",
+  rainy: "Rain",
+  snowy: "Snow",
+  "snowy-rainy": "Sleet",
+  sunny: "Sunny",
+  windy: "Windy",
+  "windy-variant": "Windy",
+};
+
+/** The HA weather condition as words ("partlycloudy" → "Partly Cloudy"). */
+export function conditionLabel(condition: string): string {
+  return CONDITION_LABEL[condition] ?? condition;
+}

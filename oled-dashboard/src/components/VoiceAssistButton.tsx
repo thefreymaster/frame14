@@ -4,7 +4,7 @@ import type { VoiceState } from "../lib/voiceAssist";
 import {
   NAV_BAR_CLEARANCE,
   NAV_BAR_INSET,
-  NAV_RAIL_WIDTH,
+  NAV_RAIL_CLEARANCE,
 } from "../lib/navMetrics";
 
 /**
@@ -45,7 +45,7 @@ export function VoiceAssistButton({
       }}
       left={{
         _landscape: navVisible
-          ? `calc(${NAV_RAIL_WIDTH} + env(safe-area-inset-left, 0px) + 1rem)`
+          ? `calc(${NAV_RAIL_CLEARANCE} + 1rem)`
           : "calc(env(safe-area-inset-left, 0px) + 1rem)",
         // Lined up with the floating bar's left end.
         _portrait: `calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`,

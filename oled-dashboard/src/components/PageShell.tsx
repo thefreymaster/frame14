@@ -27,12 +27,12 @@ export function PageShell({
       height={fill ? "100%" : undefined}
       direction="column"
       align={center ? "center" : undefined}
-      p="4"
+      p="xs"
       overflow={fill ? "hidden" : undefined}
     >
       <Flex
         direction="column"
-        gap="4"
+        gap="xs"
         width="100%"
         minW="0"
         minH="0"

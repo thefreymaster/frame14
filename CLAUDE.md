@@ -76,7 +76,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/` | redirect | → `/home` |
 | `/clock` | `Clock` | Portrait display: clock + NWS weather |
 | `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar. Cards are rearrangeable and resizable per device (press and hold) — see `HomeBoard` |
-| `/lights` | `Lights` | Light + switch controls |
+| `/lights` | `Lights` | Light + switch tiles (tap toggles, press and hold a dimmable light for brightness / white / colour); header shows how many are on + All off |
 | `/blank` | `Blank` | Pure black screen (motion off) |
 | `/photos` | `Photos` | Immich photo slideshow |
 | `/radar` | `Radar` | Radar view — frame-only nav item |
@@ -87,8 +87,13 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 
 ## UI system (Chakra UI v3, native theme)
 
-The UI is stock Chakra UI v3: `ChakraProvider value={defaultSystem}` with no
-custom tokens, recipes, variants or global styles. Components are used with
+The UI is stock Chakra UI v3 — `createSystem(defaultConfig, …)` in
+`components/ui/provider.tsx` with only three additions: buttons (and segmented
+controls) are fully rounded; a `surface` radius (1.25rem) that the Card recipe
+uses for every card and the floating side rail shares (tiles inside cards set
+`sm` themselves); and a spacing `xs` (0.25rem), the gap between cards and the
+page's padding around them on /home (HomeBoard) and every other page
+(PageShell, /control). No other custom tokens, variants or global styles. Components are used with
 their built-in variants, sizes and `colorPalette`s — Card, Collapsible, Dialog,
 Tabs, SegmentGroup, Slider, Switch, CheckboxCard, Progress / ProgressCircle,
 Stat, Badge, Tag, Skeleton, EmptyState, Alert, ActionBar, DataList,
@@ -138,16 +143,19 @@ src/
     Football.tsx                  — live game page; renders every game in the route window, "no game in session" when empty (auto-routed, so it never decides whether to show itself)
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
-    Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition
-    LandscapeNav.tsx              — floating bottom bar (portrait: an opaque capsule inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + left sidebar (landscape), each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
+    Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition; renders the StatusBanner header and the nav, and pads the page clear of both (HEADER_CLEARANCE on top; the rail or bar)
+    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: running appliances + connection icon at the right (the version is on /control). Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
+    LandscapeNav.tsx              — floating bottom bar (portrait: an opaque capsule inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface with the theme's `surface` corners, the cards' too, rather than a capsule, from under the header to the bottom gap; its selected entry's radius is that less the border and padding, so the corners are concentric), each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in
     SocketViewListener.tsx        — listens for change_view, navigates (skips /control)
     WeatherForecast.tsx           — hourly forecast strip of Buttons; each opens ForecastDetailModal
     PhotoSlide.tsx                — full-bleed crossfade image slide
     MarqueeArt.tsx                — full-bleed poster, backgroundSize cover (absolute, not fixed — PageTransition leaves a transform on an ancestor)
-    LightsSection.tsx             — renders a group of LightEntry controls
-    LightControl.tsx              — single light/switch: a Chakra CheckboxCard (yellow palette); the whole card toggles
+    LightsSection.tsx             — a group of LightControl tiles (2 across on a phone, 3 on the frame / tablets, 4 in landscape) and the one LightDialog they open
+    LightControl.tsx              — single light/switch tile (outline Card as a button): a round badge filled with the light's own rgb_color and the status ("80%" / "On" / "Off") across the top, the name below; an on tile is washed with its colour and filled from the left to the brightness. Tap toggles; press and hold on a dimmable light opens LightDialog
+    LightDialog.tsx               — a dimmable light's controls (stock Dialog), laid out like the fan's: bulb in the light's colour, % and power Switch beside a vertical brightness Slider filled in the light's colour (sends on release); white presets if it does colour temperature, colour presets if it does colour
+    LightsAllOffButton.tsx        — the Lights page header's action: turns off every light/switch that's on; spins until HA reports them off (10s cap)
     EnergySection.tsx             — energy card (coverage Progress, grid Badge) + detail modal (PanelDialog, Stats)
     PrinterSection.tsx            — 3D printer card (Progress) + click-to-open detail modal (PanelDialog: temps, layers, ETA, filament as Stats)
     PanelDialog.tsx               — shell of the detail modals: a stock Chakra Dialog with title, body and close button
@@ -172,7 +180,8 @@ src/
     HomeCardWidthPicker.tsx       — the width SegmentedControl (¼ ½ ¾ Full / ½ Full) straddling a card's bottom edge; stops pointer and key events so it never starts a drag
     HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)
     HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging — a Chakra ActionBar that ignores outside presses and Escape (HomeBoard owns Escape)
-    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones; md above; `borderRadius="sm"`, which every card and the tiles inside cards share) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed, and an `action` (a control at the right of the header, before the chevron). On a collapsible board only the title is the trigger button, stretched over the header with ::after, so the action isn't a button inside a button and a tap anywhere else still toggles
+    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones, with `--card-padding` cut further to spacing.3; md above; the theme's `surface` corners from the Card recipe, the same as the side rail's; the tiles inside cards use the smaller `sm`, so none is rounder than its card) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed, and an `action` (a control at the right of the header, before the chevron). On a collapsible board only the title is the trigger button, stretched over the header with ::after, so the action isn't a button inside a button and a tap anywhere else still toggles
+    HomeWeatherCard.tsx           — /home's first card on a phone (one column), in place of HomeHeader: weather icon + temperature, condition + humidity, one row; no clock and no bird. Same card id (`header`), so saved layouts keep its place
     StatusChip.tsx                — ambient chip (Chakra Tag, `surface` variant) for the status strip and the bird detection
     skeletons/                    — per-card loading placeholders for /home, built from stock Chakra Skeleton: each is a card's body, shown under the card's real (collapsible) header while that card's `loading` flag from useHomeData is set. Thermostat, fan and chip counts come from /api/entities
     ui/                           — Chakra CLI snippets (close-button, color-mode, data-list, empty-state, native-select, provider, segmented-control, slider, status, switch, toaster, tooltip, toggle-tip)
@@ -198,17 +207,18 @@ src/
   lib/
     queryClient.ts                — TanStack QueryClient singleton
     socket.ts                     — socket.io-client singleton (connects to window.location.origin)
-    lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icon (domain-based) from entity IDs; no static registry
+    lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icons (domain-based; a lit bulb while on) from entity IDs; no static registry
+    lightModel.ts                 — what a light can do and shows: features from supported_color_modes, brightness %, its colour (rgb_color, amber fallback), white / colour presets and which one is live
     deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
-    navMetrics.ts                 — nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the mic button, the arranging bar and the Photos/Marquee eye button
+    navMetrics.ts                 — `PAGE_GUTTER` (spacing.xs, the page's padding around the cards, which the header icons and the rail also keep to); nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the mic button, the arranging bar and the Photos/Marquee eye button
     hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
-    weatherIcons.ts               — HA weather condition → react-icons element (day/night)
+    weatherIcons.ts               — HA weather condition → react-icons element (day/night) and → words (`conditionLabel`)
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation, isMovie (the marquee's content-type gate, mirrored by the media watcher in ha-socket.js)
     teamTracker.ts                — the TeamTracker game model shared by the home card, /football and its nav item: attribute types, `sides()` (away-first split), `stateLabel()`, and the two visibility windows — `inWindow` (card: rolling 24h pre / 6h post) and `inRouteWindow` (route: the whole local day of the game, keyed on kickoff)
-    callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains
+    callService.ts                — callService(entityId, service): emits entity:call socket event for light/switch domains; callLightService sends light.turn_on with brightness_pct and a colour (color_temp_kelvin or rgb_color, never both — ha-socket.js validates and rejects both)
     voiceRecorder.ts              — mic capture; AudioContext at 16kHz so the browser resamples, worklet does Float32→Int16
     voiceAssist.ts                — voice session state machine + socket protocol (module store, like navVisibility)
     homeLayout.ts                 — /home card ids, column rules (`homeColumnsFor` and its media queries), widths per grid (`HOME_WIDTHS`), default layouts for 2 and 4 columns (a phone reads the 2-column one at full width), and localStorage `home-layout:<2|4>col` as an ordered list of `{ id, span }`; written only after a card is moved or resized, normalised on read (unknown ids dropped, spans clamped, missing cards appended at their default width); a pre-0.51 zone layout (`home-layout:portrait|landscape`) is converted on read

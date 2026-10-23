@@ -1,28 +1,54 @@
-import { HStack, Icon, Text } from "@chakra-ui/react";
+import { HStack, Icon } from "@chakra-ui/react";
 import { MdWifi, MdWifiOff } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
-import { useVersion } from "../hooks/useVersion";
+import {
+  HEADER_CLEARANCE,
+  HEADER_ICON_SIZE,
+  HEADER_TOP,
+  PAGE_GUTTER,
+} from "../lib/navMetrics";
 import { ApplianceIndicators } from "./ApplianceIndicators";
 import { Tooltip } from "./ui/tooltip";
 
-/** The thin strip above /home: connection, running appliances, version. */
-export function StatusBanner() {
+/**
+ * The header across the top of every view: running appliances and the
+ * connection, at the right. (The version is on the Settings page.)
+ *
+ * Layout renders it, and it comes and goes with the nav (so /blank, photos and
+ * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
+ * Layout pads the page down by HEADER_CLEARANCE. Its background runs up through
+ * the status-bar inset, so in an iPhone home-screen app nothing shows under the
+ * clock and notch, and its row sits a little below the inset (HEADER_TOP),
+ * clear of the band iOS blurs. It spans the full width; in landscape the
+ * floating rail starts below it. The side padding is the cards' PAGE_GUTTER,
+ * so the icons line up with the cards' edges.
+ */
+export function StatusBanner({ hidden = false }: { hidden?: boolean }) {
   const { connected } = useSocket();
-  const version = useVersion();
   const StatusIcon = connected ? MdWifi : MdWifiOff;
 
   return (
     <HStack
-      zIndex={1000}
-      borderBottomWidth="1px"
-      px="5"
-      py="1"
+      position="fixed"
+      top={0}
+      left={0}
+      right={0}
+      height={HEADER_CLEARANCE}
+      pt={HEADER_TOP}
+      pl={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
+      pr={`calc(env(safe-area-inset-right, 0px) + ${PAGE_GUTTER})`}
+      justify="flex-end"
       gap="3"
-      justify="flex-start"
+      bg="bg"
+      borderBottomWidth="1px"
+      zIndex="sticky"
+      transform={hidden ? "translateY(-100%)" : "translateY(0)"}
+      transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
     >
+      <ApplianceIndicators />
       <Tooltip content={connected ? "Connected" : "Disconnected"}>
         <Icon
-          boxSize="3.5"
+          boxSize={HEADER_ICON_SIZE}
           color={connected ? "fg.success" : "fg.error"}
           flexShrink={0}
           aria-label={connected ? "Connected" : "Disconnected"}
@@ -30,12 +56,6 @@ export function StatusBanner() {
           <StatusIcon />
         </Icon>
       </Tooltip>
-      <ApplianceIndicators />
-      {version && (
-        <Text textStyle="xs" color="fg.muted">
-          v{version}
-        </Text>
-      )}
     </HStack>
   );
 }

@@ -4,6 +4,7 @@ import { SocketViewListener } from "./SocketViewListener";
 import { PageTransition } from "./PageTransition";
 import { LandscapeNav } from "./LandscapeNav";
 import { DoorbellCard } from "./DoorbellCard";
+import { StatusBanner } from "./StatusBanner";
 import { VoiceAssistButton } from "./VoiceAssistButton";
 import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
 import { useThemeMode } from "../hooks/useThemeMode";
@@ -13,7 +14,11 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
 import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
-import { NAV_BAR_CLEARANCE, NAV_RAIL_WIDTH } from "../lib/navMetrics";
+import {
+  HEADER_CLEARANCE,
+  NAV_BAR_CLEARANCE,
+  NAV_RAIL_CLEARANCE,
+} from "../lib/navMetrics";
 
 export function Layout() {
   useThemeMode();
@@ -44,38 +49,23 @@ export function Layout() {
     <>
       <SocketViewListener />
 
-      {/* Behind the status bar. The page's top padding clears it at rest, but
-          in an iPhone home-screen app (black-translucent status bar) content
-          scrolled up would show through under the clock and notch; this strip
-          masks it. Zero height everywhere else. */}
-      {showNav && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          height="env(safe-area-inset-top, 0px)"
-          bg="bg"
-          zIndex="sticky"
-          pointerEvents="none"
-        />
-      )}
+      {/* On every view while the nav is up. It also masks the status-bar
+          inset in an iPhone home-screen app. */}
+      <StatusBanner hidden={!showNav} />
 
       <HStack gap="0" align="stretch">
         <LandscapeNav hidden={!showNav} />
         <Box
           height="var(--app-height, 100dvh)"
           overflow={scrollable ? "auto" : "hidden"}
-          pt={showNav ? "env(safe-area-inset-top, 0px)" : 0}
+          pt={showNav ? HEADER_CLEARANCE : 0}
           transition="padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-          // Room for the nav: a rail on the left in landscape, the floating bar
-          // in portrait. The page scrolls on under the bar, but its end stops
-          // above it.
+          // Room for the header and the floating nav: the rail on the left in
+          // landscape, the bar at the bottom in portrait. The page scrolls on
+          // under the bar, but its end stops above it.
           minW={{ _landscape: "100vw", _portrait: "100%" }}
           pl={{
-            _landscape: showNav
-              ? `calc(${NAV_RAIL_WIDTH} + env(safe-area-inset-left, 0px))`
-              : "0px",
+            _landscape: showNav ? NAV_RAIL_CLEARANCE : "0px",
           }}
           pb={{
             _portrait: showNav

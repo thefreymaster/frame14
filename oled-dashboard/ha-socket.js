@@ -107,7 +107,7 @@ export function getAllStates() {
   return stateCache;
 }
 
-export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, percentage, media_content_id, media_content_type }) {
+export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type }) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
   if (!ALLOWED_DOMAINS.has(domain)) return false;
   if (!ALLOWED_SERVICES.has(service)) return false;
@@ -148,6 +148,30 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
     if (!MEDIA_CONTENT_TYPES.has(media_content_type)) return false;
     service_data.media_content_id = media_content_id;
     service_data.media_content_type = media_content_type;
+  }
+
+  // light.turn_on accepts an optional brightness and one colour: a white
+  // temperature or an RGB colour (HA rejects both at once).
+  if (domain === "light" && service === "turn_on") {
+    if (brightness_pct != null) {
+      const pct = Number(brightness_pct);
+      if (!Number.isFinite(pct) || pct < 1 || pct > 100) return false;
+      service_data.brightness_pct = Math.round(pct);
+    }
+    if (color_temp_kelvin != null && rgb_color != null) return false;
+    if (color_temp_kelvin != null) {
+      const k = Number(color_temp_kelvin);
+      if (!Number.isFinite(k) || k < 1000 || k > 12000) return false;
+      service_data.color_temp_kelvin = Math.round(k);
+    }
+    if (rgb_color != null) {
+      if (
+        !Array.isArray(rgb_color) ||
+        rgb_color.length !== 3 ||
+        !rgb_color.every((c) => Number.isInteger(c) && c >= 0 && c <= 255)
+      ) return false;
+      service_data.rgb_color = rgb_color;
+    }
   }
 
   // fan.turn_on accepts optional percentage

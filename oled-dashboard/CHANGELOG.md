@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.56.0
+
+- Added: a header across the top of every view, not just Home. It's taller, with larger icons, all at the right: anything running (washer, dryer, dishwasher, 3D printer) and the connection. It shows and hides with the navigation, so Photos and the movie poster stay full-screen.
+- Changed: on an iPhone home-screen app the header sits a little lower, clear of the blurred band under the status bar, so its icons are sharp.
+- Changed: the version moved from the header to the Settings page, next to the connection status.
+- Changed: in landscape (and on desktop) the side navigation floats too: a rail with softly rounded corners, set in from the left edge under the header. The selected page's highlight has slightly tighter corners that follow the rail's, so the two outlines stay evenly spaced.
+- Changed: cards sit much closer together and closer to the screen edges: 4px apart and 4px from the edges instead of 16px, on Home and every other page. The header's icons and the landscape side rail line up with the cards' edges; the bottom bar on phones keeps its wider float.
+- Changed: cards have less padding on phones, giving their contents more room, and rounder corners that match the side navigation's; the tiles inside them keep their tighter corners.
+- Changed: the Lights page is redesigned. Each light is a tile with its icon in a round badge, the brightness ("80%") or "Off", and its full name. A light that's on takes on its own colour (warm whites glow amber, a blue nightlight glows blue) and fills from the left to its brightness.
+- Added: press and hold a dimmable light to open its controls: a brightness slider, white presets (Candle, Warm, Neutral, Daylight) for lights that change temperature, and colour presets for colour lights. Each light shows only what it supports.
+- Added: the Lights page header shows how many lights are on, with an "All off" button.
+- Changed: the BirdNET bird detection badge under the time on Home is hidden for now.
+- Changed: on phones, Home's first card is a compact weather card (icon, temperature, condition and humidity in one row) instead of the large date, clock and weather card. Tablets, the frame and desktop keep the large card.
+
 ## 0.55.0
 
 - Changed: in portrait the bottom navigation bar floats, like Apple Music's tab bar. It is a rounded capsule set in from the sides of the screen and sitting just above the bottom edge (on an iPhone, just above the home indicator), and the page scrolls on underneath it. The bar is solid, not see-through, and the selected tab is a rounded pill. The landscape side rail is unchanged.

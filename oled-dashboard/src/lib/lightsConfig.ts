@@ -1,10 +1,12 @@
 import type { IconType } from "react-icons";
-import { MdOutlineLightbulb, MdOutlet } from "react-icons/md";
+import { MdLightbulb, MdOutlineLightbulb, MdOutlet } from "react-icons/md";
 
 export type LightEntry = {
   entity_id: string;
   name: string;
   Icon: IconType;
+  /** The icon while on (a lit bulb); the same as Icon for a switch. */
+  ActiveIcon: IconType;
 };
 
 export type LightSection = {
@@ -20,10 +22,10 @@ function entityName(entityId: string): string {
     .join(" ");
 }
 
-function domainIcon(entityId: string): IconType {
+function domainIcons(entityId: string): Pick<LightEntry, "Icon" | "ActiveIcon"> {
   const domain = entityId.split(".")[0];
-  if (domain === "switch") return MdOutlet;
-  return MdOutlineLightbulb;
+  if (domain === "switch") return { Icon: MdOutlet, ActiveIcon: MdOutlet };
+  return { Icon: MdOutlineLightbulb, ActiveIcon: MdLightbulb };
 }
 
 export function buildLightSections(entityIds: string[]): LightSection[] {
@@ -31,7 +33,7 @@ export function buildLightSections(entityIds: string[]): LightSection[] {
   const switches: LightEntry[] = [];
 
   for (const id of entityIds) {
-    const entry: LightEntry = { entity_id: id, name: entityName(id), Icon: domainIcon(id) };
+    const entry: LightEntry = { entity_id: id, name: entityName(id), ...domainIcons(id) };
     if (id.startsWith("switch.")) {
       switches.push(entry);
     } else {

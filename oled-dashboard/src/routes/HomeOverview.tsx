@@ -2,7 +2,6 @@ import { useSyncExternalStore } from "react";
 import { Box } from "@chakra-ui/react";
 import { IoCloudOfflineOutline } from "react-icons/io5";
 import { useHomeData } from "../hooks/useHomeData";
-import { StatusBanner } from "../components/StatusBanner";
 import { EnergySection } from "../components/EnergySection";
 import { ClimateSection } from "../components/ClimateSection";
 import { PrinterSection } from "../components/PrinterSection";
@@ -11,6 +10,7 @@ import { TeamTracker } from "../components/TeamTracker";
 import { FanSection } from "../components/FanSection";
 import { RadarSection } from "../components/RadarSection";
 import { HomeHeader } from "../components/HomeHeader";
+import { HomeWeatherCard } from "../components/HomeWeatherCard";
 import { CalendarSection } from "../components/CalendarSection";
 import { StatusStrip } from "../components/StatusStrip";
 import { HomeBoard } from "../components/HomeBoard";
@@ -79,13 +79,22 @@ export function HomeOverview() {
   }
 
   const cards: Record<HomeCardId, React.ReactNode> = {
-    header: (
-      <HomeHeader
-        internet={data.internet}
-        weather={data.weather}
-        loading={loading.weather}
-      />
-    ),
+    // A phone (one column) gets the compact weather card: it has a clock of
+    // its own, and the full card's hero figures fill its screen.
+    header:
+      columns === 1 ? (
+        <HomeWeatherCard
+          internet={data.internet}
+          weather={data.weather}
+          loading={loading.weather}
+        />
+      ) : (
+        <HomeHeader
+          internet={data.internet}
+          weather={data.weather}
+          loading={loading.weather}
+        />
+      ),
     teamTracker: <TeamTracker />,
     radar: <RadarSection condition={data.weather?.state} />,
     energy: <EnergySection energy={data.energy} loading={loading.energy} />,
@@ -113,11 +122,6 @@ export function HomeOverview() {
     ),
   };
 
-  return (
-    <>
-      <StatusBanner />
-      {/* Keyed so each grid loads its own saved arrangement. */}
-      <HomeBoard key={columns} columns={columns} cards={cards} />
-    </>
-  );
+  // Keyed so each grid loads its own saved arrangement.
+  return <HomeBoard key={columns} columns={columns} cards={cards} />;
 }

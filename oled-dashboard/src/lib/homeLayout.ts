@@ -61,6 +61,12 @@ export const HOME_ONE_COLUMN_QUERY = "(max-width: 767.98px)";
 export const HOME_FOUR_COLUMN_QUERY =
   "(orientation: landscape) and (min-width: 1024px)";
 
+/**
+ * "Desktop" as a css-prop key: the four-column screens. Cards sit `md` apart
+ * here and `xs` apart everywhere else (phones, the frame in portrait).
+ */
+export const DESKTOP_MEDIA = `@media ${HOME_FOUR_COLUMN_QUERY}`;
+
 /** Columns for the current screen; everything else — the frame in portrait, a phone on its side — gets two. */
 export function homeColumnsFor(
   oneColumn: boolean,

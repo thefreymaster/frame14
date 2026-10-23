@@ -21,15 +21,19 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * place of the Card recipe's `l3`. Tiles inside a card set Chakra's smaller
  * `sm` themselves, so none is rounder than its card.
  *
- * Spacing has a named `xs` (0.25rem, 4px at the base size): the gap between
- * cards and the page's padding around them.
+ * Spacing has a named `xs` (0.25rem, 4px at the base size), the page's padding
+ * around the cards and the gap between them; and `md` (1rem), the gap between
+ * cards on a desktop (DESKTOP_MEDIA).
  */
 const system = createSystem(
   defaultConfig,
   defineConfig({
     theme: {
       tokens: {
-        spacing: { xs: { value: "0.25rem" } },
+        spacing: {
+          xs: { value: "0.25rem" },
+          md: { value: "1rem" },
+        },
         radii: { surface: { value: "1.25rem" } },
       },
       recipes: {

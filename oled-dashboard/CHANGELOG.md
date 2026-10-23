@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.56.1
+
+- Added: the header shows "Frame14" at the left and the time at the right, after the status icons.
+- Changed: on a desktop or a tablet held sideways (the four-column Home), cards sit 16px apart again. Phones and the frame in portrait keep the tight 4px gap.
+
 ## 0.56.0
 
 - Added: a header across the top of every view, not just Home. It's taller, with larger icons, all at the right: anything running (washer, dryer, dishwasher, 3D printer) and the connection. It shows and hides with the navigation, so Photos and the movie poster stay full-screen.

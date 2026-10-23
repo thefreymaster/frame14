@@ -229,7 +229,7 @@ export function HomeBoard({
             position="absolute"
             inset="xs"
             templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
-            columnGap="xs"
+            columnGap={columns === 4 ? "md" : "xs"}
             pointerEvents="none"
           >
             {Array.from({ length: columns }, (_, i) => (
@@ -253,7 +253,7 @@ export function HomeBoard({
             templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
             autoRows={`${PACKED_ROW_PX}px`}
             autoFlow="row dense"
-            columnGap="xs"
+            columnGap={columns === 4 ? "md" : "xs"}
             rowGap="0"
             alignItems="start"
           >

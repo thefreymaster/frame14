@@ -91,9 +91,10 @@ The UI is stock Chakra UI v3 — `createSystem(defaultConfig, …)` in
 `components/ui/provider.tsx` with only three additions: buttons (and segmented
 controls) are fully rounded; a `surface` radius (1.25rem) that the Card recipe
 uses for every card and the floating side rail shares (tiles inside cards set
-`sm` themselves); and a spacing `xs` (0.25rem), the gap between cards and the
-page's padding around them on /home (HomeBoard) and every other page
-(PageShell, /control). No other custom tokens, variants or global styles. Components are used with
+`sm` themselves); and spacings `xs` (0.25rem) — the page's padding around the cards and the gap
+between them on /home (HomeBoard) and every other page (PageShell, /control) —
+and `md` (1rem), the gap instead on a desktop (`DESKTOP_MEDIA` in lib/homeLayout,
+the four-column screens; HomeBoard keys it off `columns === 4`). No other custom tokens, variants or global styles. Components are used with
 their built-in variants, sizes and `colorPalette`s — Card, Collapsible, Dialog,
 Tabs, SegmentGroup, Slider, Switch, CheckboxCard, Progress / ProgressCircle,
 Stat, Badge, Tag, Skeleton, EmptyState, Alert, ActionBar, DataList,
@@ -144,7 +145,8 @@ src/
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition; renders the StatusBanner header and the nav, and pads the page clear of both (HEADER_CLEARANCE on top; the rail or bar)
-    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: running appliances + connection icon at the right (the version is on /control). Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
+    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: "Frame14" at the left; running appliances, connection icon and HeaderClock at the right (the version is on /control).
+    HeaderClock.tsx               — the header's "1:45 PM", the device's time; ticks each second, re-renders only when the minute changes. Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
     LandscapeNav.tsx              — floating bottom bar (portrait: an opaque capsule inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface with the theme's `surface` corners, the cards' too, rather than a capsule, from under the header to the bottom gap; its selected entry's radius is that less the border and padding, so the corners are concentric), each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in

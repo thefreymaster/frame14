@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
+import { Board } from "../components/Board";
 import { PageTransition } from "../components/PageTransition";
+import { useDesktop } from "../hooks/useDesktop";
 import { HERO_SUFFIX_SIZE, HERO_TEXT, HOME_HERO_INSET } from "../lib/hero";
 
 type ClockStyle = "analog" | "digital";
@@ -51,7 +53,8 @@ function buildMarkers() {
 
 const MARKERS = buildMarkers();
 
-function AnalogClock() {
+/** In a card (`framed`) the face fits the card; full-screen, 80vmin across. */
+function AnalogClock({ framed }: { framed: boolean }) {
   const hourRef = useRef<SVGLineElement>(null);
   const minuteRef = useRef<SVGLineElement>(null);
   const secondRef = useRef<SVGLineElement>(null);
@@ -108,8 +111,9 @@ function AnalogClock() {
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
+      css={framed ? { containerType: "size" } : undefined}
     >
-      <Box width="80vmin">
+      <Box width={framed ? "min(100cqw, 100cqh)" : "80vmin"}>
         <svg viewBox="0 0 200 200" width="100%" height="100%">
           {MARKERS}
 
@@ -206,7 +210,7 @@ const MONTHS = [
   "December",
 ];
 
-function DigitalClock() {
+function DigitalClock({ framed }: { framed: boolean }) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -221,8 +225,8 @@ function DigitalClock() {
   const ampm = rawHours < 12 ? "am" : "pm";
 
   return (
-    // Padded like Home's clock row so the figures come out the same size as
-    // Home's; see lib/hero.ts.
+    // Full-screen, padded like Home's clock row so the figures come out the
+    // same size as Home's (see lib/hero.ts); in a card, the card pads it.
     <Box
       width="100%"
       height="100%"
@@ -230,7 +234,7 @@ function DigitalClock() {
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      px={HOME_HERO_INSET}
+      px={framed ? undefined : HOME_HERO_INSET}
       css={{ containerType: "inline-size" }}
     >
       <Text {...HERO_TEXT} color="fg">
@@ -283,6 +287,9 @@ function DigitalClock() {
 
 export function Clock() {
   const [style, setStyle] = useState<ClockStyle>(loadStyle);
+  // A card in the page on a desktop, like Photos and Radar, so it stays clear
+  // of the lights strip; full-screen on the frame and phones.
+  const framed = useDesktop();
 
   function toggle() {
     setStyle((prev) => {
@@ -292,7 +299,35 @@ export function Clock() {
     });
   }
 
-  return (
+  const face = (
+    <PageTransition key={style}>
+      {style === "analog" ? (
+        <AnalogClock framed={framed} />
+      ) : (
+        <DigitalClock framed={framed} />
+      )}
+    </PageTransition>
+  );
+
+  // data-page-fill gives the card the page's height (see PageTransition), and
+  // the gutter around it matches the cards'. The card keeps the page's own
+  // black / white rather than the cards' grey, as the full-screen clock has.
+  return framed ? (
+    <Box
+      data-page-fill=""
+      width="100%"
+      height="100%"
+      p="gutter"
+      display="flex"
+      flexDirection="column"
+      onClick={toggle}
+      cursor="pointer"
+    >
+      <Board fill bg="bg">
+        {face}
+      </Board>
+    </Box>
+  ) : (
     <Box
       position="relative"
       width="100%"
@@ -304,9 +339,7 @@ export function Clock() {
       onClick={toggle}
       cursor="pointer"
     >
-      <PageTransition key={style}>
-        {style === "analog" ? <AnalogClock /> : <DigitalClock />}
-      </PageTransition>
+      {face}
     </Box>
   );
 }

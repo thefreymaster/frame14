@@ -62,10 +62,10 @@ export const HOME_FOUR_COLUMN_QUERY =
   "(orientation: landscape) and (min-width: 1024px)";
 
 /**
- * "Desktop": the four-column screens. The theme's `desktop` condition, which
- * switches spacing.gutter (between and around cards) from xs to md.
+ * A phone: the one-column screens. The theme's `phone` condition, which
+ * narrows spacing.gutter (between and around cards) from md to xs.
  */
-export const DESKTOP_MEDIA = `@media ${HOME_FOUR_COLUMN_QUERY}`;
+export const PHONE_MEDIA = `@media ${HOME_ONE_COLUMN_QUERY}`;
 
 /** Columns for the current screen; everything else — the frame in portrait, a phone on its side — gets two. */
 export function homeColumnsFor(

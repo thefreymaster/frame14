@@ -2,20 +2,33 @@
 // Layout, the mic button and the arranging bar clear the nav by these amounts,
 // and Layout pads the page down by the header's.
 
-/** Height of the status header's row (below the space HEADER_TOP leaves). */
+/**
+ * The page's padding around the cards: the theme's spacing.gutter, the same as
+ * the gap between them (md, xs on a phone). The header's icons and the
+ * landscape rail keep to it too, so they line up with the cards.
+ */
+export const PAGE_GUTTER = "var(--chakra-spacing-gutter)";
+
+/** Height of the floating header bar. */
 export const HEADER_HEIGHT = "2.75rem";
 
 /**
- * Space above the header's row: the status-bar inset, plus a gap of up to
- * 1.25rem under it. An iPhone home-screen app blurs a band a little deeper than
- * the inset, which smeared the header's icons and version; the gap clears it.
- * min() keeps the gap at zero where there is no inset (the frame, desktops,
- * iPhone landscape).
+ * The status-bar inset plus a gap of up to 1.25rem under it. An iPhone
+ * home-screen app blurs a band a little deeper than the inset, which smeared
+ * the header's icons; the gap clears it. min() keeps the gap at zero where
+ * there is no inset (the frame, desktops, iPhone landscape). StatusBanner
+ * masks this band so the page doesn't scroll under the clock and notch.
  */
-export const HEADER_TOP =
+export const STATUS_BAR_CLEARANCE =
   "calc(env(safe-area-inset-top, 0px) + min(1.25rem, env(safe-area-inset-top, 0px)))";
 
-/** Distance from the top of the screen to the bottom of the header. */
+/**
+ * Screen top to the floating header bar's top: the status-bar band, then the
+ * page gutter, so the bar floats like the cards and navs.
+ */
+export const HEADER_TOP = `calc(${STATUS_BAR_CLEARANCE} + ${PAGE_GUTTER})`;
+
+/** Distance from the top of the screen to the bottom of the header bar. */
 export const HEADER_CLEARANCE = `calc(${HEADER_HEIGHT} + ${HEADER_TOP})`;
 
 /** The header's status icons (connection, running appliances). */
@@ -23,13 +36,6 @@ export const HEADER_ICON_SIZE = { base: "4.5", md: "5" };
 
 /** Height of the portrait bottom bar. */
 export const NAV_BAR_HEIGHT = "4rem";
-
-/**
- * The page's padding around the cards: the theme's spacing.gutter, the same as
- * the gap between them (xs, md on a desktop). The header's icons and the
- * landscape rail keep to it too, so they line up with the cards.
- */
-export const PAGE_GUTTER = "var(--chakra-spacing-gutter)";
 
 /**
  * Gap between the floating portrait bar and the screen's side edges (on top of

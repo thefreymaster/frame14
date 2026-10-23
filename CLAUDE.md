@@ -75,7 +75,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | Path | Component | Description |
 |---|---|---|
 | `/` | redirect | → `/home` |
-| `/clock` | `Clock` | Portrait display: clock + NWS weather |
+| `/clock` | `Clock` | Analog or digital clock (tap to switch): full-screen on the frame and phones, a card (`Board fill`, on the page's black / white) inside the page gutter on a desktop (`useDesktop`), like Photos and Radar |
 | `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar. Cards are rearrangeable and resizable per device (press and hold) — see `HomeBoard` |
 | `/lights` | `Lights` | Light + switch tiles (tap toggles, press and hold a dimmable light for brightness / white / colour); header shows how many are on + All off |
 | `/blank` | `Blank` | Pure black screen (motion off) |
@@ -94,9 +94,9 @@ controls) are fully rounded; a `surface` radius (0.75rem) that the Card recipe
 uses for every card and both floating navs share, and a `border.surface` colour
 for their 1px edge (gray.200 / gray.700) (tiles inside cards set
 `sm` themselves, except the thermostat tiles); and spacings `xs` (0.25rem), `md` (1rem) and the semantic `gutter`: the gap
-between cards and the page's padding around them, always equal — xs, or md under
-the theme's `desktop` condition (`DESKTOP_MEDIA` in lib/homeLayout, the
-four-column screens). /home (HomeBoard), PageShell and /control use `gutter`;
+between cards and the page's padding around them, always equal — md, or xs under
+the theme's `phone` condition (`PHONE_MEDIA` in lib/homeLayout, the
+one-column screens). /home (HomeBoard), PageShell and /control use `gutter`;
 `PAGE_GUTTER` in lib/navMetrics is its CSS var for the header and rail. Dialog backdrops also blur the page (`backdropFilter` on the dialog recipe's
 backdrop). No other custom tokens, variants or global styles. Components are used with
 their built-in variants, sizes and `colorPalette`s — Card, Collapsible, Dialog,
@@ -137,7 +137,7 @@ src/
   App.tsx                         — RouterProvider
   router.tsx                      — createBrowserRouter, Layout wraps all routes
   routes/
-    Clock.tsx                     — clock + weather page
+    Clock.tsx                     — analog / digital clock (tap toggles, kept in localStorage `clockStyle`); `framed` (`useDesktop`) puts it in a `data-page-fill` gutter box holding a `Board fill bg="bg"` (the page's black / white, not the cards' grey), the analog face sized to the card (`min(100cqw, 100cqh)`) and the digital one padded by the card instead of HOME_HERO_INSET
     HomeOverview.tsx              — home overview page; builds the card map and hands it to HomeBoard, keyed by the column count (`useHomeColumns`: 4 / 2 / 1 from the media queries in lib/homeLayout)
     Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
@@ -149,10 +149,10 @@ src/
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition; renders the StatusBanner header and the nav, and pads the page clear of both (HEADER_CLEARANCE on top; the rail or bar) On a desktop (`useDesktop`) it also renders LightStrip and pads the page bottom by LIGHT_STRIP_CLEARANCE. The mic floats (VoiceAssistButton) only on a phone (HOME_ONE_COLUMN_QUERY); elsewhere it goes into StatusBanner's `voice` slot
-    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: the app icon (`/favicon-96x96.png`, status-icon size) and "Frame14" at the left; running appliances, connection icon and, on a desktop only (`useDesktop`), HeaderClock at the right (the version is on /control).; a `voice` slot beside the name holds the header mic off a phone
+    StatusBanner.tsx              — the header on every view, shown and hidden with the nav: a slim bar (HEADER_HEIGHT) floating like the navs on FLOATING_SURFACE, inset PAGE_GUTTER from the top and sides, with a plain `bg` band above it masking the iPhone status-bar inset (STATUS_BAR_CLEARANCE); the app icon (`/favicon-96x96.png`, status-icon size) and "Frame14" at the left; running appliances, connection icon and, on a desktop only (`useDesktop`), HeaderClock at the right (the version is on /control).; a `voice` slot beside the name holds the header mic off a phone
     LightStrip.tsx                — desktop only: every configured light/switch as LightStripItem in one non-wrapping row along the bottom (FLOATING_SURFACE, from the rail's edge to the right gutter, bottom in line with the rail's), scrolls sideways with the scrollbar hidden; comes and goes with the nav
     LightStripItem.tsx            — one strip entry: an on/off Chakra Toggle drawn like a rail entry (bulb over name, ENTRY_RADIUS, the rail's selected fill while on, the bulb lit in the light's colour); every button LIGHT_STRIP_ITEM_WIDTH wide, the name on one line cut off with an ellipsis (`truncate`, full name in `title`); unavailable entities render nothing
-    HeaderClock.tsx               — the header's "1:45 PM", the device's time: hours and minutes as NumberFlows in a NumberFlowGroup (two-digit minutes via `minimumIntegerDigits`, tens digit `max: 5`); checks each second, re-renders only when the minute changes Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
+    HeaderClock.tsx               — the header's "1:45 PM", the device's time: hours and minutes as NumberFlows in a NumberFlowGroup (two-digit minutes via `minimumIntegerDigits`, tens digit `max: 5`); checks each second, re-renders only when the minute changes
     LandscapeNav.tsx              — floating bottom bar (portrait: an opaque bar with the cards' `surface` corners, inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface, from under the header to the bottom gap); in both, the selected entry's radius is `surface` less the border and padding, so the corners are concentric, each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in
@@ -190,7 +190,7 @@ src/
     HomeCardWidthPicker.tsx       — the width SegmentedControl (¼ ½ ¾ Full / ½ Full) straddling a card's bottom edge; stops pointer and key events so it never starts a drag
     HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)
     HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging — a Chakra ActionBar that ignores outside presses and Escape (HomeBoard owns Escape)
-    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones, with `--card-padding` cut further to spacing.3; md above; the theme's `surface` corners from the Card recipe, the same as both navs'; the tiles inside cards use the smaller `sm`, so none is rounder than its card, except the thermostat tiles, which keep `surface`) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed, and an `action` (a control at the right of the header, before the chevron). On a collapsible board only the title is the trigger button, stretched over the header with ::after, so the action isn't a button inside a button and a tap anywhere else still toggles
+    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones, with `--card-padding` cut further to spacing.3; md above; the theme's `surface` corners from the Card recipe, the same as both navs'; the tiles inside cards use the smaller `sm`, so none is rounder than its card, except the thermostat tiles, which keep `surface`) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed, and an `action` (a control at the right of the header, before the chevron); `bg` overrides the card's colour (and drops DARK_RAISED), used only by the framed clock. On a collapsible board only the title is the trigger button, stretched over the header with ::after, so the action isn't a button inside a button and a tap anywhere else still toggles
     HomeWeatherCard.tsx           — /home's first card on a phone (one column), in place of HomeHeader: weather icon + temperature, condition + humidity, one row; no clock and no bird. Same card id (`header`), so saved layouts keep its place
     StatusChip.tsx                — ambient chip (Chakra Tag, `surface` variant) for the status strip and the bird detection
     skeletons/                    — per-card loading placeholders for /home, built from stock Chakra Skeleton: each is a card's body, shown under the card's real (collapsible) header while that card's `loading` flag from useHomeData is set. Thermostat, fan and chip counts come from /api/entities
@@ -220,11 +220,11 @@ src/
     socket.ts                     — socket.io-client singleton (connects to window.location.origin)
     lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icons (domain-based; a lit bulb while on) from entity IDs; no static registry
     lightModel.ts                 — what a light can do and shows: features from supported_color_modes, brightness %, its colour (rgb_color, amber fallback), white / colour presets and which one is live
-    floatingSurface.ts            — FLOATING_SURFACE (the navs' and lights strip's fixed surface: card colour, `border.surface`, `surface` radius, shadow, NAV_PAD), ENTRY_RADIUS (their entries' concentric corners) and DARK_RAISED (dark-mode shade overrides for anything on gray.800: the cards)
+    floatingSurface.ts            — FLOATING_SURFACE (the header's, navs' and lights strip's fixed surface: card colour, `border.surface`, `surface` radius, shadow, NAV_PAD), ENTRY_RADIUS (their entries' concentric corners) and DARK_RAISED (dark-mode shade overrides for anything on gray.800: the cards)
     deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
-    navMetrics.ts                 — `PAGE_GUTTER` (spacing.gutter, the page's padding around the cards and the gap between them, which the header icons and the rail also keep to); nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the mic button, the arranging bar and the Photos/Marquee eye button; LIGHT_STRIP_ITEM_WIDTH, LIGHT_STRIP_HEIGHT (the portrait bar's) and LIGHT_STRIP_CLEARANCE for the desktop lights strip
+    navMetrics.ts                 — `PAGE_GUTTER` (spacing.gutter, the page's padding around the cards and the gap between them, which the header bar and the rail also keep to); STATUS_BAR_CLEARANCE (iPhone status-bar inset + blur band), HEADER_TOP / HEADER_CLEARANCE (screen top to the header bar's top / bottom); nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the mic button, the arranging bar and the Photos/Marquee eye button; LIGHT_STRIP_ITEM_WIDTH, LIGHT_STRIP_HEIGHT (the portrait bar's) and LIGHT_STRIP_CLEARANCE for the desktop lights strip
     hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
     weatherIcons.ts               — HA weather condition → react-icons element (day/night) and → words (`conditionLabel`)

@@ -74,6 +74,7 @@ export const Board = ({
   storageKey,
   span,
   fill = false,
+  bg,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
@@ -90,6 +91,11 @@ export const Board = ({
    * or size inside it — used by the pages built around a chart or a long list.
    */
   fill?: boolean;
+  /**
+   * The card's colour in place of gray.800 / `bg.panel`, e.g. the page's own
+   * `bg` for the framed clock. DARK_RAISED is for gray.800, so it's dropped.
+   */
+  bg?: string;
 }) => {
   const persistKey = collapsible
     ? storageKey || (typeof title === "string" ? slugify(title) : undefined)
@@ -117,9 +123,12 @@ export const Board = ({
   return (
     <Card.Root
       size={{ base: "sm", md: "md" }}
-      bg={{ _dark: "gray.800" }}
+      bg={bg ?? { _dark: "gray.800" }}
       borderColor="border.surface"
-      css={{ _dark: DARK_RAISED, "--card-padding": { mdDown: "spacing.3" } }}
+      css={{
+        _dark: bg ? undefined : DARK_RAISED,
+        "--card-padding": { mdDown: "spacing.3" },
+      }}
       minW="0"
       flex={fill ? "1" : undefined}
       minH={fill ? "0" : undefined}

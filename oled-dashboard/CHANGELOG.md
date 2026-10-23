@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.61.0
+
+- Changed: the header floats like the navigation, a slim bar with the cards' rounded corners, inset from the top and sides by the same space as the cards.
+- Changed: the frame and tablets use the same wider space between and around cards as a desktop. Only phones keep the narrow spacing.
+- Changed: on a desktop, the Clock page sits in a card inside the page spacing, like Photos and Radar, instead of running under the lights strip. The card keeps the clock's black (or white, in Bright) background, and the analog face shrinks to fit it.
+
 ## 0.60.2
 
 - Changed: on a desktop, every button in the lights strip is the same width. A long name is cut off with "…" instead of making its button wider; hover to see the whole name.

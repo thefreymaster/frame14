@@ -12,7 +12,7 @@ import {
   segmentGroupAnatomy,
 } from "@chakra-ui/react/anatomy";
 import { ColorModeProvider } from "./color-mode";
-import { DESKTOP_MEDIA } from "../../lib/homeLayout";
+import { PHONE_MEDIA } from "../../lib/homeLayout";
 import { useThemeMode } from "../../hooks/useThemeMode";
 
 /**
@@ -30,13 +30,13 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  *
  * Spacing has a named `xs` (0.25rem, 4px at the base size) and `md` (1rem), and
  * `gutter`, the page's padding around the cards and the gap between them — the
- * same, always: xs, or md on a desktop (the `desktop` condition, DESKTOP_MEDIA:
- * the four-column screens).
+ * same, always: md, or xs on a phone (the `phone` condition, PHONE_MEDIA: the
+ * one-column screens).
  */
 const system = createSystem(
   defaultConfig,
   defineConfig({
-    conditions: { desktop: DESKTOP_MEDIA },
+    conditions: { phone: PHONE_MEDIA },
     theme: {
       tokens: {
         spacing: {
@@ -58,7 +58,7 @@ const system = createSystem(
           },
         },
         spacing: {
-          gutter: { value: { base: "{spacing.xs}", _desktop: "{spacing.md}" } },
+          gutter: { value: { base: "{spacing.md}", _phone: "{spacing.xs}" } },
         },
       },
       recipes: {

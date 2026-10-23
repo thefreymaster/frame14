@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.63.1
+
+- Fixed: a phone in remote mode no longer jumps to another view when the frames change view. That includes the frame waking on kitchen motion (which kept pulling the phone to Photos), a game kicking off, a movie starting, or another device's navigation. The phone stays wherever you are.
+- Changed: picking a photo on the phone only changes the photo. A frame on Photos shows it right away. A frame on another view stays where it is and starts from that photo the next time it goes to Photos.
+
 ## 0.63.0
 
 - Added: on a phone in remote mode, a Photos tab with every photo in the album as a grid and the album picker on top. The photo the frame is showing is highlighted; tap any photo to show it on the frame, which switches to Photos if it's on another view.

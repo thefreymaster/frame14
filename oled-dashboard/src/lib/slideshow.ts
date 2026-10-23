@@ -4,8 +4,8 @@ import { socket } from "./socket";
 
 // The Photos slideshow between devices. Each frame keeps its own place in the
 // album (localStorage, per album) and reports the photo it's on; a remote
-// sees those in its photo grid and can pick one, which every frame then shows
-// and carries on from.
+// sees those in its photo grid and can pick one, which the frames on Photos
+// then show and carry on from. A pick never changes anyone's view.
 
 /** localStorage key for the photo an album was last on, on this device. */
 const positionKey = (albumId: string) => `photos-position:${albumId}`;
@@ -35,8 +35,8 @@ const pickListeners = new Set<(pick: PhotoPick) => void>();
 
 /**
  * Called on a frame when a remote picks a photo. The pick is saved as the
- * album's position first, so a frame that isn't on Photos yet (they're sent
- * there with it) starts from it.
+ * album's position first, so a frame on another view starts from it the next
+ * time it goes to Photos.
  */
 export function onPhotoPicked(cb: (pick: PhotoPick) => void) {
   pickListeners.add(cb);
@@ -45,10 +45,9 @@ export function onPhotoPicked(cb: (pick: PhotoPick) => void) {
   };
 }
 
-/** A remote's pick: the frames go to Photos and show this one. */
+/** A remote's pick: the frames on Photos show this one. */
 export function showPhoto(pick: PhotoPick) {
   socket.emit("show_photo", pick);
-  socket.emit("change", "photos");
 }
 
 /** A frame's slideshow reports the photo it's on, or null when it goes. */

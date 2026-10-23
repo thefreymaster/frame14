@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.58.1
+
+- Fixed: when the doorbell camera can't be shown, the pop-up says "Camera unavailable" on a black picture instead of an empty (white in dark mode) box with a broken-image icon. It clears as soon as a picture arrives.
+- Fixed: while falling back to still pictures, the pop-up asks Home Assistant for one at a time instead of one every second whether or not the last had answered, which piled up slow requests on Home Assistant.
+- Fixed: on a desktop, the doorbell pop-up sits above the lights strip instead of covering its right end.
+
 ## 0.58.0
 
 - Added: on a desktop, a lights strip along the bottom of the screen: every light and switch as an on/off switch with its bulb and name, in one row (it scrolls sideways when they don't all fit). It sits inside the page spacing and lines up with the side navigation.

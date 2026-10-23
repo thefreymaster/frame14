@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.56.2
+
+- Changed: the space around the cards now always matches the space between them: 16px on a desktop (and a tablet held sideways), 4px on phones and the frame. The header's icons and the side navigation line up with it.
+- Changed: cards and both navigation bars have less rounded corners (12px), and the bottom bar on phones matches the cards instead of being a pill. The selected page's highlight keeps slightly tighter corners that follow the bar's.
+
 ## 0.56.1
 
 - Added: the header shows "Frame14" at the left and the time at the right, after the status icons.

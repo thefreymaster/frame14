@@ -25,11 +25,11 @@ export const HEADER_ICON_SIZE = { base: "4.5", md: "5" };
 export const NAV_BAR_HEIGHT = "4rem";
 
 /**
- * The page's padding around the cards: the theme's spacing.xs, the same as the
- * gap between them. The header's icons and the landscape rail keep to it too,
- * so they line up with the cards.
+ * The page's padding around the cards: the theme's spacing.gutter, the same as
+ * the gap between them (xs, md on a desktop). The header's icons and the
+ * landscape rail keep to it too, so they line up with the cards.
  */
-export const PAGE_GUTTER = "var(--chakra-spacing-xs)";
+export const PAGE_GUTTER = "var(--chakra-spacing-gutter)";
 
 /**
  * Gap between the floating portrait bar and the screen's side edges (on top of

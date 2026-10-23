@@ -89,12 +89,13 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 
 The UI is stock Chakra UI v3 — `createSystem(defaultConfig, …)` in
 `components/ui/provider.tsx` with only three additions: buttons (and segmented
-controls) are fully rounded; a `surface` radius (1.25rem) that the Card recipe
-uses for every card and the floating side rail shares (tiles inside cards set
-`sm` themselves); and spacings `xs` (0.25rem) — the page's padding around the cards and the gap
-between them on /home (HomeBoard) and every other page (PageShell, /control) —
-and `md` (1rem), the gap instead on a desktop (`DESKTOP_MEDIA` in lib/homeLayout,
-the four-column screens; HomeBoard keys it off `columns === 4`). No other custom tokens, variants or global styles. Components are used with
+controls) are fully rounded; a `surface` radius (0.75rem) that the Card recipe
+uses for every card and both floating navs share (tiles inside cards set
+`sm` themselves); and spacings `xs` (0.25rem), `md` (1rem) and the semantic `gutter`: the gap
+between cards and the page's padding around them, always equal — xs, or md under
+the theme's `desktop` condition (`DESKTOP_MEDIA` in lib/homeLayout, the
+four-column screens). /home (HomeBoard), PageShell and /control use `gutter`;
+`PAGE_GUTTER` in lib/navMetrics is its CSS var for the header and rail. No other custom tokens, variants or global styles. Components are used with
 their built-in variants, sizes and `colorPalette`s — Card, Collapsible, Dialog,
 Tabs, SegmentGroup, Slider, Switch, CheckboxCard, Progress / ProgressCircle,
 Stat, Badge, Tag, Skeleton, EmptyState, Alert, ActionBar, DataList,
@@ -147,7 +148,7 @@ src/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition; renders the StatusBanner header and the nav, and pads the page clear of both (HEADER_CLEARANCE on top; the rail or bar)
     StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: "Frame14" at the left; running appliances, connection icon and HeaderClock at the right (the version is on /control).
     HeaderClock.tsx               — the header's "1:45 PM", the device's time; ticks each second, re-renders only when the minute changes. Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
-    LandscapeNav.tsx              — floating bottom bar (portrait: an opaque capsule inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface with the theme's `surface` corners, the cards' too, rather than a capsule, from under the header to the bottom gap; its selected entry's radius is that less the border and padding, so the corners are concentric), each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
+    LandscapeNav.tsx              — floating bottom bar (portrait: an opaque bar with the cards' `surface` corners, inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface, from under the header to the bottom gap); in both, the selected entry's radius is `surface` less the border and padding, so the corners are concentric, each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in
     SocketViewListener.tsx        — listens for change_view, navigates (skips /control)
@@ -182,7 +183,7 @@ src/
     HomeCardWidthPicker.tsx       — the width SegmentedControl (¼ ½ ¾ Full / ½ Full) straddling a card's bottom edge; stops pointer and key events so it never starts a drag
     HomeCardFace.tsx              — card body + drag grip + stand-in for a card that is hidden right now (shown/hidden by CSS `:has`/`:empty`, see "Home layout" in src/index.css)
     HomeLayoutToolbar.tsx         — Reset / Done bar shown while arranging — a Chakra ActionBar that ignores outside presses and Escape (HomeBoard owns Escape)
-    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones, with `--card-padding` cut further to spacing.3; md above; the theme's `surface` corners from the Card recipe, the same as the side rail's; the tiles inside cards use the smaller `sm`, so none is rounder than its card) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed, and an `action` (a control at the right of the header, before the chevron). On a collapsible board only the title is the trigger button, stretched over the header with ::after, so the action isn't a button inside a button and a tap anywhere else still toggles
+    Board.tsx                     — stock Chakra Card (size sm below Chakra's md breakpoint, i.e. phones, with `--card-padding` cut further to spacing.3; md above; the theme's `surface` corners from the Card recipe, the same as both navs'; the tiles inside cards use the smaller `sm`, so none is rounder than its card) with an optional Collapsible header; collapse state persists in localStorage under `board-collapsed:<key>`; Collapsible animates open/close and rotates the chevron indicator; accepts ReactNode `title` so sections can show summary stats (event count, printer %, energy kW) when collapsed, and an `action` (a control at the right of the header, before the chevron). On a collapsible board only the title is the trigger button, stretched over the header with ::after, so the action isn't a button inside a button and a tap anywhere else still toggles
     HomeWeatherCard.tsx           — /home's first card on a phone (one column), in place of HomeHeader: weather icon + temperature, condition + humidity, one row; no clock and no bird. Same card id (`header`), so saved layouts keep its place
     StatusChip.tsx                — ambient chip (Chakra Tag, `surface` variant) for the status strip and the bird detection
     skeletons/                    — per-card loading placeholders for /home, built from stock Chakra Skeleton: each is a card's body, shown under the card's real (collapsible) header while that card's `loading` flag from useHomeData is set. Thermostat, fan and chip counts come from /api/entities
@@ -214,7 +215,7 @@ src/
     deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
     navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
     themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
-    navMetrics.ts                 — `PAGE_GUTTER` (spacing.xs, the page's padding around the cards, which the header icons and the rail also keep to); nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the mic button, the arranging bar and the Photos/Marquee eye button
+    navMetrics.ts                 — `PAGE_GUTTER` (spacing.gutter, the page's padding around the cards and the gap between them, which the header icons and the rail also keep to); nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the mic button, the arranging bar and the Photos/Marquee eye button
     hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
     weatherIcons.ts               — HA weather condition → react-icons element (day/night) and → words (`conditionLabel`)

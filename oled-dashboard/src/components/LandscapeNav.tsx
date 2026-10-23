@@ -124,24 +124,25 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
 const NAV_PAD = "0.375rem";
 
 /**
- * The selected entry's corner radius in the rail: the rail's, less the border
- * and padding between them, so the two corners share a centre — an inner
- * outline offset from the outer one, as a slicer offsets a print's walls. An
- * equal radius would look fatter than the corner around it.
+ * The selected entry's corner radius: the nav's (the theme's `surface`, the
+ * cards' too), less the border and padding between them, so the two corners
+ * share a centre — an inner outline offset from the outer one, as a slicer
+ * offsets a print's walls. An equal radius would look fatter than the corner
+ * around it.
  */
-const RAIL_ENTRY_RADIUS = `calc(var(--chakra-radii-surface) - 1px - ${NAV_PAD})`;
+const ENTRY_RADIUS = `calc(var(--chakra-radii-surface) - 1px - ${NAV_PAD})`;
 
 /**
- * The surface both navs share: the cards' colour (gray.800 in dark mode), set
- * apart from a card passing beneath by a border and shadow. Fully rounded for
- * the bar; the rail swaps in the theme's `surface` radius.
+ * The surface both navs share: the cards' colour (gray.800 in dark mode) and
+ * corners (the theme's `surface` radius), set apart from a card passing
+ * beneath by a border and shadow.
  */
 const FLOATING_NAV = {
   position: "fixed",
   bg: { _light: "bg.panel", _dark: "gray.800" },
   borderWidth: "1px",
   borderColor: { _light: "gray.200", _dark: "gray.700" },
-  rounded: "full",
+  rounded: "surface",
   shadow: "lg",
   zIndex: "sticky",
   p: NAV_PAD,
@@ -186,8 +187,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   // Navigation happens on click rather than onValueChange, so tapping the tab
   // you are already on still re-sends it to the other frames, as before.
   // Both navs float, and the selected entry is a shade above the nav's
-  // gray.800, its corners following the nav's: a capsule in the bar, and in
-  // the rail concentric with the rail's corners (RAIL_ENTRY_RADIUS). In the
+  // gray.800, its corners concentric with the nav's (ENTRY_RADIUS). In the
   // portrait bar entries fill its height, and on a phone the labels drop to
   // xs, Apple Music's small captions, so a sixth entry (game day) still fits
   // inside the inset bar.
@@ -203,7 +203,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         flexDirection="column"
         justifyContent="center"
         height={inBar ? "100%" : "auto"}
-        rounded={inBar ? "full" : RAIL_ENTRY_RADIUS}
+        rounded={ENTRY_RADIUS}
         px="1"
         py={inBar ? "0" : "2"}
         gap="1"
@@ -229,9 +229,10 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
 
   return (
     <>
-      {/* Portrait: a floating capsule, like Apple Music's tab bar but opaque
-          (no glass). It is inset from the sides and sits just above the home
-          indicator, and the page scrolls on underneath and around it. */}
+      {/* Portrait: a floating bar, like Apple Music's tab bar but opaque (no
+          glass) and with the cards' corners. It is inset from the sides and
+          sits just above the home indicator, and the page scrolls on
+          underneath and around it. */}
       <Box
         {...FLOATING_NAV}
         display={{ base: "block", _landscape: "none" }}
@@ -261,12 +262,10 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         </Tabs.Root>
       </Box>
 
-      {/* Landscape: the same floating surface down the left, less rounded,
-          on the cards' PAGE_GUTTER: its top lines up with the first card's. */}
+      {/* Landscape: the same floating surface down the left, on the cards'
+          PAGE_GUTTER: its top lines up with the first card's. */}
       <Box
         {...FLOATING_NAV}
-        // The cards' corners (the theme's surface radius), not a capsule.
-        rounded="surface"
         display={{ base: "none", _landscape: "block" }}
         top={`calc(${HEADER_CLEARANCE} + ${PAGE_GUTTER})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}

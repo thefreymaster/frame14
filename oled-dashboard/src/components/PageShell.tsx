@@ -1,5 +1,4 @@
 import { Flex } from "@chakra-ui/react";
-import { DESKTOP_MEDIA } from "../lib/homeLayout";
 
 /**
  * The page every route sits on — the same gutter and card gap as /home, so a
@@ -28,13 +27,12 @@ export function PageShell({
       height={fill ? "100%" : undefined}
       direction="column"
       align={center ? "center" : undefined}
-      p="xs"
+      p="gutter"
       overflow={fill ? "hidden" : undefined}
     >
       <Flex
         direction="column"
-        gap="xs"
-        css={{ [DESKTOP_MEDIA]: { gap: "md" } }}
+        gap="gutter"
         width="100%"
         minW="0"
         minH="0"

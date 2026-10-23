@@ -212,7 +212,7 @@ export function HomeBoard({
         position="relative"
         width="100%"
         minHeight="100%"
-        p="xs"
+        p="gutter"
         // Room to scroll the last card (and its width picker) clear of the
         // arranging bar.
         pb={editing ? "12rem" : "4"}
@@ -227,9 +227,9 @@ export function HomeBoard({
           <Grid
             aria-hidden
             position="absolute"
-            inset="xs"
+            inset="gutter"
             templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
-            columnGap={columns === 4 ? "md" : "xs"}
+            columnGap="gutter"
             pointerEvents="none"
           >
             {Array.from({ length: columns }, (_, i) => (
@@ -253,7 +253,7 @@ export function HomeBoard({
             templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
             autoRows={`${PACKED_ROW_PX}px`}
             autoFlow="row dense"
-            columnGap={columns === 4 ? "md" : "xs"}
+            columnGap="gutter"
             rowGap="0"
             alignItems="start"
           >

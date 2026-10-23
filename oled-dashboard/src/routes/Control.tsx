@@ -36,7 +36,6 @@ import { useSocket } from "../hooks/useSocket";
 import { useVersion } from "../hooks/useVersion";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
-import { DESKTOP_MEDIA } from "../lib/homeLayout";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
 import { useImmichAlbums } from "../hooks/useImmichAlbums";
@@ -210,8 +209,7 @@ export function Control() {
       <Flex
         direction={{ base: "column", _landscape: "row" }}
         align={{ _landscape: "flex-start" }}
-        gap="xs"
-        css={{ [DESKTOP_MEDIA]: { gap: "md" } }}
+        gap="gutter"
       >
         {deviceMode !== "frame" && (
           <Box flex="1" minWidth="0">
@@ -261,13 +259,7 @@ export function Control() {
             </Board>
           </Box>
         )}
-        <Flex
-          flex="1"
-          minWidth="0"
-          direction="column"
-          gap="xs"
-          css={{ [DESKTOP_MEDIA]: { gap: "md" } }}
-        >
+        <Flex flex="1" minWidth="0" direction="column" gap="gutter">
           {/* Display mode */}
           <Board
             title={

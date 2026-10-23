@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.60.0"
+version: "0.60.1"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -23,7 +23,7 @@ options:
   plex_url: ""
   plex_token: ""
   port: 4000
-  web_ui_url: "https://frame.unserver23.net"
+  web_ui_url: "http://192.0.2.10:4000"
   screen_type: "oled"
   assist_pipeline_id: ""
   assist_speaker: ""

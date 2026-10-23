@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.60.1
+
+- Changed: `web_ui_url` starts as a placeholder address (`http://192.0.2.10:4000`, which reaches nothing). Set it to your own address on the Configuration tab, or Open Web UI goes nowhere.
+
 ## 0.60.0
 
-- Added: a `web_ui_url` option on the Configuration tab, the address you open Frame14 at (it starts as `https://frame.unserver23.net`). The add-on's **Open Web UI** button and its sidebar entry now take the whole tab there.
+- Added: a `web_ui_url` option on the Configuration tab, the address you open Frame14 at. The add-on's **Open Web UI** button and its sidebar entry now take the whole tab there.
 - Fixed: **Open Web UI** and the sidebar entry showed a "Bad gateway" error, because nothing answered on the port Home Assistant opens them through. If `web_ui_url` is empty, they now say how to set it.
 
 ## 0.59.1

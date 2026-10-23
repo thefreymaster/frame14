@@ -1,16 +1,17 @@
-import { Icon, Toggle } from "@chakra-ui/react";
+import { Icon, Text, Toggle } from "@chakra-ui/react";
 import { useEntity } from "../hooks/useEntity";
 import { callService } from "../lib/callService";
 import { ENTRY_RADIUS } from "../lib/floatingSurface";
 import { lightColor, rgba, type LightAttrs } from "../lib/lightModel";
 import type { LightEntry } from "../lib/lightsConfig";
+import { LIGHT_STRIP_ITEM_WIDTH } from "../lib/navMetrics";
 
 /**
  * One light or switch in the desktop lights strip: an on/off button drawn like
  * a side rail entry, the bulb over the name. While on it's filled like the
- * rail's selected entry and the bulb is lit in the light's own colour. Never
- * narrower than a rail entry; a long name widens it rather than wrapping.
- * Unavailable entities don't show.
+ * rail's selected entry and the bulb is lit in the light's own colour. Every
+ * button is the same width, and a longer name is cut off with an ellipsis (the
+ * whole name in the tooltip). Unavailable entities don't show.
  */
 export function LightStripItem({
   entity_id,
@@ -33,19 +34,19 @@ export function LightStripItem({
       onPressedChange={(pressed) =>
         callService(entity_id, pressed ? "turn_on" : "turn_off")
       }
+      title={label}
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
       flexShrink={0}
+      width={LIGHT_STRIP_ITEM_WIDTH}
       height="100%"
-      minW="4.25rem"
       rounded={ENTRY_RADIUS}
-      px="3"
+      px="2"
       gap="1"
       textStyle="sm"
       fontWeight="medium"
-      whiteSpace="nowrap"
       color="fg.muted"
       cursor="pointer"
       transition="background 150ms ease"
@@ -59,7 +60,9 @@ export function LightStripItem({
       >
         <BulbIcon />
       </Icon>
-      {label}
+      <Text as="span" truncate maxW="100%">
+        {label}
+      </Text>
     </Toggle.Root>
   );
 }

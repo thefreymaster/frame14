@@ -15,8 +15,8 @@ const EMPTY: string[] = [];
 
 /**
  * Desktop only (Layout decides): every configured light and switch as an
- * on/off button drawn like a rail entry, bulb over name, in one row along the
- * bottom of the screen — the floating rail's surface laid on its side. It runs from the
+ * on/off button drawn like a rail entry, bulb over name, all one width, in one
+ * row along the bottom of the screen — the floating rail's surface laid on its side. It runs from the
  * rail's edge to the right of the page inside the page gutter, its bottom in
  * line with the rail's. One row, never wrapping: past the width it scrolls
  * sideways (the scrollbar is hidden; a trackpad or shift-scroll moves it).

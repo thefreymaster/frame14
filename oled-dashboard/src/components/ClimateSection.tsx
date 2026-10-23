@@ -32,7 +32,8 @@ const RUNNING: Record<string, { mode: ClimateVisualMode; label: string }> = {
  * status line in that colour. The status says whether it's running now
  * ("Heating to 70°", with the icon pulsing) or idle ("Heat · set 70°"). An off
  * unit is the plain outline card with a grey "Off" Badge. The whole tile is
- * the button that opens the dialog.
+ * the button that opens the dialog. Its corners are the Card recipe's
+ * `surface`, the same as the climate card around it.
  */
 function ClimateTile({
   unit,
@@ -80,7 +81,6 @@ function ClimateTile({
       borderColor={on ? ring : undefined}
       boxShadow={on ? `inset 0 0 0 calc(0.25rem - 1px) ${ring}` : undefined}
       transition="box-shadow 400ms ease, border-color 400ms ease"
-      borderRadius="sm"
       cursor="pointer"
       focusVisibleRing="outside"
       _active={{ bg: "bg.emphasized" }}

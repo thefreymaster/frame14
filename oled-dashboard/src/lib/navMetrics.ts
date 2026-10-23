@@ -59,8 +59,14 @@ export const NAV_RAIL_WIDTH = "5rem";
 export const NAV_RAIL_BOTTOM = `max(${PAGE_GUTTER}, calc(env(safe-area-inset-bottom, 0px) - 0.75rem))`;
 
 /**
+ * Width of every button in the desktop lights strip (LightStripItem), so the
+ * row is regular whatever the names; a longer name is cut off.
+ */
+export const LIGHT_STRIP_ITEM_WIDTH = "7.5rem";
+
+/**
  * Height of the desktop lights strip along the bottom (LightStrip): the
- * portrait bar's, since its buttons are the same icon over a name.
+ * portrait bar's, since its buttons are the same icon over a one-line name.
  */
 export const LIGHT_STRIP_HEIGHT = NAV_BAR_HEIGHT;
 

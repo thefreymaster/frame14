@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.60.2
+
+- Changed: on a desktop, every button in the lights strip is the same width. A long name is cut off with "…" instead of making its button wider; hover to see the whole name.
+- Changed: the thermostat tiles in the Climate card have the same rounded corners as the cards.
+
 ## 0.60.1
 
 - Changed: `web_ui_url` starts as a placeholder address (`http://192.0.2.10:4000`, which reaches nothing). Set it to your own address on the Configuration tab, or Open Web UI goes nowhere.

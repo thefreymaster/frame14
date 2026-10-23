@@ -11,10 +11,11 @@
 export const HERO_SIZE = "17cqi";
 
 /**
- * Photos lays the figures over a picture, where Home's size covers too much of
- * it, so they run at about half of Home's there.
+ * Photos framed as a card on a desktop, where Home has no big clock to match
+ * (the header has the time) and Home's size would cover most of the picture:
+ * about half of it. On the frame and phones Photos uses HERO_SIZE.
  */
-export const PHOTOS_HERO_SIZE = "9cqi";
+export const FRAMED_PHOTOS_HERO_SIZE = "9cqi";
 
 /** am/pm, seconds and other suffixes, relative to the hero figure. */
 export const HERO_SUFFIX_SIZE = "0.35em";

@@ -79,7 +79,8 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/home` | `HomeOverview` | Overview: weather, climate, energy, calendar. Cards are rearrangeable and resizable per device (press and hold) — see `HomeBoard` |
 | `/lights` | `Lights` | Light + switch tiles (tap toggles, press and hold a dimmable light for brightness / white / colour); header shows how many are on + All off |
 | `/blank` | `Blank` | Pure black screen (motion off) |
-| `/photos` | `Photos` | Immich photo slideshow: full-screen on the frame and phones, a card inside the page gutter (`surface` corners, edge) on a desktop |
+| `/photos` | `Photos` | Immich photo slideshow: full-screen on the frame and phones, a card inside the page gutter (`surface` corners, edge) on a desktop. Plays the album in order (the server's, see `/api/photos/albums/:albumId`), each device resuming where that album left off (`lib/slideshow`); frame-only nav item |
+| `/album` | `Album` | A remote's Photos (remote-only nav item, labelled Photos): the album picker and every photo in the album as a grid; the photo a frame is on is highlighted, and a tap sends the frames to /photos showing it |
 | `/radar` | `Radar` | Radar view — frame-only nav item; framed like Photos on a desktop (`useDesktop`), edge to edge elsewhere |
 | `/timer` | `Timer` | Timer — frame-only nav item |
 | `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed. Movies only — an episode (`tvshow`) or live TV (`video`/`channel`) never routes here and shows "movies only" if you navigate in |
@@ -141,10 +142,11 @@ src/
     HomeOverview.tsx              — home overview page; builds the card map and hands it to HomeBoard, keyed by the column count (`useHomeColumns`: 4 / 2 / 1 from the media queries in lib/homeLayout)
     Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
-    Photos.tsx                    — Immich slideshow; `framed` (`useDesktop`) wraps it in a `data-page-fill` gutter box with card corners
+    Photos.tsx                    — Immich slideshow; `framed` (`useDesktop`) wraps it in a `data-page-fill` gutter box with card corners. The photo on screen is tracked by id, advances in order (30s each, a tap, `next_photo`, the right arrow), is saved per album (`lib/slideshow`), and on a frame-mode device is reported to the remotes (`photo_shown`, null on leaving) and follows their picks. The time and temperature are Home's clock size (HERO_SIZE), FRAMED_PHOTOS_HERO_SIZE on a desktop. The eye button (hide the nav) isn't shown on a remote
+    Album.tsx                     — a remote's photo grid: PageHeader with the photo count and AlbumSelect, then a Board holding PhotoGrid (Skeletons while loading, EmptyStates for no album / load failure / no photos)
     Radar.tsx                     — radar view (frame-only); a `data-page-fill` box, framed like Photos on a desktop
     Timer.tsx                     — timer (frame-only)
-    Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; movies only (`isMovie`), hides nav on mount (local only), eye button restores it
+    Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; movies only (`isMovie`), hides nav on mount (local only), eye button restores it (no eye on a remote, whose nav never hides)
     Football.tsx                  — live game page; renders every game in the route window, "no game in session" when empty (auto-routed, so it never decides whether to show itself)
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
@@ -153,10 +155,12 @@ src/
     LightStrip.tsx                — desktop only: every configured light/switch as LightStripItem in one non-wrapping row along the bottom (FLOATING_SURFACE, from the rail's edge to the right gutter, bottom in line with the rail's), scrolls sideways with the scrollbar hidden; comes and goes with the nav
     LightStripItem.tsx            — one strip entry: an on/off Chakra Toggle drawn like a rail entry (bulb over name, ENTRY_RADIUS, the rail's selected fill while on, the bulb lit in the light's colour); every button LIGHT_STRIP_ITEM_WIDTH wide, the name on one line cut off with an ellipsis (`truncate`, full name in `title`); unavailable entities render nothing
     HeaderClock.tsx               — the header's "1:45 PM", the device's time: hours and minutes as NumberFlows in a NumberFlowGroup (two-digit minutes via `minimumIntegerDigits`, tens digit `max: 5`); checks each second, re-renders only when the minute changes
-    LandscapeNav.tsx              — floating bottom bar (portrait: an opaque bar with the cards' `surface` corners, inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface, from under the header to the bottom gap); in both, the selected entry's radius is `surface` less the border and padding, so the corners are concentric, each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
+    LandscapeNav.tsx              — floating bottom bar (portrait: an opaque bar with the cards' `surface` corners, inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface, from under the header to the bottom gap); in both, the selected entry's radius is `surface` less the border and padding, so the corners are concentric, each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; clock/photos/radar/timer hidden on non-frame devices, and /album (labelled Photos) on frames (`remoteOnly`)
     PageTransition.tsx            — fade+scale animation on route mount
     PixelShift.tsx                — slow pixel offset to prevent OLED burn-in
-    SocketViewListener.tsx        — listens for change_view, navigates (skips /control)
+    SocketViewListener.tsx        — listens for change_view, navigates (skips /control and /album, a remote's control pages)
+    AlbumSelect.tsx               — the slideshow album NativeSelect (HA's input_select.smart_frame_album options, named from Immich; POST /api/photos/config); on /control and /album
+    PhotoGrid.tsx                 — /album's grid: square tiles of Immich's small thumbnails (`?size=thumbnail`, lazy), the frames' photo (`usePhotosShown`) ringed with an "On frame" badge, a tap calls `showPhoto`; scrolls to the frames' photo once per album
     WeatherForecast.tsx           — hourly forecast strip of Buttons; each opens ForecastDetailModal
     PhotoSlide.tsx                — full-bleed crossfade image slide
     MarqueeArt.tsx                — full-bleed poster, backgroundSize cover (absolute, not fixed — PageTransition leaves a transform on an ancestor)
@@ -222,8 +226,9 @@ src/
     lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icons (domain-based; a lit bulb while on) from entity IDs; no static registry
     lightModel.ts                 — what a light can do and shows: features from supported_color_modes, brightness %, its colour (rgb_color, amber fallback), white / colour presets and which one is live
     floatingSurface.ts            — FLOATING_SURFACE (the navs' and lights strip's fixed surface: the cards' `bg.surface` colour, `border.surface`, `surface` radius, shadow, NAV_PAD), ENTRY_RADIUS (their entries' concentric corners) and DARK_RAISED (dark-mode shade overrides for anything on gray.800: the cards)
-    deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode()
-    navVisibility.ts              — nav show/hide store synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide)
+    deviceMode.ts                 — localStorage key "device-mode"; values "frame" | "controller"; auto-detects from UA on first visit; getDeviceMode() / setDeviceMode(), and useDeviceMode() which re-renders when /control switches it
+    navVisibility.ts              — the frames' nav show/hide setting, synced over socket; setNavVisible broadcasts, setNavVisibleLocal does not (used by routes that auto-hide). Only frame-mode devices act on it: `useNavVisible` is always true on a remote, whose /control switch reads and sets the frames' value (`useFramesNavVisible`)
+    slideshow.ts                  — Photos between devices: per-album position in localStorage (`photos-position:<albumId>`), `onPhotoPicked` (a frame saves a remote's pick as the position, then tells a mounted slideshow), `showPhoto` (a remote: `show_photo` + `change` to photos), `reportPhotoShown`, and `usePhotosShown` (the frames' photos from `photos_shown`)
     themeMode.ts                  — Auto / Bright / Dark preference storage and socket sync, mapped onto Chakra's light/dark colour mode by the provider; "auto" uses daylight window 07:00–19:00
     navMetrics.ts                 — `PAGE_GUTTER` (spacing.gutter, the page's padding around the cards and the gap between them, which the header icons and the rail also keep to); HEADER_TOP (iPhone status-bar inset + blur band, above the header's row) / HEADER_CLEARANCE (screen top to the header's bottom); nav bar height, side inset, bottom gap and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the header, the arranging bar and the Photos/Marquee eye button; LIGHT_STRIP_ITEM_WIDTH, LIGHT_STRIP_HEIGHT (the portrait bar's) and LIGHT_STRIP_CLEARANCE for the desktop lights strip
     hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
@@ -280,8 +285,8 @@ routes/
 - `GET /api/energy/yearly?year=YYYY` — monthly production/consumption + running totals for a year (daily stats summed per month); defaults to current year
 - `GET /api/photos/config` — returns `{ defaultAlbumId }` from config
 - `GET /api/photos/albums` — Immich album list
-- `GET /api/photos/albums/:albumId` — assets in an album (images only)
-- `GET /api/photos/asset/:assetId/thumbnail` — proxies Immich thumbnail (hides API key)
+- `GET /api/photos/albums/:albumId` — assets in an album (images only), in the album's order: Immich albums have no order of their own beyond date taken, newest first unless the album is set to oldest first (`order: "asc"`), which is what Immich shows. Sorted on `fileCreatedAt` here because metadata search ignores the album's setting
+- `GET /api/photos/asset/:assetId/thumbnail` — proxies Immich thumbnail (hides API key); `?size=thumbnail` for Immich's small one (the remote's grid), the 1440px preview otherwise
 - `GET /api/marquee/art?v=<cachekey>` — poster art of the configured media player. With `PLEX_URL`/`PLEX_TOKEN` set it renders the poster at 1280x1920 through Plex's transcoder, keyed on the `media_content_id` (Plex ratingKey) from the HA state cache; otherwise it proxies the entity's `entity_picture`. The client never supplies a URL; `v` is ignored and exists only for cache busting
 - `GET /api/camera/hls` — starts/joins HA's live HLS stream of the configured camera and returns the master playlist under `/api/camera/hls/<token>/…`, which proxies HA's `/api/hls/<token>/…` files (allow-listed) for the browser
 - `GET /api/assist/config` — resolves the configured Assist pipeline to a name + engines, or reports why voice is unavailable (`unknown_pipeline` / `ha_unreachable`); cached 60s
@@ -296,7 +301,9 @@ routes/
 - Client emits `entity:subscribe` / `entity:unsubscribe` → joins/leaves Socket.IO room `entity:<id>`
 - HA WebSocket pushes state updates → server fans out to `entity:<id>` rooms
 - `GET /api/change/:view` broadcasts to **all** clients (used by HA automations)
-- `SocketViewListener` navigates on `change_view` but ignores it on `/control`
+- `SocketViewListener` navigates on `change_view` but ignores it on `/control` and `/album`
+- `nav_visibility` is the frames' setting: remote-mode devices relay it (the /control switch) but keep their own nav up
+- Photos: a frame-mode slideshow emits `photo_shown` (asset id, or null when it leaves); the server keeps one per socket (dropped on disconnect) and sends everyone `photos_shown` (the distinct ids), also on connect. A remote's grid emits `show_photo` `{ albumId, assetId }`, which the server broadcasts to the others, then `change` to photos
 - Voice assist: client emits `assist:start` (with ack), `assist:audio` (binary Int16LE PCM), `assist:audio_end`, `assist:cancel`; server emits `assist:event` (the HA pipeline event, with the TTS path swapped for an opaque `audioUrl`) and `assist:error`. The server adds `cue` (`"success"` / `"failure"` / `null`) to `intent-end`: a non-null cue means the panel plays a tone instead of the speech, and that turn's `tts-end` carries no `audioUrl`. Local intents are judged by their `response_type`; LLM turns by the tool results streamed in `intent-progress`, because an LLM agent labels every reply `action_done`. One run at a time across all clients
 - `io` instance is passed to route handlers via `app.locals.io`
 

@@ -155,7 +155,7 @@ export const openApiDocument = {
         parameters: [{ name: "albumId", in: "path", required: true, schema: { type: "string" } }],
         responses: {
           200: {
-            description: "Album with image assets.",
+            description: "Album with its image assets in the album's order: by date taken, newest first unless the album is set to oldest first.",
             content: { "application/json": { schema: { $ref: "#/components/schemas/AlbumDetail" } } },
           },
           503: { description: "Immich not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
@@ -167,9 +167,18 @@ export const openApiDocument = {
         tags: ["Photos"],
         operationId: "getAssetThumbnail",
         summary: "Proxy an Immich asset thumbnail",
-        parameters: [{ name: "assetId", in: "path", required: true, schema: { type: "string" } }],
+        parameters: [
+          { name: "assetId", in: "path", required: true, schema: { type: "string" } },
+          {
+            name: "size",
+            in: "query",
+            required: false,
+            description: "preview (default, about 1440px, for the slideshow) or thumbnail (Immich's small one, for the remote's photo grid).",
+            schema: { type: "string", enum: ["preview", "thumbnail"] },
+          },
+        ],
         responses: {
-          200: { description: "JPEG thumbnail image.", content: { "image/jpeg": {} } },
+          200: { description: "Thumbnail image.", content: { "image/jpeg": {}, "image/webp": {} } },
           503: { description: "Immich not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },

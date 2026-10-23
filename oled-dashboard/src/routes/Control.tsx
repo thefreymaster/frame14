@@ -31,30 +31,24 @@ import {
 } from "react-icons/ri";
 import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "../hooks/useSocket";
 import { useVersion } from "../hooks/useVersion";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
-import { usePhotosConfig } from "../hooks/usePhotosConfig";
-import { useImmichAlbums } from "../hooks/useImmichAlbums";
-import { useNavVisible, setNavVisible } from "../lib/navVisibility";
+import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
 import type { ThemeModePreference } from "../lib/themeMode";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
 import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { VoiceStatusBoard } from "../components/VoiceStatusBoard";
+import { AlbumSelect } from "../components/AlbumSelect";
 import { toaster } from "../components/ui/toaster";
 import { Tooltip } from "../components/ui/tooltip";
 import { SegmentedControl } from "../components/ui/segmented-control";
 import { Status } from "../components/ui/status";
 import { Switch } from "../components/ui/switch";
-import {
-  NativeSelectField,
-  NativeSelectRoot,
-} from "../components/ui/native-select";
 
 const VIEWS: {
   path: string;
@@ -121,30 +115,11 @@ export function Control() {
   const { connected } = useSocket();
   const version = useVersion();
   const { preference, effectiveMode, setPreference } = useThemeMode();
-  const { data: photosConfig } = usePhotosConfig();
-  const { data: albums } = useImmichAlbums();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<string | null>(null);
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
-  const navVisible = useNavVisible();
-
-  async function handleAlbumChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const option = e.target.value;
-    if (!option) return;
-    await fetch("/api/photos/config", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ option }),
-    });
-    queryClient.invalidateQueries({ queryKey: ["photos", "config"] });
-    const name = albums?.find((a) => a.id === option)?.albumName ?? option;
-    toaster.create({
-      title: "Album changed",
-      description: name,
-      type: "success",
-    });
-  }
+  // The frames' nav: a remote's own never hides.
+  const navVisible = useFramesNavVisible();
 
   useEffect(() => {
     function onCurrentView(view: string) {
@@ -310,23 +285,7 @@ export function Control() {
 
           {/* Album */}
           <Board title={<SectionTitle>Album</SectionTitle>}>
-            <NativeSelectRoot>
-              <NativeSelectField
-                aria-label="Photo album"
-                value={photosConfig?.defaultAlbumId ?? ""}
-                onChange={handleAlbumChange}
-              >
-                {!photosConfig?.defaultAlbumId && <option value="">—</option>}
-                {photosConfig?.options.map((id) => {
-                  const album = albums?.find((a) => a.id === id);
-                  return (
-                    <option key={id} value={id}>
-                      {album?.albumName ?? id}
-                    </option>
-                  );
-                })}
-              </NativeSelectField>
-            </NativeSelectRoot>
+            <AlbumSelect />
           </Board>
         </Flex>
       </Flex>

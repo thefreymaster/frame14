@@ -130,7 +130,11 @@ async function fetchAlbumImages(albumId) {
     if (!response.ok) return { status: response.status };
     const { assets } = await response.json();
     for (const a of assets?.items ?? []) {
-      images.push({ id: a.id, createdAt: a.createdAt });
+      images.push({
+        id: a.id,
+        createdAt: a.createdAt,
+        takenAt: a.fileCreatedAt,
+      });
     }
     cursor = assets?.nextCursor;
   } while (cursor);
@@ -158,13 +162,20 @@ router.get("/albums/:albumId", async (req, res) => {
       return;
     }
 
-    // Fisher-Yates shuffle
-    for (let i = images.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [images[i], images[j]] = [images[j], images[i]];
-    }
+    // The album's own order, as Immich shows it: by date taken, newest first
+    // unless the album is set to oldest first. A fixed order (not a shuffle)
+    // so the slideshow goes through every photo before it repeats one.
+    const newestFirst = album.order !== "asc";
+    images.sort((a, b) => {
+      const diff = Date.parse(a.takenAt) - Date.parse(b.takenAt);
+      return (newestFirst ? -diff : diff) || a.id.localeCompare(b.id);
+    });
 
-    res.json({ id: album.id, albumName: album.albumName, assets: images });
+    res.json({
+      id: album.id,
+      albumName: album.albumName,
+      assets: images.map(({ id, createdAt }) => ({ id, createdAt })),
+    });
   } catch (err) {
     console.error("Immich album assets error:", err);
     res.status(500).json({ error: "Failed to fetch album assets from Immich" });
@@ -173,10 +184,13 @@ router.get("/albums/:albumId", async (req, res) => {
 
 router.get("/asset/:assetId/thumbnail", async (req, res) => {
   if (!requireImmich(res)) return;
+  // Immich's 1440px preview for the slideshow; ?size=thumbnail is its small
+  // one, for the remote's grid of the whole album.
+  const size = req.query.size === "thumbnail" ? "thumbnail" : "preview";
 
   try {
     const response = await fetch(
-      `${IMMICH_URL}/api/assets/${req.params.assetId}/thumbnail?size=preview`,
+      `${IMMICH_URL}/api/assets/${req.params.assetId}/thumbnail?size=${size}`,
       { headers: { "x-api-key": IMMICH_API_KEY } },
     );
     if (!response.ok) {

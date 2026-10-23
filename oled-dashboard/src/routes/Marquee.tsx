@@ -11,6 +11,7 @@ import {
   toggleNavVisible,
   useNavVisible,
 } from "../lib/navVisibility";
+import { useDeviceMode } from "../lib/deviceMode";
 import { EmptyState } from "../components/ui/empty-state";
 import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
 
@@ -19,6 +20,7 @@ export function Marquee() {
   const entityId = entities?.mediaPlayer ?? "";
   const { data: media } = useEntity<PlexAttrs>(entityId);
   const navVisible = useNavVisible();
+  const remote = useDeviceMode() === "controller";
 
   // Full-screen by default; restore whatever the nav was doing on the way out.
   useEffect(() => {
@@ -61,27 +63,31 @@ export function Marquee() {
         />
       )}
 
-      <IconButton
-        variant="surface"
-        size="lg"
-        onClick={(e: React.MouseEvent) => {
-          e.stopPropagation();
-          toggleNavVisible();
-        }}
-        position="fixed"
-        // In portrait it rides above the floating nav bar while that is up.
-        bottom={{
-          _landscape: "calc(16px + env(safe-area-inset-bottom, 0px))",
-          _portrait: navVisible
-            ? `calc(${NAV_BAR_CLEARANCE} + 1rem)`
-            : "calc(16px + env(safe-area-inset-bottom, 0px))",
-        }}
-        right="calc(16px + env(safe-area-inset-right, 0px))"
-        zIndex={200}
-        aria-label={navVisible ? "Hide navigation" : "Show navigation"}
-      >
-        {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
-      </IconButton>
+      {/* The eye hides the nav on the frames; a remote's nav stays up, so
+          it has no eye. */}
+      {!remote && (
+        <IconButton
+          variant="surface"
+          size="lg"
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            toggleNavVisible();
+          }}
+          position="fixed"
+          // In portrait it rides above the floating nav bar while that is up.
+          bottom={{
+            _landscape: "calc(16px + env(safe-area-inset-bottom, 0px))",
+            _portrait: navVisible
+              ? `calc(${NAV_BAR_CLEARANCE} + 1rem)`
+              : "calc(16px + env(safe-area-inset-bottom, 0px))",
+          }}
+          right="calc(16px + env(safe-area-inset-right, 0px))"
+          zIndex={200}
+          aria-label={navVisible ? "Hide navigation" : "Show navigation"}
+        >
+          {navVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
+        </IconButton>
+      )}
     </Box>
   );
 }

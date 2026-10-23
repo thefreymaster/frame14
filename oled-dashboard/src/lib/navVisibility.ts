@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from "react";
+import { getDeviceMode, useDeviceMode } from "./deviceMode";
 import { socket } from "./socket";
+
+// Shown or hidden is the frames' setting, synced over the socket to every
+// device. Only frame-mode devices act on it: a remote (device mode
+// "controller") keeps its nav up whatever the frames are doing, and still
+// shows and changes the setting from /control.
 
 let visible = true;
 const listeners = new Set<() => void>();
@@ -34,6 +40,9 @@ export function setNavVisible(v: boolean) {
  * uses setNavVisible so a deliberate press syncs everywhere.
  */
 export function setNavVisibleLocal(v: boolean) {
+  // A remote's nav never hides, and its copy of the frames' setting stays true
+  // to the frames.
+  if (getDeviceMode() === "controller") return;
   applyLocal(v);
 }
 
@@ -45,8 +54,15 @@ export function toggleNavVisible() {
   setNavVisible(!visible);
 }
 
-export function useNavVisible() {
+/** The frames' setting, for the switch that changes it. */
+export function useFramesNavVisible() {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/** Whether this device's nav is up: always, on a remote. */
+export function useNavVisible() {
+  const framesVisible = useFramesNavVisible();
+  return useDeviceMode() === "controller" || framesVisible;
 }
 
 socket.on("nav_visibility", (v: boolean) => {

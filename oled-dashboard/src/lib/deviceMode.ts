@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 const STORAGE_KEY = "device-mode";
 
 export type DeviceMode = "controller" | "frame";
@@ -21,6 +23,21 @@ export function getDeviceMode(): DeviceMode {
   return mode;
 }
 
+const listeners = new Set<() => void>();
+
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+
 export function setDeviceMode(mode: DeviceMode) {
   localStorage.setItem(STORAGE_KEY, mode);
+  listeners.forEach((cb) => cb());
+}
+
+/** This device's mode, re-rendering when /control switches it. */
+export function useDeviceMode(): DeviceMode {
+  return useSyncExternalStore(subscribe, getDeviceMode, getDeviceMode);
 }

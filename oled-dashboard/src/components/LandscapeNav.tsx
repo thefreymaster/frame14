@@ -43,6 +43,7 @@ type NavItem = {
   activeIcon: IconType;
   portraitHidden?: boolean;
   frameOnly?: boolean;
+  remoteOnly?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -60,6 +61,14 @@ const NAV_ITEMS: NavItem[] = [
     icon: IoImagesOutline,
     activeIcon: IoImages,
     frameOnly: true,
+  },
+  // A remote's Photos: the album as a grid, to pick what the frames show.
+  {
+    path: "/album",
+    label: "Photos",
+    icon: IoImagesOutline,
+    activeIcon: IoImages,
+    remoteOnly: true,
   },
   {
     path: "/lights",
@@ -110,7 +119,13 @@ const FOOTBALL_ITEM: NavItem = {
   activeIcon: IoAmericanFootball,
 };
 
-const LOCAL_ONLY_PATHS = new Set(["/control", "/lights", "/radar", "/timer"]);
+const LOCAL_ONLY_PATHS = new Set([
+  "/control",
+  "/lights",
+  "/radar",
+  "/timer",
+  "/album",
+]);
 
 const BOTTOM_NAV_ITEMS: NavItem[] = [
   {
@@ -194,7 +209,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   }
 
   const visibleNavItems = [
-    ...NAV_ITEMS.filter((i) => isFrame || !i.frameOnly),
+    ...NAV_ITEMS.filter((i) => (isFrame ? !i.remoteOnly : !i.frameOnly)),
     ...(games.length > 0 ? [FOOTBALL_ITEM] : []),
   ];
   const allItems = [...visibleNavItems, ...BOTTOM_NAV_ITEMS];

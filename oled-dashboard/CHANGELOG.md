@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.63.0
+
+- Added: on a phone in remote mode, a Photos tab with every photo in the album as a grid and the album picker on top. The photo the frame is showing is highlighted; tap any photo to show it on the frame, which switches to Photos if it's on another view.
+- Changed: the slideshow shows the album in order instead of at random, so it goes through every photo before it repeats one. The order is the album's own, as Immich shows it: by date taken, newest first unless the album is set to oldest first. Each device picks up where it left off, rather than starting over when it comes back to Photos. Every photo gets its full 30 seconds, including one put up by a tap or from the remote.
+- Changed: on the frame and phones, the time and temperature on Photos are the same size as Home's clock. On a desktop they stay the smaller size.
+- Changed: hiding the navigation (the eye button, or Show navigation in Settings) only hides it on frame-mode devices. A phone in remote mode always keeps its navigation, and has no eye button on Photos and the movie poster. Its Show navigation switch still hides and shows the frame's.
+
 ## 0.62.0
 
 - Added: on a desktop, Home's first card is a weather card in place of the big clock (the header already shows the time): the temperature and conditions now, today's high and low, and the next 8 hours with the chance of rain.

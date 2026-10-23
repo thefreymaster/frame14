@@ -64,11 +64,19 @@ app.locals.io = io;
 io.currentView = "clock";
 io.themeMode = "dark";
 io.navVisible = true;
+// The photo each frame's slideshow is on (socket id → asset id), for the
+// remotes' photo grid to highlight.
+io.photosShown = new Map();
+
+function photosShown() {
+  return [...new Set(io.photosShown.values())];
+}
 
 io.on("connection", (socket) => {
   socket.emit("current_view", io.currentView);
   socket.emit("current_theme_mode", io.themeMode);
   socket.emit("nav_visibility", io.navVisible);
+  socket.emit("photos_shown", photosShown());
 
   socket.on("change", (view) => {
     console.log({ io: "change", view });
@@ -80,6 +88,29 @@ io.on("connection", (socket) => {
   socket.on("next_photo", () => {
     console.log({ io: "next_photo" });
     socket.broadcast.emit("next_photo");
+  });
+
+  // A frame's slideshow reports the photo it's on, and null when it leaves.
+  socket.on("photo_shown", (assetId) => {
+    if (assetId !== null && typeof assetId !== "string") return;
+    if (assetId) io.photosShown.set(socket.id, assetId);
+    else io.photosShown.delete(socket.id);
+    io.emit("photos_shown", photosShown());
+  });
+
+  socket.on("disconnect", () => {
+    if (io.photosShown.delete(socket.id)) {
+      io.emit("photos_shown", photosShown());
+    }
+  });
+
+  // A remote picked a photo in its grid: the frames show it and go on from
+  // there.
+  socket.on("show_photo", (pick) => {
+    const { albumId, assetId } = pick ?? {};
+    if (typeof albumId !== "string" || typeof assetId !== "string") return;
+    console.log({ io: "show_photo", albumId, assetId });
+    socket.broadcast.emit("show_photo", { albumId, assetId });
   });
 
   socket.on("refresh", () => {

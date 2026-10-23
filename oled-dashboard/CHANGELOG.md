@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.61.2
+
+- Changed: the header lines up with the cards again on phones, instead of with the bottom navigation bar.
+
 ## 0.61.1
 
 - Changed: on phones, the space between and around cards is a little wider (8px instead of 4px).

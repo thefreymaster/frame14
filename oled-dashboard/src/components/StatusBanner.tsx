@@ -9,12 +9,13 @@ import {
 } from "../lib/navMetrics";
 import { ApplianceIndicators } from "./ApplianceIndicators";
 import { HeaderClock } from "./HeaderClock";
+import { useDesktop } from "../hooks/useDesktop";
 import { Tooltip } from "./ui/tooltip";
 
 /**
  * The header across the top of every view: the app's icon and name at the
- * left; running appliances, the connection and the time at the right. (The
- * version is on the Settings page.)
+ * left; running appliances, the connection and (on a desktop) the time at the
+ * right. (The version is on the Settings page.)
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -27,6 +28,9 @@ import { Tooltip } from "./ui/tooltip";
  */
 export function StatusBanner({ hidden = false }: { hidden?: boolean }) {
   const { connected } = useSocket();
+  // The clock only on a desktop: a phone shows its own, and the frame has
+  // the big one on Home and /clock.
+  const desktop = useDesktop();
   const StatusIcon = connected ? MdWifi : MdWifiOff;
 
   return (
@@ -71,7 +75,7 @@ export function StatusBanner({ hidden = false }: { hidden?: boolean }) {
           <StatusIcon />
         </Icon>
       </Tooltip>
-      <HeaderClock />
+      {desktop && <HeaderClock />}
     </HStack>
   );
 }

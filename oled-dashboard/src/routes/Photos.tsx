@@ -14,7 +14,7 @@ import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavVisible, toggleNavVisible } from "../lib/navVisibility";
-import { useFramedPage } from "../hooks/useFramedPage";
+import { useDesktop } from "../hooks/useDesktop";
 import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
 import { EmptyState } from "../components/ui/empty-state";
 import {
@@ -114,7 +114,8 @@ export function Photos() {
   const activeAlbumId = config?.defaultAlbumId ?? null;
   const [currentIndex, setCurrentIndex] = useState(0);
   const navVisible = useNavVisible();
-  const framed = useFramedPage();
+  // Framed (a card in the page) on a desktop; full-screen elsewhere.
+  const framed = useDesktop();
 
   const { data: album, isPending: photosPending } =
     useAlbumPhotos(activeAlbumId);

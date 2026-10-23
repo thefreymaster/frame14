@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.57.2
+
+- Changed: the header clock shows only on a desktop (or a tablet held sideways that isn't the frame). Phones have their own clock, and the frame has the large one on Home and Clock.
+
 ## 0.57.1
 
 - Changed: Radar works like Photos: on a desktop it sits inside the page like a card (the same spacing around it, rounded corners, a thin border); on the frame and on phones it fills the screen edge to edge.

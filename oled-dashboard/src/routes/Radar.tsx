@@ -1,8 +1,9 @@
 import { Box } from "@chakra-ui/react";
-import { useFramedPage } from "../hooks/useFramedPage";
+import { useDesktop } from "../hooks/useDesktop";
 
 export function Radar() {
-  const framed = useFramedPage();
+  // Framed (a card in the page) on a desktop; full-screen elsewhere.
+  const framed = useDesktop();
 
   // data-page-fill gives the map the page's height even where the layout
   // scrolls (see PageTransition). Framed (a desktop), it sits inside the

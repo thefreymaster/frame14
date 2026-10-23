@@ -79,7 +79,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/lights` | `Lights` | Light + switch tiles (tap toggles, press and hold a dimmable light for brightness / white / colour); header shows how many are on + All off |
 | `/blank` | `Blank` | Pure black screen (motion off) |
 | `/photos` | `Photos` | Immich photo slideshow: full-screen on the frame and phones, a card inside the page gutter (`surface` corners, edge) on a desktop |
-| `/radar` | `Radar` | Radar view — frame-only nav item; framed like Photos on a desktop (`useFramedPage`), edge to edge elsewhere |
+| `/radar` | `Radar` | Radar view — frame-only nav item; framed like Photos on a desktop (`useDesktop`), edge to edge elsewhere |
 | `/timer` | `Timer` | Timer — frame-only nav item |
 | `/marquee` | `Marquee` | Plex now-playing: poster art filling the screen, no overlay text; auto-routed. Movies only — an episode (`tvshow`) or live TV (`video`/`channel`) never routes here and shows "movies only" if you navigate in |
 | `/football` | `Football` | Full-screen score bug + game detail; a preview before kickoff, a scoreboard during. Up all of game day (nav tab too); auto-routed on kickoff |
@@ -140,7 +140,7 @@ src/
     HomeOverview.tsx              — home overview page; builds the card map and hands it to HomeBoard, keyed by the column count (`useHomeColumns`: 4 / 2 / 1 from the media queries in lib/homeLayout)
     Lights.tsx                    — light/switch controls (entity IDs from useEntitiesConfig)
     Blank.tsx                     — black screen
-    Photos.tsx                    — Immich slideshow; `framed` (`useFramedPage`) wraps it in a `data-page-fill` gutter box with card corners
+    Photos.tsx                    — Immich slideshow; `framed` (`useDesktop`) wraps it in a `data-page-fill` gutter box with card corners
     Radar.tsx                     — radar view (frame-only); a `data-page-fill` box, framed like Photos on a desktop
     Timer.tsx                     — timer (frame-only)
     Marquee.tsx                   — Plex now-playing poster, full-bleed with no metadata overlay; movies only (`isMovie`), hides nav on mount (local only), eye button restores it
@@ -148,7 +148,7 @@ src/
     Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls when device is frame
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition; renders the StatusBanner header and the nav, and pads the page clear of both (HEADER_CLEARANCE on top; the rail or bar)
-    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: the app icon (`/favicon-96x96.png`, status-icon size) and "Frame14" at the left; running appliances, connection icon and HeaderClock at the right (the version is on /control).
+    StatusBanner.tsx              — the fixed header on every view, shown and hidden with the nav: the app icon (`/favicon-96x96.png`, status-icon size) and "Frame14" at the left; running appliances, connection icon and, on a desktop only (`useDesktop`), HeaderClock at the right (the version is on /control).
     HeaderClock.tsx               — the header's "1:45 PM", the device's time: hours and minutes as NumberFlows in a NumberFlowGroup (two-digit minutes via `minimumIntegerDigits`, tens digit `max: 5`); checks each second, re-renders only when the minute changes Full width; its row sits HEADER_TOP down, below the iPhone status-bar inset and the band iOS blurs under it
     LandscapeNav.tsx              — floating bottom bar (portrait: an opaque bar with the cards' `surface` corners, inset from the screen edges, Apple Music's tab bar without the glass; the page scrolls under it) + floating left rail (landscape: the same surface, from under the header to the bottom gap); in both, the selected entry's radius is `surface` less the border and padding, so the corners are concentric, each a Chakra Tabs list (`variant="subtle"`) whose triggers navigate on click; radar/timer hidden on non-frame devices
     PageTransition.tsx            — fade+scale animation on route mount
@@ -192,7 +192,7 @@ src/
     ui/                           — Chakra CLI snippets (close-button, color-mode, data-list, empty-state, native-select, provider, segmented-control, slider, status, switch, toaster, tooltip, toggle-tip)
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
-    useFramedPage.ts              — whether a full-bleed view (Photos, Radar) sits in the page like a card: a desktop (HOME_FOUR_COLUMN_QUERY) and not frame mode
+    useDesktop.ts                 — a desktop: HOME_FOUR_COLUMN_QUERY and not frame mode. Photos and Radar are framed like cards there, and the header shows HeaderClock
     useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s. Returns `loading` per data source (weather, climate, energy, calendar, fan, vacuum), true only until the first answer — the REST snapshot, or live socket states for every entity; energy waits for /api/energy. There is no page-wide loading state: /home renders the board at once and each card shows its own placeholder
     useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
     useEntity.ts                  — subscribes to a single HA entity via Socket.IO room

@@ -93,6 +93,30 @@ const mapForecast = (f) => ({
   windBearing: f.wind_bearing,
 });
 
+/**
+ * One weather.get_forecasts call ("hourly" or "daily"). A failing forecast
+ * costs only that list: it comes back empty, with the reason in the log.
+ */
+async function fetchForecast(entityId, type) {
+  const res = await fetch(
+    `${HA_URL}/api/services/weather/get_forecasts?return_response`,
+    {
+      method: "POST",
+      headers: WEATHER_HEADERS(HA_TOKEN),
+      body: JSON.stringify({ entity_id: entityId, type }),
+    },
+  );
+  if (!res.ok) {
+    console.warn(
+      `Home weather: ${type} get_forecasts for ${entityId} responded with ${res.status}:`,
+      (await res.text()).slice(0, 200),
+    );
+    return [];
+  }
+  const data = await res.json();
+  return data?.service_response?.[entityId]?.forecast ?? [];
+}
+
 router.get("/weather", async (_req, res) => {
   if (!HA_TOKEN) {
     res.status(503).json({ error: "HA_TOKEN not configured" });
@@ -101,21 +125,12 @@ router.get("/weather", async (_req, res) => {
   try {
     const weatherCurrent = ENTITIES.weather?.current ?? "";
     const weatherForecast = ENTITIES.weather?.forecast ?? weatherCurrent;
-    const [currentRes, forecastRes] = await Promise.all([
+    const [currentRes, hourly, daily] = await Promise.all([
       fetch(`${HA_URL}/api/states/${weatherCurrent}`, {
         headers: WEATHER_HEADERS(HA_TOKEN),
       }),
-      fetch(
-        `${HA_URL}/api/services/weather/get_forecasts?return_response`,
-        {
-          method: "POST",
-          headers: WEATHER_HEADERS(HA_TOKEN),
-          body: JSON.stringify({
-            entity_id: weatherForecast,
-            type: "hourly",
-          }),
-        },
-      ),
+      fetchForecast(weatherForecast, "hourly"),
+      fetchForecast(weatherForecast, "daily"),
     ]);
     if (!currentRes.ok) {
       res
@@ -125,24 +140,16 @@ router.get("/weather", async (_req, res) => {
     }
     const current = await currentRes.json();
     const attrs = current.attributes ?? {};
-    // A failing forecast entity costs only the forecast: the current
-    // conditions still go out.
-    let forecastList = [];
-    if (forecastRes.ok) {
-      const forecastData = await forecastRes.json();
-      forecastList =
-        forecastData?.service_response?.[weatherForecast]?.forecast ?? [];
-    } else {
-      console.warn(
-        `Home weather: get_forecasts for ${weatherForecast} responded with ${forecastRes.status}:`,
-        (await forecastRes.text()).slice(0, 200),
-      );
-    }
+    // The forecasts failing costs only the forecasts: the current conditions
+    // still go out.
     res.json({
       state: current.state,
       temperature: attrs.temperature,
+      temperatureUnit: attrs.temperature_unit,
       humidity: attrs.humidity,
-      forecast: forecastList.slice(0, 8).map(mapForecast),
+      forecast: hourly.slice(0, 8).map(mapForecast),
+      // Today only, for its high and low.
+      forecastDaily: daily.slice(0, 1).map(mapForecast),
     });
   } catch (err) {
     console.error("Home weather fetch error:", err);

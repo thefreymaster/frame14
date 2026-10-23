@@ -9,26 +9,20 @@
  */
 export const PAGE_GUTTER = "var(--chakra-spacing-gutter)";
 
-/** Height of the floating header bar. */
+/** Height of the status header's row (below the space HEADER_TOP leaves). */
 export const HEADER_HEIGHT = "2.75rem";
 
 /**
- * The status-bar inset plus a gap of up to 1.25rem under it. An iPhone
- * home-screen app blurs a band a little deeper than the inset, which smeared
- * the header's icons; the gap clears it. min() keeps the gap at zero where
- * there is no inset (the frame, desktops, iPhone landscape). StatusBanner
- * masks this band so the page doesn't scroll under the clock and notch.
+ * Space above the header's row: the status-bar inset, plus a gap of up to
+ * 1.25rem under it. An iPhone home-screen app blurs a band a little deeper than
+ * the inset, which smeared the header's icons and version; the gap clears it.
+ * min() keeps the gap at zero where there is no inset (the frame, desktops,
+ * iPhone landscape).
  */
-export const STATUS_BAR_CLEARANCE =
+export const HEADER_TOP =
   "calc(env(safe-area-inset-top, 0px) + min(1.25rem, env(safe-area-inset-top, 0px)))";
 
-/**
- * Screen top to the floating header bar's top: the status-bar band, then the
- * page gutter, so the bar floats like the cards and navs.
- */
-export const HEADER_TOP = `calc(${STATUS_BAR_CLEARANCE} + ${PAGE_GUTTER})`;
-
-/** Distance from the top of the screen to the bottom of the header bar. */
+/** Distance from the top of the screen to the bottom of the header. */
 export const HEADER_CLEARANCE = `calc(${HEADER_HEIGHT} + ${HEADER_TOP})`;
 
 /** The header's status icons (connection, running appliances). */

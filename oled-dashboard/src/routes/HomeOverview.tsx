@@ -11,6 +11,8 @@ import { FanSection } from "../components/FanSection";
 import { RadarSection } from "../components/RadarSection";
 import { HomeHeader } from "../components/HomeHeader";
 import { HomeWeatherCard } from "../components/HomeWeatherCard";
+import { HomeForecastCard } from "../components/HomeForecastCard";
+import { useDesktop } from "../hooks/useDesktop";
 import { CalendarSection } from "../components/CalendarSection";
 import { StatusStrip } from "../components/StatusStrip";
 import { HomeBoard } from "../components/HomeBoard";
@@ -65,6 +67,7 @@ export function HomeOverview() {
   // every card that is ready render straight away.
   const { data, isError, loading } = useHomeData();
   const columns = useHomeColumns();
+  const desktop = useDesktop();
 
   if (isError || !data) {
     return (
@@ -80,10 +83,17 @@ export function HomeOverview() {
 
   const cards: Record<HomeCardId, React.ReactNode> = {
     // A phone (one column) gets the compact weather card: it has a clock of
-    // its own, and the full card's hero figures fill its screen.
+    // its own, and the full card's hero figures fill its screen. A desktop
+    // has the clock in the header, so its card is the forecast instead.
     header:
       columns === 1 ? (
         <HomeWeatherCard
+          internet={data.internet}
+          weather={data.weather}
+          loading={loading.weather}
+        />
+      ) : desktop ? (
+        <HomeForecastCard
           internet={data.internet}
           weather={data.weather}
           loading={loading.weather}

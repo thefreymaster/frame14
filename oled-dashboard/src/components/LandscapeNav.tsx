@@ -160,7 +160,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   // Navigation happens on click rather than onValueChange, so tapping the tab
   // you are already on still re-sends it to the other frames, as before.
   // Both navs float, and the selected entry is a shade above the nav's
-  // gray.800, its corners concentric with the nav's (ENTRY_RADIUS). In the
+  // `bg.surface`, its corners concentric with the nav's (ENTRY_RADIUS). In the
   // portrait bar entries fill its height, and on a phone the labels drop to
   // xs, Apple Music's small captions, so a sixth entry (game day) still fits
   // inside the inset bar.

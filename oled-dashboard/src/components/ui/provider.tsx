@@ -22,9 +22,11 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * CloseButton, so text buttons are pills and icon buttons are circles;
  * segmented controls (a row of buttons) get the same pill track and indicator.
  *
- * Cards have `surface` corners (0.75rem) and a 1px `border.surface` edge, both
- * floating navs' too; the corners replace the Card recipe's `l3`. Tiles inside a card set Chakra's smaller `sm`
- * themselves, so none is rounder than its card.
+ * Cards have the `bg.surface` colour (#23242b in dark mode), `surface`
+ * corners (0.75rem) and a 1px `border.surface` edge, both floating navs' too;
+ * the corners replace the Card recipe's `l3`. Tiles inside a card set Chakra's
+ * smaller `sm` themselves, so none is rounder than its card (the thermostat
+ * tiles excepted).
  *
  * Dialog backdrops blur the page behind them as well as dimming it.
  *
@@ -48,6 +50,14 @@ const system = createSystem(
       },
       semanticTokens: {
         colors: {
+          bg: {
+            // The colour of every card and both floating navs: #23242b in
+            // dark mode (the user's pick, a touch darker and cooler than
+            // gray.800), Chakra's own panel white in light mode.
+            surface: {
+              value: { _light: "{colors.bg.panel}", _dark: "#23242b" },
+            },
+          },
           border: {
             // The 1px edge every card and both floating navs share.
             surface: {

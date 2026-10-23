@@ -102,9 +102,9 @@ export const openApiDocument = {
       get: {
         tags: ["Weather"],
         operationId: "getHomeWeather",
-        summary: "Get current weather and hourly forecast for HomeOverview",
+        summary: "Get current weather and hourly + daily forecasts for HomeOverview",
         description:
-          "Fetches the configured weather entity from Home Assistant plus an hourly forecast via the weather.get_forecasts service. Returns current state, temperature, humidity, and the next 8 hourly forecast periods.",
+          "Fetches the configured weather entity from Home Assistant plus its hourly and daily forecasts via the weather.get_forecasts service. Returns current state, temperature and unit, humidity, the next 8 hourly periods and today's daily period (its high and low). A failing forecast call leaves only that list empty.",
         responses: {
           200: {
             description: "Current weather and hourly forecast.",
@@ -604,10 +604,16 @@ export const openApiDocument = {
         properties: {
           state: { type: "string", example: "partlycloudy" },
           temperature: { type: "number", example: 68 },
+          temperatureUnit: { type: "string", example: "°F" },
           humidity: { type: "number", example: 55 },
           forecast: {
             type: "array",
-            description: "Hourly forecast (up to 8 periods).",
+            description: "Hourly forecast (up to 8 periods, from the current hour).",
+            items: { $ref: "#/components/schemas/ForecastPeriod" },
+          },
+          forecastDaily: {
+            type: "array",
+            description: "Today's daily period: temperature is the high, templow the low.",
             items: { $ref: "#/components/schemas/ForecastPeriod" },
           },
         },

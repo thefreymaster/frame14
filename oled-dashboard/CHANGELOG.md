@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.62.0
+
+- Added: on a desktop, Home's first card is a weather card in place of the big clock (the header already shows the time): the temperature and conditions now, today's high and low, and the next 8 hours with the chance of rain.
+- Changed: cards and the navigation are a slightly darker, cooler grey in dark mode (#23242b).
+- Changed: the header is attached to the top of the screen again, on the page's own black (or white), as before 0.61.0, but without the line along its bottom edge. The mic stays in it.
+
 ## 0.61.2
 
 - Changed: the header lines up with the cards again on phones, instead of with the bottom navigation bar.

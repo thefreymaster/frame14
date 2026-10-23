@@ -18,8 +18,13 @@ export interface HomeForecastPeriod {
 export interface HomeWeather {
   state: string;
   temperature: number | null;
+  /** "°F" or "°C", as Home Assistant reports it. */
+  temperatureUnit: string | null;
   humidity: number | null;
+  /** The next 8 hours, from the current one. */
   forecast: HomeForecastPeriod[];
+  /** Today's daily period: temperature is the high, templow the low. */
+  forecastDaily: HomeForecastPeriod[];
 }
 
 export interface HomeClimate {
@@ -135,8 +140,10 @@ interface CalendarResponse {
 interface WeatherResponse {
   state: string;
   temperature?: number;
+  temperatureUnit?: string;
   humidity?: number;
   forecast: HomeForecastPeriod[];
+  forecastDaily?: HomeForecastPeriod[];
 }
 
 interface ClimateAttributes {
@@ -163,6 +170,7 @@ interface FanAttributes {
 
 interface WeatherAttributes {
   temperature?: number | string | null;
+  temperature_unit?: string | null;
   humidity?: number | string | null;
 }
 
@@ -523,7 +531,12 @@ export function useHomeData() {
             parseFloatOrNull(liveCurrentWeather?.attributes?.humidity) ??
             wx?.humidity ??
             null,
+          temperatureUnit:
+            liveCurrentWeather?.attributes?.temperature_unit ??
+            wx?.temperatureUnit ??
+            null,
           forecast: wx?.forecast ?? [],
+          forecastDaily: wx?.forecastDaily ?? [],
         };
 
   const fallbackClimate = (climateQuery.data ?? []).map(mapClimateResponse);

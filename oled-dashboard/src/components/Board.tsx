@@ -55,11 +55,12 @@ function writeOpen(key: string | undefined, open: boolean) {
  * Its 1px edge is the theme's `border.surface` (gray.700 in dark mode), the
  * same as the floating navs'.
  *
- * In dark mode the card is gray.800 rather than the Card's `bg.panel`
- * (gray.950): on the frame's matte NXTPAPER screen gray.950 sat so close to
- * the page that the cards disappeared. gray.800 is also what Chakra's
- * `bg.emphasized`, `border` and the gray palette's `muted` / `border` are in
- * dark mode, so inside the card those step up one shade (DARK_RAISED) —
+ * Its colour is the theme's `bg.surface`: #23242b in dark mode rather than the
+ * Card's `bg.panel` (gray.950), which on the frame's matte NXTPAPER screen sat
+ * so close to the page that the cards disappeared. That's about gray.800,
+ * which is what Chakra's `bg.emphasized`, `border` and the gray palette's
+ * `muted` / `border` are in dark mode, so inside the card those step up one
+ * shade (DARK_RAISED) —
  * otherwise skeleton bars, switch tracks, outline buttons and field borders
  * vanish into it. Rows and tiles inside a card stay `bg.muted` / `bg.panel`
  * and read as wells.
@@ -92,8 +93,8 @@ export const Board = ({
    */
   fill?: boolean;
   /**
-   * The card's colour in place of gray.800 / `bg.panel`, e.g. the page's own
-   * `bg` for the framed clock. DARK_RAISED is for gray.800, so it's dropped.
+   * The card's colour in place of `bg.surface`, e.g. the page's own `bg` for
+   * the framed clock. DARK_RAISED is for `bg.surface`, so it's dropped.
    */
   bg?: string;
 }) => {
@@ -123,7 +124,7 @@ export const Board = ({
   return (
     <Card.Root
       size={{ base: "sm", md: "md" }}
-      bg={bg ?? { _dark: "gray.800" }}
+      bg={bg ?? "bg.surface"}
       borderColor="border.surface"
       css={{
         _dark: bg ? undefined : DARK_RAISED,

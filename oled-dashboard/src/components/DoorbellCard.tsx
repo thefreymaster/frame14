@@ -7,6 +7,7 @@ import { useEntity, type HAState } from "../hooks/useEntity";
 import { socket } from "../lib/socket";
 import { useDesktop } from "../hooks/useDesktop";
 import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics";
+import { CameraVideo } from "./CameraVideo";
 
 /**
  * Front-door card.
@@ -16,10 +17,12 @@ import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics";
  * hides itself. The sensor dropping back to off does not cut it short — the
  * point is to see who walked up, which takes longer than the sensor stays on.
  *
- * The feed only exists while the card is up: unmounting the <img> ends the
- * proxied MJPEG request, which is what stops HA generating frames.
+ * The picture is Home Assistant's live HLS stream (CameraVideo), which only
+ * exists while the card is up: unmounting the video stops its requests. (HA's
+ * MJPEG stream is built from stills, which an RTSP-only Generic camera
+ * doesn't have, so it isn't used.)
  *
- * When the stream won't render it falls back to stills, one at a time: the
+ * When the live stream won't start it falls back to stills, one at a time: the
  * next is asked for SNAPSHOT_INTERVAL_MS after the last one loads or fails
  * (a failing HA still takes ~5s, and overlapping requests piled up on HA). If
  * no picture has arrived and a still has failed, the box says the camera is
@@ -47,7 +50,7 @@ export function DoorbellCard() {
   // Each showing gets its own id so the browser opens a fresh stream request
   // instead of reusing the finished one from the last detection.
   const [showId, setShowId] = useState(0);
-  const [mode, setMode] = useState<"stream" | "snapshot">("stream");
+  const [mode, setMode] = useState<"live" | "snapshot">("live");
   const [tick, setTick] = useState(0);
   // Whether any picture has shown this time, and whether a still has failed.
   const [loaded, setLoaded] = useState(false);
@@ -75,7 +78,7 @@ export function DoorbellCard() {
 
       if (state.state !== "on" || prev === "on") return;
 
-      setMode("stream");
+      setMode("live");
       setLoaded(false);
       setStillFailed(false);
       setShowId((n) => n + 1);
@@ -107,11 +110,6 @@ export function DoorbellCard() {
   }, []);
 
   if (!visible || !cameraId) return null;
-
-  const src =
-    mode === "stream"
-      ? `/api/camera/stream?v=${showId}`
-      : `/api/camera/snapshot?t=${tick}`;
 
   const label = camera?.attributes?.friendly_name || "Front Door";
 
@@ -154,29 +152,33 @@ export function DoorbellCard() {
             hide();
           }}
         />
-        <Image
-          key={src}
-          src={src}
-          // The card's title names the camera; a failed still shows nothing.
-          alt=""
-          visibility={!loaded && stillFailed ? "hidden" : undefined}
-          onLoad={() => {
-            setLoaded(true);
-            setStillFailed(false);
-            if (mode === "snapshot") nextStill();
-          }}
-          onError={() => {
-            if (mode === "stream") {
-              setMode("snapshot");
-              return;
-            }
-            setStillFailed(true);
-            nextStill();
-          }}
-          width="100%"
-          height="100%"
-          fit="cover"
-        />
+        {mode === "live" ? (
+          <CameraVideo
+            key={showId}
+            onPlaying={() => setLoaded(true)}
+            onFail={() => setMode("snapshot")}
+          />
+        ) : (
+          <Image
+            key={tick}
+            src={`/api/camera/snapshot?t=${tick}`}
+            // The card's title names the camera; a failed still shows nothing.
+            alt=""
+            visibility={!loaded && stillFailed ? "hidden" : undefined}
+            onLoad={() => {
+              setLoaded(true);
+              setStillFailed(false);
+              nextStill();
+            }}
+            onError={() => {
+              setStillFailed(true);
+              nextStill();
+            }}
+            width="100%"
+            height="100%"
+            fit="cover"
+          />
+        )}
         {!loaded && stillFailed && (
           <VStack
             position="absolute"

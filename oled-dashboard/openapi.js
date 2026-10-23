@@ -212,6 +212,37 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/camera/hls": {
+      get: {
+        tags: ["Camera"],
+        operationId: "startCameraHls",
+        summary: "Start Home Assistant's live HLS stream of the configured camera",
+        description:
+          "Asks Home Assistant (WebSocket camera/stream, format hls) to start or join the camera's live stream and returns the master playlist's URL under this server's HLS proxy. Works for an RTSP camera whose stills (and so the MJPEG stream) don't. The client supplies no entity ID.",
+        responses: {
+          200: { description: "The master playlist to play.", content: { "application/json": { schema: { type: "object", properties: { url: { type: "string", example: "/api/camera/hls/0123abcd/master_playlist.m3u8" } } } } } },
+          502: { description: "Home Assistant could not start the stream.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "No camera entity configured, or HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/camera/hls/{token}/{file}": {
+      get: {
+        tags: ["Camera"],
+        operationId: "getCameraHlsFile",
+        summary: "Proxy one file of Home Assistant's HLS stream",
+        description:
+          "Forwards a playlist (master_playlist.m3u8, playlist.m3u8), the init segment (init.mp4) or a segment (segment/<n>.m4s, segment/<n>.<part>.m4s) of the stream started by /api/camera/hls. Only those files are served; only the LL-HLS _HLS_msn and _HLS_part query parameters are passed on. The token is the stream's own credential and no HA bearer token is sent.",
+        parameters: [
+          { name: "token", in: "path", required: true, schema: { type: "string" } },
+          { name: "file", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "The playlist or media segment, as Home Assistant served it." },
+          404: { description: "Not one of the stream's files." },
+        },
+      },
+    },
     "/api/camera/snapshot": {
       get: {
         tags: ["Camera"],

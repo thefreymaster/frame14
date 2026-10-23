@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.59.0
+
+- Added: the doorbell pop-up plays the camera's live video through Home Assistant's own live stream (the same one Home Assistant's camera view plays), instead of the still-picture stream, which an RTSP camera without a still-image URL can't produce. If the live stream can't start, it falls back to still pictures and then "Camera unavailable".
+
 ## 0.58.1
 
 - Fixed: when the doorbell camera can't be shown, the pop-up says "Camera unavailable" on a black picture instead of an empty (white in dark mode) box with a broken-image icon. It clears as soon as a picture arrives.

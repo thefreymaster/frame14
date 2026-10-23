@@ -159,6 +159,8 @@ src/
     WeatherForecast.tsx           — hourly forecast strip of Buttons; each opens ForecastDetailModal
     PhotoSlide.tsx                — full-bleed crossfade image slide
     MarqueeArt.tsx                — full-bleed poster, backgroundSize cover (absolute, not fixed — PageTransition leaves a transform on an ancestor)
+    DoorbellCard.tsx              — front-door pop-up for 30s on the person sensor's rising edge (bottom right; above the lights strip on a desktop): CameraVideo, falling back to stills one at a time (/api/camera/snapshot, next asked after the last loads or fails), then a "Camera unavailable" overlay when nothing has shown
+    CameraVideo.tsx               — the camera's live HLS: GET /api/camera/hls, then hls.js (dynamic import; MSE, lowLatencyMode) or native HLS; onPlaying / onFail (once: start error, fatal hls error, <video> error, or not playing within 15s)
     LightsSection.tsx             — a group of LightControl tiles (2 across on a phone, 3 on the frame / tablets, 4 in landscape) and the one LightDialog they open
     LightControl.tsx              — single light/switch tile (outline Card as a button): a round badge filled with the light's own rgb_color and the status ("80%" / "On" / "Off") across the top, the name below; an on tile is washed with its colour and filled from the left to the brightness. Tap toggles; press and hold on a dimmable light opens LightDialog
     LightDialog.tsx               — a dimmable light's controls (stock Dialog), laid out like the fan's: bulb in the light's colour, % and power Switch beside a vertical brightness Slider filled in the light's colour (sends on release); white presets if it does colour temperature, colour presets if it does colour
@@ -254,6 +256,7 @@ routes/
   entities.js     — GET /api/entities (serves ENTITIES object to frontend)
   photos.js       — GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail
   marquee.js      — GET /api/marquee/art (full-res poster from Plex via media_content_id when PLEX_URL/PLEX_TOKEN are set; falls back to proxying the media player's entity_picture from the HA state cache)
+  camera.js       — GET /api/camera/hls (WebSocket camera/stream, format hls → our proxy URL), GET /api/camera/hls/:token/*file (HA's HLS files only: playlists, init.mp4, segment/<n>[.<part>].m4s; only _HLS_msn/_HLS_part forwarded; no bearer), GET /api/camera/snapshot (camera_proxy), GET /api/camera/stream (camera_proxy_stream MJPEG, unused by the client: HA builds it from stills, which an RTSP-only Generic camera lacks)
   assist.js       — GET /api/assist/config, GET /api/assist/tts/:id, plus attachAssistSocket() for the voice session
   views.js        — GET /api/change/:view (broadcasts change_view via io from app.locals)
   videos.js       — GET /api/videos/list, GET /videos/:file
@@ -277,6 +280,7 @@ routes/
 - `GET /api/photos/albums/:albumId` — assets in an album (images only)
 - `GET /api/photos/asset/:assetId/thumbnail` — proxies Immich thumbnail (hides API key)
 - `GET /api/marquee/art?v=<cachekey>` — poster art of the configured media player. With `PLEX_URL`/`PLEX_TOKEN` set it renders the poster at 1280x1920 through Plex's transcoder, keyed on the `media_content_id` (Plex ratingKey) from the HA state cache; otherwise it proxies the entity's `entity_picture`. The client never supplies a URL; `v` is ignored and exists only for cache busting
+- `GET /api/camera/hls` — starts/joins HA's live HLS stream of the configured camera and returns the master playlist under `/api/camera/hls/<token>/…`, which proxies HA's `/api/hls/<token>/…` files (allow-listed) for the browser
 - `GET /api/assist/config` — resolves the configured Assist pipeline to a name + engines, or reports why voice is unavailable (`unknown_pipeline` / `ha_unreachable`); cached 60s
 - `GET /api/assist/tts/:id` — proxies one reply's Piper audio from HA so the panel plays it from this origin (mixed content otherwise). The id is minted server-side; the client never supplies a URL
 - `GET /api/change/:view` — broadcasts `change_view` to all Socket.IO clients

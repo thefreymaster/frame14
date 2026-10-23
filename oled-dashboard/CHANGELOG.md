@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.63.2
+
+- Changed: the mic button in the header moved from beside the Frame14 name to the right, after the status icons. On a desktop it sits just before the time.
+
 ## 0.63.1
 
 - Fixed: a phone in remote mode no longer jumps to another view when the frames change view. That includes the frame waking on kitchen motion (which kept pulling the phone to Photos), a game kicking off, a movie starting, or another device's navigation. The phone stays wherever you are.

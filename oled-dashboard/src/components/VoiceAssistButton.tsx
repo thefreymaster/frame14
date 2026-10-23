@@ -4,8 +4,9 @@ import type { VoiceState } from "../lib/voiceAssist";
 
 /**
  * The mic button, on every view: you walk up to the panel and talk. A plain
- * square-cornered button beside the name in StatusBanner, on every device —
- * Chakra's stock button radius (`l2`), not the theme's pill.
+ * square-cornered button at the right of StatusBanner, after the status icons
+ * (before the clock on a desktop), on every device — Chakra's stock button
+ * radius (`l2`), not the theme's pill.
  */
 export function VoiceAssistButton({
   onTap,

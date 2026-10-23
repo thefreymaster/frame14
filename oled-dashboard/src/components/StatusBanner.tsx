@@ -13,9 +13,9 @@ import { useDesktop } from "../hooks/useDesktop";
 import { Tooltip } from "./ui/tooltip";
 
 /**
- * The header across the top of every view: the app's icon, name and mic at
- * the left; running appliances, the connection and (on a desktop) the time at
- * the right. (The version is on the Settings page.)
+ * The header across the top of every view: the app's icon and name at the
+ * left; running appliances, the connection, the mic and (on a desktop) the
+ * time at the right. (The version is on the Settings page.)
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -33,7 +33,7 @@ export function StatusBanner({
   voice,
 }: {
   hidden?: boolean;
-  /** The mic, beside the name. */
+  /** The mic, after the status icons (before the clock on a desktop). */
   voice?: React.ReactNode;
 }) {
   const { connected } = useSocket();
@@ -70,7 +70,6 @@ export function StatusBanner({
         <Text textStyle={{ base: "md", md: "lg" }} fontWeight="semibold">
           Frame14
         </Text>
-        {voice}
       </HStack>
       <Spacer />
       <ApplianceIndicators />
@@ -84,6 +83,7 @@ export function StatusBanner({
           <StatusIcon />
         </Icon>
       </Tooltip>
+      {voice}
       {desktop && <HeaderClock />}
     </HStack>
   );

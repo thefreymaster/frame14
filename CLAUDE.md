@@ -87,7 +87,7 @@ In the HA addon, these are configured via the addon's Configuration tab (`light_
 | `/printer` | `Printer` | The 3D printer: status badge (and HMS alert) in the header, the camera live (MJPEG via /api/printer/camera/stream), the job (model thumbnail, name, progress, layer, time left, finish time; Pause/Resume and a confirmed Stop while one runs) and the temperatures. Stacked in portrait, camera left in landscape. Entities derived from the configured status sensor (lib/printerEntities). Offered on remotes but off in their nav until turned on |
 | `/vacuum` | `Vacuum` | The robot vacuums, one VacuumPanel each: state and controls (battery, this clean's progress, area / time / last run, suction, Clean·Pause·Resume / Dock / Locate), the map (an image entity via /api/home/vacuum/map/:id) and the wear parts. Core Roborock naming (lib/vacuum). Map left in landscape. Offered on remotes but off in their nav until turned on |
 | `/football` | `Football` | Full-screen score bug + game detail; a preview before kickoff, a scoreboard during. Up all of game day (nav tab too); auto-routed on kickoff |
-| `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote); the Navigation card (this device's nav: drag to reorder, show / hide; Home stays first, Settings stays shown) |
+| `/control` | `Control` | Settings + remote control; device mode toggle (frame vs remote); the Navigation card (this device's nav: drag to reorder, show / hide; Home stays first, Settings stays shown). On a phone (one column) the sections sit in tabs: Views, Display (+ Album), Device (Navigation + Voice) |
 
 ## UI system (Chakra UI v3, native theme)
 
@@ -152,7 +152,7 @@ src/
     Printer.tsx                   — /printer: PageHeader with the status Badge, then PrinterCameraCard beside (landscape) or above (portrait) PrinterJobCard + PrinterTempsCard; an EmptyState without a configured printer
     Vacuum.tsx                    — /vacuum: PageHeader, then a VacuumPanel per configured vacuum (maps from useVacuumMaps)
     Football.tsx                  — live game page; renders every game in the route window, "no game in session" when empty (auto-routed, so it never decides whether to show itself)
-    Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls (the Views grid, which also puts the frames on Printer or Vacuum) when device is frame; NavLayoutBoard (this device's nav order and visibility) after Display
+    Control.tsx                   — settings + remote; device mode toggle (frame vs remote), hides remote controls (the Views grid, which also puts the frames on Printer or Vacuum) when device is frame; NavLayoutBoard (this device's nav order and visibility) after Display. On a phone (HOME_ONE_COLUMN_QUERY, measured with `ssr: false` so there is no flash of the long page) the boards go in Chakra Tabs (`line`, fitted): Views (absent in frame mode), Display + Album, Device (Navigation + Voice); wider screens keep the one page
   components/
     Layout.tsx                    — wraps Outlet with SocketViewListener + PageTransition; renders the StatusBanner header and the nav, and pads the page clear of both (HEADER_CLEARANCE on top; the rail or bar) On a desktop (`useDesktop`) it also renders LightStrip and pads the page bottom by LIGHT_STRIP_CLEARANCE. The mic (VoiceAssistButton) goes into StatusBanner's `voice` slot on every device
     StatusBanner.tsx              — the header on every view, shown and hidden with the nav: fixed and full width, the page's own `bg` with no edge (attached, not floating — the user rejected the 0.61 floating bar), running up through the iPhone status-bar inset with its row HEADER_TOP down; the app icon (`/favicon-96x96.png`, status-icon size) and "Frame14" at the left; running appliances, connection icon, the `voice` slot (the mic) and, on a desktop only (`useDesktop`), HeaderClock at the right (the version is on /control)
@@ -186,7 +186,10 @@ src/
     LightControl.tsx              — single light/switch tile (outline Card as a button): a round badge filled with the light's own rgb_color and the status ("80%" / "On" / "Off") across the top, the name below; an on tile is washed with its colour and filled from the left to the brightness. Tap toggles; press and hold on a dimmable light opens LightDialog
     LightDialog.tsx               — a dimmable light's controls (stock Dialog), laid out like the fan's: bulb in the light's colour, % and power Switch beside a vertical brightness Slider filled in the light's colour (sends on release); white presets if it does colour temperature, colour presets if it does colour
     LightsAllOffButton.tsx        — the Lights page header's action: turns off every light/switch that's on; spins until HA reports them off (10s cap)
-    EnergySection.tsx             — energy card (coverage Progress, grid Badge) + detail modal (PanelDialog, Stats)
+    EnergySection.tsx             — energy card (coverage Progress, grid Badge); its body opens EnergyDialog
+    EnergyDialog.tsx              — the energy detail (PanelDialog): Now (PowerFlow), Today (the coverage figure, TodayPowerChart, and the day's totals as split bars: produced = used at home + sent to grid, used = from solar + from grid). The totals are /api/energy's; only the self-used share comes from /api/energy/today (useEnergyToday, fetched while open), so each bar's parts add up to its total
+    PowerFlow.tsx                 — Solar → Home → Grid (exporting) or Solar → Home ← Grid (importing) as round nodes joined by wires of moving dots (emotion keyframes, stopped under reduced motion) in the flow's colour; an idle wire is a hairline
+    TodayPowerChart.tsx           — today's power, midnight to midnight: solar line + 12% wash, home line, whole-kW gridlines, ending at the live values. The SVG is stretched (`preserveAspectRatio="none"`, non-scaling strokes); dots, the hairline and labels are HTML over it. The legend is the readout: pointer, drag (touch-action pan-y keeps vertical scroll) or arrow keys show a quarter hour's values; otherwise it names the lines and the solar peak
     PrinterSection.tsx            — 3D printer card (Progress) + click-to-open detail modal (PanelDialog: temps, layers, ETA, filament as Stats)
     PanelDialog.tsx               — shell of the detail modals: a stock Chakra Dialog with title, body and close button. `scrollBehavior="inside"` (a tall panel scrolls its body; the title and close stay put) and the positioner padded by the safe-area insets plus the gutter, content `maxH="100%"`: on an iPhone a full-height panel had its close button under the status bar, with no outside left to tap
     ForecastDetailModal.tsx       — one forecast period as a PanelDialog of Stats
@@ -228,6 +231,7 @@ src/
     useEntity.ts                  — subscribes to a single HA entity via Socket.IO room
     useLiveGame.ts                — tracked games worth showing now; `useGames(window)` takes the window predicate, `useLiveGame()` is the route's tighter one. Ticks every 60s so windows open/close on the clock
     useEnergy.ts                  — fetches /api/energy, refetches every 5min
+    useEnergyToday.ts             — fetches /api/energy/today while enabled (the energy dialog open), refetches every 5min
     useThemeMode.ts               — reads/writes theme preference (auto/bright/dark), syncs via socket
     useScreenType.ts              — fetches /api for screenType field ("oled" | "lcd")
     useImmichAlbums.ts            — fetches /api/photos/albums
@@ -263,6 +267,7 @@ src/
     hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
     forecast.ts                   — RAIN_SHOWN_FROM (20%: rain chances below aren't shown) and `roundTemp`, shared by the hourly and daily forecasts
+    energy.ts                     — the energy card and dialog's helpers (fmtW, fmtKwh, coverage, grid, GRID_ACTIVE_THRESHOLD) and ENERGY_COLORS / ENERGY_VARS: solar yellow.500, export green.600, import orange.600, home fg.muted, the same in both modes (picked with the dataviz validator: a darker yellow loses its colour-blind separation from the green and orange)
     weatherIcons.ts               — HA weather condition → react-icons element (day/night) and → words (`conditionLabel`)
     plexMedia.ts                  — Plex media_player attribute helpers: artUrl (cache-busted proxy URL), title/subtitle, elapsed + progress extrapolation, isMovie (the marquee's content-type gate, mirrored by the media watcher in ha-socket.js)
     teamTracker.ts                — the TeamTracker game model shared by the home card, /football and its nav item: attribute types, `sides()` (away-first split), `stateLabel()`, and the two visibility windows — `inWindow` (card: rolling 24h pre / 6h post) and `inRouteWindow` (route: the whole local day of the game, keyed on kickoff)
@@ -290,7 +295,7 @@ routes/
   weather.js      — GET /api/weather (entity IDs from entities.js)
   home.js         — GET /api/home/weather, GET /api/home/calendar
   climate.js      — GET /api/home/climate (fetches HA states for ENTITIES.climate array)
-  energy.js       — GET /api/energy, /api/energy/monthly, /api/energy/yearly (entity IDs from entities.js)
+  energy.js       — GET /api/energy, /api/energy/today, /api/energy/monthly, /api/energy/yearly (entity IDs from entities.js)
   vacuum.js       — GET /api/home/vacuum (fetches HA states for ENTITIES.vacuums array, each with its maps from the state cache), GET /api/home/vacuum/map/:entityId
   printer.js      — GET /api/printer/camera/stream, GET /api/printer/cover
   entities.js     — GET /api/entities (serves ENTITIES object to frontend)
@@ -316,6 +321,7 @@ routes/
 - `GET /api/printer/camera/stream` — the printer camera's MJPEG (HA camera_proxy_stream of `camera.<printer>_camera`); `GET /api/printer/cover` — the job's model thumbnail (the cover image entity). Both derive the entity from the configured printer, never from the client
 - `GET /api/home/calendar` — today + tomorrow calendar events from all HA calendars
 - `GET /api/energy` — solar production/consumption from HA (entity IDs from `ENTITIES.energy`). Today's kWh totals are the change in the lifetime meters since the end of yesterday when `lifetimeProduction`/`lifetimeConsumption` are set — the inverter's own "today" sensors drift and reset on the inverter's clock, so they are only the fallback
+- `GET /api/energy/today` — today's solar production and home consumption in quarter hours (means of HA's 5-minute statistics, requested in W whatever the sensors' unit), plus `selfConsumed`: kWh of solar the house used itself, the smaller of the two in each 5-minute slot
 - `GET /api/energy/monthly?month=YYYY-MM` — daily production/consumption + running totals for a month (HA long-term statistics; each day is the difference between end-of-day lifetime readings, which the statistics `change` type cannot be used for — counter resets corrupt it); defaults to current month
 - `GET /api/energy/yearly?year=YYYY` — monthly production/consumption + running totals for a year (daily stats summed per month); defaults to current year
 - `GET /api/photos/config` — returns `{ defaultAlbumId }` from config

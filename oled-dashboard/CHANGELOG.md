@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.66.0
+
+- Changed: the energy detail (tap the Energy card on Home) is redesigned. "Now" shows where the power is going: solar into the house, and the rest out to the grid, or the grid making up the difference, with moving dots on each line in the direction it flows. "Today" draws the day's solar and home use as a chart, with the day's solar peak; drag across it (or point at it) to read any quarter hour. Under the chart, what the panels produced is split into what the house used and what went to the grid, and what the house used into what came from solar and what came from the grid.
+- Added: `/api/energy/today`, today's solar and home power in quarter hours (from Home Assistant's 5-minute statistics) and how much of the day's solar the house used itself.
+- Changed: on a phone, Settings puts its sections in tabs: Views, Display (theme, navigation, refresh and the album) and Device (this phone's navigation and voice). The frame, tablets and desktop browsers keep the single page.
+- No add-on options were added or changed: the chart uses the existing current power entities.
+
 ## 0.65.1
 
 - Fixed: on an iPhone, the forecast dialog's close button sat under the status bar and couldn't be tapped, so the dialog couldn't be closed. Dialogs now keep clear of the status bar and the home indicator, and a dialog taller than the screen scrolls its contents while the title and close button stay in place. The same applies to the energy and printer details.

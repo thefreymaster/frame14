@@ -9,7 +9,9 @@ import {
   IconButton,
   SimpleGrid,
   Stack,
+  Tabs,
   Text,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import { MdSkipNext, MdRefresh, MdRadar, MdElectricBolt } from "react-icons/md";
 import {
@@ -22,6 +24,9 @@ import {
   IoOptionsOutline,
   IoAmericanFootballOutline,
   IoAmericanFootball,
+  IoGridOutline,
+  IoContrastOutline,
+  IoPhonePortraitOutline,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -36,6 +41,7 @@ import { useSocket } from "../hooks/useSocket";
 import { useVersion } from "../hooks/useVersion";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
+import { HOME_ONE_COLUMN_QUERY } from "../lib/homeLayout";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
 import type { ThemeModePreference } from "../lib/themeMode";
@@ -126,6 +132,17 @@ function nextPhoto() {
   socket.emit("next_photo");
 }
 
+/**
+ * The phone's tabs: the sections grouped by what they act on. The views the
+ * frames show; how the frames look and which album they play; and this
+ * device's own nav and voice.
+ */
+const TABS = [
+  { value: "views", label: "Views", icon: IoGridOutline },
+  { value: "display", label: "Display", icon: IoContrastOutline },
+  { value: "device", label: "Device", icon: IoPhonePortraitOutline },
+] as const;
+
 export function Control() {
   const { connected } = useSocket();
   const version = useVersion();
@@ -135,6 +152,11 @@ export function Control() {
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
   // The frames' nav: a remote's own never hides.
   const navVisible = useFramesNavVisible();
+  // A phone (one column) gets the sections in tabs rather than one long page.
+  // Measured before the first paint, so a phone never flashes the long page.
+  const [phone] = useMediaQuery([HOME_ONE_COLUMN_QUERY], { ssr: false });
+  const showViews = deviceMode !== "frame";
+  const [tab, setTab] = useState<string>(showViews ? "views" : "display");
 
   useEffect(() => {
     function onCurrentView(view: string) {
@@ -159,6 +181,105 @@ export function Control() {
     socket.emit("change", path.replace("/", ""));
     setActiveView(path);
   }
+
+  const viewsBoard = (
+    <Board title={<SectionTitle>Views</SectionTitle>}>
+      <SimpleGrid columns={3} gap="3">
+        {VIEWS.map((v) => {
+          const isActive = activeView === v.path;
+          const Icon = isActive ? v.activeIcon : v.icon;
+          return (
+            <Box key={v.path} position="relative" minW="0">
+              <Button
+                variant={isActive ? "solid" : "outline"}
+                aria-pressed={isActive}
+                aria-label={v.label}
+                onClick={() => changeView(v.path)}
+                width="100%"
+                height="auto"
+                // A rounded rectangle, not the pill every other button
+                // is: a square tile at full radius is a circle.
+                aspectRatio="4 / 3"
+                borderRadius="xl"
+                flexDirection="column"
+                gap="2"
+              >
+                <Icon />
+                {v.label}
+              </Button>
+              {v.path === "/photos" && (
+                <Tooltip content="Next photo" showArrow>
+                  <IconButton
+                    aria-label="Next photo"
+                    variant="ghost"
+                    size="xs"
+                    position="absolute"
+                    top="1"
+                    right="1"
+                    onClick={nextPhoto}
+                  >
+                    <MdSkipNext />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          );
+        })}
+      </SimpleGrid>
+    </Board>
+  );
+
+  const displayBoard = (
+    <Board
+      title={
+        <HStack justify="space-between" width="100%">
+          <SectionTitle>Display</SectionTitle>
+          {preference === "auto" && <Badge>auto · {effectiveMode}</Badge>}
+        </HStack>
+      }
+    >
+      <Stack gap="5">
+        <Field.Root>
+          <Field.Label>Theme</Field.Label>
+          <SegmentedControl
+            items={THEME_MODES}
+            value={preference}
+            aria-label="Theme"
+            onValueChange={(e) => {
+              if (e.value) setPreference(e.value as ThemeModePreference);
+            }}
+          />
+        </Field.Root>
+
+        <Switch
+          checked={navVisible}
+          onCheckedChange={(e) => setNavVisible(e.checked)}
+        >
+          Show navigation
+        </Switch>
+
+        <Button
+          variant="outline"
+          onClick={() => {
+            socket.emit("refresh");
+            toaster.create({
+              title: "Refreshing displays",
+              type: "info",
+            });
+          }}
+        >
+          <MdRefresh />
+          Refresh displays
+        </Button>
+      </Stack>
+    </Board>
+  );
+
+  const albumBoard = (
+    <Board title={<SectionTitle>Album</SectionTitle>}>
+      <AlbumSelect />
+    </Board>
+  );
 
   return (
     <PageShell center maxW={{ portrait: "36rem", landscape: "60rem" }}>
@@ -195,118 +316,67 @@ export function Control() {
         </Field.Root>
       </PageHeader>
 
-      {/* Body: stacked portrait, side-by-side landscape */}
-      <Flex
-        direction={{ base: "column", _landscape: "row" }}
-        align={{ _landscape: "flex-start" }}
-        gap="gutter"
-      >
-        {deviceMode !== "frame" && (
-          <Box flex="1" minWidth="0">
-            <Board title={<SectionTitle>Views</SectionTitle>}>
-              <SimpleGrid columns={3} gap="3">
-                {VIEWS.map((v) => {
-                  const isActive = activeView === v.path;
-                  const Icon = isActive ? v.activeIcon : v.icon;
-                  return (
-                    <Box key={v.path} position="relative" minW="0">
-                      <Button
-                        variant={isActive ? "solid" : "outline"}
-                        aria-pressed={isActive}
-                        aria-label={v.label}
-                        onClick={() => changeView(v.path)}
-                        width="100%"
-                        height="auto"
-                        // A rounded rectangle, not the pill every other button
-                        // is: a square tile at full radius is a circle.
-                        aspectRatio="4 / 3"
-                        borderRadius="xl"
-                        flexDirection="column"
-                        gap="2"
-                      >
-                        <Icon />
-                        {v.label}
-                      </Button>
-                      {v.path === "/photos" && (
-                        <Tooltip content="Next photo" showArrow>
-                          <IconButton
-                            aria-label="Next photo"
-                            variant="ghost"
-                            size="xs"
-                            position="absolute"
-                            top="1"
-                            right="1"
-                            onClick={nextPhoto}
-                          >
-                            <MdSkipNext />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-                  );
-                })}
-              </SimpleGrid>
-            </Board>
-          </Box>
-        )}
-        <Flex flex="1" minWidth="0" direction="column" gap="gutter">
-          {/* Display mode */}
-          <Board
-            title={
-              <HStack justify="space-between" width="100%">
-                <SectionTitle>Display</SectionTitle>
-                {preference === "auto" && <Badge>auto · {effectiveMode}</Badge>}
-              </HStack>
-            }
-          >
-            <Stack gap="5">
-              <Field.Root>
-                <Field.Label>Theme</Field.Label>
-                <SegmentedControl
-                  items={THEME_MODES}
-                  value={preference}
-                  aria-label="Theme"
-                  onValueChange={(e) => {
-                    if (e.value) setPreference(e.value as ThemeModePreference);
-                  }}
-                />
-              </Field.Root>
-
-              <Switch
-                checked={navVisible}
-                onCheckedChange={(e) => setNavVisible(e.checked)}
-              >
-                Show navigation
-              </Switch>
-
-              <Button
-                variant="outline"
-                onClick={() => {
-                  socket.emit("refresh");
-                  toaster.create({
-                    title: "Refreshing displays",
-                    type: "info",
-                  });
-                }}
-              >
-                <MdRefresh />
-                Refresh displays
-              </Button>
+      {phone ? (
+        <Tabs.Root
+          value={tab}
+          onValueChange={(e) => setTab(e.value)}
+          variant="line"
+          fitted
+          display="flex"
+          flexDirection="column"
+          gap="gutter"
+        >
+          <Tabs.List>
+            {TABS.filter((t) => showViews || t.value !== "views").map((t) => (
+              <Tabs.Trigger key={t.value} value={t.value}>
+                <t.icon />
+                {t.label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+          {showViews && (
+            <Tabs.Content value="views" p="0">
+              {viewsBoard}
+            </Tabs.Content>
+          )}
+          <Tabs.Content value="display" p="0">
+            <Stack gap="gutter">
+              {displayBoard}
+              {albumBoard}
             </Stack>
-          </Board>
+          </Tabs.Content>
+          <Tabs.Content value="device" p="0">
+            <Stack gap="gutter">
+              <NavLayoutBoard />
+              <VoiceStatusBoard />
+            </Stack>
+          </Tabs.Content>
+        </Tabs.Root>
+      ) : (
+        /* Body: stacked portrait, side-by-side landscape */
+        <Flex
+          direction={{ base: "column", _landscape: "row" }}
+          align={{ _landscape: "flex-start" }}
+          gap="gutter"
+        >
+          {showViews && (
+            <Box flex="1" minWidth="0">
+              {viewsBoard}
+            </Box>
+          )}
+          <Flex flex="1" minWidth="0" direction="column" gap="gutter">
+            {displayBoard}
 
-          {/* This device's nav: order and what it shows */}
-          <NavLayoutBoard />
+            {/* This device's nav: order and what it shows */}
+            <NavLayoutBoard />
 
-          {/* Voice */}
-          <VoiceStatusBoard />
+            {/* Voice */}
+            <VoiceStatusBoard />
 
-          {/* Album */}
-          <Board title={<SectionTitle>Album</SectionTitle>}>
-            <AlbumSelect />
-          </Board>
+            {albumBoard}
+          </Flex>
         </Flex>
-      </Flex>
+      )}
     </PageShell>
   );
 }

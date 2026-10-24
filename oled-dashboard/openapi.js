@@ -423,6 +423,33 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/energy/today": {
+      get: {
+        tags: ["Energy"],
+        operationId: "getEnergyToday",
+        summary: "Get today's power curve",
+        description:
+          "Returns the solar production and home consumption power since local midnight, as quarter-hour means of Home Assistant's 5-minute statistics (in watts, whatever unit the sensors report in), plus how much of the day's solar the house used itself. The energy dialog draws the curve and splits the day's totals by it.",
+        responses: {
+          200: {
+            description: "Today's power.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/EnergyTodayResponse" },
+              },
+            },
+          },
+          503: {
+            description: "HA_TOKEN or energy entities not configured.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+          500: {
+            description: "Failed to fetch from Home Assistant.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+        },
+      },
+    },
     "/api/energy/monthly": {
       get: {
         tags: ["Energy"],
@@ -766,6 +793,32 @@ export const openApiDocument = {
           currentProductionUnit: { type: "string", example: "W" },
           currentConsumption: { type: "number", example: 1850 },
           currentConsumptionUnit: { type: "string", example: "W" },
+        },
+      },
+      EnergyTodayPoint: {
+        type: "object",
+        properties: {
+          time: { type: "string", format: "date-time", description: "The quarter hour's start." },
+          production: { type: "number", nullable: true, example: 6240, description: "Mean solar production, W." },
+          consumption: { type: "number", nullable: true, example: 1310, description: "Mean home consumption, W." },
+        },
+      },
+      EnergyTodayResponse: {
+        type: "object",
+        properties: {
+          start: { type: "string", format: "date-time", description: "Local midnight today." },
+          end: { type: "string", format: "date-time", description: "Local midnight tomorrow." },
+          points: {
+            type: "array",
+            description: "One per quarter hour with statistics, oldest first.",
+            items: { $ref: "#/components/schemas/EnergyTodayPoint" },
+          },
+          selfConsumed: {
+            type: "number",
+            nullable: true,
+            example: 6.2,
+            description: "kWh of today's solar the house used itself (the smaller of production and consumption in each 5-minute slot). Null without statistics.",
+          },
         },
       },
       Circuit: {

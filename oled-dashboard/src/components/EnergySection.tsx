@@ -6,7 +6,6 @@ import {
   HStack,
   Icon,
   Progress,
-  SimpleGrid,
   Stat,
   Text,
 } from "@chakra-ui/react";
@@ -14,44 +13,16 @@ import { PiSolarRoof } from "react-icons/pi";
 import { IoFlash } from "react-icons/io5";
 import type { HomeEnergy } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { coverage, fmtKwh, fmtW, grid } from "../lib/energy";
 import { Board } from "./Board";
-import { PanelDialog } from "./PanelDialog";
+import { EnergyDialog } from "./EnergyDialog";
 import { EnergySkeleton } from "./skeletons/EnergySkeleton";
 
-function fmtKwh(n: number) {
-  return isNaN(n) ? "--" : n.toFixed(0);
-}
-
-function fmtW(watts: number): string {
-  if (isNaN(watts)) return "--";
-  return `${(watts / 1000).toFixed(1)} kW`;
-}
-
-const GRID_ACTIVE_THRESHOLD = 5;
-
-function coverage(energy: HomeEnergy) {
-  const { productionToday, consumptionToday } = energy;
-  return consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
-}
-
-function grid(energy: HomeEnergy) {
-  const draw = energy.currentConsumption - energy.currentProduction;
-  const abs = Math.abs(draw);
-  return { abs, exporting: draw < 0, active: abs > GRID_ACTIVE_THRESHOLD };
-}
-
 /** Import / export: arrow and colour carry the direction. */
-function GridBadge({
-  energy,
-  size = "md",
-}: {
-  energy: HomeEnergy;
-  size?: "md" | "lg";
-}) {
+function GridBadge({ energy }: { energy: HomeEnergy }) {
   const { abs, exporting } = grid(energy);
   return (
     <Badge
-      size={size}
       colorPalette={exporting ? "green" : "orange"}
       aria-label={`${exporting ? "Exporting" : "Importing"} ${fmtW(abs)}`}
     >
@@ -75,7 +46,11 @@ export function EnergySection({
 
   return (
     <>
-      <EnergyModal energy={energy} open={open} onClose={() => setOpen(false)} />
+      <EnergyDialog
+        energy={energy}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
       <Board
         collapsible
         storageKey="energy"
@@ -131,74 +106,5 @@ export function EnergySection({
         )}
       </Board>
     </>
-  );
-}
-
-function EnergyModal({
-  energy,
-  open,
-  onClose,
-}: {
-  energy: HomeEnergy;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const {
-    currentProduction,
-    currentConsumption,
-    productionToday,
-    consumptionToday,
-  } = energy;
-  const pct = Math.round(coverage(energy));
-
-  return (
-    <PanelDialog open={open} onClose={onClose} title="Energy">
-      <SimpleGrid columns={2} gap="6">
-        <Stat.Root>
-          <Stat.Label>
-            <PiSolarRoof /> Solar now
-          </Stat.Label>
-          <Stat.ValueText>{fmtW(currentProduction)}</Stat.ValueText>
-        </Stat.Root>
-        <Stat.Root>
-          <Stat.Label>
-            <IoFlash /> Home now
-          </Stat.Label>
-          <Stat.ValueText>{fmtW(currentConsumption)}</Stat.ValueText>
-        </Stat.Root>
-      </SimpleGrid>
-
-      <Box>
-        {grid(energy).active ? (
-          <GridBadge energy={energy} size="lg" />
-        ) : (
-          <Text color="fg.muted">Grid idle</Text>
-        )}
-      </Box>
-
-      <Box borderTopWidth="1px" pt="6">
-        <Text textStyle="sm" fontWeight="medium" color="fg.muted" mb="3">
-          Today
-        </Text>
-        <SimpleGrid columns={3} gap="6">
-          <Stat.Root>
-            <Stat.Label>Produced</Stat.Label>
-            <Stat.ValueText>
-              {fmtKwh(productionToday)} <Stat.ValueUnit>kWh</Stat.ValueUnit>
-            </Stat.ValueText>
-          </Stat.Root>
-          <Stat.Root>
-            <Stat.Label>Solar</Stat.Label>
-            <Stat.ValueText>{pct}%</Stat.ValueText>
-          </Stat.Root>
-          <Stat.Root>
-            <Stat.Label>Used</Stat.Label>
-            <Stat.ValueText>
-              {fmtKwh(consumptionToday)} <Stat.ValueUnit>kWh</Stat.ValueUnit>
-            </Stat.ValueText>
-          </Stat.Root>
-        </SimpleGrid>
-      </Box>
-    </PanelDialog>
   );
 }

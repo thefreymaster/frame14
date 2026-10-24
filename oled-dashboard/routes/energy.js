@@ -45,13 +45,14 @@ function energyScale(entity) {
   return USE_LIFETIME ? kwhScale(entity) : 1;
 }
 
-async function fetchStatistics(statisticIds, start, end, period, types) {
+async function fetchStatistics(statisticIds, start, end, period, types, units) {
   return sendCommand("recorder/statistics_during_period", {
     start_time: start.toISOString(),
     end_time: end.toISOString(),
     statistic_ids: statisticIds,
     period,
     types,
+    ...(units && { units }),
   });
 }
 
@@ -186,6 +187,89 @@ router.get("/", async (_req, res) => {
   } catch (err) {
     console.error("Energy fetch error:", err);
     res.status(500).json({ error: "Failed to fetch energy data from HA" });
+  }
+});
+
+// Today's curve, for the energy dialog: the two power sensors' 5-minute means
+// since local midnight, averaged into quarter hours. HA keeps 5-minute
+// statistics as long as it keeps history (10 days by default), and converts
+// them to watts whatever unit the sensors report in.
+//
+// It also sends how much of the day's solar the house used itself: in each
+// 5-minute slot both sensors cover, that is the smaller of the two. The dialog
+// splits the day's totals by it, into what went to and came from the grid.
+const QUARTER_HOUR_MS = 15 * 60e3;
+
+function meansByStart(rows) {
+  const map = new Map();
+  for (const row of rows ?? []) {
+    if (row.mean == null) continue;
+    map.set(new Date(row.start).getTime(), Number(row.mean));
+  }
+  return map;
+}
+
+router.get("/today", async (_req, res) => {
+  if (!HA_TOKEN) {
+    res.status(503).json({ error: "HA_TOKEN not configured" });
+    return;
+  }
+  if (!CURRENT_PRODUCTION_ENTITY || !CURRENT_CONSUMPTION_ENTITY) {
+    res.status(503).json({ error: "Energy entities not configured" });
+    return;
+  }
+
+  const start = startOfToday();
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  try {
+    const stats = await fetchStatistics(
+      [CURRENT_PRODUCTION_ENTITY, CURRENT_CONSUMPTION_ENTITY],
+      start,
+      new Date(),
+      "5minute",
+      ["mean"],
+      { power: "W" },
+    );
+    const production = meansByStart(stats?.[CURRENT_PRODUCTION_ENTITY]);
+    const consumption = meansByStart(stats?.[CURRENT_CONSUMPTION_ENTITY]);
+
+    const quarters = new Map();
+    const add = (t, key, watts) => {
+      const q = start.getTime() + Math.floor((t - start.getTime()) / QUARTER_HOUR_MS) * QUARTER_HOUR_MS;
+      if (!quarters.has(q)) quarters.set(q, { production: [], consumption: [] });
+      quarters.get(q)[key].push(Math.max(0, watts));
+    };
+    for (const [t, w] of production) add(t, "production", w);
+    for (const [t, w] of consumption) add(t, "consumption", w);
+    const mean = (ws) => (ws.length ? Math.round(ws.reduce((a, b) => a + b, 0) / ws.length) : null);
+    const points = [...quarters.keys()]
+      .sort((a, b) => a - b)
+      .map((q) => ({
+        time: new Date(q).toISOString(),
+        production: mean(quarters.get(q).production),
+        consumption: mean(quarters.get(q).consumption),
+      }));
+
+    let selfWh = 0;
+    let slots = 0;
+    for (const [t, p] of production) {
+      const c = consumption.get(t);
+      if (c == null) continue;
+      selfWh += Math.min(Math.max(0, p), Math.max(0, c)) / 12;
+      slots++;
+    }
+
+    res.json({
+      start: start.toISOString(),
+      end: end.toISOString(),
+      points,
+      selfConsumed: slots ? round2(selfWh / 1000) : null,
+    });
+  } catch (err) {
+    console.error("Today's power fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch today's power from HA" });
   }
 });
 

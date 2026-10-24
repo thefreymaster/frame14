@@ -8,7 +8,7 @@ import {
   Stat,
   Text,
 } from "@chakra-ui/react";
-import { IoPrintOutline } from "react-icons/io5";
+import { Printer3dOutlineIcon } from "../lib/printerIcons";
 import NumberFlow from "@number-flow/react";
 import type { HomePrinter } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -65,7 +65,9 @@ export function PrinterSection({ printer }: { printer: HomePrinter }) {
         storageKey="printer"
         title={
           <HStack width="100%" gap="3">
-            <SectionTitle icon={<IoPrintOutline />}>3D printer</SectionTitle>
+            <SectionTitle icon={<Printer3dOutlineIcon />}>
+              3D printer
+            </SectionTitle>
             <Box flex="1" minW="0" />
             <Badge colorPalette="green">
               <NumberFlow value={printer.progress} />%

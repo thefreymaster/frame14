@@ -23,18 +23,26 @@ import {
   NAV_RAIL_CLEARANCE,
 } from "../lib/navMetrics";
 
+// Pages that can run past the screen and scroll (on a remote, every page
+// does); the rest are fixed, full-screen views.
+const SCROLLING_PATHS = new Set([
+  "/control",
+  "/lights",
+  "/home",
+  "/printer",
+  "/vacuum",
+]);
+
 export function Layout() {
   useThemeMode();
   useReady();
   const location = useLocation();
   const isControl = location.pathname === "/control";
-  const isLights = location.pathname === "/lights";
   const isBlank = location.pathname === "/blank";
-  const isHome = location.pathname === "/home";
   const navVisible = useNavVisible();
   const showNav = !isBlank && navVisible;
   const isController = getDeviceMode() === "controller";
-  const scrollable = isControl || isLights || isHome || isController;
+  const scrollable = SCROLLING_PATHS.has(location.pathname) || isController;
 
   const voice = useVoiceAssist();
   const { data: assistConfig } = useAssistConfig();

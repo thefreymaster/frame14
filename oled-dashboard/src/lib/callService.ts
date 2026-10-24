@@ -71,3 +71,41 @@ export function callFanService(
   if (params?.percentage != null) payload.percentage = params.percentage;
   socket.emit("entity:call", payload);
 }
+
+/**
+ * A vacuum's controls. The server takes these for the configured vacuums
+ * only.
+ */
+export function callVacuumService(
+  entityId: string,
+  service: "start" | "pause" | "return_to_base" | "locate",
+): void;
+export function callVacuumService(
+  entityId: string,
+  service: "set_fan_speed",
+  params: { fan_speed: string },
+): void;
+export function callVacuumService(
+  entityId: string,
+  service: string,
+  params?: { fan_speed?: string },
+) {
+  socket.emit("entity:call", {
+    domain: "vacuum",
+    service,
+    entity_id: entityId,
+    ...params,
+  });
+}
+
+/**
+ * Presses a button entity. The server takes the configured printer's pause,
+ * resume and stop buttons only.
+ */
+export function pressButton(entityId: string) {
+  socket.emit("entity:call", {
+    domain: "button",
+    service: "press",
+    entity_id: entityId,
+  });
+}

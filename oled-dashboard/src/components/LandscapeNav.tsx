@@ -1,25 +1,6 @@
-import { useState, useEffect } from "react";
-import { Box, Spacer, Tabs } from "@chakra-ui/react";
-import type { IconType } from "react-icons";
+import { useState, useEffect, useRef } from "react";
+import { Box, Spacer, Tabs, type SystemStyleObject } from "@chakra-ui/react";
 import { useLocation, useNavigate } from "react-router";
-import {
-  IoTimeOutline,
-  IoTime,
-  IoImagesOutline,
-  IoImages,
-  IoSettingsOutline,
-  IoSettings,
-  IoAmericanFootballOutline,
-  IoAmericanFootball,
-} from "react-icons/io5";
-
-import {
-  RiHome5Line,
-  RiHome5Fill,
-  RiLightbulbLine,
-  RiLightbulbFill,
-} from "react-icons/ri";
-import { MdRadar, MdElectricBolt } from "react-icons/md";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
@@ -43,90 +24,9 @@ import {
   NAV_RAIL_WIDTH,
   PAGE_GUTTER,
 } from "../lib/navMetrics";
-import { PiSolarRoof } from "react-icons/pi";
-
-type NavItem = {
-  path: string;
-  label: string;
-  icon: IconType;
-  activeIcon: IconType;
-  portraitHidden?: boolean;
-  frameOnly?: boolean;
-  remoteOnly?: boolean;
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { path: "/home", label: "Home", icon: RiHome5Line, activeIcon: RiHome5Fill },
-  {
-    path: "/clock",
-    label: "Clock",
-    icon: IoTimeOutline,
-    activeIcon: IoTime,
-    frameOnly: true,
-  },
-  {
-    path: "/photos",
-    label: "Photos",
-    icon: IoImagesOutline,
-    activeIcon: IoImages,
-    frameOnly: true,
-  },
-  // A remote's Photos: the album as a grid, to pick what the frames show.
-  {
-    path: "/album",
-    label: "Photos",
-    icon: IoImagesOutline,
-    activeIcon: IoImages,
-    remoteOnly: true,
-  },
-  {
-    path: "/lights",
-    label: "Lights",
-    icon: RiLightbulbLine,
-    activeIcon: RiLightbulbFill,
-  },
-  {
-    path: "/solar",
-    label: "Solar",
-    icon: PiSolarRoof,
-    activeIcon: PiSolarRoof,
-  },
-  {
-    path: "/power",
-    label: "Power",
-    icon: MdElectricBolt,
-    activeIcon: MdElectricBolt,
-  },
-  {
-    path: "/radar",
-    label: "Radar",
-    icon: MdRadar,
-    activeIcon: MdRadar,
-    portraitHidden: true,
-    frameOnly: true,
-  },
-  // {
-  //   path: "/timer",
-  //   label: "Timer",
-  //   icon: IoTimerOutline,
-  //   activeIcon: IoTimer,
-  //   portraitHidden: true,
-  //   frameOnly: true,
-  // },
-];
-
-/**
- * Spliced in only while a tracked team is playing — the one nav entry that
- * comes and goes. Deliberately not LOCAL_ONLY: tapping it should move every
- * panel to the game, and "football" is a TRANSIENT_VIEW server-side so it is
- * never remembered as the route to wake up on.
- */
-const FOOTBALL_ITEM: NavItem = {
-  path: "/football",
-  label: "Football",
-  icon: IoAmericanFootballOutline,
-  activeIcon: IoAmericanFootball,
-};
+import { SETTINGS_PATH, splitForBar, type NavItem } from "../lib/navItems";
+import { useNavItems } from "../lib/navLayout";
+import { NavMoreMenu } from "./NavMoreMenu";
 
 const LOCAL_ONLY_PATHS = new Set([
   "/control",
@@ -136,14 +36,29 @@ const LOCAL_ONLY_PATHS = new Set([
   "/album",
 ]);
 
-const BOTTOM_NAV_ITEMS: NavItem[] = [
-  {
-    path: "/control",
-    label: "Settings",
-    icon: IoSettingsOutline,
-    activeIcon: IoSettings,
-  },
-];
+// Each nav entry's look. In the portrait bar entries fill its height, and on
+// a phone the labels drop to xs, Apple Music's small captions; the end
+// entries' outer bottom corners follow an iPhone's curve (see navMetrics).
+// 20px icons on a phone and a little larger wherever the type scale grows,
+// and a neutral grey fill (gray.100 / gray.700) on the selected entry rather
+// than the subtle tab's near-black.
+function entryCss(placement: "bar" | "rail"): SystemStyleObject {
+  const inBar = placement === "bar";
+  return {
+    flexDirection: "column",
+    justifyContent: "center",
+    height: inBar ? "100%" : "auto",
+    rounded: ENTRY_RADIUS,
+    _first: inBar ? { roundedBottomLeft: NAV_BAR_END_ENTRY_RADIUS } : {},
+    _last: inBar ? { roundedBottomRight: NAV_BAR_END_ENTRY_RADIUS } : {},
+    px: "1",
+    py: inBar ? "0" : "2",
+    gap: "1",
+    textStyle: inBar ? { base: "xs", md: "sm" } : undefined,
+    _icon: { boxSize: { base: "5", md: "1.375rem" } },
+    _selected: { bg: { _light: "gray.100", _dark: "gray.700" } },
+  };
+}
 
 interface LandscapeNavProps {
   hidden?: boolean;
@@ -161,6 +76,10 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   }
   const isFrame = getDeviceMode() === "frame";
   const { games } = useLiveGame();
+  // This device's entries in its order, as /control sets them (lib/navLayout).
+  const items = useNavItems(games.length > 0);
+  const { bar, more } = splitForBar(items);
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onChangeView(view: string) {
@@ -184,38 +103,16 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   // Navigation happens on click rather than onValueChange, so tapping the tab
   // you are already on still re-sends it to the other frames, as before.
   // Both navs float, and the selected entry is a shade above the nav's
-  // `bg.surface`, its corners concentric with the nav's (ENTRY_RADIUS). In the
-  // portrait bar entries fill its height, and on a phone the labels drop to
-  // xs, Apple Music's small captions, so a sixth entry (game day) still fits
-  // inside the inset bar.
+  // `bg.surface`, its corners concentric with the nav's (ENTRY_RADIUS).
   function renderItem(item: NavItem, placement: "bar" | "rail") {
     const isActive = activeView === item.path;
     const Icon = isActive ? item.activeIcon : item.icon;
-    const inBar = placement === "bar";
     return (
       <Tabs.Trigger
         key={item.path}
         value={item.path}
         onClick={() => handleClick(item.path)}
-        flexDirection="column"
-        justifyContent="center"
-        height={inBar ? "100%" : "auto"}
-        rounded={ENTRY_RADIUS}
-        _first={
-          inBar ? { roundedBottomLeft: NAV_BAR_END_ENTRY_RADIUS } : undefined
-        }
-        _last={
-          inBar ? { roundedBottomRight: NAV_BAR_END_ENTRY_RADIUS } : undefined
-        }
-        px="1"
-        py={inBar ? "0" : "2"}
-        gap="1"
-        textStyle={inBar ? { base: "xs", md: "sm" } : undefined}
-        // 20px icons on a phone and a little larger wherever the type scale
-        // grows, and a neutral grey fill (gray.100 / gray.700) on the
-        // selected entry rather than the subtle tab's near-black.
-        _icon={{ boxSize: { base: "5", md: "1.375rem" } }}
-        _selected={{ bg: { _light: "gray.100", _dark: "gray.700" } }}
+        css={entryCss(placement)}
       >
         <Icon />
         {item.label}
@@ -223,12 +120,11 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
     );
   }
 
-  const visibleNavItems = [
-    ...NAV_ITEMS.filter((i) => (isFrame ? !i.remoteOnly : !i.frameOnly)),
-    ...(games.length > 0 ? [FOOTBALL_ITEM] : []),
-  ];
-  const allItems = [...visibleNavItems, ...BOTTOM_NAV_ITEMS];
-  const portraitItems = allItems.filter((i) => isFrame || !i.portraitHidden);
+  // The rail has room for every entry. Settings, when it ends the nav, sits
+  // at the rail's foot.
+  const settingsLast = items.at(-1)?.path === SETTINGS_PATH;
+  const railTop = settingsLast ? items.slice(0, -1) : items;
+  const railFoot = settingsLast ? items.slice(-1) : [];
 
   return (
     <>
@@ -236,8 +132,11 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           glass). It is inset from the sides and sits just above the home
           indicator, and the page scrolls on underneath and around it. On an
           iPhone its bottom corners follow the screen's and its top is flat;
-          elsewhere it has the cards' corners (NAV_BAR_TOP_RADIUS). */}
+          elsewhere it has the cards' corners (NAV_BAR_TOP_RADIUS). It holds
+          five entries; a longer nav keeps its first five and puts the rest
+          under More (NavMoreMenu), as an iPhone tab bar does. */}
       <Box
+        ref={barRef}
         {...FLOATING_SURFACE}
         rounded={`${NAV_BAR_TOP_RADIUS} ${NAV_BAR_TOP_RADIUS} ${NAV_BAR_BOTTOM_RADIUS} ${NAV_BAR_BOTTOM_RADIUS}`}
         display={{ base: "block", _landscape: "none" }}
@@ -264,7 +163,16 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           height="100%"
         >
           <Tabs.List height="100%" gap="1">
-            {portraitItems.map((item) => renderItem(item, "bar"))}
+            {bar.map((item) => renderItem(item, "bar"))}
+            {more.length > 0 && (
+              <NavMoreMenu
+                items={more}
+                activeView={activeView}
+                onSelect={handleClick}
+                bar={barRef}
+                entryCss={entryCss("bar")}
+              />
+            )}
           </Tabs.List>
         </Tabs.Root>
       </Box>
@@ -295,9 +203,9 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           height="100%"
         >
           <Tabs.List width="100%" height="100%" gap="1">
-            {visibleNavItems.map((item) => renderItem(item, "rail"))}
+            {railTop.map((item) => renderItem(item, "rail"))}
             <Spacer />
-            {BOTTOM_NAV_ITEMS.map((item) => renderItem(item, "rail"))}
+            {railFoot.map((item) => renderItem(item, "rail"))}
           </Tabs.List>
         </Tabs.Root>
       </Box>

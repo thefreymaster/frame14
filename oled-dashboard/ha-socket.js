@@ -19,6 +19,7 @@
 import WebSocket from "ws";
 import { HA_URL, HA_TOKEN } from "./config.js";
 import { ENTITIES } from "./entities.js";
+import { printerEntities } from "./printer-entities.js";
 
 const MOTION_ENTITY = "binary_sensor.kitchen_motion_sensor_motion";
 const ROUTE_ENTITY = "input_select.oledos_route";
@@ -98,6 +99,31 @@ const ALLOWED_HVAC_MODES = new Set(["heat", "cool", "off", "auto", "heat_cool", 
 const ENTITY_ID_RE = /^[a-z_]+\.[a-z0-9_]+$/;
 // Fan mode names vary per device ("auto", "Low", "wind free"), so validate shape not value.
 const FAN_MODE_RE = /^[A-Za-z0-9 _-]{1,32}$/;
+const VACUUM_SERVICES = new Set(["start", "pause", "return_to_base", "locate", "set_fan_speed"]);
+
+/**
+ * Service data for the vacuums' and the printer's controls, or null if the
+ * call isn't one of them. Those domains reach further than the allow-list
+ * below can tell apart (button.press would press any button in the house), so
+ * they're held to the configured devices: a vacuum in ENTITIES.vacuums, and the
+ * configured printer's pause / resume / stop buttons.
+ */
+function deviceControlData({ domain, service, entity_id, fan_speed }) {
+  if (domain === "vacuum") {
+    if (!VACUUM_SERVICES.has(service)) return null;
+    if (!(ENTITIES.vacuums ?? []).includes(entity_id)) return null;
+    if (service !== "set_fan_speed") return { entity_id };
+    // Suction names vary per model too ("max_plus", "Turbo").
+    if (typeof fan_speed !== "string" || !FAN_MODE_RE.test(fan_speed)) return null;
+    return { entity_id, fan_speed };
+  }
+  if (domain === "button") {
+    if (service !== "press") return null;
+    if (!(printerEntities()?.buttons ?? []).includes(entity_id)) return null;
+    return { entity_id };
+  }
+  return null;
+}
 
 export function getState(entityId) {
   return stateCache.get(entityId);
@@ -107,8 +133,16 @@ export function getAllStates() {
   return stateCache;
 }
 
-export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type }) {
+export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type }) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
+
+  if (domain === "vacuum" || domain === "button") {
+    const service_data = deviceControlData({ domain, service, entity_id, fan_speed });
+    if (!service_data) return false;
+    haWs.send(JSON.stringify({ id: nextMsgId++, type: "call_service", domain, service, service_data }));
+    return true;
+  }
+
   if (!ALLOWED_DOMAINS.has(domain)) return false;
   if (!ALLOWED_SERVICES.has(service)) return false;
   if (typeof entity_id !== "string" || !ENTITY_ID_RE.test(entity_id)) return false;

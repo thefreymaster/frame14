@@ -12,6 +12,7 @@ export const PRINTER_FIELDS = [
   "nozzleTarget",
   "bedTemp",
   "bedTarget",
+  "chamberTemp",
   "currentLayer",
   "totalLayers",
   "currentStage",
@@ -38,6 +39,7 @@ const BAMBU_LAB: Suffixes = {
   nozzleTarget: "nozzle_target_temperature",
   bedTemp: "bed_temperature",
   bedTarget: "bed_target_temperature",
+  chamberTemp: "chamber_temperature",
   currentLayer: "current_layer",
   totalLayers: "total_layer_count",
   currentStage: "current_stage",
@@ -59,6 +61,7 @@ const BAMBUDDY: Suffixes = {
   nozzleTarget: "nozzle_target_temperature",
   bedTemp: "bed_temperature",
   bedTarget: "bed_target_temperature",
+  chamberTemp: "chamber_temperature",
   currentLayer: "current_layer",
   totalLayers: "total_layers",
   currentStage: null,
@@ -92,4 +95,60 @@ export function printerEntityIds(
       return [field, base && suffix ? `${base}_${suffix}` : ""];
     }),
   ) as Record<PrinterField, string>;
+}
+
+/** The printer's entities that aren't sensors; "" where there's none. */
+export interface PrinterParts {
+  /** binary_sensor: the printer is reachable (Bambuddy). */
+  online: string;
+  /** binary_sensor: the printer reports HMS errors. */
+  hmsErrors: string;
+  /** image: the current job's model thumbnail. */
+  cover: string;
+  camera: string;
+  /** buttons */
+  pause: string;
+  resume: string;
+  stop: string;
+}
+
+/**
+ * The PrinterParts for the configured status sensor, by the same prefix and
+ * integration as printerEntityIds. The server derives the camera, the cover
+ * and the buttons the same way (printer-entities.js), and accepts presses on
+ * those buttons only: keep the two in step.
+ */
+export function printerPartIds(
+  configValue: string | undefined | null,
+): PrinterParts {
+  const value = (configValue ?? "").trim();
+  const none: PrinterParts = {
+    online: "",
+    hmsErrors: "",
+    cover: "",
+    camera: "",
+    pause: "",
+    resume: "",
+    stop: "",
+  };
+  let name = "";
+  let bambuddy = false;
+  if (value.endsWith("_print_status")) {
+    name = value.slice(0, -"_print_status".length);
+  } else if (value.endsWith("_status")) {
+    name = value.slice(0, -"_status".length);
+    bambuddy = true;
+  }
+  if (!name.startsWith("sensor.")) return none;
+  name = name.slice("sensor.".length);
+  const action = bambuddy ? "print" : "printing";
+  return {
+    online: bambuddy ? `binary_sensor.${name}_online` : "",
+    hmsErrors: `binary_sensor.${name}_hms_errors`,
+    cover: bambuddy ? `image.${name}_cover` : `image.${name}_cover_image`,
+    camera: `camera.${name}_camera`,
+    pause: `button.${name}_pause_${action}`,
+    resume: `button.${name}_resume_${action}`,
+    stop: `button.${name}_stop_${action}`,
+  };
 }

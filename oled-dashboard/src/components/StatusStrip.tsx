@@ -1,5 +1,5 @@
 import { Flex, Tag } from "@chakra-ui/react";
-import { IoPrintOutline } from "react-icons/io5";
+import { Printer3dOutlineIcon } from "../lib/printerIcons";
 import { TbVacuumCleaner } from "react-icons/tb";
 import type { HomePrinter, HomeVacuum } from "../hooks/useHomeData";
 import { StatusChip } from "./StatusChip";
@@ -55,7 +55,7 @@ export function StatusStrip({
   return (
     <Flex width="100%" minW="0" gap="2" wrap="wrap" align="center">
       {showPrinterChip && (
-        <StatusChip icon={<IoPrintOutline />}>
+        <StatusChip icon={<Printer3dOutlineIcon />}>
           <ChipText>Printer idle</ChipText>
         </StatusChip>
       )}

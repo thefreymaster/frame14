@@ -29,6 +29,7 @@ import {
   RiLightbulbLine,
   RiLightbulbFill,
 } from "react-icons/ri";
+import { TbVacuumCleaner } from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
 import { useSocket } from "../hooks/useSocket";
@@ -44,6 +45,8 @@ import { PageHeader } from "../components/PageHeader";
 import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { VoiceStatusBoard } from "../components/VoiceStatusBoard";
 import { AlbumSelect } from "../components/AlbumSelect";
+import { NavLayoutBoard } from "../components/NavLayoutBoard";
+import { Printer3dIcon, Printer3dOutlineIcon } from "../lib/printerIcons";
 import { toaster } from "../components/ui/toaster";
 import { Tooltip } from "../components/ui/tooltip";
 import { SegmentedControl } from "../components/ui/segmented-control";
@@ -80,6 +83,18 @@ const VIEWS: {
     label: "Power",
     icon: MdElectricBolt,
     activeIcon: MdElectricBolt,
+  },
+  {
+    path: "/printer",
+    label: "Printer",
+    icon: Printer3dOutlineIcon,
+    activeIcon: Printer3dIcon,
+  },
+  {
+    path: "/vacuum",
+    label: "Vacuum",
+    icon: TbVacuumCleaner,
+    activeIcon: TbVacuumCleaner,
   },
   { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar },
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
@@ -279,6 +294,9 @@ export function Control() {
               </Button>
             </Stack>
           </Board>
+
+          {/* This device's nav: order and what it shows */}
+          <NavLayoutBoard />
 
           {/* Voice */}
           <VoiceStatusBoard />

@@ -13,6 +13,8 @@ import { Solar } from "./routes/Solar";
 import { Power } from "./routes/Power";
 import { Marquee } from "./routes/Marquee";
 import { Football } from "./routes/Football";
+import { Printer } from "./routes/Printer";
+import { Vacuum } from "./routes/Vacuum";
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +32,8 @@ export const router = createBrowserRouter([
       { path: "/timer", element: <Timer /> },
       { path: "/solar", element: <Solar /> },
       { path: "/power", element: <Power /> },
+      { path: "/printer", element: <Printer /> },
+      { path: "/vacuum", element: <Vacuum /> },
       { path: "/marquee", element: <Marquee /> },
       { path: "/football", element: <Football /> },
     ],

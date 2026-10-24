@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.64.0
+
+- Added: a 3D printer page (Printer in the nav). It shows the printer's status, its camera live, the current job (model thumbnail, name, progress, layer, time left and when it should finish) and the nozzle, bed and chamber temperatures. While a print runs you can pause or resume it, and stop it after a confirmation.
+- Added: a vacuum page (Vacuum in the nav). It shows the vacuum's battery, state and any error; the current clean's progress, area and time; when it last ran; and its map. It also shows wear on the brushes, filter and sensors, with overdue parts flagged. Clean, Pause, Resume, Dock and Locate buttons and a suction setting control the vacuum.
+- Added: Settings has a Navigation card. Drag a tab's handle to change its place in the nav, and use its switch to show or hide it. Home always stays first, and Settings can move but stays shown. Each device keeps its own order, and Reset goes back to the default.
+- Changed: the bottom navigation bar shows up to five tabs. With more, it shows the first five and a More tab that opens the rest as a menu above the bar. The side rail in landscape still shows every tab.
+- Changed: Printer and Vacuum are in the nav on the frame and desktop browsers. On a phone used as a remote they're off until you turn them on in Settings. The remote's Views grid can also put the frames on either page.
+- Changed: the 3D printer card on Home uses a 3D printer icon.
+- No add-on options were added or changed: the pages use the existing printer status and vacuum entities.
+
 ## 0.63.3
 
 - Changed: on an iPhone, the bottom navigation bar sits close in to the screen's edges, has a flat top, and its bottom corners follow the curve of the screen's corners. Its buttons sit a little higher, above the home indicator, so the Home and Settings labels stay clear of the curve. On the frame and in a browser window it's unchanged.

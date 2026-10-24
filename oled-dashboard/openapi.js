@@ -34,6 +34,15 @@ export const openApiDocument = {
       description: "Live view of the configured camera, proxied from Home Assistant.",
     },
     {
+      name: "Printer",
+      description:
+        "The 3D printer page's camera and model thumbnail, proxied from Home Assistant. Entity IDs are derived from the configured printer status sensor.",
+    },
+    {
+      name: "Vacuum",
+      description: "The configured vacuums and their maps, from Home Assistant.",
+    },
+    {
       name: "Videos",
       description: "Video listing and delivery endpoints.",
     },
@@ -263,6 +272,99 @@ export const openApiDocument = {
           200: { description: "JPEG still image.", content: { "image/jpeg": {} } },
           502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           503: { description: "No camera entity configured, or HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/printer/camera/stream": {
+      get: {
+        tags: ["Printer"],
+        operationId: "getPrinterCameraStream",
+        summary: "Proxy the MJPEG live stream of the printer's camera",
+        description:
+          "Pipes Home Assistant's camera_proxy_stream for the printer's camera (camera.<printer>_camera, derived from the configured status sensor), attaching the server's HA token. The client supplies no entity ID. The upstream request is aborted as soon as the client disconnects.",
+        responses: {
+          200: { description: "MJPEG stream (multipart/x-mixed-replace).", content: { "multipart/x-mixed-replace": {} } },
+          404: { description: "No printer configured, or it has no camera.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/printer/cover": {
+      get: {
+        tags: ["Printer"],
+        operationId: "getPrinterCover",
+        summary: "The current job's model thumbnail",
+        description:
+          "Home Assistant's image_proxy for the printer integration's cover image (Bambuddy image.<printer>_cover, ha-bambulab image.<printer>_cover_image). The client supplies no entity ID; `v` is ignored and exists only for cache busting (the page passes the image entity's state).",
+        parameters: [{ name: "v", in: "query", required: false, schema: { type: "string" } }],
+        responses: {
+          200: { description: "The thumbnail image.", content: { "image/png": {} } },
+          404: { description: "No printer configured, or it has no cover image.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/home/vacuum": {
+      get: {
+        tags: ["Vacuum"],
+        operationId: "getVacuums",
+        summary: "The configured vacuums",
+        description:
+          "State of each vacuum in the entity config, with its maps: the image entities its integration names after it (core Roborock: image.<vacuum>_<map>), found in the server's state cache.",
+        responses: {
+          200: {
+            description: "One entry per configured vacuum.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      entity_id: { type: "string", example: "vacuum.roborock_q5_pro" },
+                      name: { type: "string", example: "Robovac" },
+                      state: { type: "string", example: "docked" },
+                      progress: { type: "number", nullable: true },
+                      battery: { type: "number", nullable: true },
+                      maps: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            entity_id: { type: "string", example: "image.roborock_q5_pro_first_floor" },
+                            name: { type: "string", example: "First Floor" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          500: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/home/vacuum/map/{entityId}": {
+      get: {
+        tags: ["Vacuum"],
+        operationId: "getVacuumMap",
+        summary: "One of a vacuum's maps",
+        description:
+          "Home Assistant's image_proxy for a map image entity. Only the maps of the configured vacuums (as listed by /api/home/vacuum) are served. `v` is ignored and exists only for cache busting (the page passes the image entity's state, the time the map last changed).",
+        parameters: [
+          { name: "entityId", in: "path", required: true, schema: { type: "string", example: "image.roborock_q5_pro_first_floor" } },
+          { name: "v", in: "query", required: false, schema: { type: "string" } },
+        ],
+        responses: {
+          200: { description: "The map image.", content: { "image/png": {} } },
+          404: { description: "Not a configured vacuum's map.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },

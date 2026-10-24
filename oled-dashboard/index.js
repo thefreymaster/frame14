@@ -41,6 +41,7 @@ import vacuumRouter from "./routes/vacuum.js";
 import fanRouter from "./routes/fan.js";
 import marqueeRouter from "./routes/marquee.js";
 import cameraRouter from "./routes/camera.js";
+import printerRouter from "./routes/printer.js";
 import assistRouter, { attachAssistSocket } from "./routes/assist.js";
 import ingressRouter from "./routes/ingress.js";
 
@@ -171,6 +172,7 @@ app.use("/api/home/vacuum", vacuumRouter);
 app.use("/api/home/fan", fanRouter);
 app.use("/api/marquee", marqueeRouter);
 app.use("/api/camera", cameraRouter);
+app.use("/api/printer", printerRouter);
 app.use("/api/assist", assistRouter);
 app.use("/api/home", homeRouter);
 app.use("/api/videos", videosRouter);

@@ -1,6 +1,7 @@
 import { HStack, Icon, Image, Spacer, Text } from "@chakra-ui/react";
-import { MdWifi, MdWifiOff } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
+import { connectionLabel, type ConnectionStatus } from "../lib/connection";
+import { ConnectionIcon } from "./ConnectionIcon";
 import {
   HEADER_CLEARANCE,
   HEADER_ICON_SIZE,
@@ -11,6 +12,14 @@ import { ApplianceIndicators } from "./ApplianceIndicators";
 import { HeaderClock } from "./HeaderClock";
 import { useDesktop } from "../hooks/useDesktop";
 import { Tooltip } from "./ui/tooltip";
+
+// Grey while connecting — on load, and after a drop while socket.io
+// retries — and red only once it has been down a minute (lib/connection).
+const CONNECTION_COLOR: Record<ConnectionStatus, string> = {
+  connected: "fg.success",
+  connecting: "fg.muted",
+  disconnected: "fg.error",
+};
 
 /**
  * The header across the top of every view: the app's icon and name at the
@@ -36,11 +45,11 @@ export function StatusBanner({
   /** The mic, after the status icons (before the clock on a desktop). */
   voice?: React.ReactNode;
 }) {
-  const { connected } = useSocket();
+  const { status } = useSocket();
+  const connection = connectionLabel(status);
   // The clock only on a desktop: a phone shows its own, and the frame has
   // the big one on Home and /clock.
   const desktop = useDesktop();
-  const StatusIcon = connected ? MdWifi : MdWifiOff;
 
   return (
     <HStack
@@ -73,14 +82,14 @@ export function StatusBanner({
       </HStack>
       <Spacer />
       <ApplianceIndicators />
-      <Tooltip content={connected ? "Connected" : "Disconnected"}>
+      <Tooltip content={connection}>
         <Icon
           boxSize={HEADER_ICON_SIZE}
-          color={connected ? "fg.success" : "fg.error"}
+          color={CONNECTION_COLOR[status]}
           flexShrink={0}
-          aria-label={connected ? "Connected" : "Disconnected"}
+          aria-label={connection}
         >
-          <StatusIcon />
+          <ConnectionIcon status={status} />
         </Icon>
       </Tooltip>
       {voice}

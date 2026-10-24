@@ -38,6 +38,7 @@ import { TbVacuumCleaner } from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
 import { useSocket } from "../hooks/useSocket";
+import { connectionLabel } from "../lib/connection";
 import { reloadApp, useAppVersion } from "../lib/appVersion";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
@@ -144,7 +145,7 @@ const TABS = [
 ] as const;
 
 export function Control() {
-  const { connected } = useSocket();
+  const { status: connection } = useSocket();
   const version = useAppVersion();
   const { preference, effectiveMode, setPreference } = useThemeMode();
   const navigate = useNavigate();
@@ -310,8 +311,12 @@ export function Control() {
                 Update
               </Button>
             )}
-            <Status value={connected ? "success" : "error"}>
-              {connected ? "Connected" : "Disconnected"}
+            <Status
+              value={connection === "connected" ? "success" : "error"}
+              // Grey while connecting, as the header's icon is.
+              colorPalette={connection === "connecting" ? "gray" : undefined}
+            >
+              {connectionLabel(connection)}
             </Status>
           </>
         }

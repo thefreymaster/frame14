@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.70.0
+
+- Changed: the connection icon in the header. While Frame14 is connecting — when it first loads, and after the connection drops — it's grey, and the Wi-Fi arcs light up one after another from the dot outwards, like an iPhone searching for a network. It used to show the red disconnected icon straight away. It goes red only after a minute without getting through, and green as soon as it connects.
+- Changed: the connection in Settings says Connecting… or Reconnecting… in grey during that minute, instead of Disconnected.
+
 ## 0.69.0
 
 - Added: a launch animation. As Frame14 loads, the app icon builds itself on the page's black (white in Bright): the house appears from its peak down, the framed photo grows into it, and the hills rise inside. When the page is ready the icon lifts away, and the Home cards rise into place one after another.

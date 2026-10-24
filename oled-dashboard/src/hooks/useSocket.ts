@@ -1,25 +1,9 @@
-import { useEffect, useState } from "react";
 import { socket } from "../lib/socket";
+import { useConnectionStatus } from "../lib/connection";
 
+/** The socket and its status (lib/connection: connecting / connected /
+ *  disconnected). */
 export function useSocket() {
-  const [connected, setConnected] = useState(socket.connected);
-
-  useEffect(() => {
-    function onConnect() {
-      setConnected(true);
-    }
-    function onDisconnect() {
-      setConnected(false);
-    }
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-    };
-  }, []);
-
-  return { socket, connected };
+  const status = useConnectionStatus();
+  return { socket, status, connected: status === "connected" };
 }

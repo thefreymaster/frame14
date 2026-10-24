@@ -18,6 +18,7 @@ import {
   NAV_BAR_HEIGHT,
   NAV_BAR_INSET,
   NAV_BAR_LIFT,
+  NAV_BAR_SIDE_BORDER,
   NAV_BAR_SIDE_ROOM,
   NAV_BAR_TOP_RADIUS,
   NAV_RAIL_BOTTOM,
@@ -130,16 +131,20 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
 
   return (
     <>
-      {/* Portrait: a floating bar, like Apple Music's tab bar but opaque (no
-          glass). It is inset from the sides and sits just above the home
-          indicator, and the page scrolls on underneath and around it. On an
-          iPhone its bottom corners follow the screen's and its top is flat;
-          elsewhere it has the cards' corners (NAV_BAR_TOP_RADIUS). It holds
-          five entries; a longer nav keeps its first five and puts the rest
-          under More (NavMoreMenu), as an iPhone tab bar does. */}
+      {/* Portrait: a bar like Apple Music's tab bar but opaque (no glass),
+          the page scrolling on underneath it. On an iPhone it is flush with
+          the screen's sides and bottom, over the home indicator, with only a
+          top edge, its bottom corners the screen's own and its top flat;
+          elsewhere it floats a gap in from the edges with the cards' corners
+          (NAV_BAR_TOP_RADIUS) and a full border. It has five slots; a longer
+          nav keeps its first four and puts the rest under More (NavMoreMenu),
+          as an iPhone tab bar does. */}
       <Box
         ref={barRef}
         {...FLOATING_SURFACE}
+        borderLeftWidth={NAV_BAR_SIDE_BORDER}
+        borderRightWidth={NAV_BAR_SIDE_BORDER}
+        borderBottomWidth={NAV_BAR_SIDE_BORDER}
         rounded={`${NAV_BAR_TOP_RADIUS} ${NAV_BAR_TOP_RADIUS} ${NAV_BAR_BOTTOM_RADIUS} ${NAV_BAR_BOTTOM_RADIUS}`}
         display={{ base: "block", _landscape: "none" }}
         top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_CLEARANCE})`}

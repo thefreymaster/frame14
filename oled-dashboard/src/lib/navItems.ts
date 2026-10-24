@@ -142,20 +142,19 @@ export function navItemsFor(mode: DeviceMode): NavItem[] {
   );
 }
 
-/** The most entries the portrait bar holds; past that it adds More. */
+/** The most slots the portrait bar has, More included. */
 export const NAV_BAR_ENTRIES = 5;
 
 /**
  * Splits a nav for the portrait bar: five entries or fewer all go in it;
- * past that the first five do, and the rest go under More.
+ * past that More takes the fifth slot, so the first four stay and the rest
+ * go under More (six entries: four in the bar, two under More).
  */
 export function splitForBar(items: NavItem[]): {
   bar: NavItem[];
   more: NavItem[];
 } {
   if (items.length <= NAV_BAR_ENTRIES) return { bar: items, more: [] };
-  return {
-    bar: items.slice(0, NAV_BAR_ENTRIES),
-    more: items.slice(NAV_BAR_ENTRIES),
-  };
+  const keep = NAV_BAR_ENTRIES - 1;
+  return { bar: items.slice(0, keep), more: items.slice(keep) };
 }

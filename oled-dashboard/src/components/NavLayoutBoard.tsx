@@ -142,8 +142,8 @@ export function NavLayoutBoard() {
       </Stack>
       <Text textStyle="sm" color="fg.muted" mt="4">
         For this device. Drag to reorder. With more than {NAV_BAR_ENTRIES}{" "}
-        shown, the bottom bar keeps the first {NAV_BAR_ENTRIES} and puts the
-        rest under More.
+        shown, the bottom bar keeps the first {NAV_BAR_ENTRIES - 1} and puts
+        the rest under More.
       </Text>
     </Board>
   );

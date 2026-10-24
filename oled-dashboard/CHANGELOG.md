@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.72.0
+
+- Changed: the bottom bar never holds more than five buttons. With five views or fewer they all show; with more, the first four show and More takes the fifth place with the rest. It used to show five plus More.
+- Changed: on an iPhone the bottom bar sits flush with the screen's sides and bottom, its bottom corners following the screen's, with only a top edge. Its buttons stay where they were. On the frame and on desktops the bar still floats a gap in from the edges.
+
 ## 0.71.0
 
 - Changed: the nav no longer fills the current entry with a grey pill. The view on screen is marked only by its icon and label being bright, with the other entries dimmed. The same goes for the bottom bar, the side rail and the rows of the More menu.

@@ -15,7 +15,9 @@ import { DARK_RAISED, ENTRY_RADIUS, NAV_PAD } from "../lib/floatingSurface";
  * its own, that opens the rest of the nav as a menu over the bar's trailing
  * end, as the iPhone's Home Assistant dashboard does. The menu is the bar's
  * surface (colour, edge, corners, padding), a gap above it and its right edge
- * on the bar's; its rows have the entries' concentric corners, and the view on
+ * on the bar's (at least the theme's `xs` from the bar and the screen's edge
+ * where the bar is flush to them, on an iPhone); its rows have the entries'
+ * concentric corners, and the view on
  * screen is bright against the others' muted grey, as the bar's selected
  * entry is (no fill).
  *
@@ -52,6 +54,8 @@ export function NavMoreMenu({
         // The bar's box, raised by its gap from the screen's side, which in
         // portrait is also its gap from the bottom: the menu sits one gap
         // above the bar, as the bar sits one gap above the screen's edge.
+        // Where the bar is flush to the screen (an iPhone) the gap is the
+        // theme's `xs` instead, above the bar and in from the screen's edge.
         getAnchorElement: () => {
           const el = bar.current;
           if (!el) return null;
@@ -59,11 +63,15 @@ export function NavMoreMenu({
             contextElement: el,
             getBoundingClientRect: () => {
               const r = el.getBoundingClientRect();
+              const xs =
+                0.25 *
+                parseFloat(getComputedStyle(document.documentElement).fontSize);
+              const gap = Math.max(r.left, xs);
               return new DOMRect(
                 r.left,
-                r.top - r.left,
-                r.width,
-                r.height + r.left,
+                r.top - gap,
+                r.width - Math.max(0, xs - r.left),
+                r.height + gap,
               );
             },
           };

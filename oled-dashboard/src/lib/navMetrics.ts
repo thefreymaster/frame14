@@ -50,25 +50,32 @@ const SCREEN_RADIUS = "62px";
 const ROUNDED_SCREEN = "calc(env(safe-area-inset-bottom, 0px) * 100)";
 
 /**
- * Gap between the floating portrait bar and the bottom of the screen: the
- * theme's `xs` on an iPhone, so the bar sits close in to the screen's edges
- * (down in the home-indicator inset, the indicator over its bottom padding);
- * 1rem elsewhere.
+ * Gap between the portrait bar and the bottom of the screen: none on an
+ * iPhone, where the bar is flush with the screen's bottom and sides, down in
+ * the home-indicator inset with the indicator over its bottom padding (it
+ * floated a `xs` gap in before 0.72); 1rem elsewhere, where it floats.
  */
-export const NAV_BAR_BOTTOM = `max(var(--chakra-spacing-xs), calc(1rem - ${ROUNDED_SCREEN}))`;
+export const NAV_BAR_BOTTOM = `max(0px, calc(1rem - ${ROUNDED_SCREEN}))`;
 
 /**
- * Gap between the floating portrait bar and the screen's side edges (on top of
- * any side safe-area inset): the bottom gap, so on an iPhone the bar's bottom
- * corners can share a centre with the screen's (NAV_BAR_BOTTOM_RADIUS).
+ * Gap between the portrait bar and the screen's side edges (on top of any
+ * side safe-area inset): the bottom gap, so on an iPhone the bar is flush
+ * there too and its bottom corners are the screen's own.
  */
 export const NAV_BAR_INSET = NAV_BAR_BOTTOM;
 
 /**
+ * The portrait bar's edge. On an iPhone, flush with the screen, it keeps only
+ * its top edge: the side and bottom borders are 0 there, 1px (the floating
+ * surface's) elsewhere.
+ */
+export const NAV_BAR_SIDE_BORDER = `max(0px, calc(1px - ${ROUNDED_SCREEN}))`;
+
+/**
  * The portrait bar's corners. On an iPhone's rounded screen the bottom two
- * follow the screen's curve, a gap in from it (SCREEN_RADIUS less the gap, so
- * the two share a centre), and the top is flat with square corners. Elsewhere
- * (the frame, a browser window) all four are the cards' `surface`.
+ * follow the screen's curve (SCREEN_RADIUS less the bottom gap, which is 0,
+ * so they are the screen's corners), and the top is flat with square corners.
+ * Elsewhere (the frame, a browser window) all four are the cards' `surface`.
  */
 export const NAV_BAR_TOP_RADIUS = `max(0px, calc(var(--chakra-radii-surface) - ${ROUNDED_SCREEN}))`;
 export const NAV_BAR_BOTTOM_RADIUS = `max(var(--chakra-radii-surface), min(calc(${SCREEN_RADIUS} - ${NAV_BAR_BOTTOM}), ${ROUNDED_SCREEN}))`;
@@ -78,11 +85,12 @@ export const NAV_BAR_BOTTOM_RADIUS = `max(var(--chakra-radii-surface), min(calc(
  * first and last entries' labels (Home, Settings) ran into them. The bar is
  * this much taller there, the extra room below its entries (over the home
  * indicator, as iOS's own tab bars leave it), and its entries this much
- * further in from its sides, which puts the labels clear of the curve. 0
- * elsewhere.
+ * further in from its sides, which puts the labels clear of the curve. Both
+ * grew by the `xs` the bar used to float in from the screen, so its entries
+ * sit where they did. 0 elsewhere.
  */
-export const NAV_BAR_LIFT = `min(0.75rem, ${ROUNDED_SCREEN})`;
-export const NAV_BAR_SIDE_ROOM = `min(0.5rem, ${ROUNDED_SCREEN})`;
+export const NAV_BAR_LIFT = `min(1rem, ${ROUNDED_SCREEN})`;
+export const NAV_BAR_SIDE_ROOM = `min(0.75rem, ${ROUNDED_SCREEN})`;
 
 /**
  * The outer bottom corner of the bar's first and last entries: on an iPhone,

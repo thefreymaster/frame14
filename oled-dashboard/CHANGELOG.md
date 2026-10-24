@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.71.0
+
+- Changed: the nav no longer fills the current entry with a grey pill. The view on screen is marked only by its icon and label being bright, with the other entries dimmed. The same goes for the bottom bar, the side rail and the rows of the More menu.
+- Changed: in dark mode, cards and the navigation are the grey of iOS's grouped lists (the Settings app's groups on black, #1C1C1E) instead of #23242b. Their edge is unchanged.
+- Added: tap the connection icon in the header for a small menu about the connection: whether Frame14 is connected and since when, the round trip to the server, the transport, this device's IP address as the server sees it, the server's address, whether the server is connected to Home Assistant, and the version (and the newer installed one, if there is one).
+- Added: tap a running appliance's icon in the header (washer, dryer, dishwasher, 3D printer, vacuum) for a small menu with its status, how long it has been running and since when. The printer's also shows its progress and time left.
+
 ## 0.70.0
 
 - Changed: the connection icon in the header. While Frame14 is connecting — when it first loads, and after the connection drops — it's grey, and the Wi-Fi arcs light up one after another from the dot outwards, like an iPhone searching for a network. It used to show the red disconnected icon straight away. It goes red only after a minute without getting through, and green as soon as it connects.

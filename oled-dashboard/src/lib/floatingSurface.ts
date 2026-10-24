@@ -31,10 +31,10 @@ export const FLOATING_SURFACE = {
 export const ENTRY_RADIUS = `calc(var(--chakra-radii-surface) - 1px - ${NAV_PAD})`;
 
 /**
- * Chakra's dark-mode shades that equal gray.800 — about the cards' and these
- * surfaces' `bg.surface` — one step up for everything on them, so skeleton bars,
- * switch tracks, outline buttons and borders don't vanish. Apply under
- * `_dark` (see Board).
+ * Chakra's dark-mode shades that equal gray.800 — a hair above the cards' and
+ * these surfaces' `bg.surface` (#1C1C1E) — one step up for everything on them,
+ * so skeleton bars, switch tracks, outline buttons and borders don't vanish.
+ * Apply under `_dark` (see Board).
  */
 export const DARK_RAISED = {
   "--chakra-colors-bg-emphasized": "colors.gray.700",

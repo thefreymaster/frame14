@@ -14,6 +14,10 @@ export const DISCONNECTED_AFTER_MS = 60_000;
 
 let status: ConnectionStatus = socket.connected ? "connected" : "connecting";
 let everConnected = socket.connected;
+// When the connection last came up or went down (ms): what "since" means in
+// the connection menu. Going from connecting to disconnected doesn't move it;
+// that's still the same drop.
+let sinceAt = Date.now();
 let giveUp: ReturnType<typeof setTimeout> | undefined;
 const listeners = new Set<() => void>();
 
@@ -25,6 +29,7 @@ function set(next: ConnectionStatus) {
 
 function startGrace() {
   clearTimeout(giveUp);
+  sinceAt = Date.now();
   set("connecting");
   giveUp = setTimeout(() => set("disconnected"), DISCONNECTED_AFTER_MS);
 }
@@ -32,6 +37,7 @@ function startGrace() {
 socket.on("connect", () => {
   clearTimeout(giveUp);
   everConnected = true;
+  sinceAt = Date.now();
   set("connected");
 });
 socket.on("disconnect", startGrace);
@@ -50,6 +56,15 @@ export function getConnectionStatus() {
 
 export function useConnectionStatus() {
   return useSyncExternalStore(subscribe, getConnectionStatus);
+}
+
+function getConnectionSince() {
+  return sinceAt;
+}
+
+/** When the status last changed for real: the connect, or the drop (ms). */
+export function useConnectionSince() {
+  return useSyncExternalStore(subscribe, getConnectionSince);
 }
 
 /** The status in words: a first connection is "Connecting…", one after a

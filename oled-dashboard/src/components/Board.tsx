@@ -59,9 +59,10 @@ function writeOpen(key: string | undefined, open: boolean) {
  * Its 1px edge is the theme's `border.surface` (gray.700 in dark mode), the
  * same as the floating navs'.
  *
- * Its colour is the theme's `bg.surface`: #23242b in dark mode rather than the
- * Card's `bg.panel` (gray.950), which on the frame's matte NXTPAPER screen sat
- * so close to the page that the cards disappeared. That's about gray.800,
+ * Its colour is the theme's `bg.surface`: #1C1C1E in dark mode (iOS's
+ * grouped-cell grey, since 0.71; #23242b before) rather than the Card's
+ * `bg.panel` (gray.950), which on the frame's matte NXTPAPER screen sat so
+ * close to the page that the cards disappeared. That's a hair under gray.800,
  * which is what Chakra's `bg.emphasized`, `border` and the gray palette's
  * `muted` / `border` are in dark mode, so inside the card those step up one
  * shade (DARK_RAISED) —

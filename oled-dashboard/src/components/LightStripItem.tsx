@@ -8,8 +8,9 @@ import { LIGHT_STRIP_ITEM_WIDTH } from "../lib/navMetrics";
 
 /**
  * One light or switch in the desktop lights strip: an on/off button drawn like
- * a side rail entry, the bulb over the name. While on it's filled like the
- * rail's selected entry and the bulb is lit in the light's own colour. Every
+ * a side rail entry, the bulb over the name. While on it's filled a neutral
+ * grey (gray.100 / gray.700; the nav's selected entry has no fill since 0.71)
+ * and the bulb is lit in the light's own colour. Every
  * button is the same width, and a longer name is cut off with an ellipsis (the
  * whole name in the tooltip). Unavailable entities don't show.
  */

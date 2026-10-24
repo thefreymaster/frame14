@@ -39,9 +39,10 @@ const LOCAL_ONLY_PATHS = new Set([
 // Each nav entry's look. In the portrait bar entries fill its height, and on
 // a phone the labels drop to xs, Apple Music's small captions; the end
 // entries' outer bottom corners follow an iPhone's curve (see navMetrics).
-// 20px icons on a phone and a little larger wherever the type scale grows,
-// and a neutral grey fill (gray.100 / gray.700) on the selected entry rather
-// than the subtle tab's near-black.
+// 20px icons on a phone and a little larger wherever the type scale grows.
+// The selected entry has no fill (the subtle tab's is cleared): its icon and
+// label are the full foreground against the others' muted grey, and that alone
+// says which view is on screen.
 function entryCss(placement: "bar" | "rail"): SystemStyleObject {
   const inBar = placement === "bar";
   return {
@@ -56,7 +57,7 @@ function entryCss(placement: "bar" | "rail"): SystemStyleObject {
     gap: "1",
     textStyle: inBar ? { base: "xs", md: "sm" } : undefined,
     _icon: { boxSize: { base: "5", md: "1.375rem" } },
-    _selected: { bg: { _light: "gray.100", _dark: "gray.700" } },
+    _selected: { bg: "transparent", color: "fg" },
   };
 }
 
@@ -102,8 +103,9 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   // Each nav entry is a Tabs trigger: the selected tab is the view on screen.
   // Navigation happens on click rather than onValueChange, so tapping the tab
   // you are already on still re-sends it to the other frames, as before.
-  // Both navs float, and the selected entry is a shade above the nav's
-  // `bg.surface`, its corners concentric with the nav's (ENTRY_RADIUS).
+  // Both navs float; the selected entry is bright, not filled, and the
+  // entries' corners (ENTRY_RADIUS, for the focus ring) are concentric with
+  // the nav's.
   function renderItem(item: NavItem, placement: "bar" | "rail") {
     const isActive = activeView === item.path;
     const Icon = isActive ? item.activeIcon : item.icon;

@@ -16,7 +16,8 @@ import { DARK_RAISED, ENTRY_RADIUS, NAV_PAD } from "../lib/floatingSurface";
  * end, as the iPhone's Home Assistant dashboard does. The menu is the bar's
  * surface (colour, edge, corners, padding), a gap above it and its right edge
  * on the bar's; its rows have the entries' concentric corners, and the view on
- * screen is filled as the bar's selected entry is.
+ * screen is bright against the others' muted grey, as the bar's selected
+ * entry is (no fill).
  *
  * It sits in the bar's Tabs list but isn't a tab (a tab can't also be a menu's
  * trigger), so it takes the tabs' own styles from the list's context.
@@ -106,8 +107,9 @@ export function NavMoreMenu({
                   rounded={ENTRY_RADIUS}
                   textStyle="md"
                   fontWeight="medium"
-                  _icon={{ boxSize: "5", color: "fg.muted" }}
-                  _selected={{ bg: { _light: "gray.100", _dark: "gray.700" } }}
+                  color="fg.muted"
+                  _icon={{ boxSize: "5" }}
+                  _selected={{ color: "fg" }}
                 >
                   <Icon />
                   {item.label}

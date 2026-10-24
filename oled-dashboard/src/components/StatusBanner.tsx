@@ -1,7 +1,4 @@
-import { HStack, Icon, Image, Spacer, Text } from "@chakra-ui/react";
-import { useSocket } from "../hooks/useSocket";
-import { connectionLabel, type ConnectionStatus } from "../lib/connection";
-import { ConnectionIcon } from "./ConnectionIcon";
+import { HStack, Image, Spacer, Text } from "@chakra-ui/react";
 import {
   HEADER_CLEARANCE,
   HEADER_ICON_SIZE,
@@ -9,22 +6,15 @@ import {
   PAGE_GUTTER,
 } from "../lib/navMetrics";
 import { ApplianceIndicators } from "./ApplianceIndicators";
+import { ConnectionMenu } from "./ConnectionMenu";
 import { HeaderClock } from "./HeaderClock";
 import { useDesktop } from "../hooks/useDesktop";
-import { Tooltip } from "./ui/tooltip";
-
-// Grey while connecting — on load, and after a drop while socket.io
-// retries — and red only once it has been down a minute (lib/connection).
-const CONNECTION_COLOR: Record<ConnectionStatus, string> = {
-  connected: "fg.success",
-  connecting: "fg.muted",
-  disconnected: "fg.error",
-};
 
 /**
  * The header across the top of every view: the app's icon and name at the
  * left; running appliances, the connection, the mic and (on a desktop) the
- * time at the right. (The version is on the Settings page.)
+ * time at the right. (The version is on the Settings page.) The appliance
+ * and connection icons each open a small menu on a tap (HeaderMenu).
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -45,8 +35,6 @@ export function StatusBanner({
   /** The mic, after the status icons (before the clock on a desktop). */
   voice?: React.ReactNode;
 }) {
-  const { status } = useSocket();
-  const connection = connectionLabel(status);
   // The clock only on a desktop: a phone shows its own, and the frame has
   // the big one on Home and /clock.
   const desktop = useDesktop();
@@ -82,16 +70,7 @@ export function StatusBanner({
       </HStack>
       <Spacer />
       <ApplianceIndicators />
-      <Tooltip content={connection}>
-        <Icon
-          boxSize={HEADER_ICON_SIZE}
-          color={CONNECTION_COLOR[status]}
-          flexShrink={0}
-          aria-label={connection}
-        >
-          <ConnectionIcon status={status} />
-        </Icon>
-      </Tooltip>
+      <ConnectionMenu />
       {voice}
       {desktop && <HeaderClock />}
     </HStack>

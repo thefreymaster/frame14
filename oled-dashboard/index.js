@@ -36,6 +36,7 @@ import energyRouter from "./routes/energy.js";
 import circuitsRouter from "./routes/circuits.js";
 import homeRouter from "./routes/home.js";
 import entitiesRouter from "./routes/entities.js";
+import connectionRouter from "./routes/connection.js";
 import climateRouter from "./routes/climate.js";
 import vacuumRouter from "./routes/vacuum.js";
 import fanRouter from "./routes/fan.js";
@@ -155,6 +156,11 @@ io.on("connection", (socket) => {
     else console.warn("[entity:call] rejected", payload);
   });
 
+  // The connection menu's round-trip check: answered at once.
+  socket.on("echo", (ack) => {
+    if (typeof ack === "function") ack();
+  });
+
   attachAssistSocket(socket);
 });
 
@@ -170,6 +176,7 @@ app.use("/api", viewsRouter);
 app.use("/api/energy", energyRouter);
 app.use("/api/circuits", circuitsRouter);
 app.use("/api/entities", entitiesRouter);
+app.use("/api/connection", connectionRouter);
 app.use("/api/home/climate", climateRouter);
 app.use("/api/home/vacuum", vacuumRouter);
 app.use("/api/home/fan", fanRouter);

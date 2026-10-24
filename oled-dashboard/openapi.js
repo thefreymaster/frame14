@@ -80,6 +80,25 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/connection": {
+      get: {
+        tags: ["Health"],
+        operationId: "getConnectionInfo",
+        summary: "Describe the caller's connection",
+        description:
+          "What the header's connection menu shows: the caller's address as the server sees it (cf-connecting-ip, then x-forwarded-for, then the socket's), the server's hostname, LAN addresses, installed version and uptime, and whether the server's Home Assistant WebSocket is up.",
+        responses: {
+          200: {
+            description: "The connection as seen from the server.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ConnectionInfo" },
+              },
+            },
+          },
+        },
+      },
+    },
     "/api/weather": {
       get: {
         tags: ["Weather"],
@@ -691,6 +710,34 @@ export const openApiDocument = {
           message: {
             type: "string",
             example: "API is running",
+          },
+        },
+      },
+      ConnectionInfo: {
+        type: "object",
+        required: ["client", "server", "homeAssistant"],
+        properties: {
+          client: {
+            type: "object",
+            properties: {
+              address: { type: "string", nullable: true, example: "10.0.0.42" },
+            },
+          },
+          server: {
+            type: "object",
+            properties: {
+              hostname: { type: "string", example: "homeassistant" },
+              addresses: { type: "array", items: { type: "string" }, example: ["10.0.0.10"] },
+              version: { type: "string", example: "0.71.0" },
+              uptimeSeconds: { type: "integer", example: 86400 },
+            },
+          },
+          homeAssistant: {
+            type: "object",
+            properties: {
+              host: { type: "string", example: "supervisor" },
+              connected: { type: "boolean", example: true },
+            },
           },
         },
       },

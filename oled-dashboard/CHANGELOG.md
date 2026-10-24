@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.68.0
+
+- Added: when the add-on updates while Frame14 is open, a notice says a new version is installed, with a Refresh button. It appears once per new version, on every device, including the frame.
+- Added: Settings shows the version the app is actually running. When a newer one is installed, an Update link next to it reloads into it, so on an iPhone you no longer have to close the app fully to get the new version.
+
 ## 0.67.0
 
 - Removed: the "Printer idle" and "Vacuum docked" chips at the bottom of Home. An idle printer or vacuum no longer shows on Home at all.

@@ -38,7 +38,7 @@ import { TbVacuumCleaner } from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useNavigate } from "react-router";
 import { useSocket } from "../hooks/useSocket";
-import { useVersion } from "../hooks/useVersion";
+import { reloadApp, useAppVersion } from "../lib/appVersion";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { HOME_ONE_COLUMN_QUERY } from "../lib/homeLayout";
@@ -145,7 +145,7 @@ const TABS = [
 
 export function Control() {
   const { connected } = useSocket();
-  const version = useVersion();
+  const version = useAppVersion();
   const { preference, effectiveMode, setPreference } = useThemeMode();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState<string | null>(null);
@@ -288,10 +288,27 @@ export function Control() {
         title="Control"
         actions={
           <>
-            {version && (
+            {version.running && (
               <Text textStyle="sm" color="fg.muted">
-                v{version}
+                v{version.running}
               </Text>
+            )}
+            {/* This page is older than the add-on: reload into the new one. */}
+            {version.outdated && (
+              <Button
+                size="xs"
+                variant="plain"
+                colorPalette="blue"
+                color="colorPalette.fg"
+                px="0"
+                textStyle="sm"
+                textDecoration="underline"
+                textUnderlineOffset="3px"
+                aria-label={`Update to v${version.installed}`}
+                onClick={reloadApp}
+              >
+                Update
+              </Button>
             )}
             <Status value={connected ? "success" : "error"}>
               {connected ? "Connected" : "Disconnected"}

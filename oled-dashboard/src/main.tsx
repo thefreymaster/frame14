@@ -6,6 +6,8 @@ import { queryClient } from "./lib/queryClient";
 import "./index.css";
 // Applies the saved theme mode before the first paint.
 import "./lib/themeMode";
+// Watches for the add-on updating under this page.
+import "./lib/appVersion";
 import { Provider } from "./components/ui/provider";
 import { Toaster } from "./components/ui/toaster";
 

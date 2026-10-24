@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.68.1
+
+- No changes to the app: this release exists to try out the new-version notice from 0.68.0. An open Frame14 page should show "New version available" with a Refresh button, and Settings an Update link next to v0.68.0.
+
 ## 0.68.0
 
 - Added: when the add-on updates while Frame14 is open, a notice says a new version is installed, with a Refresh button. It appears once per new version, on every device, including the frame.

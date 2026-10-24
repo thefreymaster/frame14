@@ -39,6 +39,10 @@ function writeOpen(key: string | undefined, open: boolean) {
  * Collapse state persists per board in localStorage under
  * `board-collapsed:<key>`.
  *
+ * A card that isn't collapsible can be one big button instead (`onClick`,
+ * named for screen readers by `label`): the whole card is the tap target, and
+ * Enter or Space presses it from the keyboard.
+ *
  * An `action` sits at the right of the header, before the chevron. It can't
  * live inside the trigger (a button in a button), so the trigger wraps only
  * the title and stretches an ::after over the whole header; the action is
@@ -68,6 +72,7 @@ function writeOpen(key: string | undefined, open: boolean) {
 export const Board = ({
   children,
   onClick,
+  label,
   title,
   action,
   collapsible = false,
@@ -78,7 +83,10 @@ export const Board = ({
   bg,
 }: {
   children: React.ReactNode;
+  /** Makes a non-collapsible card a button. */
   onClick?: () => void;
+  /** What pressing the card does, e.g. "Show the forecast". */
+  label?: string;
   title?: React.ReactNode;
   /** A control at the right of the header, e.g. a button. */
   action?: React.ReactNode;
@@ -114,6 +122,8 @@ export const Board = ({
       </Box>
     ) : null;
 
+  const clickable = onClick != null && !collapsible;
+
   const hasBody = children != null && children !== false;
   const body = hasBody ? (
     <Card.Body flex={fill ? "1" : undefined} minH={fill ? "0" : undefined}>
@@ -134,8 +144,31 @@ export const Board = ({
       flex={fill ? "1" : undefined}
       minH={fill ? "0" : undefined}
       gridColumn={span === 2 ? "1 / -1" : undefined}
-      onClick={!collapsible ? onClick : undefined}
-      cursor={onClick && !collapsible ? "pointer" : undefined}
+      onClick={clickable ? onClick : undefined}
+      cursor={clickable ? "pointer" : undefined}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-label={clickable ? label : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.target !== e.currentTarget) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      _focusVisible={
+        clickable
+          ? {
+              outline: "2px solid",
+              outlineColor: "colorPalette.focusRing",
+              outlineOffset: "2px",
+            }
+          : undefined
+      }
     >
       {collapsible ? (
         <Collapsible.Root

@@ -23,7 +23,10 @@ export interface HomeWeather {
   humidity: number | null;
   /** The next 8 hours, from the current one. */
   forecast: HomeForecastPeriod[];
-  /** Today's daily period: temperature is the high, templow the low. */
+  /**
+   * Up to 10 days from today (today's first): temperature is the high,
+   * templow the low.
+   */
   forecastDaily: HomeForecastPeriod[];
 }
 

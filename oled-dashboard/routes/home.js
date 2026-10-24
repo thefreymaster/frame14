@@ -148,8 +148,9 @@ router.get("/weather", async (_req, res) => {
       temperatureUnit: attrs.temperature_unit,
       humidity: attrs.humidity,
       forecast: hourly.slice(0, 8).map(mapForecast),
-      // Today only, for its high and low.
-      forecastDaily: daily.slice(0, 1).map(mapForecast),
+      // Today first (the cards' high and low), then the days after it for
+      // the forecast dialog.
+      forecastDaily: daily.slice(0, 10).map(mapForecast),
     });
   } catch (err) {
     console.error("Home weather fetch error:", err);

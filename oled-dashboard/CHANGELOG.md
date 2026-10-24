@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.65.0
+
+- Added: tap the time and weather card on Home to see the forecast. It shows the weather now with today's high and low, the next eight hours, and the next ten days, each with its rain chance, low and high, and a bar showing where the day's range falls in the week. The weather card on a phone and the Weather card on a desktop open it too.
+
 ## 0.64.0
 
 - Added: a 3D printer page (Printer in the nav). It shows the printer's status, its camera live, the current job (model thumbnail, name, progress, layer, time left and when it should finish) and the nozzle, bed and chamber temperatures. While a print runs you can pause or resume it, and stop it after a confirmation.

@@ -116,6 +116,17 @@ with Chakra's own fonts, radii, shadows, borders and colours.
 - **Colour mode.** `lib/themeMode.ts` keeps the Auto / Bright / Dark preference, the 07:00–19:00 daylight window
   and the socket sync; `components/ui/provider.tsx` feeds the effective mode to Chakra's colour mode (the
   `color-mode` snippet, next-themes, `forcedTheme`). Bright is Chakra's light mode, Dark is Chakra's dark mode.
+- **Launch splash.** `index.html` carries the one other piece of global CSS, inline so it paints before the
+  bundle arrives (until then nothing set a background, so a load showed the browser's white even in dark
+  mode). An inline script reads the theme preference as `lib/themeMode` would and sets `data-theme-mode`;
+  an early `@layer splash` paints the page's black / white (Chakra's layers win once loaded); and `#splash`
+  builds the app icon (SVG traced from `public/web-app-manifest-512x512.png`) in layers — the house wiped in
+  from its peak down, the framed photo growing into it, the hills rising — with a glint while it waits. Every
+  step is a transform or a fade on its own layer, because the splash runs while the bundle compiles and the
+  main thread is busy: an SVG stroke drawing (`stroke-dashoffset`) froze half drawn there. `html[data-splash]` drives it: `up` keeps /home's cards hidden, `out` lifts the logo away,
+  fades the page in and rises the cards in reading order (`--enter-order`). `lib/splash.ts` flips it,
+  `hooks/useReleaseSplash` says when. Not on /blank (a reload at night stays black). Under reduced motion the
+  logo is static and the hand-off is a fade.
 - **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
   `colorPalette`. Where a raw CSS string is needed (SVG strokes in the climate dialog's dial and the analog
   clock), use the variable, e.g. `var(--chakra-colors-orange-solid)`; nivo needs literals, so Solar resolves
@@ -227,9 +238,10 @@ src/
   hooks/
     useWeather.ts                 — fetches /api/weather, refetches every 5min
     useDesktop.ts                 — a desktop: HOME_FOUR_COLUMN_QUERY and not a phone/Android user agent (`isMobileUserAgent` in lib/deviceMode; the kitchen frame is an Android tablet). Not device mode: desktop browsers default to frame mode. Photos and Radar are framed like cards there, and the header shows HeaderClock
-    useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s. Returns `loading` per data source (weather, climate, energy, calendar, fan, vacuum), true only until the first answer — the REST snapshot, or live socket states for every entity; energy waits for /api/energy. There is no page-wide loading state: /home renders the board at once and each card shows its own placeholder
+    useHomeData.ts                — weather+climate+energy+calendar+people+printer+vacuum; climate polls /api/home/climate every 60s, energy polls /api/energy every 30s. Returns `loading` per data source (weather, climate, energy, calendar, fan, vacuum), true only until the first answer — the REST snapshot, or live socket states for every entity; energy waits for /api/energy. There is no page-wide loading state: /home renders the board at once and each card shows its own placeholder (on a first load the launch splash covers it until every flag has cleared)
     useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
-    useEntity.ts                  — subscribes to a single HA entity via Socket.IO room
+    useEntity.ts                  — subscribes to a single HA entity via Socket.IO room (`useEntity`, `useEntities`). The server acks each subscribe after the cached state; `useEntitiesAnswered` / `entitiesAnswered()` say every subscribe so far has its answer, published through React Query's notifyManager so it can't turn true before the states ahead of it have rendered
+    useReleaseSplash.ts           — `useReleaseSplash(ready)`: takes the launch splash down once ready, the entity config has loaded and every subscribe is answered (TeamTracker and the printer subscribe only after the config, and arriving late re-packed the board). Called by Layout (any page but "/" and /home, on mount) and HomeOverview (every card's `loading` clear); it reads entitiesAnswered() in its effect, after the children's subscribing effects
     useLiveGame.ts                — tracked games worth showing now; `useGames(window)` takes the window predicate, `useLiveGame()` is the route's tighter one. Ticks every 60s so windows open/close on the clock
     useEnergy.ts                  — fetches /api/energy, refetches every 5min
     useEnergyToday.ts             — fetches /api/energy/today while enabled (the energy dialog open), refetches every 5min
@@ -267,6 +279,7 @@ src/
     navMetrics.ts                 — `PAGE_GUTTER` (spacing.gutter, the page's padding around the cards and the gap between them, which the header icons and the rail also keep to); HEADER_TOP (iPhone status-bar inset + blur band, above the header's row) / HEADER_CLEARANCE (screen top to the header's bottom); nav bar height, side inset (= the bottom gap), bottom gap, the bar's iPhone shape (NAV_BAR_TOP_RADIUS / NAV_BAR_BOTTOM_RADIUS, NAV_BAR_LIFT, NAV_BAR_SIDE_ROOM, NAV_BAR_END_ENTRY_RADIUS, all switched on the home-indicator inset) and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the header, the arranging bar and the Photos/Marquee eye button; LIGHT_STRIP_ITEM_WIDTH, LIGHT_STRIP_HEIGHT (the portrait bar's) and LIGHT_STRIP_CLEARANCE for the desktop lights strip
     hvac.ts                       — thermostat model shared by the climate card and modal: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, and the card's tile columns (`climateGridCss`)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
+    splash.ts                     — the launch splash's hand-off (see "Launch splash"): `releaseSplash()` waits for the logo's draw-in (its CSS animations; 3s after the app starts at most), numbers the visible /home cards top to bottom, sets `data-splash="out"`, and when the hand-off has played removes `#splash` and clears the attribute
     appVersion.ts                 — RUNNING_VERSION (`__APP_VERSION__`) vs the installed one (/api `version`), checked on every socket connect (so after the add-on restarts with an update) and when the page becomes visible. Outdated: one persistent toast per new version with a Refresh action (`window.location.reload()`; the service worker fetches navigations network-first, so a reload gets the new hashed assets), and `useAppVersion()` gives /control its running version and Update link
     forecast.ts                   — RAIN_SHOWN_FROM (20%: rain chances below aren't shown) and `roundTemp`, shared by the hourly and daily forecasts
     energy.ts                     — the energy card and dialog's helpers (fmtW, fmtKwh, coverage, grid, GRID_ACTIVE_THRESHOLD) and ENERGY_COLORS / ENERGY_VARS: solar yellow.500, export green.600, import orange.600, home fg.muted, the same in both modes (picked with the dataviz validator: a darker yellow loses its colour-blind separation from the green and orange)
@@ -341,7 +354,7 @@ routes/
 ## Socket.IO
 
 - Client emits `change` with a view name → server broadcasts `change_view` to all **other** clients
-- Client emits `entity:subscribe` / `entity:unsubscribe` → joins/leaves Socket.IO room `entity:<id>`
+- Client emits `entity:subscribe` / `entity:unsubscribe` → joins/leaves Socket.IO room `entity:<id>`. The server sends the cached state on subscribe, then acks it (also when it has no state), so the client knows when it has everything there is
 - HA WebSocket pushes state updates → server fans out to `entity:<id>` rooms
 - `GET /api/change/:view` broadcasts to **all** clients (used by HA automations)
 - `SocketViewListener` navigates on `change_view` but ignores it on `/control`, and always on a remote-mode device. The motion watcher re-broadcasts the last route on every kitchen motion `on`, so a remote that followed it was yanked back to that view every time someone walked past

@@ -23,6 +23,7 @@ import {
   type HomeColumns,
 } from "../lib/homeLayout";
 import { EmptyState } from "../components/ui/empty-state";
+import { useReleaseSplash } from "../hooks/useReleaseSplash";
 
 // ── Columns hook ─────────────────────────────────────────────────────────────
 
@@ -65,6 +66,9 @@ export function HomeOverview() {
   // Each card shows its own placeholder until its data lands; the board and
   // every card that is ready render straight away.
   const { data, isError, loading } = useHomeData();
+  // On a first load the launch splash waits for them all, so the board
+  // arrives whole.
+  useReleaseSplash(!Object.values(loading).some(Boolean));
   const columns = useHomeColumns();
   const desktop = useDesktop();
 

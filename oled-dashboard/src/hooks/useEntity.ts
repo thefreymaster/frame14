@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import {
+  notifyManager,
   useQueries,
   useQuery,
   useQueryClient,
@@ -17,6 +18,42 @@ export interface HAState<A = Record<string, unknown>> {
 
 const refCounts = new Map<string, number>();
 
+// Whether the server has answered every subscribe so far. It acks each one,
+// after the entity's cached state if it has one, so a page can tell when its
+// live states are all in without waiting on an entity Home Assistant lacks.
+const unanswered = new Set<string>();
+let allAnswered = true;
+const answeredListeners = new Set<() => void>();
+
+function setAllAnswered(value: boolean) {
+  if (allAnswered === value) return;
+  allAnswered = value;
+  answeredListeners.forEach((fn) => fn());
+}
+
+function answered(entityId: string) {
+  if (!unanswered.delete(entityId) || unanswered.size > 0) return;
+  // Through React Query's queue, behind the states that arrived ahead of the
+  // acks: the flag mustn't turn true before the cards have drawn them.
+  notifyManager.schedule(() => setAllAnswered(unanswered.size === 0));
+}
+
+function subscribeAnswered(fn: () => void) {
+  answeredListeners.add(fn);
+  return () => {
+    answeredListeners.delete(fn);
+  };
+}
+
+/** Whether the server has answered every entity subscribe made so far. */
+export function entitiesAnswered() {
+  return allAnswered;
+}
+
+export function useEntitiesAnswered() {
+  return useSyncExternalStore(subscribeAnswered, entitiesAnswered);
+}
+
 function normalizeEntityIds(entityIds: readonly string[]) {
   const normalized: string[] = [];
   const seen = new Set<string>();
@@ -33,7 +70,11 @@ function normalizeEntityIds(entityIds: readonly string[]) {
 function refSubscribe(entityId: string) {
   const cur = refCounts.get(entityId) ?? 0;
   refCounts.set(entityId, cur + 1);
-  if (cur === 0) socket.emit("entity:subscribe", entityId);
+  if (cur === 0) {
+    unanswered.add(entityId);
+    setAllAnswered(false);
+    socket.emit("entity:subscribe", entityId, () => answered(entityId));
+  }
 }
 
 function refUnsubscribe(entityId: string) {
@@ -42,6 +83,7 @@ function refUnsubscribe(entityId: string) {
   const next = cur - 1;
   if (next === 0) {
     refCounts.delete(entityId);
+    answered(entityId);
     socket.emit("entity:unsubscribe", entityId);
   } else {
     refCounts.set(entityId, next);

@@ -16,6 +16,7 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
 import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
+import { useReleaseSplash } from "../hooks/useReleaseSplash";
 import {
   HEADER_CLEARANCE,
   LIGHT_STRIP_CLEARANCE,
@@ -33,10 +34,16 @@ const SCROLLING_PATHS = new Set([
   "/vacuum",
 ]);
 
+// Pages that keep the launch splash up until they have data: /home waits for
+// its cards (HomeOverview), and "/" is on its way there. Any other page is
+// ready once it has mounted.
+const SPLASH_HOLDING_PATHS = new Set(["/", "/home"]);
+
 export function Layout() {
   useThemeMode();
   useReady();
   const location = useLocation();
+  useReleaseSplash(!SPLASH_HOLDING_PATHS.has(location.pathname));
   const isControl = location.pathname === "/control";
   const isBlank = location.pathname === "/blank";
   const navVisible = useNavVisible();

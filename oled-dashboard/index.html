@@ -18,8 +18,239 @@
          body / display font tokens in src/theme/tokens.ts. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Frame14</title>
+    <!-- Launch splash. The bundle takes a while to arrive and parse, and until
+         it runs nothing gives the page a background, so it showed the
+         browser's white even in dark mode. This script and style paint the
+         page in its mode, and the logo below, on the very first frame;
+         src/lib/splash.ts takes the splash down once the page has its data. -->
+    <script>
+      (function () {
+        // lib/themeMode.ts's preference and daylight window, read early; it
+        // takes over (and syncs with the server) once the bundle runs.
+        var mode = "dark";
+        try {
+          var pref = localStorage.getItem("theme-mode-preference");
+          var hour = new Date().getHours();
+          if (pref === "bright" || (pref === "auto" && hour >= 7 && hour < 19)) {
+            mode = "bright";
+          }
+        } catch (e) {}
+        var root = document.documentElement;
+        root.dataset.themeMode = mode;
+        root.style.colorScheme = mode === "bright" ? "light" : "dark";
+        // /blank stays black: a reload at night shouldn't light the kitchen.
+        if (location.pathname !== "/blank") root.dataset.splash = "up";
+      })();
+    </script>
+    <style>
+      /* Chakra's own page colours (bg: white / black), in the first layer so
+         Chakra's layers win once its styles load. */
+      @layer splash {
+        html {
+          background: #09090b;
+        }
+        html[data-theme-mode="bright"] {
+          background: #fff;
+        }
+      }
+
+      #splash {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        place-items: center;
+        background: #09090b;
+      }
+      html[data-theme-mode="bright"] #splash {
+        background: #fff;
+      }
+      html[data-splash] #splash {
+        display: grid;
+      }
+
+      /* The app icon: the house and its framed photo on the blue tile. It is
+         built in layers so that every step of the intro is a transform or a
+         fade, which the compositor keeps running while the bundle compiles;
+         a stroke-by-stroke SVG drawing froze half drawn for that long. */
+      .splash-tile {
+        position: relative;
+        width: clamp(88px, 13vmin, 200px);
+        aspect-ratio: 1;
+        border-radius: 22.5%;
+        overflow: hidden;
+        background: linear-gradient(160deg, #2fa6fd, #1793f6);
+        box-shadow: 0 1.5vmin 5vmin rgb(28 157 253 / 0.28);
+      }
+      .splash-layer {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      /* The photo's window inside the frame: 190, 221, 132 x 136 of 512. */
+      .splash-photo {
+        position: absolute;
+        inset: 43.16% 37.11% 30.27% 37.11%;
+        border-radius: 4.5% / 4.4%;
+        overflow: hidden;
+        background: #a6dafc;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        /* Intro: the tile settles in; the house appears from its peak down,
+           the roof spreading out and the walls running to the floor; the
+           framed photo grows into it and the hills rise inside. */
+        .splash-tile {
+          animation: splash-tile-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        /* The house's layer slides down into place while the drawing inside
+           it slides up by as much: the drawing stays put and the layer's
+           edge sweeps down over it. */
+        .splash-house {
+          overflow: hidden;
+          animation: splash-wipe 760ms cubic-bezier(0.45, 0, 0.25, 1) 140ms
+            both;
+        }
+        .splash-house > svg {
+          animation: splash-unwipe 760ms cubic-bezier(0.45, 0, 0.25, 1) 140ms
+            both;
+        }
+        .splash-picture {
+          transform-origin: 50% 56.4%;
+          animation: splash-picture-in 480ms cubic-bezier(0.16, 1, 0.3, 1)
+            520ms both;
+        }
+        .splash-far {
+          animation: splash-hill 520ms cubic-bezier(0.16, 1, 0.3, 1) 640ms both;
+        }
+        .splash-near {
+          animation: splash-hill 520ms cubic-bezier(0.16, 1, 0.3, 1) 700ms both;
+        }
+        /* Waiting on data: a slow glint across the tile. */
+        .splash-tile::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            105deg,
+            transparent 35%,
+            rgb(255 255 255 / 0.22) 50%,
+            transparent 65%
+          );
+          transform: translateX(-100%);
+          animation: splash-glint 2.4s cubic-bezier(0.45, 0, 0.25, 1) 1.3s
+            infinite;
+        }
+
+        /* Hand-off: the logo lifts away as the page fades up behind it. */
+        html[data-splash="out"] .splash-tile {
+          animation: splash-tile-out 420ms cubic-bezier(0.4, 0, 1, 1) both;
+        }
+      }
+
+      html[data-splash="out"] #splash {
+        pointer-events: none;
+        animation: splash-fade 520ms ease 80ms reverse both;
+      }
+
+      /* /home's cards wait under the splash, then rise into place one after
+         another, in reading order (--enter-order, set by lib/splash.ts). */
+      html[data-splash="up"] .home-card {
+        opacity: 0;
+      }
+      html[data-splash="out"] .home-card {
+        animation: splash-card-in 640ms cubic-bezier(0.16, 1, 0.3, 1)
+          calc(140ms + var(--enter-order, 0) * 55ms) backwards;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html[data-splash="out"] .home-card {
+          animation-name: splash-fade;
+        }
+      }
+
+      @keyframes splash-tile-in {
+        from {
+          opacity: 0;
+          transform: scale(0.82);
+        }
+      }
+      @keyframes splash-tile-out {
+        to {
+          opacity: 0;
+          transform: scale(1.12);
+        }
+      }
+      @keyframes splash-wipe {
+        from {
+          transform: translateY(-100%);
+        }
+      }
+      @keyframes splash-unwipe {
+        from {
+          transform: translateY(100%);
+        }
+      }
+      @keyframes splash-picture-in {
+        from {
+          opacity: 0;
+          transform: scale(0.6);
+        }
+      }
+      @keyframes splash-fade {
+        from {
+          opacity: 0;
+        }
+      }
+      @keyframes splash-hill {
+        from {
+          transform: translateY(70%);
+        }
+      }
+      @keyframes splash-glint {
+        60%,
+        to {
+          transform: translateX(100%);
+        }
+      }
+      @keyframes splash-card-in {
+        from {
+          opacity: 0;
+          transform: translateY(1.5rem) scale(0.98);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" aria-hidden="true">
+      <div class="splash-tile">
+        <!-- Traced from public/web-app-manifest-512x512.png (512 x 512). -->
+        <div class="splash-layer splash-picture">
+          <div class="splash-photo">
+            <svg class="splash-layer splash-far" viewBox="190 221 132 136">
+              <path d="M188 300 L220 279 L268 312 V360 H188 Z" fill="#5ebdfc" />
+              <path d="M188 330 L240 296 L296 266 L324 284 V360 H188 Z" fill="#3aabfc" />
+            </svg>
+            <svg class="splash-layer splash-near" viewBox="190 221 132 136">
+              <path d="M188 343 L324 270 V360 H188 Z" fill="#087bdd" />
+            </svg>
+          </div>
+          <svg class="splash-layer" viewBox="0 0 512 512">
+            <path fill="none" stroke="#fff" stroke-width="15" d="M199 216 H313 A14 14 0 0 1 327 230 V348 A14 14 0 0 1 313 362 H199 A14 14 0 0 1 185 348 V230 A14 14 0 0 1 199 216 Z" />
+          </svg>
+        </div>
+        <div class="splash-layer splash-house">
+          <svg class="splash-layer" viewBox="0 0 512 512">
+            <rect x="334" y="137" width="30" height="70" rx="3" fill="#fff" />
+            <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke-width="21" d="M126 236 L256 120 L386 236" />
+              <path stroke-width="20" d="M151 214 V374 A20 20 0 0 0 171 394 H341 A20 20 0 0 0 361 374 V214" />
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

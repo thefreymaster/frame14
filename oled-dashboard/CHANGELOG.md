@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.69.0
+
+- Added: a launch animation. As Frame14 loads, the app icon builds itself on the page's black (white in Bright): the house appears from its peak down, the framed photo grows into it, and the hills rise inside. When the page is ready the icon lifts away, and the Home cards rise into place one after another.
+- Changed: on first load, Home waits until every card has its data, including the Teams, printer and lights that arrive live. Cards no longer pop in one at a time or move around after the page appears. It waits at most 3 seconds after the app starts; after that, a card that's still loading shows its placeholder.
+- Fixed: the screen flashed white while the app loaded, even in dark mode. It's now black (or white in Bright) from the first moment.
+- The blank screen stays black when it reloads, with no icon. With reduced motion turned on, the icon appears complete and the page fades in.
+
 ## 0.68.1
 
 - No changes to the app: this release exists to try out the new-version notice from 0.68.0. An open Frame14 page should show "New version available" with a Refresh button, and Settings an Update link next to v0.68.0.

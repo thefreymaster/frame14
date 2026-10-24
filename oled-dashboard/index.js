@@ -133,11 +133,14 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("nav_visibility", v);
   });
 
-  socket.on("entity:subscribe", (entityId) => {
+  socket.on("entity:subscribe", (entityId, ack) => {
     if (typeof entityId !== "string" || !entityId) return;
     socket.join(`entity:${entityId}`);
     const cached = getState(entityId);
     if (cached) socket.emit(entityId, cached);
+    // Answered after the state, and also when there is none, so the client
+    // can tell when it has everything there is (the launch splash waits on it).
+    if (typeof ack === "function") ack();
   });
 
   socket.on("entity:unsubscribe", (entityId) => {

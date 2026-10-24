@@ -14,7 +14,6 @@ import { HomeWeatherCard } from "../components/HomeWeatherCard";
 import { HomeForecastCard } from "../components/HomeForecastCard";
 import { useDesktop } from "../hooks/useDesktop";
 import { CalendarSection } from "../components/CalendarSection";
-import { StatusStrip } from "../components/StatusStrip";
 import { HomeBoard } from "../components/HomeBoard";
 import {
   HOME_FOUR_COLUMN_QUERY,
@@ -119,17 +118,10 @@ export function HomeOverview() {
         loading={loading.calendar}
       />
     ),
-    // Active-only sections: they claim a tile while running, and report as
-    // chips in the status strip when they aren't.
+    // Active-only sections: they claim a tile while running and are gone
+    // when they aren't (the header's icons say they're running, too).
     printer: <PrinterSection printer={data.printer} />,
     vacuum: <VacuumSection vacuum={data.vacuum} />,
-    statusStrip: (
-      <StatusStrip
-        printer={data.printer}
-        vacuum={data.vacuum}
-        loading={loading.vacuum}
-      />
-    ),
   };
 
   // Keyed so each grid loads its own saved arrangement.

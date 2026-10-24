@@ -115,7 +115,7 @@ export interface HomeLoading {
   calendar: boolean;
   /** Only while fans are configured; with none the card never shows. */
   fan: boolean;
-  /** Only while vacuums are configured; feeds the status strip's chips. */
+  /** Only while vacuums are configured. */
   vacuum: boolean;
 }
 

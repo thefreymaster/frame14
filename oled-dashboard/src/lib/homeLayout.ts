@@ -25,7 +25,6 @@ export const HOME_CARD_IDS = [
   "calendar",
   "printer",
   "vacuum",
-  "statusStrip",
 ] as const;
 
 export type HomeCardId = (typeof HOME_CARD_IDS)[number];
@@ -49,10 +48,6 @@ export const HOME_CARDS: Record<
   calendar: { label: "Calendar" },
   printer: { label: "3D printer", hiddenHint: "Shows while printing" },
   vacuum: { label: "Vacuum", hiddenHint: "Shows while cleaning" },
-  statusStrip: {
-    label: "Status chips",
-    hiddenHint: "Shows idle printer and vacuum",
-  },
 };
 
 /** Phones (below Chakra's md) get one column. */
@@ -109,7 +104,6 @@ const DEFAULTS: Record<HomeGrid, HomeLayout> = {
     { id: "printer", span: 2 },
     { id: "vacuum", span: 2 },
     { id: "fan", span: 2 },
-    { id: "statusStrip", span: 2 },
   ],
   4: [
     { id: "header", span: 2 },
@@ -119,7 +113,6 @@ const DEFAULTS: Record<HomeGrid, HomeLayout> = {
     { id: "radar", span: 2 },
     { id: "calendar", span: 2 },
     { id: "energy", span: 2 },
-    { id: "statusStrip", span: 2 },
     { id: "printer", span: 2 },
     { id: "vacuum", span: 2 },
   ],

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.67.0
+
+- Removed: the "Printer idle" and "Vacuum docked" chips at the bottom of Home. An idle printer or vacuum no longer shows on Home at all.
+- Added: a vacuum icon in the header while a vacuum is cleaning or returning to its dock, next to the printer icon that already shows while a print runs. Both are green, like the washer, dryer and dishwasher icons, and disappear when the appliance is idle.
+
 ## 0.66.0
 
 - Changed: the energy detail (tap the Energy card on Home) is redesigned. "Now" shows where the power is going: solar into the house, and the rest out to the grid, or the grid making up the difference, with moving dots on each line in the direction it flows. "Today" draws the day's solar and home use as a chart, with the day's solar peak; drag across it (or point at it) to read any quarter hour. Under the chart, what the panels produced is split into what the house used and what went to the grid, and what the house used into what came from solar and what came from the grid.

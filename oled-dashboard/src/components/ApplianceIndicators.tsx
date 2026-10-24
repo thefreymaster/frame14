@@ -1,6 +1,11 @@
 import { HStack, Icon } from "@chakra-ui/react";
 import { Tooltip } from "./ui/tooltip";
-import { TbWashMachine, TbWashTumbleDry, TbBowlSpoon } from "react-icons/tb";
+import {
+  TbWashMachine,
+  TbWashTumbleDry,
+  TbBowlSpoon,
+  TbVacuumCleaner,
+} from "react-icons/tb";
 import type { IconType } from "react-icons";
 import { useEntities, useEntity } from "../hooks/useEntity";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
@@ -44,17 +49,40 @@ const APPLIANCES: { id: string; Icon: IconType; label: string }[] = [
 ];
 
 const PRINTER_ACTIVE_STATES = new Set(["running", "printing", "pause"]);
+// The same states that give a vacuum its card on /home (VacuumSection).
+const VACUUM_LABELS: Record<string, string> = {
+  cleaning: "Vacuum cleaning",
+  returning: "Vacuum returning to the dock",
+};
+const NO_VACUUMS: string[] = [];
 
+/**
+ * The header's running appliances, in green: the washer, dryer and
+ * dishwasher, the 3D printer while it prints (or is paused mid-print) and
+ * each vacuum while it cleans or heads back to its dock. Idle, they show
+ * nothing.
+ */
 export function ApplianceIndicators() {
   const queries = useEntities(APPLIANCES.map((a) => a.id));
   const running = APPLIANCES.filter((_, i) => queries[i].data?.state === "on");
   const entitiesQuery = useEntitiesConfig();
-  const printer = useEntity(printerEntityIds(entitiesQuery.data?.printer).status);
+  const printer = useEntity(
+    printerEntityIds(entitiesQuery.data?.printer).status,
+  );
   const printerActive = PRINTER_ACTIVE_STATES.has(
     printer.data?.state?.toLowerCase() ?? "",
   );
+  const vacuumIds = entitiesQuery.data?.vacuums ?? NO_VACUUMS;
+  const vacuumQueries = useEntities(vacuumIds);
+  const vacuums = vacuumIds
+    .map((id, i) => ({
+      id,
+      label: VACUUM_LABELS[vacuumQueries[i]?.data?.state ?? ""],
+    }))
+    .filter((v) => v.label);
 
-  if (running.length === 0 && !printerActive) return null;
+  if (running.length === 0 && !printerActive && vacuums.length === 0)
+    return null;
 
   return (
     <HStack gap="3" align="center">
@@ -83,6 +111,17 @@ export function ApplianceIndicators() {
           </Icon>
         </Tooltip>
       )}
+      {vacuums.map(({ id, label }) => (
+        <Tooltip key={id} content={label}>
+          <Icon
+            boxSize={HEADER_ICON_SIZE}
+            color="fg.success"
+            aria-label={label}
+          >
+            <TbVacuumCleaner />
+          </Icon>
+        </Tooltip>
+      ))}
     </HStack>
   );
 }

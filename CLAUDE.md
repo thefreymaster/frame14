@@ -188,7 +188,7 @@ src/
     LightsAllOffButton.tsx        — the Lights page header's action: turns off every light/switch that's on; spins until HA reports them off (10s cap)
     EnergySection.tsx             — energy card (coverage Progress, grid Badge) + detail modal (PanelDialog, Stats)
     PrinterSection.tsx            — 3D printer card (Progress) + click-to-open detail modal (PanelDialog: temps, layers, ETA, filament as Stats)
-    PanelDialog.tsx               — shell of the detail modals: a stock Chakra Dialog with title, body and close button
+    PanelDialog.tsx               — shell of the detail modals: a stock Chakra Dialog with title, body and close button. `scrollBehavior="inside"` (a tall panel scrolls its body; the title and close stay put) and the positioner padded by the safe-area insets plus the gutter, content `maxH="100%"`: on an iPhone a full-height panel had its close button under the status bar, with no outside left to tap
     ForecastDetailModal.tsx       — one forecast period as a PanelDialog of Stats
     TeamTracker.tsx               — TeamTracker sports card; tapping a score bug opens /football; one chip per tracked team (matchup, kickoff time / live score with period + clock / final); renders only for PRE/IN/POST, hidden on BYE/NOT_FOUND. On a narrow card (container query, `NARROW`) the broadcast row re-flows to one team per row with the clock between. Card-sized rendering only — the game model is in `src/lib/teamTracker.ts`
     FootballScoreboard.tsx        — the /football score bug at scoreboard scale; same anatomy as TeamTracker's chip, its own vmin sizes (the card's are tuned for a bento tile)

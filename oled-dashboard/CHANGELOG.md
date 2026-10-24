@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.65.1
+
+- Fixed: on an iPhone, the forecast dialog's close button sat under the status bar and couldn't be tapped, so the dialog couldn't be closed. Dialogs now keep clear of the status bar and the home indicator, and a dialog taller than the screen scrolls its contents while the title and close button stay in place. The same applies to the energy and printer details.
+
 ## 0.65.0
 
 - Added: tap the time and weather card on Home to see the forecast. It shows the weather now with today's high and low, the next eight hours, and the next ten days, each with its rain chance, low and high, and a bar showing where the day's range falls in the week. The weather card on a phone and the Weather card on a desktop open it too.

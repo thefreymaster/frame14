@@ -19,11 +19,12 @@ export interface EnergyToday {
 }
 
 /**
- * /api/energy/today: today's power curve in quarter hours. Only fetched while
- * `enabled` (the energy dialog is open); HA compiles the statistics every
- * five minutes, so it refetches at that pace.
+ * /api/energy/today: today's power curve in quarter hours. The energy card
+ * draws it, so it's fetched whenever /home is up; the dialog reads the same
+ * query. HA compiles the statistics every five minutes, so it refetches at
+ * that pace.
  */
-export function useEnergyToday(enabled: boolean) {
+export function useEnergyToday() {
   return useQuery<EnergyToday>({
     queryKey: ["energy", "today"],
     queryFn: async () => {
@@ -31,7 +32,6 @@ export function useEnergyToday(enabled: boolean) {
       if (!res.ok) throw new Error(`Today's power fetch failed: ${res.status}`);
       return res.json();
     },
-    enabled,
     staleTime: 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
   });

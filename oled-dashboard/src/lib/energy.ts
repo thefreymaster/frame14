@@ -23,6 +23,12 @@ export const ENERGY_VARS = {
   home: "var(--chakra-colors-fg-muted)",
 } as const;
 
+/**
+ * The energy card's strip of today's curve: short, so the card stays about
+ * the size of its neighbours (its skeleton keeps the same height).
+ */
+export const SPARKLINE_HEIGHT = { base: "2.5rem", md: "3.5rem" };
+
 export function fmtKwh(n: number) {
   return isNaN(n) ? "--" : n.toFixed(0);
 }

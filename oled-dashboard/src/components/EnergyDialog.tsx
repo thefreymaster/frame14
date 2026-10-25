@@ -8,7 +8,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import type { HomeEnergy } from "../hooks/useHomeData";
-import { useEnergyToday } from "../hooks/useEnergyToday";
+import type { useEnergyToday } from "../hooks/useEnergyToday";
 import { ENERGY_COLORS, coverage, fmtKwh } from "../lib/energy";
 import { PanelDialog } from "./PanelDialog";
 import { PowerFlow } from "./PowerFlow";
@@ -20,19 +20,20 @@ import { TodayPowerChart } from "./TodayPowerChart";
  * power curve, and today's totals, each split by the grid: the solar into
  * what the house used and what went out, the house's use into what the
  * solar covered and what came in. The curve and the split come from
- * /api/energy/today, fetched while the dialog is open; until it answers the
- * totals stand alone.
+ * /api/energy/today — the card's query, handed in, since the card draws the
+ * curve too; until it answers the totals stand alone.
  */
 export function EnergyDialog({
   energy,
+  today,
   open,
   onClose,
 }: {
   energy: HomeEnergy;
+  today: ReturnType<typeof useEnergyToday>;
   open: boolean;
   onClose: () => void;
 }) {
-  const today = useEnergyToday(open);
   const { productionToday: produced, consumptionToday: used } = energy;
   // The totals are /api/energy's; only the self-used share comes from the
   // curve, so the two halves of each bar add up to the total above it.

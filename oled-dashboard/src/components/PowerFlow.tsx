@@ -23,6 +23,31 @@ const flowLeft = keyframes`
   to { background-position-x: 0; }
 `;
 
+type FlowSize = "sm" | "md";
+
+/**
+ * The diagram at the dialog's size (`md`) and the energy card's (`sm`), the
+ * same drawing with smaller nodes, figures and words.
+ */
+const SIZES = {
+  md: {
+    node: "14",
+    icon: "6",
+    gap: { base: "1.5", md: "3" },
+    value: { base: "lg", md: "xl" },
+    valueTop: "2",
+    label: "sm",
+  },
+  sm: {
+    node: "10",
+    icon: "5",
+    gap: "1.5",
+    value: "sm",
+    valueTop: "0.5",
+    label: "xs",
+  },
+} as const;
+
 /**
  * Where the power is going now, as the house wires it: the panels feed the
  * house, and what it doesn't use goes out through the meter, or the grid
@@ -30,36 +55,43 @@ const flowLeft = keyframes`
  * Solar → Home ← Grid when importing. A line with power on it carries dots
  * moving the way it flows, in the flow's colour; an idle line is a hairline.
  */
-export function PowerFlow({ energy }: { energy: HomeEnergy }) {
+export function PowerFlow({
+  energy,
+  size = "md",
+}: {
+  energy: HomeEnergy;
+  size?: FlowSize;
+}) {
   const { abs, exporting, active } = grid(energy);
   const producing = energy.currentProduction > GRID_ACTIVE_THRESHOLD;
   const gridColor = !active ? null : exporting ? "export" : "import";
+  const s = SIZES[size];
 
   return (
     <Grid
       templateColumns="auto minmax(1rem, 1fr) auto minmax(1rem, 1fr) auto"
-      columnGap={{ base: "1.5", md: "3" }}
+      columnGap={s.gap}
       rowGap="1"
       alignItems="center"
       justifyItems="center"
     >
-      <Node icon={<PiSolarRoof />} color={producing ? "solar" : null} />
+      <Node icon={<PiSolarRoof />} color={producing ? "solar" : null} size={size} />
       <Wire color={producing ? "solar" : null} direction="right" />
-      <Node icon={<IoHome />} color="home" />
+      <Node icon={<IoHome />} color="home" size={size} />
       <Wire color={gridColor} direction={exporting ? "right" : "left"} />
-      <Node icon={<IoFlash />} color={gridColor} />
+      <Node icon={<IoFlash />} color={gridColor} size={size} />
 
-      <Value>{fmtW(energy.currentProduction)}</Value>
+      <Value size={size}>{fmtW(energy.currentProduction)}</Value>
       <span />
-      <Value>{fmtW(energy.currentConsumption)}</Value>
+      <Value size={size}>{fmtW(energy.currentConsumption)}</Value>
       <span />
-      <Value>{active ? fmtW(abs) : "—"}</Value>
+      <Value size={size}>{active ? fmtW(abs) : "—"}</Value>
 
-      <Label>Solar</Label>
+      <Label size={size}>Solar</Label>
       <span />
-      <Label>Home</Label>
+      <Label size={size}>Home</Label>
       <span />
-      <Label>
+      <Label size={size}>
         {active ? (exporting ? "To grid" : "From grid") : "Grid idle"}
       </Label>
     </Grid>
@@ -68,17 +100,25 @@ export function PowerFlow({ energy }: { energy: HomeEnergy }) {
 
 type Flow = keyof typeof ENERGY_COLORS;
 
-function Node({ icon, color }: { icon: React.ReactNode; color: Flow | null }) {
+function Node({
+  icon,
+  color,
+  size,
+}: {
+  icon: React.ReactNode;
+  color: Flow | null;
+  size: FlowSize;
+}) {
   const c = color ? ENERGY_COLORS[color] : "border";
   return (
     <Center
-      boxSize="14"
+      boxSize={SIZES[size].node}
       rounded="full"
       borderWidth="2px"
       borderColor={c}
       bg={color ? `${c}/12` : undefined}
     >
-      <Icon boxSize="6" color={color ? c : "fg.subtle"}>
+      <Icon boxSize={SIZES[size].icon} color={color ? c : "fg.subtle"}>
         {icon}
       </Icon>
     </Center>
@@ -117,22 +157,34 @@ function Wire({
   );
 }
 
-function Value({ children }: { children: React.ReactNode }) {
+function Value({
+  children,
+  size,
+}: {
+  children: React.ReactNode;
+  size: FlowSize;
+}) {
   return (
     <Text
-      textStyle={{ base: "lg", md: "xl" }}
+      textStyle={SIZES[size].value}
       fontWeight="semibold"
       whiteSpace="nowrap"
-      mt="2"
+      mt={SIZES[size].valueTop}
     >
       {children}
     </Text>
   );
 }
 
-function Label({ children }: { children: React.ReactNode }) {
+function Label({
+  children,
+  size,
+}: {
+  children: React.ReactNode;
+  size: FlowSize;
+}) {
   return (
-    <Text textStyle="sm" color="fg.muted" whiteSpace="nowrap">
+    <Text textStyle={SIZES[size].label} color="fg.muted" whiteSpace="nowrap">
       {children}
     </Text>
   );

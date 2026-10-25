@@ -1,17 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Box, HStack, Text } from "@chakra-ui/react";
 import type { EnergyTodayPoint } from "../hooks/useEnergyToday";
-import { ENERGY_COLORS, ENERGY_VARS, fmtW } from "../lib/energy";
+import { useNow } from "../hooks/useNow";
+import { ENERGY_VARS, fmtW } from "../lib/energy";
+import {
+  curveMax,
+  curvePath,
+  curvePeak,
+  curvePoints,
+  curveWash,
+  type PowerPoint,
+} from "../lib/powerCurve";
+import { PowerDot } from "./PowerDot";
+import { PowerKey } from "./PowerKey";
 
 /** The plot's own units: a day across, a kilowatt scale up. */
 const VIEW_W = 1000;
 const VIEW_H = 100;
-
-interface Point {
-  t: number;
-  production: number | null;
-  consumption: number | null;
-}
 
 const timeLabel = (t: number) =>
   new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -43,24 +48,10 @@ export function TodayPowerChart({
 }) {
   const [active, setActive] = useState<number | null>(null);
   // When "now" is: the chart mounts as the dialog opens, then keeps time.
-  const [nowT, setNowT] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNowT(Date.now()), 60 * 1000);
-    return () => clearInterval(id);
-  }, []);
-  const now: Point = { t: nowT, ...live };
+  const now: PowerPoint = { t: useNow(60 * 1000), ...live };
+  const points = curvePoints(raw, now);
 
-  const points: Point[] = [
-    ...raw
-      .map((p) => ({ ...p, t: Date.parse(p.time) }))
-      .filter((p) => p.t < now.t),
-    now,
-  ];
-
-  const max = Math.max(
-    1000,
-    ...points.flatMap((p) => [p.production ?? 0, p.consumption ?? 0]),
-  );
+  const max = curveMax(points);
   // Whole kilowatts, in steps that leave two or three gridlines.
   const kwStep = max <= 2000 ? 1 : max <= 6000 ? 2 : max <= 12000 ? 4 : 5;
   const top = Math.ceil(max / 1000 / kwStep) * kwStep * 1000;
@@ -74,38 +65,8 @@ export function TodayPowerChart({
   const pct = (t: number) => `${((t - start) / (end - start)) * 100}%`;
   const pctY = (w: number) => `${(1 - w / top) * 100}%`;
 
-  const line = (key: "production" | "consumption") => {
-    let d = "";
-    let pen = false;
-    for (const p of points) {
-      const v = p[key];
-      if (v == null) {
-        pen = false;
-        continue;
-      }
-      d += `${pen ? "L" : "M"}${xOf(p.t).toFixed(1)},${yOf(v).toFixed(1)}`;
-      pen = true;
-    }
-    return d;
-  };
-  const solarLine = line("production");
-  // The wash: each run of the solar line closed down to the baseline.
-  const solarArea = solarLine
-    .split("M")
-    .filter(Boolean)
-    .map((run) => {
-      const coords = run.split("L");
-      const first = coords[0].split(",")[0];
-      const last = coords[coords.length - 1].split(",")[0];
-      return `M${first},${VIEW_H}L${run}L${last},${VIEW_H}Z`;
-    })
-    .join("");
-
-  const peak = points.reduce<Point | null>(
-    (best, p) =>
-      p.production != null && p.production > (best?.production ?? 0) ? p : best,
-    null,
-  );
+  const solarLine = curvePath(points, "production", xOf, yOf);
+  const peak = curvePeak(points);
 
   const shown = active != null ? points[active] : null;
   const marker = shown ?? now;
@@ -134,6 +95,10 @@ export function TodayPowerChart({
     return d.getTime();
   });
 
+  // While reading, each key shows its value ("—" for a gap); otherwise the names.
+  const reading = (v: number | null | undefined) =>
+    shown ? (v != null ? fmtW(v) : null) : undefined;
+
   return (
     <Box>
       <HStack
@@ -147,8 +112,8 @@ export function TodayPowerChart({
         minH="6"
       >
         <HStack gap="4" wrap="wrap" rowGap="1">
-          <Key color="solar" label="Solar" value={shown?.production} />
-          <Key color="home" label="Home" value={shown?.consumption} />
+          <PowerKey color="solar" label="Solar" value={reading(shown?.production)} />
+          <PowerKey color="home" label="Home" value={reading(shown?.consumption)} />
         </HStack>
         <Text color="fg.muted" whiteSpace="nowrap">
           {shown
@@ -224,9 +189,13 @@ export function TodayPowerChart({
           style={{ position: "absolute", inset: 0, overflow: "visible" }}
           aria-hidden
         >
-          <path d={solarArea} fill={ENERGY_VARS.solar} fillOpacity={0.12} />
           <path
-            d={line("consumption")}
+            d={curveWash(solarLine, VIEW_H)}
+            fill={ENERGY_VARS.solar}
+            fillOpacity={0.12}
+          />
+          <path
+            d={curvePath(points, "consumption", xOf, yOf)}
             fill="none"
             stroke={ENERGY_VARS.home}
             strokeWidth={2}
@@ -257,20 +226,20 @@ export function TodayPowerChart({
             pointerEvents="none"
           />
         )}
-        <Dot
-          t={marker.t}
-          w={marker.consumption}
-          color="home"
-          pct={pct}
-          pctY={pctY}
-        />
-        <Dot
-          t={marker.t}
-          w={marker.production}
-          color="solar"
-          pct={pct}
-          pctY={pctY}
-        />
+        {marker.consumption != null && (
+          <PowerDot
+            left={pct(marker.t)}
+            top={pctY(marker.consumption)}
+            color="home"
+          />
+        )}
+        {marker.production != null && (
+          <PowerDot
+            left={pct(marker.t)}
+            top={pctY(marker.production)}
+            color="solar"
+          />
+        )}
       </Box>
 
       {/* The hours under the plot. */}
@@ -291,60 +260,5 @@ export function TodayPowerChart({
         ))}
       </Box>
     </Box>
-  );
-}
-
-function Dot({
-  t,
-  w,
-  color,
-  pct,
-  pctY,
-}: {
-  t: number;
-  w: number | null;
-  color: "solar" | "home";
-  pct: (t: number) => string;
-  pctY: (w: number) => string;
-}) {
-  if (w == null) return null;
-  return (
-    <Box
-      position="absolute"
-      left={pct(t)}
-      top={pctY(w)}
-      transform="translate(-50%, -50%)"
-      boxSize="3"
-      rounded="full"
-      bg={ENERGY_COLORS[color]}
-      borderWidth="2px"
-      borderColor="bg.panel"
-      pointerEvents="none"
-    />
-  );
-}
-
-/** A legend entry: the line's colour, its name and, while reading, its value. */
-function Key({
-  color,
-  label,
-  value,
-}: {
-  color: "solar" | "home";
-  label: string;
-  value: number | null | undefined;
-}) {
-  return (
-    <HStack gap="2" whiteSpace="nowrap">
-      <Box w="3.5" h="0.5" rounded="full" bg={ENERGY_COLORS[color]} />
-      {value !== undefined ? (
-        <>
-          <Text fontWeight="semibold">{value != null ? fmtW(value) : "—"}</Text>
-          <Text color="fg.muted">{label}</Text>
-        </>
-      ) : (
-        <Text color="fg.muted">{label}</Text>
-      )}
-    </HStack>
   );
 }

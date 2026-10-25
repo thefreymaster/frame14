@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEnergyToday } from "./useEnergyToday";
 import { useEntitiesConfig } from "./useEntitiesConfig";
 import { useEntities, useEntity, type HAState } from "./useEntity";
 import { printerEntityIds } from "../lib/printerEntities";
@@ -112,6 +113,11 @@ export interface HomeLoading {
   weather: boolean;
   climate: boolean;
   energy: boolean;
+  /**
+   * Today's curve (the energy card's strip) hasn't landed. The card draws
+   * without it, so only the launch splash waits on this one.
+   */
+  energyCurve: boolean;
   calendar: boolean;
   /** Only while fans are configured; with none the card never shows. */
   fan: boolean;
@@ -458,6 +464,9 @@ export function useHomeData() {
     refetchInterval: 1000 * 30,
     staleTime: 1000 * 30,
   });
+  // The same query the energy card draws its strip from; read here only so
+  // the splash can wait for it, and the strip doesn't appear after the card.
+  const energyTodayQuery = useEnergyToday();
   const energyStates = useEntities(energyEntities.map(({ entityId }) => entityId));
 
   // People
@@ -707,6 +716,7 @@ export function useHomeData() {
     weather: homeWeather == null && weatherQuery.isPending,
     climate: climateQuery.isPending && !allLive(climateStates),
     energy: energyQuery.isPending,
+    energyCurve: energyTodayQuery.isPending,
     calendar: calendarQuery.isPending,
     fan: fanEntityIds.length > 0 && fanQuery.isPending && !allLive(fanStates),
     vacuum:

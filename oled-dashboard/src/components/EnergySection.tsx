@@ -5,17 +5,27 @@ import {
   Flex,
   HStack,
   Icon,
-  Progress,
-  Stat,
+  Skeleton,
+  Stack,
   Text,
 } from "@chakra-ui/react";
+import { IoFlash, IoHome } from "react-icons/io5";
 import { PiSolarRoof } from "react-icons/pi";
-import { IoFlash } from "react-icons/io5";
 import type { HomeEnergy } from "../hooks/useHomeData";
+import { useEnergyToday } from "../hooks/useEnergyToday";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
-import { coverage, fmtKwh, fmtW, grid } from "../lib/energy";
+import {
+  ENERGY_COLORS,
+  SPARKLINE_HEIGHT,
+  coverage,
+  fmtKwh,
+  fmtW,
+  grid,
+} from "../lib/energy";
 import { Board } from "./Board";
 import { EnergyDialog } from "./EnergyDialog";
+import { PowerFlow } from "./PowerFlow";
+import { TodaySparkline } from "./TodaySparkline";
 import { EnergySkeleton } from "./skeletons/EnergySkeleton";
 
 /** Import / export: arrow and colour carry the direction. */
@@ -31,6 +41,43 @@ function GridBadge({ energy }: { energy: HomeEnergy }) {
   );
 }
 
+/**
+ * A day total keyed to its line in the strip by the flow's own icon for it,
+ * in the line's colour: the panels for the solar, the house for its use.
+ */
+function Total({
+  icon,
+  color,
+  kwh,
+  label,
+}: {
+  icon: React.ReactNode;
+  color: "solar" | "home";
+  kwh: number;
+  label: string;
+}) {
+  return (
+    <HStack gap="1.5" whiteSpace="nowrap" aria-label={`${label} ${fmtKwh(kwh)} kWh`}>
+      <Icon boxSize="4" color={ENERGY_COLORS[color]} aria-hidden>
+        {icon}
+      </Icon>
+      <Text fontWeight="semibold">
+        {fmtKwh(kwh)}{" "}
+        <Text as="span" fontWeight="normal" color="fg.muted">
+          kWh
+        </Text>
+      </Text>
+    </HStack>
+  );
+}
+
+/**
+ * The energy card: where the power is going now (PowerFlow, the dialog's
+ * diagram at its small size), then today — how much of the day's use the
+ * solar covered, as the one big figure, beside the day's curve
+ * (TodaySparkline) with the two totals over it. A tap on the body opens
+ * EnergyDialog, which has the full chart and the split totals.
+ */
 export function EnergySection({
   energy,
   loading = false,
@@ -40,14 +87,15 @@ export function EnergySection({
   loading?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const today = useEnergyToday();
   const { productionToday, consumptionToday } = energy;
   const pct = coverage(energy);
-  const palette = pct >= 100 ? "green" : "yellow";
 
   return (
     <>
       <EnergyDialog
         energy={energy}
+        today={today}
         open={open}
         onClose={() => setOpen(false)}
       />
@@ -68,41 +116,72 @@ export function EnergySection({
         {loading ? (
           <EnergySkeleton />
         ) : (
-          <Box
+          <Stack
+            gap="3"
             role="button"
             aria-label="Show energy detail"
             onClick={() => setOpen(true)}
             cursor="pointer"
           >
-            <Progress.Root
-              value={Math.min(100, Math.max(0, pct))}
-              colorPalette={palette}
-              size="lg"
-            >
-              <Stat.Root>
-                <Stat.Label>Solar coverage today</Stat.Label>
-                <Stat.ValueText>{Math.round(pct)}%</Stat.ValueText>
-              </Stat.Root>
-              <Progress.Track mt="3">
-                <Progress.Range />
-              </Progress.Track>
-            </Progress.Root>
+            <PowerFlow energy={energy} size="sm" />
 
-            <Flex gap="4" rowGap="2" wrap="wrap" mt="4" textStyle="lg">
-              <HStack gap="2">
-                <Icon color="yellow.500">
-                  <PiSolarRoof />
-                </Icon>
-                <Text>{fmtKwh(productionToday)} kWh</Text>
-              </HStack>
-              <HStack gap="2" ms="auto">
-                <Icon color="fg.muted">
-                  <IoFlash />
-                </Icon>
-                <Text>{fmtKwh(consumptionToday)} kWh</Text>
-              </HStack>
-            </Flex>
-          </Box>
+            <HStack gap="4" align="stretch">
+              <Stack gap="1" justify="center" flexShrink={0}>
+                <Text
+                  textStyle="4xl"
+                  fontWeight="semibold"
+                  lineHeight="1"
+                  letterSpacing="tight"
+                  color={pct >= 100 ? "fg.success" : "fg"}
+                  aria-label={`Solar covered ${Math.round(pct)}% of today's use`}
+                >
+                  {Math.round(pct)}%
+                </Text>
+                <Text textStyle="xs" color="fg.muted" whiteSpace="nowrap">
+                  Solar covered today
+                </Text>
+              </Stack>
+
+              <Stack gap="2" flex="1" minW="0" justify="end">
+                <HStack gap="4" rowGap="0.5" wrap="wrap" textStyle="sm">
+                  <Total
+                    icon={<PiSolarRoof />}
+                    color="solar"
+                    kwh={productionToday}
+                    label="Solar produced"
+                  />
+                  <Total
+                    icon={<IoHome />}
+                    color="home"
+                    kwh={consumptionToday}
+                    label="Home used"
+                  />
+                </HStack>
+                {today.data ? (
+                  <TodaySparkline
+                    points={today.data.points}
+                    start={Date.parse(today.data.start)}
+                    end={Date.parse(today.data.end)}
+                    live={{
+                      production: energy.currentProduction,
+                      consumption: energy.currentConsumption,
+                    }}
+                    height={SPARKLINE_HEIGHT}
+                  />
+                ) : today.isError ? (
+                  // No curve: the strip stays, empty, so the card keeps its size.
+                  <Box
+                    height={SPARKLINE_HEIGHT}
+                    borderBottomWidth="1px"
+                    borderColor="border"
+                    aria-hidden
+                  />
+                ) : (
+                  <Skeleton height={SPARKLINE_HEIGHT} />
+                )}
+              </Stack>
+            </HStack>
+          </Stack>
         )}
       </Board>
     </>

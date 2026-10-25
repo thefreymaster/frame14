@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.73.0
+
+- Changed: the Energy card on Home. Its body is now the Energy dialog's power flow at a smaller size — the panels, the house and the grid as round nodes, with dots running along the wires the way the power is going right now, in the flow's colour (yellow from the panels, green out to the grid, orange in from it) — with the live kilowatts under each node. Below it, how much of today's use the solar covered is the one big figure (green once it passes 100%), beside a strip of today's power curve: solar over its wash and the house's use, midnight to midnight, ending at the values now. The two day totals sit over the strip, keyed by the panel and house icons. The progress bar is gone. The card is a little taller than it was; a tap on the body still opens the dialog with the full chart.
+- Changed: today's curve is fetched whenever Home is up (every five minutes), not only while the Energy dialog is open, so the dialog's chart is there as soon as it opens. The launch animation waits for it too (within its usual limit).
+
 ## 0.72.0
 
 - Changed: the bottom bar never holds more than five buttons. With five views or fewer they all show; with more, the first four show and More takes the fifth place with the rest. It used to show five plus More.

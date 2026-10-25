@@ -36,7 +36,7 @@ function parseFloatOrNull(value: string | undefined | null): number | null {
  * own "today" sensors can't be trusted for), and the four energy entities
  * over the socket for the power now in W (a kW sensor is scaled). `loading`
  * holds until /api/energy's first answer. Shared by /home (useHomeData) and
- * /solar's Now card, which read one query and one set of subscriptions.
+ * /energy's Now card, which read one query and one set of subscriptions.
  */
 export function useLiveEnergy(): { energy: HomeEnergy; loading: boolean } {
   const entitiesQuery = useEntitiesConfig();

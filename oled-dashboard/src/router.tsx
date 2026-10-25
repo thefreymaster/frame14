@@ -9,8 +9,7 @@ import { HomeOverview } from "./routes/HomeOverview";
 import { Lights } from "./routes/Lights";
 import { Radar } from "./routes/Radar";
 import { Timer } from "./routes/Timer";
-import { Solar } from "./routes/Solar";
-import { Power } from "./routes/Power";
+import { Energy } from "./routes/Energy";
 import { Marquee } from "./routes/Marquee";
 import { Football } from "./routes/Football";
 import { Printer } from "./routes/Printer";
@@ -30,8 +29,14 @@ export const router = createBrowserRouter([
       { path: "/lights", element: <Lights /> },
       { path: "/radar", element: <Radar /> },
       { path: "/timer", element: <Timer /> },
-      { path: "/solar", element: <Solar /> },
-      { path: "/power", element: <Power /> },
+      { path: "/energy", element: <Energy /> },
+      // Solar and Power became the Energy page's tabs (0.75); their paths
+      // still land there, for automations and bookmarks.
+      { path: "/solar", element: <Navigate to="/energy" replace /> },
+      {
+        path: "/power",
+        element: <Navigate to="/energy?tab=circuits" replace />,
+      },
       { path: "/printer", element: <Printer /> },
       { path: "/vacuum", element: <Vacuum /> },
       { path: "/marquee", element: <Marquee /> },

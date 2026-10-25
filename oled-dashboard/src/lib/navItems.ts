@@ -8,6 +8,8 @@ import {
   IoSettings,
   IoAmericanFootballOutline,
   IoAmericanFootball,
+  IoFlashOutline,
+  IoFlash,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -15,8 +17,7 @@ import {
   RiLightbulbLine,
   RiLightbulbFill,
 } from "react-icons/ri";
-import { MdRadar, MdElectricBolt } from "react-icons/md";
-import { PiSolarRoof } from "react-icons/pi";
+import { MdRadar } from "react-icons/md";
 import { TbVacuumCleaner } from "react-icons/tb";
 import type { DeviceMode } from "./deviceMode";
 import { Printer3dIcon, Printer3dOutlineIcon } from "./printerIcons";
@@ -83,16 +84,10 @@ export const NAV_ITEMS: NavItem[] = [
     activeIcon: RiLightbulbFill,
   },
   {
-    path: "/solar",
-    label: "Solar",
-    icon: PiSolarRoof,
-    activeIcon: PiSolarRoof,
-  },
-  {
-    path: "/power",
-    label: "Power",
-    icon: MdElectricBolt,
-    activeIcon: MdElectricBolt,
+    path: "/energy",
+    label: "Energy",
+    icon: IoFlashOutline,
+    activeIcon: IoFlash,
   },
   {
     path: "/printer",
@@ -134,6 +129,15 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const NAV_ITEM_BY_PATH = new Map(NAV_ITEMS.map((i) => [i.path, i]));
+
+/**
+ * Paths entries used to have, so a saved layout (lib/navLayout) keeps their
+ * place: Solar and Power became the Energy page in 0.75.
+ */
+export const RENAMED_PATHS: Record<string, string> = {
+  "/solar": "/energy",
+  "/power": "/energy",
+};
 
 /** The entries a device in this mode can have in its nav. */
 export function navItemsFor(mode: DeviceMode): NavItem[] {

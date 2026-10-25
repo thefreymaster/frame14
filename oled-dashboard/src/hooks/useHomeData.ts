@@ -423,7 +423,7 @@ export function useHomeData() {
   });
   const fanStates = useEntities<FanAttributes>(fanEntityIds);
 
-  // Energy: the live model /solar's Now card shares (one /api/energy query,
+  // Energy: the live model /energy's Now card shares (one /api/energy query,
   // one set of entity subscriptions).
   const { energy: homeEnergy, loading: energyLoading } = useLiveEnergy();
   // The same query the energy card draws its strip from; read here only so

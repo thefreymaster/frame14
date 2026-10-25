@@ -13,7 +13,7 @@ import {
   Text,
   useMediaQuery,
 } from "@chakra-ui/react";
-import { MdSkipNext, MdRefresh, MdRadar, MdElectricBolt } from "react-icons/md";
+import { MdSkipNext, MdRefresh, MdRadar } from "react-icons/md";
 import {
   IoTimeOutline,
   IoTime,
@@ -24,6 +24,8 @@ import {
   IoOptionsOutline,
   IoAmericanFootballOutline,
   IoAmericanFootball,
+  IoFlashOutline,
+  IoFlash,
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
@@ -86,10 +88,10 @@ const VIEWS: {
     activeIcon: RiLightbulbFill,
   },
   {
-    path: "/power",
-    label: "Power",
-    icon: MdElectricBolt,
-    activeIcon: MdElectricBolt,
+    path: "/energy",
+    label: "Energy",
+    icon: IoFlashOutline,
+    activeIcon: IoFlash,
   },
   {
     path: "/printer",

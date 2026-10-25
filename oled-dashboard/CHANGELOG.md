@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.75.0
+
+- Changed: Solar and Power are one page, Energy, with the Home card's bolt in the nav. At the top is the Now card from Solar — the power flow from the Home energy card, the grid figure in its header, collapsible — and under it two tabs: Solar, the month or year chart as it was, and Circuits, the per-circuit breakdown that was the Power page.
+- Changed: the Solar chart's controls moved from the page's header into the chart card's own: the month or year between its arrows at the left, Total / Daily and Month / Year at the right (on their own row on a phone).
+- Removed: the Solar · Grid · Home figures that headed the Power page; the Now card's power flow shows the same three.
+- Changed: a device whose nav was rearranged keeps Energy where Solar (or Power) was. The old /solar and /power addresses still open the Energy page, on the Solar or the Circuits tab, so automations that send a panel there keep working.
+
 ## 0.74.0
 
 - Changed: the Solar page is drawn like the new Energy card. A Now card at the top shows the power flow — the panels, the house and the grid with dots running along the wires the way the power is going, the live kilowatts under each — with the grid figure in its header, and it can be collapsed. The month or year is one card: how much of the period's use the solar covered as the big figure (green past 100%), the two totals keyed to the lines, and the chart in the same style — solar over its wash and the house's use in grey, on a kWh scale with gridlines, the lines ending where the period has got to, with a dot on each. Total still draws the running totals and Daily each day's (or each month's) own.

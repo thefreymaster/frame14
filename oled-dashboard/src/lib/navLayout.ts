@@ -3,6 +3,7 @@ import { useDeviceMode, type DeviceMode } from "./deviceMode";
 import {
   HOME_PATH,
   NAV_ITEM_BY_PATH,
+  RENAMED_PATHS,
   SETTINGS_PATH,
   navItemsFor,
   type NavItem,
@@ -34,7 +35,8 @@ export function defaultNavLayout(mode: DeviceMode): NavEntry[] {
 
 /**
  * A saved layout made safe to use: entries this mode doesn't offer (or no
- * longer exist) dropped, entries added since it was saved put at the end
+ * longer exist) dropped, a renamed entry kept in its place (two that became
+ * one shown if either was), entries added since it was saved put at the end
  * (before Settings, if that ends it) as they default, Home first, and Home and
  * Settings shown.
  */
@@ -42,17 +44,20 @@ function normalize(mode: DeviceMode, saved: unknown): NavEntry[] {
   const defaults = defaultNavLayout(mode);
   if (!Array.isArray(saved)) return defaults;
   const offered = new Set(defaults.map((e) => e.path));
-  const seen = new Set<string>();
   const out: NavEntry[] = [];
   for (const e of saved as Partial<NavEntry>[]) {
-    const path = e?.path;
-    if (typeof path !== "string" || !offered.has(path) || seen.has(path)) {
+    if (typeof e?.path !== "string") continue;
+    const path = RENAMED_PATHS[e.path] ?? e.path;
+    if (!offered.has(path)) continue;
+    const shown = e.shown !== false;
+    const had = out.find((o) => o.path === path);
+    if (had) {
+      had.shown ||= shown;
       continue;
     }
-    seen.add(path);
-    out.push({ path, shown: e.shown !== false });
+    out.push({ path, shown });
   }
-  const added = defaults.filter((e) => !seen.has(e.path));
+  const added = defaults.filter((e) => !out.some((o) => o.path === e.path));
   const settingsLast = out.at(-1)?.path === SETTINGS_PATH;
   out.splice(settingsLast ? out.length - 1 : out.length, 0, ...added);
   return [

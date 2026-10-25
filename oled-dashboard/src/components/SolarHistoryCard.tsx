@@ -5,28 +5,18 @@ import {
   Flex,
   HStack,
   IconButton,
-  Skeleton,
   Spinner,
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { PiSolarRoof } from "react-icons/pi";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useEnergyMonthly, type NivoSeries } from "../hooks/useEnergyMonthly";
 import { useEnergyYearly } from "../hooks/useEnergyYearly";
-import { useLiveEnergy } from "../hooks/useLiveEnergy";
-import { Board } from "../components/Board";
-import {
-  EnergyHistoryChart,
-  type HistoryPoint,
-} from "../components/EnergyHistoryChart";
-import { GridBadge } from "../components/GridBadge";
-import { PageShell } from "../components/PageShell";
-import { PageHeader } from "../components/PageHeader";
-import { PowerFlow } from "../components/PowerFlow";
-import { SectionTitle } from "../components/SectionTitle/SectionTitle";
-import { SegmentedControl } from "../components/ui/segmented-control";
-import { fmtKwh, grid } from "../lib/energy";
+import { Board } from "./Board";
+import { EnergyHistoryChart, type HistoryPoint } from "./EnergyHistoryChart";
+import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { SegmentedControl } from "./ui/segmented-control";
+import { fmtKwh } from "../lib/energy";
 
 const MONTHS = [
   "January",
@@ -84,14 +74,14 @@ function slotsOf(view: View, cursor: Cursor) {
 }
 
 /**
- * The /solar page: where the power is going now (PowerFlow, as on the energy
- * card and in its dialog), then a month of days or a year of months in the
- * card's style — the coverage figure beside the keyed totals, over the solar
- * and home lines (EnergyHistoryChart). Total draws the running totals, Daily
- * each slot's own; the slot's mean temperature reads out with its name in
- * Daily. Period and chart mode are the header's controls.
+ * The Energy page's Solar tab: a month of days or a year of months in the
+ * energy card's style — the coverage figure beside the keyed totals, over the
+ * solar and home lines (EnergyHistoryChart). Total draws the running totals,
+ * Daily each slot's own; the slot's mean temperature reads out with its name
+ * in Daily. The card's header is the controls: the period between its
+ * arrows, then Total / Daily and Month / Year.
  */
-export function Solar() {
+export function SolarHistoryCard() {
   const now = new Date();
   const [view, setView] = useState<View>("month");
   const [chartMode, setChartMode] = useState<ChartMode>("total");
@@ -132,10 +122,13 @@ export function Solar() {
   }
 
   const monthParam = `${cursor.year}-${two(cursor.month + 1)}`;
-  const label =
+  const period = view === "month" ? monthParam : String(cursor.year);
+  // The header's name for the period, and the readout's (this year's months
+  // go by name alone).
+  const title =
     view === "month"
-      ? `${MONTHS[cursor.month].slice(0, 3).toUpperCase()} ${cursor.year}`
-      : `${cursor.year}`;
+      ? `${MONTHS[cursor.month]} ${cursor.year}`
+      : String(cursor.year);
   const periodName =
     view === "month"
       ? isCurrentYear
@@ -143,7 +136,6 @@ export function Solar() {
         : `${MONTHS[cursor.month]} ${cursor.year}`
       : String(cursor.year);
 
-  const live = useLiveEnergy();
   const monthly = useEnergyMonthly(view === "month" ? monthParam : undefined);
   const yearly = useEnergyYearly(view === "year" ? cursor.year : undefined);
   const { data, isPending, isError } = view === "month" ? monthly : yearly;
@@ -208,13 +200,37 @@ export function Solar() {
   );
 
   return (
-    <PageShell fill>
-      <PageHeader
-        icon={<PiSolarRoof />}
-        iconColor="yellow.500"
-        title="Solar"
-        actions={
-          <HStack gap="3" rowGap="2" wrap="wrap">
+    <Board
+      fill
+      title={
+        <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
+          {/* prev / period / next */}
+          <HStack gap="1">
+            <IconButton
+              aria-label={view === "month" ? "Previous month" : "Previous year"}
+              variant="ghost"
+              size="sm"
+              onClick={shiftBack}
+            >
+              <FiChevronLeft />
+            </IconButton>
+            {/* Wide enough for the longest month, so the arrows stay put. */}
+            <Box minW="9rem" textAlign="center">
+              <SectionTitle>{title}</SectionTitle>
+            </Box>
+            <IconButton
+              aria-label={view === "month" ? "Next month" : "Next year"}
+              variant="ghost"
+              size="sm"
+              disabled={atNow}
+              onClick={shiftForward}
+            >
+              <FiChevronRight />
+            </IconButton>
+          </HStack>
+
+          {/* The modes, at the right; on their own row when the header wraps. */}
+          <HStack gap="3" rowGap="2" wrap="wrap" ms="auto">
             <SegmentedControl
               size="sm"
               items={[
@@ -227,7 +243,6 @@ export function Solar() {
                 e.value && setChartMode(e.value as ChartMode)
               }
             />
-
             <SegmentedControl
               size="sm"
               items={[
@@ -238,87 +253,31 @@ export function Solar() {
               aria-label="Period"
               onValueChange={(e) => e.value && switchView(e.value as View)}
             />
-
-            {/* prev / label / next */}
-            <HStack gap="1">
-              <IconButton
-                aria-label={
-                  view === "month" ? "Previous month" : "Previous year"
-                }
-                variant="ghost"
-                size="sm"
-                onClick={shiftBack}
-              >
-                <FiChevronLeft />
-              </IconButton>
-              <Text
-                textStyle="sm"
-                fontWeight="medium"
-                minW="5rem"
-                textAlign="center"
-              >
-                {label}
-              </Text>
-              <IconButton
-                aria-label={view === "month" ? "Next month" : "Next year"}
-                variant="ghost"
-                size="sm"
-                disabled={atNow}
-                onClick={shiftForward}
-              >
-                <FiChevronRight />
-              </IconButton>
-            </HStack>
           </HStack>
-        }
-      />
-
-      {/* Now */}
-      <Board
-        collapsible
-        storageKey="solar-now"
-        title={
-          <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
-            <SectionTitle>Now</SectionTitle>
-            {grid(live.energy).active && (
-              <Box ms="auto">
-                <GridBadge energy={live.energy} />
-              </Box>
-            )}
-          </Flex>
-        }
-      >
-        {live.loading ? (
-          <Skeleton height="7.5rem" />
-        ) : (
-          <PowerFlow energy={live.energy} />
-        )}
-      </Board>
-
-      {/* The period */}
-      <Board fill>
-        {isPending ? (
-          <Center flex="1">
-            <Spinner size="lg" aria-label="Loading" />
-          </Center>
-        ) : isError || !data ? (
-          <Center flex="1">
-            <Text color="fg.muted">unavailable</Text>
-          </Center>
-        ) : (
-          <EnergyHistoryChart
-            // A new period or mode starts with the readout idle.
-            key={`${view}-${chartMode}-${label}`}
-            points={points}
-            ticks={ticks}
-            totals={{ production: prodTotal, consumption: consTotal }}
-            note={note}
-            lead={lead}
-            ring="bg.surface"
-            label={`${periodName}, ${chartMode === "total" ? "running totals" : view === "month" ? "by day" : "by month"}`}
-          />
-        )}
-      </Board>
-    </PageShell>
+        </Flex>
+      }
+    >
+      {isPending ? (
+        <Center height="100%">
+          <Spinner size="lg" aria-label="Loading" />
+        </Center>
+      ) : isError || !data ? (
+        <Center height="100%">
+          <Text color="fg.muted">unavailable</Text>
+        </Center>
+      ) : (
+        <EnergyHistoryChart
+          // A new period or mode starts with the readout idle.
+          key={`${view}-${chartMode}-${period}`}
+          points={points}
+          ticks={ticks}
+          totals={{ production: prodTotal, consumption: consTotal }}
+          note={note}
+          lead={lead}
+          ring="bg.surface"
+          label={`${periodName}, ${chartMode === "total" ? "running totals" : view === "month" ? "by day" : "by month"}`}
+        />
+      )}
+    </Board>
   );
 }

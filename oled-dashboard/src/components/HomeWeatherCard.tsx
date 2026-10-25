@@ -16,8 +16,8 @@ import { conditionLabel, weatherIcon } from "../lib/weatherIcons";
 
 /**
  * The weather now, in one row — what /home's first card is on a phone in
- * place of HomeHeader. No clock (the phone shows one) and no bird: the icon
- * and the temperature on the left, the condition and humidity on the right.
+ * place of HomeHeader. No clock (the phone shows one): the icon and the
+ * temperature on the left, the condition and humidity on the right.
  * Same card id ("header"), so a saved layout keeps its place. A tap opens the
  * forecast.
  */

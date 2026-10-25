@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { Text, HStack, Spacer, Alert, Skeleton } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
-// Bird badge switched off for now; see the commented-out block below.
-// import { BirdSection } from "./BirdSection";
 import { Board } from "./Board";
 import { ForecastDialog } from "./ForecastDialog";
 import { HERO_SUFFIX_SIZE, HERO_TEXT } from "../lib/hero";
@@ -155,14 +153,6 @@ export function HomeHeader({
             </Text>
           )}
         </HStack>
-
-        {/* Switched off for now.
-          Latest BirdNET-Go detection — renders nothing when there hasn't been
-          one, so the header keeps its height.
-      <HStack width="100%" minW="0" mt="4" _empty={{ display: "none" }}>
-        <BirdSection />
-      </HStack>
-      */}
       </Board>
     </>
   );

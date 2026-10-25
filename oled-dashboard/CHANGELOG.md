@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.84.0
+
+- Removed: the BirdNET-Go detection chip and its `bird_species_entity` option — BirdNET isn't running any more, and the chip had been switched off since the Home header was redesigned. The add-on ignores the option if it is still in its Configuration; delete it there when convenient.
+
 ## 0.83.0
 
 - Added: a Media page (`/media`), in the nav after Calendar on every device and among a remote's Views (opening on the remote itself, like Lights). A card per media player: what is playing with its artwork, the artist and album or the series and episode, and the progress through it; then the controls the player supports — previous, play / pause, next, stop, power — the volume with a mute button, and the source.

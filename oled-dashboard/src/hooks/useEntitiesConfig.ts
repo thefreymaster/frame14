@@ -21,7 +21,6 @@ export interface EntitiesConfig {
   /** The Media page's (`media_player_entities`); the marquee's when empty. */
   mediaPlayers: string[];
   printer: string;
-  bird: string;
   teamTracker: string[];
   person: string;
   /** The doorbell card's camera. */

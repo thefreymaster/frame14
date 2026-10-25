@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.85.1
+
+- Fixed: the header's row is back where it was, 1.25rem under an iPhone's status bar. 0.85.0 docked it against the status bar, which wasn't asked for; only the frost was. The frost stays.
+
 ## 0.85.0
 
 - Changed: the frame's bottom bar has six slots — five entries and More — where it had a phone's five; a nav of six or fewer now shows whole, and a longer one keeps its first five and puts the rest under More. A phone's bar keeps its five slots (four and More). Settings' Navigation card counts and badges by this device's bar.

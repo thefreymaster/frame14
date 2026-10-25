@@ -10,6 +10,8 @@ import {
   IoAmericanFootball,
   IoFlashOutline,
   IoFlash,
+  IoThermometerOutline,
+  IoThermometer,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -82,6 +84,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Lights",
     icon: RiLightbulbLine,
     activeIcon: RiLightbulbFill,
+  },
+  {
+    path: "/climate",
+    label: "Climate",
+    icon: IoThermometerOutline,
+    activeIcon: IoThermometer,
   },
   {
     path: "/energy",

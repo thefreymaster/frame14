@@ -26,6 +26,8 @@ import {
   IoAmericanFootball,
   IoFlashOutline,
   IoFlash,
+  IoThermometerOutline,
+  IoThermometer,
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
@@ -88,6 +90,12 @@ const VIEWS: {
     activeIcon: RiLightbulbFill,
   },
   {
+    path: "/climate",
+    label: "Climate",
+    icon: IoThermometerOutline,
+    activeIcon: IoThermometer,
+  },
+  {
     path: "/energy",
     label: "Energy",
     icon: IoFlashOutline,
@@ -118,7 +126,9 @@ const VIEWS: {
   },
 ];
 
-const LOCAL_ONLY_PATHS = new Set(["/lights", "/radar", "/timer"]);
+// Control surfaces open on this device (a remote's user wants the lights and
+// thermostats in hand, not on the frame); the rest put the frames there.
+const LOCAL_ONLY_PATHS = new Set(["/lights", "/climate", "/radar", "/timer"]);
 
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "auto", label: "Auto" },

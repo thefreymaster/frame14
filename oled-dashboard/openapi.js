@@ -22,6 +22,10 @@ export const openApiDocument = {
       description: "Weather data proxied from Home Assistant NWS integration.",
     },
     {
+      name: "Climate",
+      description: "The configured thermostats and their day, from Home Assistant.",
+    },
+    {
       name: "Photos",
       description: "Immich photo library proxy endpoints.",
     },
@@ -321,6 +325,96 @@ export const openApiDocument = {
           200: { description: "The thumbnail image.", content: { "image/png": {} } },
           404: { description: "No printer configured, or it has no cover image.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/home/climate": {
+      get: {
+        tags: ["Climate"],
+        operationId: "getClimate",
+        summary: "The configured thermostats",
+        description:
+          "State of each climate entity in the entity config, in its order, named by the add-on's climate_names where set.",
+        responses: {
+          200: {
+            description: "One entry per configured thermostat.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      entity_id: { type: "string", example: "climate.samsung_airconditioner_1" },
+                      name: { type: "string", example: "1st Floor AC" },
+                      state: { type: "string", example: "cool" },
+                      currentTemp: { type: "number", nullable: true },
+                      currentHumidity: {
+                        type: "number",
+                        nullable: true,
+                        description: "Relative humidity, %, when the thermostat reports one.",
+                      },
+                      targetTemp: { type: "number", nullable: true },
+                      hvacMode: { type: "string", nullable: true, example: "cool" },
+                      hvacAction: { type: "string", nullable: true, example: "cooling" },
+                      fanMode: { type: "string", nullable: true, example: "auto" },
+                      fanModes: { type: "array", items: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          500: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/home/climate/history": {
+      get: {
+        tags: ["Climate"],
+        operationId: "getClimateHistory",
+        summary: "Today's room temperature per thermostat",
+        description:
+          "Home Assistant's history of each configured climate entity since local midnight, in quarter hours: the time-weighted room temperature, the target last set in the quarter (null while off) and whether it mostly heated or cooled in it. Climate entities have no long-term statistics, so this needs the recorder's history to cover today.",
+        responses: {
+          200: {
+            description: "The day's span and one series per configured thermostat.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    start: { type: "string", format: "date-time" },
+                    end: { type: "string", format: "date-time" },
+                    units: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          entity_id: { type: "string", example: "climate.samsung_airconditioner_1" },
+                          points: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                time: { type: "string", format: "date-time", description: "The quarter hour's start." },
+                                temp: { type: "number", nullable: true },
+                                target: { type: "number", nullable: true },
+                                action: { type: "string", nullable: true, enum: ["heating", "cooling", null] },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          500: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },

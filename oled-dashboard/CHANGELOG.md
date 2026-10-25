@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.79.0
+
+- Added: a Climate page (`/climate`), in the nav after Lights on every device and among a remote's Views (where, like Lights, it opens on the remote itself). Each thermostat is a card: the dial, mode and fan-speed controls the Home card's dialog has, its status in the header ("Heating to 70°" in the mode's colour while it runs), and today's room temperature since midnight as a strip under the controls — the target as a dashed step, the quarter hours it heated or cooled tinted orange or blue, the day's low and high above it. The page header counts the units that are on and carries All off. An automation can put a frame on it with `/api/change/climate`.
+- Added: the room's humidity under the dial's reading ("Indoor 64° · 46% humidity"), on the page and in the Home card's dialog, when the thermostat reports one.
+- Added: `/api/home/climate/history`, today's room temperature, target and heating / cooling per quarter hour for each configured thermostat, from Home Assistant's history (so the recorder's keep-days must cover today, which the default ten do).
+
 ## 0.78.0
 
 - Changed: the bottom bar and the left rail are frosted. They keep the cards' colour, but at 72%, over a blur (8px) of whatever scrolls beneath — the classic tab-bar material, not Liquid Glass: no refraction or highlight. The desktop lights strip stays opaque. On Home nothing passes under the rail, so its frost shows on full-bleed views and behind dialogs.

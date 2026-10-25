@@ -7,6 +7,7 @@ import { Album } from "./routes/Album";
 import { Control } from "./routes/Control";
 import { HomeOverview } from "./routes/HomeOverview";
 import { Lights } from "./routes/Lights";
+import { Climate } from "./routes/Climate";
 import { Radar } from "./routes/Radar";
 import { Timer } from "./routes/Timer";
 import { Energy } from "./routes/Energy";
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "/control", element: <Control /> },
       { path: "/home", element: <HomeOverview /> },
       { path: "/lights", element: <Lights /> },
+      { path: "/climate", element: <Climate /> },
       { path: "/radar", element: <Radar /> },
       { path: "/timer", element: <Timer /> },
       { path: "/energy", element: <Energy /> },

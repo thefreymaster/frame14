@@ -75,6 +75,66 @@ export function fmtClimateTemp(temp: number | null | undefined) {
   return temp == null ? null : Math.round(temp);
 }
 
+/** Home Assistant's hvac_action values that mean the unit is running now. */
+const RUNNING_ACTION: Record<string, { mode: ClimateVisualMode; label: string }> =
+  {
+    heating: { mode: "heat", label: "Heating" },
+    cooling: { mode: "cool", label: "Cooling" },
+  };
+
+export interface ClimateStatus {
+  /** The mode set on the unit. */
+  mode: ClimateVisualMode;
+  /** What to draw it as: the action running now, else the mode. */
+  shown: ClimateVisualMode;
+  /** Drawn as on: anything but off. */
+  on: boolean;
+  /** Heating or cooling right now. */
+  running: boolean;
+  /** The target, rounded, when the mode has one (heat or cool). */
+  target: number | null;
+  /** "Heating to 70°" running, "Heat · set 70°" idle, "Fan", "Off". */
+  status: string;
+  /** The status for a screen reader. */
+  spoken: string;
+}
+
+/**
+ * How a thermostat reads: shared by the Home card's tiles and /climate's
+ * panels, so a unit says the same thing wherever it is shown.
+ */
+export function climateStatus(unit: HomeClimate): ClimateStatus {
+  const mode = normalizeClimateMode(unit.hvacMode ?? unit.state);
+  const running = unit.hvacAction ? RUNNING_ACTION[unit.hvacAction] : undefined;
+  const shown = running?.mode ?? mode;
+  const targetTemp = fmtClimateTemp(unit.targetTemp);
+  const label =
+    running?.label ?? HVAC_MODES.find((m) => m.key === mode)?.label ?? "Off";
+  const target =
+    (mode === "heat" || mode === "cool") && targetTemp != null
+      ? targetTemp
+      : null;
+  return {
+    mode,
+    shown,
+    on: shown !== "off",
+    running: running != null,
+    target,
+    status:
+      target == null
+        ? label
+        : running
+          ? `${label} to ${target}°`
+          : `${label} · set ${target}°`,
+    spoken:
+      target == null
+        ? label
+        : running
+          ? `${label} to ${target}°`
+          : `${label}, set to ${target}°`,
+  };
+}
+
 export function getClimateAction(
   mode: ClimateVisualMode,
   unit: HomeClimate,
@@ -106,25 +166,40 @@ const TILE_MIN_REM = 9;
 const TILE_GAP_REM = 0.75;
 
 /**
- * Columns for the home card's thermostat tiles (and their skeleton), chosen by
- * the card's own width — the caller makes the wrapper a size container. One
- * column, then two, then one row for every unit once they all fit; never a
- * row of three with one left over. In rem so the steps follow the root size:
- * four units are 2x2 on the portrait frame and on a phone, and one row in
- * landscape; a very narrow card falls back to a single column.
+ * Columns for `count` thermostats at least `minRem` wide with `gapRem`
+ * between them, chosen by the container's own width — the caller makes the
+ * wrapper a size container. One column, then two, then one row for every
+ * unit once they all fit; never a row of three with one left over. In rem so
+ * the steps follow the root size. The gap itself is the caller's to set.
  */
-export function climateGridCss(count: number) {
+export function climateColumnsCss(
+  count: number,
+  minRem = TILE_MIN_REM,
+  gapRem = TILE_GAP_REM,
+) {
   const atLeast = (n: number) =>
-    `@container (min-width: ${n * TILE_MIN_REM + (n - 1) * TILE_GAP_REM}rem)`;
+    `@container (min-width: ${n * minRem + (n - 1) * gapRem}rem)`;
   const columns = (n: number) => ({
     gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
   });
   const pair = Math.max(1, Math.min(2, count));
   const all = Math.max(1, count);
   return {
-    gap: `${TILE_GAP_REM}rem`,
     ...columns(1),
     [atLeast(pair)]: columns(pair),
     [atLeast(all)]: columns(all),
+  };
+}
+
+/**
+ * The home card's thermostat tiles (and their skeleton): climateColumnsCss at
+ * the tiles' width and gap. Four units are 2x2 on the portrait frame and on a
+ * phone, and one row in landscape; a very narrow card falls back to a single
+ * column.
+ */
+export function climateGridCss(count: number) {
+  return {
+    gap: `${TILE_GAP_REM}rem`,
+    ...climateColumnsCss(count),
   };
 }

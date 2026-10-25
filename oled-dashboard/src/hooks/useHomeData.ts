@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useClimate } from "./useClimate";
 import { useEnergyToday } from "./useEnergyToday";
 import { useLiveEnergy } from "./useLiveEnergy";
 import { useEntitiesConfig } from "./useEntitiesConfig";
@@ -37,6 +38,8 @@ export interface HomeClimate {
   name: string;
   state: string;
   currentTemp: number | null;
+  /** The room's relative humidity, %, when the thermostat reports one. */
+  currentHumidity: number | null;
   targetTemp: number | null;
   hvacMode: string | null;
   hvacAction: string | null;
@@ -156,16 +159,6 @@ interface WeatherResponse {
   forecastDaily?: HomeForecastPeriod[];
 }
 
-interface ClimateAttributes {
-  friendly_name?: string;
-  current_temperature?: number | string | null;
-  temperature?: number | string | null;
-  hvac_mode?: string | null;
-  hvac_action?: string | null;
-  fan_mode?: string | null;
-  fan_modes?: string[] | null;
-}
-
 interface VacuumAttributes {
   friendly_name?: string;
   cleaning_progress?: number | string | null;
@@ -231,18 +224,6 @@ function allLive(states: { data?: unknown }[]): boolean {
   return states.length > 0 && states.every((state) => state.data != null);
 }
 
-interface ClimateResponse {
-  entity_id: string;
-  name: string;
-  state: string;
-  currentTemp: number | null;
-  targetTemp: number | null;
-  hvacMode: string | null;
-  hvacAction: string | null;
-  fanMode: string | null;
-  fanModes: string[] | null;
-}
-
 interface VacuumResponse {
   entity_id: string;
   name: string;
@@ -257,20 +238,6 @@ interface FanResponse {
   state: string;
   percentage: number | null;
   presetMode: string | null;
-}
-
-function mapClimateResponse(climate: ClimateResponse): HomeClimate {
-  return {
-    entity_id: climate.entity_id,
-    name: climate.name,
-    state: climate.state,
-    currentTemp: climate.currentTemp,
-    targetTemp: climate.targetTemp,
-    hvacMode: climate.hvacMode,
-    hvacAction: climate.hvacAction,
-    fanMode: climate.fanMode ?? null,
-    fanModes: climate.fanModes ?? [],
-  };
 }
 
 function mapVacuumResponse(vacuum: VacuumResponse): HomeVacuum {
@@ -313,33 +280,6 @@ function mapFanState(state: HAState<FanAttributes>): HomeFan {
   };
 }
 
-function mapClimateState(
-  state: HAState<ClimateAttributes>,
-  /** Configured labels (the add-on's climate_names), over the entity's own. */
-  names: Record<string, string>,
-): HomeClimate {
-  return {
-    entity_id: state.entity_id,
-    name:
-      names[state.entity_id] ??
-      state.attributes?.friendly_name ??
-      state.entity_id,
-    state: state.state,
-    currentTemp: parseFloatOrNull(state.attributes?.current_temperature),
-    targetTemp: parseFloatOrNull(state.attributes?.temperature),
-    hvacMode: state.attributes?.hvac_mode ?? state.state ?? null,
-    hvacAction: state.attributes?.hvac_action ?? null,
-    fanMode: state.attributes?.fan_mode ?? null,
-    fanModes: state.attributes?.fan_modes ?? [],
-  };
-}
-
-async function fetchClimate(): Promise<ClimateResponse[]> {
-  const res = await fetch("/api/home/climate");
-  if (!res.ok) throw new Error(`Climate fetch failed: ${res.status}`);
-  return res.json() as Promise<ClimateResponse[]>;
-}
-
 async function fetchVacuum(): Promise<VacuumResponse[]> {
   const res = await fetch("/api/home/vacuum");
   if (!res.ok) throw new Error(`Vacuum fetch failed: ${res.status}`);
@@ -367,11 +307,6 @@ async function fetchWeather(): Promise<WeatherResponse> {
 export function useHomeData() {
   const queryClient = useQueryClient();
   const entitiesQuery = useEntitiesConfig();
-  const climateEntityIds = useMemo(
-    () => [...new Set(entitiesQuery.data?.climate ?? [])],
-    [entitiesQuery.data?.climate],
-  );
-  const climateNames = entitiesQuery.data?.climateNames ?? {};
   const vacuumEntityIds = useMemo(
     () => [...new Set(entitiesQuery.data?.vacuums ?? [])],
     [entitiesQuery.data?.vacuums],
@@ -406,13 +341,9 @@ export function useHomeData() {
     weatherEntities.map(({ entityId }) => entityId),
   );
 
-  // Climate
-  const climateQuery = useQuery<ClimateResponse[]>({
-    queryKey: ["home", "climate"],
-    queryFn: fetchClimate,
-    staleTime: Infinity,
-  });
-  const climateStates = useEntities<ClimateAttributes>(climateEntityIds);
+  // Climate: the live model /climate shares (one query, one set of entity
+  // subscriptions).
+  const { climate: homeClimate, loading: climateLoading } = useClimate();
 
   // Vacuum
   const vacuumQuery = useQuery<VacuumResponse[]>({
@@ -519,25 +450,6 @@ export function useHomeData() {
           forecast: wx?.forecast ?? [],
           forecastDaily: wx?.forecastDaily ?? [],
         };
-
-  const fallbackClimate = (climateQuery.data ?? []).map(mapClimateResponse);
-  const homeClimate: HomeClimate[] =
-    climateEntityIds.length === 0
-      ? fallbackClimate
-      : (() => {
-          const fallbackById = new Map(
-            fallbackClimate.map((climate) => [climate.entity_id, climate]),
-          );
-
-          return climateEntityIds
-            .map((entityId, index) => {
-              const liveState = climateStates[index]?.data;
-              return liveState
-                ? mapClimateState(liveState, climateNames)
-                : (fallbackById.get(entityId) ?? null);
-            })
-            .filter((climate): climate is HomeClimate => climate != null);
-        })();
 
   const fallbackVacuum = (vacuumQuery.data ?? []).map(mapVacuumResponse);
   const homeVacuum: HomeVacuum[] =
@@ -654,7 +566,7 @@ export function useHomeData() {
   // energy card waits for /api/energy alone — its daily totals come from there.
   const loading: HomeLoading = {
     weather: homeWeather == null && weatherQuery.isPending,
-    climate: climateQuery.isPending && !allLive(climateStates),
+    climate: climateLoading,
     energy: energyLoading,
     energyCurve: energyTodayQuery.isPending,
     calendar: calendarQuery.isPending,

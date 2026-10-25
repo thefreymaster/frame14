@@ -72,15 +72,22 @@ Enable **Start on boot** and **Watchdog**, then start it. The dashboard is avail
 
 | Path | Description |
 |---|---|
-| `/` | Redirects to `/clock` |
-| `/clock` | Portrait clock + weather display |
-| `/home` | Overview: weather, climate, energy, calendar |
+| `/` | Redirects to `/home` |
+| `/home` | Overview: weather, climate, energy, calendar, printer, vacuum, fans; cards rearrange per device (press and hold) |
+| `/clock` | Analog or digital clock (tap to switch); frame-only nav item |
 | `/lights` | Light and switch controls |
-| `/photos` | Immich photo slideshow |
-| `/radar` | Radar view (frame-only nav item) |
-| `/timer` | Timer (frame-only nav item) |
+| `/climate` | The thermostats: dial, mode and fan controls, with today's room temperature under each |
+| `/energy` | Power flow now, with Solar (month / year history) and Circuits (per-circuit draw) as tabs; `/solar` and `/power` redirect here |
+| `/printer` | The 3D printer: camera, job progress and controls, temperatures; off by default in a remote's nav |
+| `/vacuum` | The robot vacuums: state, controls, map, wear parts; off by default in a remote's nav |
+| `/photos` | Immich photo slideshow; frame-only nav item |
+| `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames |
+| `/radar` | Radar view; frame-only nav item |
+| `/timer` | Timer; frame-only nav item |
+| `/marquee` | Plex now-playing poster art; auto-routed while a movie plays |
+| `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day |
 | `/blank` | Black screen (motion off) |
-| `/control` | Settings + remote control; use "Use as display" / "Use as remote" to set device mode |
+| `/control` | Settings + remote control; use "Use as display" / "Use as remote" to set device mode, and arrange this device's nav |
 
 ---
 

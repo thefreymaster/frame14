@@ -9,20 +9,12 @@ import { ClimateDialog } from "./ClimateDialog";
 import { ClimateSkeleton } from "./skeletons/ClimateSkeleton";
 import {
   climateGridCss,
+  climateStatus,
   fmtClimateTemp,
-  HVAC_MODES,
   hvacPalette,
   isClimateOn,
   MODE_ICON,
-  normalizeClimateMode,
-  type ClimateVisualMode,
 } from "../lib/hvac";
-
-/** Home Assistant's hvac_action values that mean the unit is running now. */
-const RUNNING: Record<string, { mode: ClimateVisualMode; label: string }> = {
-  heating: { mode: "heat", label: "Heating" },
-  cooling: { mode: "cool", label: "Cooling" },
-};
 
 /**
  * One thermostat as a Stat tile: the name and a mode icon, then the room
@@ -42,33 +34,11 @@ function ClimateTile({
   unit: HomeClimate;
   onTap: () => void;
 }) {
-  const mode = normalizeClimateMode(unit.hvacMode ?? unit.state);
-  const running = unit.hvacAction ? RUNNING[unit.hvacAction] : undefined;
-  const shown = running?.mode ?? mode;
-  const on = shown !== "off";
+  const { shown, on, running, status, spoken } = climateStatus(unit);
   const { accent, ring, palette } = hvacPalette(shown);
   const ModeIcon = MODE_ICON[shown];
   const currentTemp = fmtClimateTemp(unit.currentTemp);
-  const targetTemp = fmtClimateTemp(unit.targetTemp);
-  const label =
-    running?.label ?? HVAC_MODES.find((m) => m.key === mode)?.label ?? "Off";
-  const target =
-    (mode === "heat" || mode === "cool") && targetTemp != null
-      ? targetTemp
-      : null;
   const reading = currentTemp != null ? `${currentTemp}°` : "—";
-  const status =
-    target == null
-      ? label
-      : running
-        ? `${label} to ${target}°`
-        : `${label} · set ${target}°`;
-  const spoken =
-    target == null
-      ? label
-      : running
-        ? `${label} to ${target}°`
-        : `${label}, set to ${target}°`;
 
   return (
     <Card.Root

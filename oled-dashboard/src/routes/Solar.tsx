@@ -1,24 +1,32 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Center,
+  Flex,
   HStack,
   IconButton,
+  Skeleton,
   Spinner,
-  Stat,
+  Stack,
   Text,
-  defaultSystem,
 } from "@chakra-ui/react";
-import { ResponsiveLine } from "@nivo/line";
 import { PiSolarRoof } from "react-icons/pi";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { useEnergyMonthly } from "../hooks/useEnergyMonthly";
+import { useEnergyMonthly, type NivoSeries } from "../hooks/useEnergyMonthly";
 import { useEnergyYearly } from "../hooks/useEnergyYearly";
-import { useThemeMode } from "../hooks/useThemeMode";
+import { useLiveEnergy } from "../hooks/useLiveEnergy";
 import { Board } from "../components/Board";
+import {
+  EnergyHistoryChart,
+  type HistoryPoint,
+} from "../components/EnergyHistoryChart";
+import { GridBadge } from "../components/GridBadge";
 import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
+import { PowerFlow } from "../components/PowerFlow";
+import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { SegmentedControl } from "../components/ui/segmented-control";
+import { fmtKwh, grid } from "../lib/energy";
 
 const MONTHS = [
   "January",
@@ -35,24 +43,60 @@ const MONTHS = [
   "December",
 ];
 
-const FONT_BODY = "var(--chakra-fonts-body)";
-
-/** A palette colour as a literal — nivo mixes opacities, so CSS vars won't do. */
-const color = (path: string) => defaultSystem.token(`colors.${path}`) as string;
-
-function fmtKwh(n: number) {
-  return n.toFixed(1);
-}
-
 type View = "month" | "year";
 type ChartMode = "total" | "daily";
 
+interface Cursor {
+  year: number;
+  month: number;
+}
+
+const two = (n: number) => String(n).padStart(2, "0");
+
+/** One series of the API's answer as x → y. */
+function seriesOf(data: NivoSeries[], id: string) {
+  return new Map(
+    (data.find((s) => s.id === id)?.data ?? []).map((d) => [d.x, d.y]),
+  );
+}
+
+/**
+ * The period's slots — every day of the month or month of the year, so the
+ * plot spans the whole period and the lines end where it has got to — each
+ * with its x in the API's form, its readout name and its axis label if it
+ * has one (every seventh day; every third month).
+ */
+function slotsOf(view: View, cursor: Cursor) {
+  if (view === "year") {
+    return MONTHS.map((name, m) => ({
+      x: `${cursor.year}-${two(m + 1)}`,
+      label: name,
+      tick: m % 3 === 0 ? name.slice(0, 3) : null,
+    }));
+  }
+  const days = new Date(cursor.year, cursor.month + 1, 0).getDate();
+  const mon = MONTHS[cursor.month].slice(0, 3);
+  return Array.from({ length: days }, (_, i) => ({
+    x: `${cursor.year}-${two(cursor.month + 1)}-${two(i + 1)}`,
+    label: `${mon} ${i + 1}`,
+    tick: i % 7 === 0 ? String(i + 1) : null,
+  }));
+}
+
+/**
+ * The /solar page: where the power is going now (PowerFlow, as on the energy
+ * card and in its dialog), then a month of days or a year of months in the
+ * card's style — the coverage figure beside the keyed totals, over the solar
+ * and home lines (EnergyHistoryChart). Total draws the running totals, Daily
+ * each slot's own; the slot's mean temperature reads out with its name in
+ * Daily. Period and chart mode are the header's controls.
+ */
 export function Solar() {
   const now = new Date();
   const [view, setView] = useState<View>("month");
   const [chartMode, setChartMode] = useState<ChartMode>("total");
   // Cursor: which month/year is being viewed.
-  const [cursor, setCursor] = useState({
+  const [cursor, setCursor] = useState<Cursor>({
     year: now.getFullYear(),
     month: now.getMonth(),
   });
@@ -87,100 +131,81 @@ export function Solar() {
     }
   }
 
-  const monthParam = `${cursor.year}-${String(cursor.month + 1).padStart(2, "0")}`;
+  const monthParam = `${cursor.year}-${two(cursor.month + 1)}`;
   const label =
     view === "month"
       ? `${MONTHS[cursor.month].slice(0, 3).toUpperCase()} ${cursor.year}`
       : `${cursor.year}`;
+  const periodName =
+    view === "month"
+      ? isCurrentYear
+        ? MONTHS[cursor.month]
+        : `${MONTHS[cursor.month]} ${cursor.year}`
+      : String(cursor.year);
 
-  const { effectiveMode } = useThemeMode();
-  const isDark = effectiveMode === "dark";
-
-  const productionColor = color("yellow.500");
-  const consumptionColor = isDark ? color("gray.400") : color("gray.600");
-  const temperatureColor = isDark ? color("blue.400") : color("blue.600");
-  const crosshairColor = isDark ? color("gray.700") : color("gray.300");
-  const tickColor = isDark ? color("gray.500") : color("gray.600");
-  // Chart text at Chakra's `xs`, which follows the page's root size.
-  const tickSize =
-    parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.75;
-
-  const nivoTheme = useMemo(
-    () => ({
-      background: "transparent",
-      text: { fontFamily: FONT_BODY, fontSize: tickSize },
-      axis: {
-        ticks: {
-          text: { fill: tickColor, fontFamily: FONT_BODY, fontSize: tickSize },
-          line: { stroke: "transparent" },
-        },
-        domain: { line: { stroke: "transparent" } },
-      },
-      crosshair: { line: { stroke: crosshairColor, strokeWidth: 1 } },
-    }),
-    [tickColor, crosshairColor, tickSize],
-  );
-
+  const live = useLiveEnergy();
   const monthly = useEnergyMonthly(view === "month" ? monthParam : undefined);
   const yearly = useEnergyYearly(view === "year" ? cursor.year : undefined);
   const { data, isPending, isError } = view === "month" ? monthly : yearly;
 
-  // Temperature is on a different scale (°F vs kWh) — normalize it into the
-  // upper band of the energy y-range and keep actual values for the tooltip.
-  const { chartData, tempByX } = useMemo(() => {
-    if (!data) return { chartData: [], tempByX: new Map<string, number>() };
+  // The slots as the chart draws them, from whichever series the mode wants.
+  const slots = slotsOf(view, cursor);
+  const production = seriesOf(
+    data ?? [],
+    chartMode === "total" ? "runningProduction" : "production",
+  );
+  const consumption = seriesOf(
+    data ?? [],
+    chartMode === "total" ? "runningConsumption" : "consumption",
+  );
+  const temperature = seriesOf(data ?? [], "temperature");
+  const points: HistoryPoint[] = slots.map((s) => ({
+    label: s.label,
+    production: production.get(s.x) ?? null,
+    consumption: consumption.get(s.x) ?? null,
+    temperature: chartMode === "daily" ? (temperature.get(s.x) ?? null) : null,
+  }));
+  const ticks = slots.flatMap((s, index) =>
+    s.tick ? [{ index, label: s.tick }] : [],
+  );
 
-    const wanted =
-      chartMode === "total"
-        ? ["runningProduction", "runningConsumption"]
-        : ["production", "consumption"];
-    const energySeries = data
-      .filter((s) => wanted.includes(s.id))
-      .map((s) => ({
-        id: s.id,
-        data: s.data.filter((d): d is { x: string; y: number } => d.y != null),
-      }));
-
-    const tempByX = new Map<string, number>();
-    if (chartMode === "daily") {
-      const tempPoints =
-        data
-          .find((s) => s.id === "temperature")
-          ?.data.filter((d): d is { x: string; y: number } => d.y != null) ??
-        [];
-      for (const p of tempPoints) tempByX.set(p.x, p.y);
-
-      const energyMax = Math.max(
-        0,
-        ...energySeries.flatMap((s) => s.data.map((d) => d.y)),
-      );
-      if (tempPoints.length > 0 && energyMax > 0) {
-        const temps = tempPoints.map((p) => p.y);
-        const tMin = Math.min(...temps);
-        const tMax = Math.max(...temps);
-        const lo = energyMax * 0.55;
-        const hi = energyMax * 0.95;
-        const scale = (t: number) =>
-          tMax === tMin
-            ? (lo + hi) / 2
-            : lo + ((t - tMin) / (tMax - tMin)) * (hi - lo);
-        energySeries.push({
-          id: "temperature",
-          data: tempPoints.map((p) => ({ x: p.x, y: scale(p.y) })),
-        });
-      }
-    }
-
-    return { chartData: energySeries, tempByX };
-  }, [data, chartMode]);
-
-  const prodTotal =
-    data?.find((s) => s.id === "runningProduction")?.data.at(-1)?.y ?? 0;
-  const consTotal =
-    data?.find((s) => s.id === "runningConsumption")?.data.at(-1)?.y ?? 0;
+  // The period's totals: the running series' last values.
+  const lastOf = (id: string) =>
+    [...seriesOf(data ?? [], id).values()].filter((y) => y != null).at(-1) ?? 0;
+  const prodTotal = lastOf("runningProduction");
+  const consTotal = lastOf("runningConsumption");
   const pct = consTotal > 0 ? Math.round((prodTotal / consTotal) * 100) : 0;
-  const pctColor =
-    pct >= 100 ? "green.fg" : pct >= 60 ? "yellow.fg" : "fg.muted";
+
+  // Daily: the best slot, named. Running totals have no best.
+  let note: string | null = null;
+  if (chartMode === "daily") {
+    const best = points.reduce<HistoryPoint | null>(
+      (b, p) =>
+        p.production != null && p.production > (b?.production ?? 0) ? p : b,
+      null,
+    );
+    if (best) {
+      note = `Best ${view === "month" ? "day" : "month"} ${fmtKwh(best.production!)} kWh · ${best.label}`;
+    }
+  }
+
+  const lead = (
+    <Stack gap="1" flexShrink={0}>
+      <Text
+        textStyle="4xl"
+        fontWeight="semibold"
+        lineHeight="1"
+        letterSpacing="tight"
+        color={pct >= 100 ? "fg.success" : "fg"}
+        aria-label={`Solar covered ${pct}% of the use in ${periodName}`}
+      >
+        {pct}%
+      </Text>
+      <Text textStyle="xs" color="fg.muted" whiteSpace="nowrap">
+        Solar covered in {periodName}
+      </Text>
+    </Stack>
+  );
 
   return (
     <PageShell fill>
@@ -248,204 +273,51 @@ export function Solar() {
         }
       />
 
-      {/* Stats */}
-      <Board>
-        <HStack justify="space-between" align="flex-end" width="100%" minW="0">
-          <Stat.Root size="lg" alignItems="flex-start">
-            <Stat.Label>Produced</Stat.Label>
-            <Stat.ValueText color="yellow.fg">
-              {fmtKwh(prodTotal as number)}
-              <Stat.ValueUnit>kWh</Stat.ValueUnit>
-            </Stat.ValueText>
-          </Stat.Root>
-          <Stat.Root size="lg" alignItems="center">
-            <Stat.Label>Solar</Stat.Label>
-            <Stat.ValueText color={pctColor}>{pct}%</Stat.ValueText>
-          </Stat.Root>
-          <Stat.Root size="lg" alignItems="flex-end">
-            <Stat.Label>Consumed</Stat.Label>
-            <Stat.ValueText>
-              {fmtKwh(consTotal as number)}
-              <Stat.ValueUnit>kWh</Stat.ValueUnit>
-            </Stat.ValueText>
-          </Stat.Root>
-        </HStack>
+      {/* Now */}
+      <Board
+        collapsible
+        storageKey="solar-now"
+        title={
+          <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
+            <SectionTitle>Now</SectionTitle>
+            {grid(live.energy).active && (
+              <Box ms="auto">
+                <GridBadge energy={live.energy} />
+              </Box>
+            )}
+          </Flex>
+        }
+      >
+        {live.loading ? (
+          <Skeleton height="7.5rem" />
+        ) : (
+          <PowerFlow energy={live.energy} />
+        )}
       </Board>
 
-      {/* Chart */}
+      {/* The period */}
       <Board fill>
-        <Box height="100%" display="flex" flexDirection="column" minH="0">
-          {isPending && (
-            <Center height="100%">
-              <Spinner size="lg" aria-label="Loading" />
-            </Center>
-          )}
-          {isError && (
-            <Center height="100%">
-              <Text color="fg.muted">unavailable</Text>
-            </Center>
-          )}
-          {!isPending && !isError && chartData.length > 0 && (
-            <Box
-              key={`${view}-${chartMode}-${label}`}
-              animation="chart-reveal 0.9s cubic-bezier(0.4, 0, 0.2, 1) both"
-              flex="1"
-              minH="0"
-            >
-              <ResponsiveLine
-                data={chartData}
-                theme={nivoTheme}
-                colors={[productionColor, consumptionColor, temperatureColor]}
-                curve="monotoneX"
-                lineWidth={1.5}
-                enablePoints={false}
-                enableGridX={false}
-                enableGridY={false}
-                enableArea={true}
-                areaOpacity={1}
-                areaBlendMode="normal"
-                defs={[
-                  {
-                    id: "solarProdArea",
-                    type: "linearGradient",
-                    colors: [
-                      { offset: 0, color: productionColor, opacity: 0.22 },
-                      { offset: 100, color: productionColor, opacity: 0 },
-                    ],
-                  },
-                  {
-                    id: "solarConsArea",
-                    type: "linearGradient",
-                    colors: [
-                      { offset: 0, color: consumptionColor, opacity: 0.18 },
-                      { offset: 100, color: consumptionColor, opacity: 0 },
-                    ],
-                  },
-                  {
-                    id: "solarNoArea",
-                    type: "linearGradient",
-                    colors: [
-                      { offset: 0, color: productionColor, opacity: 0 },
-                      { offset: 100, color: productionColor, opacity: 0 },
-                    ],
-                  },
-                ]}
-                fill={[
-                  { match: { id: "runningProduction" }, id: "solarProdArea" },
-                  { match: { id: "production" }, id: "solarProdArea" },
-                  { match: { id: "runningConsumption" }, id: "solarConsArea" },
-                  { match: { id: "consumption" }, id: "solarConsArea" },
-                  { match: { id: "temperature" }, id: "solarNoArea" },
-                ]}
-                axisLeft={null}
-                axisRight={null}
-                axisTop={null}
-                axisBottom={{
-                  tickSize: 0,
-                  tickPadding: 10,
-                  format: (v) => {
-                    if (view === "year") {
-                      const m = parseInt(String(v).slice(5, 7), 10) - 1;
-                      return MONTHS[m]?.slice(0, 3) ?? "";
-                    }
-                    const day = parseInt(String(v).slice(-2), 10);
-                    return day % 7 === 1 ? String(day) : "";
-                  },
-                }}
-                margin={{ top: 12, right: 4, bottom: 32, left: 4 }}
-                animate={true}
-                motionConfig="gentle"
-                isInteractive={true}
-                enableCrosshair={true}
-                crosshairType="x"
-                useMesh={true}
-                tooltip={({ point }) => {
-                  const x = String(point.data.x);
-                  const xLabel =
-                    view === "year"
-                      ? (MONTHS[parseInt(x.slice(5, 7), 10) - 1] ?? x)
-                      : x.slice(5);
-                  const isTemp = point.seriesId === "temperature";
-                  const valueLabel = isTemp
-                    ? `${Math.round(tempByX.get(x) ?? 0)}°F`
-                    : `${(point.data.y as number).toFixed(1)} kWh`;
-                  const seriesLabel = isTemp
-                    ? "Avg temp"
-                    : String(point.seriesId)
-                          .toLowerCase()
-                          .includes("production")
-                      ? "Produced"
-                      : "Consumed";
-                  return (
-                    <Box
-                      bg="bg.panel"
-                      borderWidth="1px"
-                      shadow="md"
-                      rounded="l2"
-                      px="3"
-                      py="2"
-                      pointerEvents="none"
-                    >
-                      <Text textStyle="xs" color="fg.muted">
-                        {xLabel}
-                      </Text>
-                      <Text
-                        textStyle="lg"
-                        fontWeight="semibold"
-                        style={{ color: point.seriesColor }}
-                      >
-                        {valueLabel}
-                      </Text>
-                      <Text textStyle="xs" color="fg.muted">
-                        {seriesLabel}
-                      </Text>
-                    </Box>
-                  );
-                }}
-              />
-            </Box>
-          )}
-
-          {/* Legend */}
-          <HStack
-            gap="6"
-            justify="center"
-            mt="3"
-            flexShrink={0}
-            textStyle="sm"
-            color="fg.muted"
-          >
-            <HStack gap="2">
-              <Box
-                w="6"
-                h="0.5"
-                rounded="full"
-                style={{ background: productionColor }}
-              />
-              <Text>Production</Text>
-            </HStack>
-            <HStack gap="2">
-              <Box
-                w="6"
-                h="0.5"
-                rounded="full"
-                style={{ background: consumptionColor }}
-              />
-              <Text>Consumption</Text>
-            </HStack>
-            {chartMode === "daily" && (
-              <HStack gap="2">
-                <Box
-                  w="6"
-                  h="0.5"
-                  rounded="full"
-                  style={{ background: temperatureColor }}
-                />
-                <Text>Temp</Text>
-              </HStack>
-            )}
-          </HStack>
-        </Box>
+        {isPending ? (
+          <Center flex="1">
+            <Spinner size="lg" aria-label="Loading" />
+          </Center>
+        ) : isError || !data ? (
+          <Center flex="1">
+            <Text color="fg.muted">unavailable</Text>
+          </Center>
+        ) : (
+          <EnergyHistoryChart
+            // A new period or mode starts with the readout idle.
+            key={`${view}-${chartMode}-${label}`}
+            points={points}
+            ticks={ticks}
+            totals={{ production: prodTotal, consumption: consTotal }}
+            note={note}
+            lead={lead}
+            ring="bg.surface"
+            label={`${periodName}, ${chartMode === "total" ? "running totals" : view === "month" ? "by day" : "by month"}`}
+          />
+        )}
       </Board>
     </PageShell>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEnergyToday } from "./useEnergyToday";
+import { useLiveEnergy } from "./useLiveEnergy";
 import { useEntitiesConfig } from "./useEntitiesConfig";
 import { useEntities, useEntity, type HAState } from "./useEntity";
 import { printerEntityIds } from "../lib/printerEntities";
@@ -258,13 +259,6 @@ interface FanResponse {
   presetMode: string | null;
 }
 
-interface EnergyResponse {
-  production: number;
-  consumption: number;
-  currentProduction: number;
-  currentConsumption: number;
-}
-
 function mapClimateResponse(climate: ClimateResponse): HomeClimate {
   return {
     entity_id: climate.entity_id,
@@ -351,12 +345,6 @@ async function fetchFan(): Promise<FanResponse[]> {
   return res.json() as Promise<FanResponse[]>;
 }
 
-async function fetchEnergy(): Promise<EnergyResponse> {
-  const res = await fetch("/api/energy");
-  if (!res.ok) throw new Error(`Energy fetch failed: ${res.status}`);
-  return res.json() as Promise<EnergyResponse>;
-}
-
 async function fetchCalendar(): Promise<CalendarResponse> {
   const res = await fetch("/api/home/calendar");
   if (!res.ok) throw new Error(`Calendar fetch failed: ${res.status}`);
@@ -398,28 +386,6 @@ export function useHomeData() {
       ].filter((entity) => entity.entityId),
     [entitiesQuery.data?.weather],
   );
-  const energyEntities = useMemo(
-    () =>
-      [
-        {
-          key: "currentProduction" as const,
-          entityId: entitiesQuery.data?.energy?.currentProduction ?? "",
-        },
-        {
-          key: "currentConsumption" as const,
-          entityId: entitiesQuery.data?.energy?.currentConsumption ?? "",
-        },
-        {
-          key: "productionToday" as const,
-          entityId: entitiesQuery.data?.energy?.productionToday ?? "",
-        },
-        {
-          key: "consumptionToday" as const,
-          entityId: entitiesQuery.data?.energy?.consumptionToday ?? "",
-        },
-      ].filter((entity) => entity.entityId),
-    [entitiesQuery.data?.energy],
-  );
 
   // Weather
   const weatherQuery = useQuery<WeatherResponse>({
@@ -457,17 +423,12 @@ export function useHomeData() {
   });
   const fanStates = useEntities<FanAttributes>(fanEntityIds);
 
-  // Energy
-  const energyQuery = useQuery<EnergyResponse>({
-    queryKey: ["home", "energy"],
-    queryFn: fetchEnergy,
-    refetchInterval: 1000 * 30,
-    staleTime: 1000 * 30,
-  });
+  // Energy: the live model /solar's Now card shares (one /api/energy query,
+  // one set of entity subscriptions).
+  const { energy: homeEnergy, loading: energyLoading } = useLiveEnergy();
   // The same query the energy card draws its strip from; read here only so
   // the splash can wait for it, and the strip doesn't appear after the card.
   const energyTodayQuery = useEnergyToday();
-  const energyStates = useEntities(energyEntities.map(({ entityId }) => entityId));
 
   // People
   const personEvan = useEntity(PERSON_ENTITIES[0].id);
@@ -650,35 +611,6 @@ export function useHomeData() {
     gcodeFilename: cleanString(printerExtraStateByKey.gcodeFilename),
   };
 
-  const liveEnergyByKey = new Map(
-    energyEntities.map(({ key }, index) => [key, energyStates[index]?.data]),
-  );
-
-  function liveWatts(key: "currentProduction" | "currentConsumption", fallback: number): number {
-    const s = liveEnergyByKey.get(key);
-    if (!s) return fallback;
-    const val = parseFloatOrNull(s.state);
-    if (val == null) return fallback;
-    const unit = (s.attributes as Record<string, unknown>)?.unit_of_measurement;
-    return unit === "kW" ? val * 1000 : val;
-  }
-
-  const homeEnergy: HomeEnergy = {
-    currentProduction: liveWatts("currentProduction", energyQuery.data?.currentProduction ?? 0),
-    currentConsumption: liveWatts("currentConsumption", energyQuery.data?.currentConsumption ?? 0),
-    // /api/energy is the authority for the daily totals — it derives them from
-    // the lifetime counters' statistics. The card waits for it (see loading);
-    // the raw "today" sensors are only a fallback for when that request fails.
-    productionToday:
-      energyQuery.data?.production ??
-      parseFloatOrNull(liveEnergyByKey.get("productionToday")?.state) ??
-      0,
-    consumptionToday:
-      energyQuery.data?.consumption ??
-      parseFloatOrNull(liveEnergyByKey.get("consumptionToday")?.state) ??
-      0,
-  };
-
   const homeInternet = useMemo<HomeInternet>(
     () => ({ connected: ping.data === undefined || ping.data.state === "on" }),
     [ping.data],
@@ -715,7 +647,7 @@ export function useHomeData() {
   const loading: HomeLoading = {
     weather: homeWeather == null && weatherQuery.isPending,
     climate: climateQuery.isPending && !allLive(climateStates),
-    energy: energyQuery.isPending,
+    energy: energyLoading,
     energyCurve: energyTodayQuery.isPending,
     calendar: calendarQuery.isPending,
     fan: fanEntityIds.length > 0 && fanQuery.isPending && !allLive(fanStates),

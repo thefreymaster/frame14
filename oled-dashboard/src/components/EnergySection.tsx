@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Badge,
   Box,
   Flex,
   HStack,
@@ -19,27 +18,14 @@ import {
   SPARKLINE_HEIGHT,
   coverage,
   fmtKwh,
-  fmtW,
   grid,
 } from "../lib/energy";
 import { Board } from "./Board";
 import { EnergyDialog } from "./EnergyDialog";
+import { GridBadge } from "./GridBadge";
 import { PowerFlow } from "./PowerFlow";
 import { TodaySparkline } from "./TodaySparkline";
 import { EnergySkeleton } from "./skeletons/EnergySkeleton";
-
-/** Import / export: arrow and colour carry the direction. */
-function GridBadge({ energy }: { energy: HomeEnergy }) {
-  const { abs, exporting } = grid(energy);
-  return (
-    <Badge
-      colorPalette={exporting ? "green" : "orange"}
-      aria-label={`${exporting ? "Exporting" : "Importing"} ${fmtW(abs)}`}
-    >
-      {exporting ? "↑" : "↓"} {fmtW(abs)}
-    </Badge>
-  );
-}
 
 /**
  * A day total keyed to its line in the strip by the flow's own icon for it,

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.74.0
+
+- Changed: the Solar page is drawn like the new Energy card. A Now card at the top shows the power flow — the panels, the house and the grid with dots running along the wires the way the power is going, the live kilowatts under each — with the grid figure in its header, and it can be collapsed. The month or year is one card: how much of the period's use the solar covered as the big figure (green past 100%), the two totals keyed to the lines, and the chart in the same style — solar over its wash and the house's use in grey, on a kWh scale with gridlines, the lines ending where the period has got to, with a dot on each. Total still draws the running totals and Daily each day's (or each month's) own.
+- Changed: point at, drag across or arrow through the chart to read a day or month: the keys show its values and its name appears at the right, with its average temperature in Daily. Idle, Daily names the best day or month. The old tooltip is gone.
+- Changed: the temperature is no longer drawn as a line over the chart (it was on a made-up scale); it reads out with the day instead.
+
 ## 0.73.0
 
 - Changed: the Energy card on Home. Its body is now the Energy dialog's power flow at a smaller size — the panels, the house and the grid as round nodes, with dots running along the wires the way the power is going right now, in the flow's colour (yellow from the panels, green out to the grid, orange in from it) — with the live kilowatts under each node. Below it, how much of today's use the solar covered is the one big figure (green once it passes 100%), beside a strip of today's power curve: solar over its wash and the house's use, midnight to midnight, ending at the values now. The two day totals sit over the strip, keyed by the panel and house icons. The progress bar is gone. The card is a little taller than it was; a tap on the body still opens the dialog with the full chart.

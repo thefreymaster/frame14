@@ -1,6 +1,6 @@
-// The floating surface the navs and the desktop lights strip share, its
-// entries' corners, and the dark-mode shades for anything sitting on the
-// cards' `bg.surface`.
+// The floating surface the navs and the desktop lights strip share (the
+// navs' frosted, NAV_SURFACE), its entries' corners, and the dark-mode shades
+// for anything sitting on the cards' `bg.surface`.
 
 /** Space between a floating surface's edge and its entries. */
 export const NAV_PAD = "0.375rem";
@@ -19,6 +19,30 @@ export const FLOATING_SURFACE = {
   shadow: "lg",
   zIndex: "sticky",
   p: NAV_PAD,
+} as const;
+
+/**
+ * How far the navs blur what passes beneath them. The user chose 8px from a
+ * sheet of 0 / 8 / 16 / 24 / 40: a card's shapes still read through it.
+ */
+export const NAV_BLUR = "8px";
+
+/** How much of the surface colour the navs keep over that blur, in percent. */
+export const NAV_SURFACE_TINT = 72;
+
+/**
+ * The navs' surface: FLOATING_SURFACE made frosted — the cards' colour at
+ * NAV_SURFACE_TINT over a NAV_BLUR blur of the page scrolling beneath, a
+ * little more saturated: iOS's classic tab-bar material, not Liquid Glass
+ * (no refraction, no highlight, the colour stays the cards'). The lights
+ * strip keeps the opaque surface.
+ */
+export const NAV_SURFACE = {
+  ...FLOATING_SURFACE,
+  bg: `bg.surface/${NAV_SURFACE_TINT}`,
+  backdropFilter: `blur(${NAV_BLUR}) saturate(1.8)`,
+  // Older WebKit knows only the prefixed property.
+  css: { WebkitBackdropFilter: `blur(${NAV_BLUR}) saturate(1.8)` },
 } as const;
 
 /**

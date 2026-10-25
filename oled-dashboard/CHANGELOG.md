@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.78.0
+
+- Changed: the bottom bar and the left rail are frosted. They keep the cards' colour, but at 72%, over a blur (8px) of whatever scrolls beneath — the classic tab-bar material, not Liquid Glass: no refraction or highlight. The desktop lights strip stays opaque. On Home nothing passes under the rail, so its frost shows on full-bleed views and behind dialogs.
+
 ## 0.77.0
 
 - Changed: the thermostats are the LocalThings ones (`climate.samsung_airconditioner_*`, local control of the Samsung mini splits) instead of SmartThings'. The add-on's `climate_entities` default lists them; an add-on that was configured before keeps its own list, so swap the four ids in its Configuration.

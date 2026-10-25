@@ -4,11 +4,7 @@ import { useLocation, useNavigate } from "react-router";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
-import {
-  ENTRY_RADIUS,
-  FLOATING_SURFACE,
-  NAV_PAD,
-} from "../lib/floatingSurface";
+import { ENTRY_RADIUS, NAV_PAD, NAV_SURFACE } from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
   NAV_BAR_BOTTOM,
@@ -104,9 +100,9 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
   // Each nav entry is a Tabs trigger: the selected tab is the view on screen.
   // Navigation happens on click rather than onValueChange, so tapping the tab
   // you are already on still re-sends it to the other frames, as before.
-  // Both navs float; the selected entry is bright, not filled, and the
-  // entries' corners (ENTRY_RADIUS, for the focus ring) are concentric with
-  // the nav's.
+  // Both navs float, frosted (NAV_SURFACE); the selected entry is bright, not
+  // filled, and the entries' corners (ENTRY_RADIUS, for the focus ring) are
+  // concentric with the nav's.
   function renderItem(item: NavItem, placement: "bar" | "rail") {
     const isActive = activeView === item.path;
     const Icon = isActive ? item.activeIcon : item.icon;
@@ -131,8 +127,9 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
 
   return (
     <>
-      {/* Portrait: a bar like Apple Music's tab bar but opaque (no glass),
-          the page scrolling on underneath it. On an iPhone it is flush with
+      {/* Portrait: a bar like Apple Music's tab bar, frosted — the page
+          scrolling on underneath it shows through a heavy blur (NAV_SURFACE;
+          the classic material, not Liquid Glass). On an iPhone it is flush with
           the screen's sides and bottom, over the home indicator, with only a
           top edge, its bottom corners the screen's own and its top flat;
           elsewhere it floats a gap in from the edges with the cards' corners
@@ -141,7 +138,8 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           as an iPhone tab bar does. */}
       <Box
         ref={barRef}
-        {...FLOATING_SURFACE}
+        data-nav="bar"
+        {...NAV_SURFACE}
         borderLeftWidth={NAV_BAR_SIDE_BORDER}
         borderRightWidth={NAV_BAR_SIDE_BORDER}
         borderBottomWidth={NAV_BAR_SIDE_BORDER}
@@ -184,10 +182,11 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
         </Tabs.Root>
       </Box>
 
-      {/* Landscape: the same floating surface down the left, on the cards'
+      {/* Landscape: the same frosted surface down the left, on the cards'
           PAGE_GUTTER: its top lines up with the first card's. */}
       <Box
-        {...FLOATING_SURFACE}
+        data-nav="rail"
+        {...NAV_SURFACE}
         display={{ base: "none", _landscape: "block" }}
         top={`calc(${HEADER_CLEARANCE} + ${PAGE_GUTTER})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}

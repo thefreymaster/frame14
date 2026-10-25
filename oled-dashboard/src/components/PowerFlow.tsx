@@ -26,18 +26,20 @@ const flowLeft = keyframes`
 
 type FlowSize = "sm" | "md";
 
-/** The nodes' edge: a 2px border, and the home ring's stroke, the same. */
+/** The nodes' edge: a 2px border. The home ring is thicker (SIZES.ring). */
 const EDGE = 2;
 
 /**
  * The diagram at the dialog's size (`md`) and the energy card's (`sm`), the
  * same drawing with smaller nodes, figures and words. `px` is the node's
- * size in pixels (at the 16px root), the ring's drawing space.
+ * size in pixels (at the 16px root), the ring's drawing space, and `ring`
+ * the ring's stroke in it, a little heavier than the other nodes' edge.
  */
 const SIZES = {
   md: {
     node: "14",
     px: 56,
+    ring: 4,
     icon: "6",
     gap: { base: "1.5", md: "3" },
     value: { base: "lg", md: "xl" },
@@ -47,6 +49,7 @@ const SIZES = {
   sm: {
     node: "10",
     px: 40,
+    ring: 3,
     icon: "5",
     gap: "1.5",
     value: "sm",
@@ -153,8 +156,9 @@ function Node({
  * A node's edge as a ring of a percentage: the track in the node's colour,
  * over it the first hundred in solar yellow from twelve o'clock clockwise,
  * and over that the second hundred in green (past 200 it stays all green).
- * Each lap moves as the figure does. Drawn in the node's pixel space, so
- * the stroke is the border's 2px.
+ * Each lap moves as the figure does. Drawn in the node's pixel space, with
+ * a stroke a little heavier than the other nodes' 2px borders, so the
+ * ring reads as a gauge among them.
  */
 function Ring({
   pct,
@@ -165,9 +169,9 @@ function Ring({
   track: Flow;
   size: FlowSize;
 }) {
-  const px = SIZES[size].px;
+  const { px, ring: stroke } = SIZES[size];
   const mid = px / 2;
-  const r = mid - EDGE / 2;
+  const r = mid - stroke / 2;
   const whole = Math.round(Math.max(0, pct));
   const lap = (n: number) => Math.min(100, Math.max(0, whole - n * 100));
   return (
@@ -190,7 +194,7 @@ function Ring({
         r={r}
         fill="none"
         stroke={ENERGY_VARS[track]}
-        strokeWidth={EDGE}
+        strokeWidth={stroke}
       />
       <g transform={`rotate(-90 ${mid} ${mid})`}>
         {(["solar", "export"] as const).map((color, i) => {
@@ -203,7 +207,7 @@ function Ring({
               r={r}
               fill="none"
               stroke={ENERGY_VARS[color]}
-              strokeWidth={EDGE}
+              strokeWidth={stroke}
               // Round ends, except that a zero-length dash with them is a dot.
               strokeLinecap={length > 0 ? "round" : "butt"}
               pathLength={100}

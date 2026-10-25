@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.76.2
+
+- Changed: the house's ring is a little heavier than the other nodes' edges — 3px on the card, 4px in the dialog and on the Energy page — so it reads as a gauge beside them.
+
 ## 0.76.1
 
 - Changed: the house's ring is today's figure — how much of the day's use the solar has covered, the number under the diagram on the card — rather than the share of the draw right now. Past 100% it goes round again in green over the yellow, as the figure turns green: a 150% day is a full yellow ring with a green half over it, a 200% day all green.

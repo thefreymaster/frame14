@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.76.1
+
+- Changed: the house's ring is today's figure — how much of the day's use the solar has covered, the number under the diagram on the card — rather than the share of the draw right now. Past 100% it goes round again in green over the yellow, as the figure turns green: a 150% day is a full yellow ring with a green half over it, a 200% day all green.
+
 ## 0.76.0
 
 - Added: the house in the power flow (the Energy card, its dialog, and the Energy page's Now card) wears a ring: how much of what the house is drawing right now the panels are covering, in solar yellow from the top clockwise, the rest the edge's grey. It's full whenever the panels make at least what the house uses (so all the while power is going out to the grid), part of the way round when the grid makes up the rest, and plain at night. It moves as the figures change.

@@ -7,9 +7,9 @@ import {
   ENERGY_COLORS,
   ENERGY_VARS,
   GRID_ACTIVE_THRESHOLD,
+  coverage,
   fmtW,
   grid,
-  solarShare,
 } from "../lib/energy";
 
 /** One dot spacing, so a loop of the animation looks continuous. */
@@ -61,9 +61,11 @@ const SIZES = {
  * makes up what the panels can't. Solar → Home → Grid when exporting,
  * Solar → Home ← Grid when importing. A line with power on it carries dots
  * moving the way it flows, in the flow's colour; an idle line is a hairline.
- * The house's edge is a ring: the share of its draw the panels are covering
- * right now, in solar yellow from the top clockwise, the rest the edge's grey
- * (`solarShare`) — full while exporting, part while importing, none at night.
+ * The house's edge is a ring of today's coverage (`coverage`, the card's big
+ * figure): how much of the day's use the solar has made, in solar yellow from
+ * the top clockwise over the edge's grey. Past 100% it goes round again in
+ * green over the yellow, as the figure turns green — 150% is a full yellow
+ * ring with a green half over it, 200% all green.
  */
 export function PowerFlow({
   energy,
@@ -91,7 +93,7 @@ export function PowerFlow({
         icon={<IoHome />}
         color="home"
         size={size}
-        ring={solarShare(energy)}
+        ring={coverage(energy)}
       />
       <Wire color={gridColor} direction={exporting ? "right" : "left"} />
       <Node icon={<IoFlash />} color={gridColor} size={size} />
@@ -124,7 +126,7 @@ function Node({
   icon: React.ReactNode;
   color: Flow | null;
   size: FlowSize;
-  /** A share, 0–1, drawn in solar yellow round the edge in place of the border. */
+  /** A percentage drawn round the edge in place of the border (Ring). */
   ring?: number;
 }) {
   const c = color ? ENERGY_COLORS[color] : "border";
@@ -138,7 +140,7 @@ function Node({
       bg={color ? `${c}/12` : undefined}
     >
       {ring != null && (
-        <Ring share={ring} track={color ?? "home"} size={size} />
+        <Ring pct={ring} track={color ?? "home"} size={size} />
       )}
       <Icon boxSize={SIZES[size].icon} color={color ? c : "fg.subtle"}>
         {icon}
@@ -148,26 +150,29 @@ function Node({
 }
 
 /**
- * A node's edge as a ring: the track in the node's colour, over it the share
- * in solar yellow from twelve o'clock clockwise, moving as the share does.
- * Drawn in the node's pixel space, so the stroke is the border's 2px.
+ * A node's edge as a ring of a percentage: the track in the node's colour,
+ * over it the first hundred in solar yellow from twelve o'clock clockwise,
+ * and over that the second hundred in green (past 200 it stays all green).
+ * Each lap moves as the figure does. Drawn in the node's pixel space, so
+ * the stroke is the border's 2px.
  */
 function Ring({
-  share,
+  pct,
   track,
   size,
 }: {
-  share: number;
+  pct: number;
   track: Flow;
   size: FlowSize;
 }) {
   const px = SIZES[size].px;
   const mid = px / 2;
   const r = mid - EDGE / 2;
-  const pct = Math.round(Math.min(1, Math.max(0, share)) * 100);
+  const whole = Math.round(Math.max(0, pct));
+  const lap = (n: number) => Math.min(100, Math.max(0, whole - n * 100));
   return (
     // Plain SVG children: Chakra would read `transform` and the strokes as
-    // CSS. The arc's offset is inline, so its transition lives up here.
+    // CSS. The arcs' offsets are inline, so their transition lives up here.
     <chakra.svg
       position="absolute"
       inset="0"
@@ -175,7 +180,7 @@ function Ring({
       height="100%"
       viewBox={`0 0 ${px} ${px}`}
       role="img"
-      aria-label={`Solar covers ${pct}% of the home's use`}
+      aria-label={`Solar covered ${whole}% of today's use`}
       css={{ "& circle": { transition: "stroke-dashoffset 0.6s ease" } }}
       _motionReduce={{ "& circle": { transition: "none" } }}
     >
@@ -188,19 +193,25 @@ function Ring({
         strokeWidth={EDGE}
       />
       <g transform={`rotate(-90 ${mid} ${mid})`}>
-        <circle
-          cx={mid}
-          cy={mid}
-          r={r}
-          fill="none"
-          stroke={ENERGY_VARS.solar}
-          strokeWidth={EDGE}
-          // Round ends, except that a zero-length dash with them is a dot.
-          strokeLinecap={pct > 0 ? "round" : "butt"}
-          pathLength={100}
-          strokeDasharray="100 100"
-          style={{ strokeDashoffset: 100 - pct }}
-        />
+        {(["solar", "export"] as const).map((color, i) => {
+          const length = lap(i);
+          return (
+            <circle
+              key={color}
+              cx={mid}
+              cy={mid}
+              r={r}
+              fill="none"
+              stroke={ENERGY_VARS[color]}
+              strokeWidth={EDGE}
+              // Round ends, except that a zero-length dash with them is a dot.
+              strokeLinecap={length > 0 ? "round" : "butt"}
+              pathLength={100}
+              strokeDasharray="100 100"
+              style={{ strokeDashoffset: 100 - length }}
+            />
+          );
+        })}
       </g>
     </chakra.svg>
   );

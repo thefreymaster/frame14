@@ -9,6 +9,7 @@ import { HomeOverview } from "./routes/HomeOverview";
 import { Lights } from "./routes/Lights";
 import { Climate } from "./routes/Climate";
 import { Weather } from "./routes/Weather";
+import { Calendar } from "./routes/Calendar";
 import { Timer } from "./routes/Timer";
 import { Energy } from "./routes/Energy";
 import { Marquee } from "./routes/Marquee";
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
       { path: "/lights", element: <Lights /> },
       { path: "/climate", element: <Climate /> },
       { path: "/weather", element: <Weather /> },
+      { path: "/calendar", element: <Calendar /> },
       // Radar became the Weather page's tab (0.80); its path still lands
       // there, for automations and bookmarks.
       {

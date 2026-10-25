@@ -30,6 +30,8 @@ import {
   IoThermometer,
   IoPartlySunnyOutline,
   IoPartlySunny,
+  IoCalendarOutline,
+  IoCalendar,
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
@@ -121,6 +123,12 @@ const VIEWS: {
     icon: IoPartlySunnyOutline,
     activeIcon: IoPartlySunny,
   },
+  {
+    path: "/calendar",
+    label: "Calendar",
+    icon: IoCalendarOutline,
+    activeIcon: IoCalendar,
+  },
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
   // Always listed here, unlike the nav bar's tab which only appears on game
   // day — the remote is where you go to put the frame on something, so the
@@ -139,6 +147,7 @@ const LOCAL_ONLY_PATHS = new Set([
   "/lights",
   "/climate",
   "/weather",
+  "/calendar",
   "/timer",
 ]);
 

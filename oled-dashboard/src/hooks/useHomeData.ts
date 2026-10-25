@@ -115,7 +115,9 @@ export interface HomeCalendarEvent {
   start: string | null;
   end: string | null;
   allDay: boolean;
+  /** The calendar's name. */
   calendar: string;
+  calendarId?: string;
 }
 
 export interface HomeInternet {

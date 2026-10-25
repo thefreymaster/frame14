@@ -26,6 +26,10 @@ export const openApiDocument = {
       description: "The configured thermostats and their day, from Home Assistant.",
     },
     {
+      name: "Calendar",
+      description: "Home Assistant's calendars: today and tomorrow for the Home card, the fortnight for the Calendar page.",
+    },
+    {
       name: "Photos",
       description: "Immich photo library proxy endpoints.",
     },
@@ -406,6 +410,84 @@ export const openApiDocument = {
                               },
                             },
                           },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          500: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/home/calendar": {
+      get: {
+        tags: ["Calendar"],
+        operationId: "getHomeCalendar",
+        summary: "Today's and tomorrow's events",
+        description:
+          "Every Home Assistant calendar's events today and tomorrow (calendar.radarr left out), all-day ones first then by start, plus the calendar entity ids the page subscribes to.",
+        responses: {
+          200: {
+            description: "Today, tomorrow and the calendars.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    today: { type: "array", items: { $ref: "#/components/schemas/CalendarEvent" } },
+                    tomorrow: { type: "array", items: { $ref: "#/components/schemas/CalendarEvent" } },
+                    entities: { type: "array", items: { type: "string", example: "calendar.family" } },
+                  },
+                },
+              },
+            },
+          },
+          500: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/home/calendar/agenda": {
+      get: {
+        tags: ["Calendar"],
+        operationId: "getCalendarAgenda",
+        summary: "The next days' events, by day",
+        description:
+          "Every calendar's events for the next `days` days (14 by default, 31 at most), one entry per local day with its events (all-day first, then by start): a timed event on the day it starts, an all-day one on each day it covers.",
+        parameters: [
+          { name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 31, default: 14 } },
+        ],
+        responses: {
+          200: {
+            description: "The span, the calendars and the days.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    start: { type: "string", example: "2026-10-25", description: "The first day." },
+                    end: { type: "string", example: "2026-11-08", description: "The day after the last." },
+                    calendars: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          entity_id: { type: "string", example: "calendar.family" },
+                          name: { type: "string", example: "Family" },
+                        },
+                      },
+                    },
+                    days: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          date: { type: "string", example: "2026-10-25" },
+                          events: { type: "array", items: { $ref: "#/components/schemas/CalendarEvent" } },
                         },
                       },
                     },
@@ -876,6 +958,17 @@ export const openApiDocument = {
             description: "Hourly forecast from the weather.get_forecasts service (up to 8).",
             items: { $ref: "#/components/schemas/ForecastPeriod" },
           },
+        },
+      },
+      CalendarEvent: {
+        type: "object",
+        properties: {
+          summary: { type: "string", example: "Soccer practice" },
+          start: { type: "string", nullable: true, example: "2026-10-25T17:30:00-04:00", description: "A date-time, or a date for an all-day event." },
+          end: { type: "string", nullable: true, example: "2026-10-25T19:00:00-04:00", description: "For an all-day event, the day after its last." },
+          allDay: { type: "boolean" },
+          calendar: { type: "string", example: "Family", description: "The calendar's name." },
+          calendarId: { type: "string", example: "calendar.family" },
         },
       },
       HomeWeatherResponse: {

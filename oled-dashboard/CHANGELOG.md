@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.81.0
+
+- Added: a Calendar page (`/calendar`), in the nav after Weather on every device and among a remote's Views (opening on the remote itself, like Lights). The next two weeks as a card per day — Today, Tomorrow, then "Mon, Oct 27" — each with its events (the time or "all day", an event that has ended struck through) and, with more than one calendar, each event's calendar as a coloured badge; a free day is a header alone, so a free day reads as free. An all-day event that spans days appears on each. The header counts the fortnight's events and names the calendars. One across on a phone, two on the frame, more on a wide desktop.
+- Added: the chevron in the Home calendar card's header opens the Calendar page.
+- Added: `/api/home/calendar/agenda?days=14`, every calendar's events for the next days, bucketed by local day.
+
 ## 0.80.0
 
 - Added: a Weather page (`/weather`), in the nav where Radar was — and on every device now, where Radar was the frame's alone. A collapsible Now card has the conditions (the icon, the temperature, the condition, today's high and low), the forecast's advisories and the figures the weather entity reports (feels like, humidity, wind with its compass point, pressure, visibility, UV index). Under it three tabs: Hourly (the next 24 hours as a temperature line with each hour's rain chance as a bar, over the hour-by-hour strip, which scrolls sideways), Daily (the days ahead, as in the forecast dialog) and Radar (the interactive map that was the Radar page). A remote's Views has Weather in Radar's place; like Lights it opens on the remote itself.

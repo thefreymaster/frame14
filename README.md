@@ -83,6 +83,7 @@ Enable **Start on boot** and **Watchdog**, then start it. The dashboard is avail
 | `/photos` | Immich photo slideshow; frame-only nav item |
 | `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames |
 | `/weather` | Now (conditions + advisories from the forecast), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |
+| `/calendar` | The next two weeks across every Home Assistant calendar, a card per day |
 | `/timer` | Timer; frame-only nav item |
 | `/marquee` | Plex now-playing poster art; auto-routed while a movie plays |
 | `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day |

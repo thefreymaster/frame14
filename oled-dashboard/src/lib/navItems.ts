@@ -14,6 +14,8 @@ import {
   IoThermometer,
   IoPartlySunnyOutline,
   IoPartlySunny,
+  IoCalendarOutline,
+  IoCalendar,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -119,6 +121,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Weather",
     icon: IoPartlySunnyOutline,
     activeIcon: IoPartlySunny,
+  },
+  {
+    path: "/calendar",
+    label: "Calendar",
+    icon: IoCalendarOutline,
+    activeIcon: IoCalendar,
   },
   // Comes and goes with the game. Deliberately not local-only: tapping it
   // should move every panel to the game, and "football" is a TRANSIENT_VIEW

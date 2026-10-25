@@ -13,7 +13,7 @@ import {
   Text,
   useMediaQuery,
 } from "@chakra-ui/react";
-import { MdSkipNext, MdRefresh, MdRadar } from "react-icons/md";
+import { MdSkipNext, MdRefresh } from "react-icons/md";
 import {
   IoTimeOutline,
   IoTime,
@@ -28,6 +28,8 @@ import {
   IoFlash,
   IoThermometerOutline,
   IoThermometer,
+  IoPartlySunnyOutline,
+  IoPartlySunny,
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
@@ -113,7 +115,12 @@ const VIEWS: {
     icon: TbVacuumCleaner,
     activeIcon: TbVacuumCleaner,
   },
-  { path: "/radar", label: "Radar", icon: MdRadar, activeIcon: MdRadar },
+  {
+    path: "/weather",
+    label: "Weather",
+    icon: IoPartlySunnyOutline,
+    activeIcon: IoPartlySunny,
+  },
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
   // Always listed here, unlike the nav bar's tab which only appears on game
   // day — the remote is where you go to put the frame on something, so the
@@ -128,7 +135,12 @@ const VIEWS: {
 
 // Control surfaces open on this device (a remote's user wants the lights and
 // thermostats in hand, not on the frame); the rest put the frames there.
-const LOCAL_ONLY_PATHS = new Set(["/lights", "/climate", "/radar", "/timer"]);
+const LOCAL_ONLY_PATHS = new Set([
+  "/lights",
+  "/climate",
+  "/weather",
+  "/timer",
+]);
 
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "auto", label: "Auto" },

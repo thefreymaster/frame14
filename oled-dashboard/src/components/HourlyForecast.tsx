@@ -18,9 +18,17 @@ function hourLabel(datetime: string, now: Date): string {
  * The next hours as columns in a subtle `sm` well, like the calendar's rows:
  * the hour, the condition's icon, the rain chance (a row only when some hour
  * reaches RAIN_SHOWN_FROM) and the temperature. The desktop weather card's
- * and the forecast dialog's.
+ * and the forecast dialog's; with `scroll` (/weather's full day of hours)
+ * the columns keep a readable width and the well scrolls sideways instead of
+ * dropping the later hours.
  */
-export function HourlyForecast({ hours }: { hours: HomeForecastPeriod[] }) {
+export function HourlyForecast({
+  hours,
+  scroll = false,
+}: {
+  hours: HomeForecastPeriod[];
+  scroll?: boolean;
+}) {
   const now = new Date();
   const hourRain = hours.some(
     (h) => (h.precipitationProbability ?? 0) >= RAIN_SHOWN_FROM,
@@ -28,21 +36,30 @@ export function HourlyForecast({ hours }: { hours: HomeForecastPeriod[] }) {
 
   return (
     <Card.Root size="sm" variant="subtle" borderRadius="sm">
-      <Card.Body px="2" css={{ containerType: "inline-size" }}>
+      <Card.Body
+        px="2"
+        css={{ containerType: "inline-size" }}
+        overflowX={scroll ? "auto" : undefined}
+        style={scroll ? { scrollbarWidth: "none" } : undefined}
+      >
         {/* One column per hour shown: a narrow well (a ¼-width tile, a
             phone) drops the later hours rather than squeeze them. */}
         <Grid
           gridAutoFlow="column"
-          gridAutoColumns="minmax(0, 1fr)"
+          gridAutoColumns={scroll ? "minmax(4.5rem, 1fr)" : "minmax(0, 1fr)"}
           gap="1"
-          css={{
-            "@container (max-width: 34rem)": {
-              "& > :nth-child(n + 7)": { display: "none" },
-            },
-            "@container (max-width: 24rem)": {
-              "& > :nth-child(n + 5)": { display: "none" },
-            },
-          }}
+          css={
+            scroll
+              ? undefined
+              : {
+                  "@container (max-width: 34rem)": {
+                    "& > :nth-child(n + 7)": { display: "none" },
+                  },
+                  "@container (max-width: 24rem)": {
+                    "& > :nth-child(n + 5)": { display: "none" },
+                  },
+                }
+          }
         >
           {hours.map((h) => {
             const rain = h.precipitationProbability ?? 0;

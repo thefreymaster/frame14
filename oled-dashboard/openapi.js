@@ -883,11 +883,25 @@ export const openApiDocument = {
         properties: {
           state: { type: "string", example: "partlycloudy" },
           temperature: { type: "number", example: 68 },
+          apparentTemperature: { type: "number", nullable: true, example: 66 },
           temperatureUnit: { type: "string", example: "°F" },
           humidity: { type: "number", example: 55 },
+          windSpeed: { type: "number", nullable: true, example: 10.5 },
+          windSpeedUnit: { type: "string", nullable: true, example: "mph" },
+          windBearing: { type: "number", nullable: true, example: 275 },
+          pressure: { type: "number", nullable: true, example: 29.75 },
+          pressureUnit: { type: "string", nullable: true, example: "inHg" },
+          visibility: { type: "number", nullable: true, example: 16.5 },
+          visibilityUnit: { type: "string", nullable: true, example: "mi" },
+          uvIndex: { type: "number", nullable: true, example: 3 },
           forecast: {
             type: "array",
             description: "Hourly forecast (up to 8 periods, from the current hour).",
+            items: { $ref: "#/components/schemas/ForecastPeriod" },
+          },
+          forecastHours: {
+            type: "array",
+            description: "Hourly forecast (up to 24 periods, from the current hour), for the weather page.",
             items: { $ref: "#/components/schemas/ForecastPeriod" },
           },
           forecastDaily: {

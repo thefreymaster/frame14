@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.80.0
+
+- Added: a Weather page (`/weather`), in the nav where Radar was — and on every device now, where Radar was the frame's alone. A collapsible Now card has the conditions (the icon, the temperature, the condition, today's high and low), the forecast's advisories and the figures the weather entity reports (feels like, humidity, wind with its compass point, pressure, visibility, UV index). Under it three tabs: Hourly (the next 24 hours as a temperature line with each hour's rain chance as a bar, over the hour-by-hour strip, which scrolls sideways), Daily (the days ahead, as in the forecast dialog) and Radar (the interactive map that was the Radar page). A remote's Views has Weather in Radar's place; like Lights it opens on the remote itself.
+- Added: advisories, read from the WeatherKit forecast the page already has — the same signals the Home Assistant weather automations watch: a freeze in the next two nights, thunderstorms, snow or sleet, high winds (30 mph and up), a 15° drop within six hours, and rain on the way (a 50% chance and up while it isn't raining). The NWS integration is disabled and WeatherKit carries no alerts, so these are derived from the forecast, not official warnings.
+- Changed: `/radar` redirects to the Weather page's Radar tab (`/weather?tab=radar`), so `/api/change/radar` and bookmarks still work, and a saved nav layout keeps Weather in Radar's place. On the frame the map now sits inside the page gutter with the cards' corners, as it did on a desktop, rather than edge to edge.
+- Changed: `/api/home/weather` also returns the next 24 hours (`forecastHours`) and the entity's apparent temperature, wind (speed, unit, bearing), pressure, visibility and UV index.
+
 ## 0.79.0
 
 - Added: a Climate page (`/climate`), in the nav after Lights on every device and among a remote's Views (where, like Lights, it opens on the remote itself). Each thermostat is a card: the dial, mode and fan-speed controls the Home card's dialog has, its status in the header ("Heating to 70°" in the mode's colour while it runs), and today's room temperature since midnight as a strip under the controls — the target as a dashed step, the quarter hours it heated or cooled tinted orange or blue, the day's low and high above it. The page header counts the units that are on and carries All off. An automation can put a frame on it with `/api/change/climate`.

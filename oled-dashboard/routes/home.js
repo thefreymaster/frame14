@@ -145,9 +145,22 @@ router.get("/weather", async (_req, res) => {
     res.json({
       state: current.state,
       temperature: attrs.temperature,
+      apparentTemperature: attrs.apparent_temperature ?? null,
       temperatureUnit: attrs.temperature_unit,
       humidity: attrs.humidity,
+      // The rest of the conditions, for /weather's Now card; an attribute
+      // the entity lacks is null.
+      windSpeed: attrs.wind_speed ?? null,
+      windSpeedUnit: attrs.wind_speed_unit ?? null,
+      windBearing: attrs.wind_bearing ?? null,
+      pressure: attrs.pressure ?? null,
+      pressureUnit: attrs.pressure_unit ?? null,
+      visibility: attrs.visibility ?? null,
+      visibilityUnit: attrs.visibility_unit ?? null,
+      uvIndex: attrs.uv_index ?? null,
       forecast: hourly.slice(0, 8).map(mapForecast),
+      // The next day of hours for /weather's Hourly tab (the cards show 8).
+      forecastHours: hourly.slice(0, 24).map(mapForecast),
       // Today first (the cards' high and low), then the days after it for
       // the forecast dialog.
       forecastDaily: daily.slice(0, 10).map(mapForecast),

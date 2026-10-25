@@ -12,6 +12,8 @@ import {
   IoFlash,
   IoThermometerOutline,
   IoThermometer,
+  IoPartlySunnyOutline,
+  IoPartlySunny,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -19,7 +21,6 @@ import {
   RiLightbulbLine,
   RiLightbulbFill,
 } from "react-icons/ri";
-import { MdRadar } from "react-icons/md";
 import { TbVacuumCleaner } from "react-icons/tb";
 import type { DeviceMode } from "./deviceMode";
 import { Printer3dIcon, Printer3dOutlineIcon } from "./printerIcons";
@@ -111,12 +112,13 @@ export const NAV_ITEMS: NavItem[] = [
     activeIcon: TbVacuumCleaner,
     remoteOff: true,
   },
+  // In Radar's old place (RENAMED_PATHS keeps a saved layout's), and on
+  // every device, where Radar was the frame's alone.
   {
-    path: "/radar",
-    label: "Radar",
-    icon: MdRadar,
-    activeIcon: MdRadar,
-    frameOnly: true,
+    path: "/weather",
+    label: "Weather",
+    icon: IoPartlySunnyOutline,
+    activeIcon: IoPartlySunny,
   },
   // Comes and goes with the game. Deliberately not local-only: tapping it
   // should move every panel to the game, and "football" is a TRANSIENT_VIEW
@@ -140,11 +142,13 @@ export const NAV_ITEM_BY_PATH = new Map(NAV_ITEMS.map((i) => [i.path, i]));
 
 /**
  * Paths entries used to have, so a saved layout (lib/navLayout) keeps their
- * place: Solar and Power became the Energy page in 0.75.
+ * place: Solar and Power became the Energy page in 0.75, Radar the Weather
+ * page's tab in 0.80.
  */
 export const RENAMED_PATHS: Record<string, string> = {
   "/solar": "/energy",
   "/power": "/energy",
+  "/radar": "/weather",
 };
 
 /** The entries a device in this mode can have in its nav. */

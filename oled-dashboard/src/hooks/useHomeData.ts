@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClimate } from "./useClimate";
 import { useEnergyToday } from "./useEnergyToday";
+import { useHomeWeather } from "./useHomeWeather";
 import { useLiveEnergy } from "./useLiveEnergy";
 import { useEntitiesConfig } from "./useEntitiesConfig";
 import { useEntities, useEntity, type HAState } from "./useEntity";
@@ -21,11 +22,24 @@ export interface HomeForecastPeriod {
 export interface HomeWeather {
   state: string;
   temperature: number | null;
+  /** What it feels like, when the entity reports it. */
+  apparentTemperature: number | null;
   /** "°F" or "°C", as Home Assistant reports it. */
   temperatureUnit: string | null;
   humidity: number | null;
+  windSpeed: number | null;
+  /** "mph" or "km/h", as Home Assistant reports it; the forecasts' wind is in it too. */
+  windSpeedUnit: string | null;
+  windBearing: number | null;
+  pressure: number | null;
+  pressureUnit: string | null;
+  visibility: number | null;
+  visibilityUnit: string | null;
+  uvIndex: number | null;
   /** The next 8 hours, from the current one. */
   forecast: HomeForecastPeriod[];
+  /** The next 24 hours, for /weather's Hourly tab. */
+  forecastHours: HomeForecastPeriod[];
   /**
    * Up to 10 days from today (today's first): temperature is the high,
    * templow the low.
@@ -150,15 +164,6 @@ interface CalendarResponse {
   entities: string[];
 }
 
-interface WeatherResponse {
-  state: string;
-  temperature?: number;
-  temperatureUnit?: string;
-  humidity?: number;
-  forecast: HomeForecastPeriod[];
-  forecastDaily?: HomeForecastPeriod[];
-}
-
 interface VacuumAttributes {
   friendly_name?: string;
   cleaning_progress?: number | string | null;
@@ -169,12 +174,6 @@ interface FanAttributes {
   friendly_name?: string;
   percentage?: number | string | null;
   preset_mode?: string | null;
-}
-
-interface WeatherAttributes {
-  temperature?: number | string | null;
-  temperature_unit?: string | null;
-  humidity?: number | string | null;
 }
 
 const PERSON_ENTITIES = [
@@ -298,12 +297,6 @@ async function fetchCalendar(): Promise<CalendarResponse> {
   return res.json() as Promise<CalendarResponse>;
 }
 
-async function fetchWeather(): Promise<WeatherResponse> {
-  const res = await fetch("/api/home/weather");
-  if (!res.ok) throw new Error(`Weather fetch failed: ${res.status}`);
-  return res.json() as Promise<WeatherResponse>;
-}
-
 export function useHomeData() {
   const queryClient = useQueryClient();
   const entitiesQuery = useEntitiesConfig();
@@ -315,31 +308,9 @@ export function useHomeData() {
     () => [...new Set(entitiesQuery.data?.fans ?? [])],
     [entitiesQuery.data?.fans],
   );
-  const weatherEntities = useMemo(
-    () =>
-      [
-        {
-          key: "current" as const,
-          entityId: entitiesQuery.data?.weather?.current ?? "",
-        },
-        {
-          key: "forecast" as const,
-          entityId: entitiesQuery.data?.weather?.forecast ?? "",
-        },
-      ].filter((entity) => entity.entityId),
-    [entitiesQuery.data?.weather],
-  );
-
-  // Weather
-  const weatherQuery = useQuery<WeatherResponse>({
-    queryKey: ["home", "weather"],
-    queryFn: fetchWeather,
-    refetchInterval: 1000 * 60 * 5,
-    staleTime: 1000 * 60 * 5,
-  });
-  const weatherStates = useEntities<WeatherAttributes>(
-    weatherEntities.map(({ entityId }) => entityId),
-  );
+  // Weather: the live model /weather shares (one query, one set of entity
+  // subscriptions).
+  const { weather: homeWeather, loading: weatherLoading } = useHomeWeather();
 
   // Climate: the live model /climate shares (one query, one set of entity
   // subscriptions).
@@ -408,48 +379,14 @@ export function useHomeData() {
   );
   const calendarStates = useEntities(calendarEntityIds);
 
-  const weatherStateRevision = weatherStates
-    .map((result) => result.data?.last_updated ?? "")
-    .join("|");
   const calendarStateRevision = calendarStates
     .map((result) => result.data?.last_updated ?? "")
     .join("|");
 
   useEffect(() => {
-    if (!weatherStateRevision) return;
-    void queryClient.invalidateQueries({ queryKey: ["home", "weather"] });
-  }, [queryClient, weatherStateRevision]);
-
-  useEffect(() => {
     if (!calendarStateRevision) return;
     void queryClient.invalidateQueries({ queryKey: ["home", "calendar"] });
   }, [calendarStateRevision, queryClient]);
-
-  const liveWeatherByKey = new Map(
-    weatherEntities.map(({ key }, index) => [key, weatherStates[index]?.data]),
-  );
-  const liveCurrentWeather = liveWeatherByKey.get("current");
-  const wx = weatherQuery.data;
-  const homeWeather: HomeWeather | null =
-    !liveCurrentWeather && !wx
-      ? null
-      : {
-          state: liveCurrentWeather?.state ?? wx?.state ?? "unknown",
-          temperature:
-            parseFloatOrNull(liveCurrentWeather?.attributes?.temperature) ??
-            wx?.temperature ??
-            null,
-          humidity:
-            parseFloatOrNull(liveCurrentWeather?.attributes?.humidity) ??
-            wx?.humidity ??
-            null,
-          temperatureUnit:
-            liveCurrentWeather?.attributes?.temperature_unit ??
-            wx?.temperatureUnit ??
-            null,
-          forecast: wx?.forecast ?? [],
-          forecastDaily: wx?.forecastDaily ?? [],
-        };
 
   const fallbackVacuum = (vacuumQuery.data ?? []).map(mapVacuumResponse);
   const homeVacuum: HomeVacuum[] =
@@ -565,7 +502,7 @@ export function useHomeData() {
   // socket states for every one of its entities, whichever comes first. The
   // energy card waits for /api/energy alone — its daily totals come from there.
   const loading: HomeLoading = {
-    weather: homeWeather == null && weatherQuery.isPending,
+    weather: weatherLoading,
     climate: climateLoading,
     energy: energyLoading,
     energyCurve: energyTodayQuery.isPending,

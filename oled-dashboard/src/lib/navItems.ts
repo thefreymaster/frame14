@@ -16,6 +16,8 @@ import {
   IoPartlySunny,
   IoCalendarOutline,
   IoCalendar,
+  IoVideocamOutline,
+  IoVideocam,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -112,6 +114,13 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Vacuum",
     icon: TbVacuumCleaner,
     activeIcon: TbVacuumCleaner,
+    remoteOff: true,
+  },
+  {
+    path: "/cameras",
+    label: "Cameras",
+    icon: IoVideocamOutline,
+    activeIcon: IoVideocam,
     remoteOff: true,
   },
   // In Radar's old place (RENAMED_PATHS keeps a saved layout's), and on

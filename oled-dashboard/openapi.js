@@ -247,9 +247,10 @@ export const openApiDocument = {
       get: {
         tags: ["Camera"],
         operationId: "getCameraStream",
-        summary: "Proxy the MJPEG live stream of the configured camera",
+        summary: "Proxy the MJPEG live stream of a configured camera",
         description:
-          "Pipes Home Assistant's camera_proxy_stream for the camera entity in the entity config, attaching the server's HA token so clients never need one. The client supplies no entity ID. The upstream request is aborted as soon as the client disconnects.",
+          "Pipes Home Assistant's camera_proxy_stream for a camera in the entity config, attaching the server's HA token so clients never need one. `entity` must be one of the configured cameras (camera_entity or camera_entities); without it the doorbell camera is meant. The upstream request is aborted as soon as the client disconnects.",
+        parameters: [{ $ref: "#/components/parameters/CameraEntity" }],
         responses: {
           200: { description: "MJPEG stream (multipart/x-mixed-replace).", content: { "multipart/x-mixed-replace": {} } },
           502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
@@ -261,9 +262,10 @@ export const openApiDocument = {
       get: {
         tags: ["Camera"],
         operationId: "startCameraHls",
-        summary: "Start Home Assistant's live HLS stream of the configured camera",
+        summary: "Start Home Assistant's live HLS stream of a configured camera",
         description:
-          "Asks Home Assistant (WebSocket camera/stream, format hls) to start or join the camera's live stream and returns the master playlist's URL under this server's HLS proxy. Works for an RTSP camera whose stills (and so the MJPEG stream) don't. The client supplies no entity ID.",
+          "Asks Home Assistant (WebSocket camera/stream, format hls) to start or join the camera's live stream and returns the master playlist's URL under this server's HLS proxy. Works for an RTSP camera whose stills (and so the MJPEG stream) don't. `entity` must be one of the configured cameras; without it the doorbell camera is meant.",
+        parameters: [{ $ref: "#/components/parameters/CameraEntity" }],
         responses: {
           200: { description: "The master playlist to play.", content: { "application/json": { schema: { type: "object", properties: { url: { type: "string", example: "/api/camera/hls/0123abcd/master_playlist.m3u8" } } } } } },
           502: { description: "Home Assistant could not start the stream.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
@@ -292,9 +294,10 @@ export const openApiDocument = {
       get: {
         tags: ["Camera"],
         operationId: "getCameraSnapshot",
-        summary: "Proxy a single still image from the configured camera",
+        summary: "Proxy a single still image from a configured camera",
         description:
-          "Fallback for clients that cannot render the MJPEG stream: one JPEG from Home Assistant's camera_proxy for the configured camera entity, sent with no-store so each request is a fresh frame.",
+          "Fallback for clients that cannot play the live stream: one JPEG from Home Assistant's camera_proxy for a configured camera, sent with no-store so each request is a fresh frame. `entity` must be one of the configured cameras; without it the doorbell camera is meant.",
+        parameters: [{ $ref: "#/components/parameters/CameraEntity" }],
         responses: {
           200: { description: "JPEG still image.", content: { "image/jpeg": {} } },
           502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
@@ -874,6 +877,16 @@ export const openApiDocument = {
     },
   },
   components: {
+    parameters: {
+      CameraEntity: {
+        name: "entity",
+        in: "query",
+        required: false,
+        description:
+          "One of the configured cameras (camera_entity or camera_entities). Any other id is a 404; without it the doorbell camera (camera_entity) is meant.",
+        schema: { type: "string", example: "camera.front_porch_high" },
+      },
+    },
     schemas: {
       ApiStatus: {
         type: "object",

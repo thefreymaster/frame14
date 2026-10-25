@@ -9,14 +9,15 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
  * (/api/printer/camera/stream) in a 16:9 well. The <img> holds the stream
  * only while the page is up, which is when HA (and Bambuddy behind it) sends
  * frames. A spinner shows under it until the first frame covers it; a failed
- * stream offers a retry.
+ * stream offers a retry. Titled "Camera" on /printer; /cameras names the
+ * printer instead.
  */
-export function PrinterCameraCard() {
+export function PrinterCameraCard({ title = "Camera" }: { title?: string }) {
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
 
   return (
-    <Board title={<SectionTitle>Camera</SectionTitle>}>
+    <Board title={<SectionTitle>{title}</SectionTitle>}>
       <Box
         position="relative"
         aspectRatio="16 / 9"

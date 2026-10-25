@@ -21,7 +21,10 @@ export interface EntitiesConfig {
   bird: string;
   teamTracker: string[];
   person: string;
+  /** The doorbell card's camera. */
   camera: string;
+  /** The Cameras page's (`camera_entities`); the doorbell's when empty. */
+  cameras: string[];
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

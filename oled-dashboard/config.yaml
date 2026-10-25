@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.81.0"
+version: "0.82.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -116,6 +116,7 @@ options:
     - "sensor.teamtracker_fsu"
   person_entity: "binary_sensor.front_porch_person_detected"
   camera_entity: "camera.front_porch_high"
+  camera_entities: []
 schema:
   ha_url: str
   ha_token: str
@@ -160,3 +161,5 @@ schema:
     - str
   person_entity: str?
   camera_entity: str?
+  camera_entities:
+    - str

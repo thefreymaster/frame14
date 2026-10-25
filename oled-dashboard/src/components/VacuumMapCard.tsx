@@ -13,7 +13,14 @@ import { SegmentedControl } from "./ui/segmented-control";
  * Live while the vacuum is out; a vacuum with several maps (floors) gets a
  * picker.
  */
-export function VacuumMapCard({ vacuum }: { vacuum: VacuumModel }) {
+export function VacuumMapCard({
+  vacuum,
+  title = "Map",
+}: {
+  vacuum: VacuumModel;
+  /** "Map" on /vacuum, where the page names the vacuum; its name on /cameras. */
+  title?: string;
+}) {
   const [picked, setPicked] = useState<string | null>(null);
   const map = vacuum.maps.find((m) => m.entity_id === picked) ?? vacuum.maps[0];
   if (!map) return null;
@@ -24,7 +31,7 @@ export function VacuumMapCard({ vacuum }: { vacuum: VacuumModel }) {
     <Board
       title={
         <Flex align="center" gap="3" width="100%">
-          <SectionTitle>Map</SectionTitle>
+          <SectionTitle>{title}</SectionTitle>
           <Spacer />
           {live && <Badge colorPalette="green">Live</Badge>}
         </Flex>

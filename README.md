@@ -36,6 +36,8 @@ In the addon's **Configuration** tab, set the following:
 | `energy_current_consumption` | Live power consumption sensor | `sensor.envoy_xxx_current_power_consumption` |
 | `energy_production_today` | Daily solar total sensor | `sensor.envoy_xxx_energy_production_today` |
 | `energy_consumption_today` | Daily consumption total sensor | `sensor.envoy_xxx_energy_consumption_today` |
+| `camera_entity` | The doorbell card's camera (shown when `person_entity` turns on) | `camera.front_porch_high` |
+| `camera_entities` | The Cameras page's cameras; the doorbell's when empty | `- camera.front_porch_rtsp` |
 
 **Example light_entities:**
 ```yaml
@@ -80,6 +82,7 @@ Enable **Start on boot** and **Watchdog**, then start it. The dashboard is avail
 | `/energy` | Power flow now, with Solar (month / year history) and Circuits (per-circuit draw) as tabs; `/solar` and `/power` redirect here |
 | `/printer` | The 3D printer: camera, job progress and controls, temperatures; off by default in a remote's nav |
 | `/vacuum` | The robot vacuums: state, controls, map, wear parts; off by default in a remote's nav |
+| `/cameras` | Every camera live (stills when the stream won't start), the printer's camera and the vacuum maps; off by default in a remote's nav |
 | `/photos` | Immich photo slideshow; frame-only nav item |
 | `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames |
 | `/weather` | Now (conditions + advisories from the forecast), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |

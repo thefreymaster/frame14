@@ -32,6 +32,8 @@ import {
   IoPartlySunny,
   IoCalendarOutline,
   IoCalendar,
+  IoVideocamOutline,
+  IoVideocam,
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
@@ -116,6 +118,12 @@ const VIEWS: {
     label: "Vacuum",
     icon: TbVacuumCleaner,
     activeIcon: TbVacuumCleaner,
+  },
+  {
+    path: "/cameras",
+    label: "Cameras",
+    icon: IoVideocamOutline,
+    activeIcon: IoVideocam,
   },
   {
     path: "/weather",

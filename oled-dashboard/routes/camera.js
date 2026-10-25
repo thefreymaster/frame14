@@ -7,26 +7,41 @@ import { sendCommand } from "../ha-socket.js";
 const router = Router();
 
 /**
- * Live view of the configured camera.
+ * Live views of the configured cameras: the doorbell card's (`camera_entity`)
+ * and the Cameras page's (`camera_entities`, since 0.82).
  *
- * As with the marquee art, the entity ID is read from ENTITIES server-side and
- * never taken from the client — forwarding a client-supplied path with the HA
- * bearer token attached would let anyone reach arbitrary internal HA endpoints.
+ * As with the marquee art, the entity ID is never taken from the client as
+ * given: `?entity=` must name one of the configured cameras, and without it
+ * the doorbell camera is meant — forwarding a client-supplied path with the
+ * HA bearer token attached would let anyone reach arbitrary internal HA
+ * endpoints.
  */
-function haCameraPath(kind) {
-  return `${HA_URL}/api/${kind}/${encodeURIComponent(ENTITIES.camera)}`;
+function configuredCameras() {
+  return [ENTITIES.camera, ...(ENTITIES.cameras ?? [])].filter(Boolean);
 }
 
-function guard(res) {
-  if (!ENTITIES.camera) {
-    res.status(503).json({ error: "No camera entity configured" });
-    return false;
-  }
+/** The camera a request means, or null (with the response sent) when none. */
+function pickCamera(req, res) {
   if (!HA_TOKEN) {
     res.status(503).json({ error: "HA_TOKEN not configured" });
-    return false;
+    return null;
   }
-  return true;
+  const cameras = configuredCameras();
+  if (cameras.length === 0) {
+    res.status(503).json({ error: "No camera entity configured" });
+    return null;
+  }
+  const requested = req.query.entity;
+  if (requested == null) return ENTITIES.camera || cameras[0];
+  if (typeof requested !== "string" || !cameras.includes(requested)) {
+    res.status(404).json({ error: "Not a configured camera" });
+    return null;
+  }
+  return requested;
+}
+
+function haCameraPath(kind, entityId) {
+  return `${HA_URL}/api/${kind}/${encodeURIComponent(entityId)}`;
 }
 
 /**
@@ -36,13 +51,14 @@ function guard(res) {
  * client disconnect is what stops HA generating frames the moment it hides.
  */
 router.get("/stream", async (req, res) => {
-  if (!guard(res)) return;
+  const entityId = pickCamera(req, res);
+  if (!entityId) return;
 
   const controller = new AbortController();
   res.on("close", () => controller.abort());
 
   try {
-    const response = await fetch(haCameraPath("camera_proxy_stream"), {
+    const response = await fetch(haCameraPath("camera_proxy_stream", entityId), {
       headers: { Authorization: `Bearer ${HA_TOKEN}` },
       signal: controller.signal,
     });
@@ -82,19 +98,20 @@ const HLS_FILE_RE =
 const HLS_QUERY_KEYS = ["_HLS_msn", "_HLS_part"];
 
 /**
- * Start (or join) HA's live HLS stream of the camera — HA's own player path,
+ * Start (or join) HA's live HLS stream of a camera — HA's own player path,
  * which works for an RTSP camera whose stills don't (a Generic camera with no
  * still image URL). HA answers with /api/hls/<token>/master_playlist.m3u8;
  * the browser gets the same path under this add-on's proxy below, because it
  * can't reach ha_url (normally http://supervisor/core).
  */
-router.get("/hls", async (_req, res) => {
-  if (!guard(res)) return;
+router.get("/hls", async (req, res) => {
+  const entityId = pickCamera(req, res);
+  if (!entityId) return;
 
   try {
     const result = await sendCommand(
       "camera/stream",
-      { entity_id: ENTITIES.camera, format: "hls" },
+      { entity_id: entityId, format: "hls" },
       20_000,
     );
     const match = /^\/api\/hls\/([^/]+)\/master_playlist\.m3u8$/.exec(
@@ -157,12 +174,13 @@ router.get("/hls/:token/*file", async (req, res) => {
   }
 });
 
-/** Single still — the fallback the card polls when the live stream fails. */
-router.get("/snapshot", async (_req, res) => {
-  if (!guard(res)) return;
+/** Single still — the fallback the cards poll when the live stream fails. */
+router.get("/snapshot", async (req, res) => {
+  const entityId = pickCamera(req, res);
+  if (!entityId) return;
 
   try {
-    const response = await fetch(haCameraPath("camera_proxy"), {
+    const response = await fetch(haCameraPath("camera_proxy", entityId), {
       headers: { Authorization: `Bearer ${HA_TOKEN}` },
     });
     if (!response.ok) {

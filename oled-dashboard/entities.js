@@ -65,6 +65,7 @@ function loadEntities() {
       teamTracker: options.team_tracker_entities ?? [],
       person: options.person_entity ?? "",
       camera: options.camera_entity ?? "",
+      cameras: options.camera_entities ?? [],
     };
   }
 
@@ -87,6 +88,7 @@ function loadEntities() {
       teamTracker: frame14.teamTracker ?? [],
       person: frame14.person ?? "",
       camera: frame14.camera ?? "",
+      cameras: frame14.cameras ?? [],
     };
   }
 
@@ -106,6 +108,7 @@ function loadEntities() {
     teamTracker: [],
     person: "",
     camera: "",
+    cameras: [],
   };
 }
 

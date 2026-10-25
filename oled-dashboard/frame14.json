@@ -73,5 +73,6 @@
   "bird": "sensor.birdnet_go_front_porch_camera_last_species",
   "teamTracker": ["sensor.teamtracker_fsu"],
   "person": "binary_sensor.front_porch_person_detected",
-  "camera": "camera.front_porch_high"
+  "camera": "camera.front_porch_high",
+  "cameras": ["camera.front_porch_high", "camera.front_porch_rtsp"]
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.82.0
+
+- Added: a Cameras page (`/cameras`): every picture of the house on one page — a card per camera with its live stream (Home Assistant's HLS, as the doorbell card plays it), falling back to a still every five seconds when the stream won't start, a Live / Stills / Offline badge and a retry; the 3D printer's camera while it has one; and each vacuum's map. In the nav after Vacuum on the frame; offered on remotes but off in their nav until turned on, like Printer and Vacuum, and among a remote's Views, which puts the frames on it. Automations can use `/api/change/cameras`.
+- Added: `camera_entities`, an add-on option listing the Cameras page's cameras. It is empty by default, when the page shows the doorbell's `camera_entity`; add `camera.front_porch_rtsp` and the rest in the add-on's Configuration.
+- Changed: `/api/camera/hls`, `/api/camera/stream` and `/api/camera/snapshot` take `?entity=` for one of the configured cameras; without it they mean the doorbell camera, as before.
+
 ## 0.81.0
 
 - Added: a Calendar page (`/calendar`), in the nav after Weather on every device and among a remote's Views (opening on the remote itself, like Lights). The next two weeks as a card per day — Today, Tomorrow, then "Mon, Oct 27" — each with its events (the time or "all day", an event that has ended struck through) and, with more than one calendar, each event's calendar as a coloured badge; a free day is a header alone, so a free day reads as free. An all-day event that spans days appears on each. The header counts the fortnight's events and names the calendars. One across on a phone, two on the frame, more on a wide desktop.

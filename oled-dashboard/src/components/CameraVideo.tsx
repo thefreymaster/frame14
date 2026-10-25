@@ -6,8 +6,9 @@ import type Hls from "hls.js";
 const START_TIMEOUT_MS = 15_000;
 
 /**
- * The configured camera's live video: Home Assistant's own HLS stream, started
- * through /api/camera/hls and played through the add-on's proxy.
+ * A camera's live video: Home Assistant's own HLS stream, started through
+ * /api/camera/hls (the doorbell camera, or `entityId`, one of the configured
+ * cameras) and played through the add-on's proxy.
  *
  * hls.js (loaded only when a stream is shown) plays it wherever Media Source
  * Extensions exist — Chrome, the frame's WebView, iOS 17.1+ — in low-latency
@@ -17,9 +18,11 @@ const START_TIMEOUT_MS = 15_000;
  * Unmounting tears hls.js down, which stops the segment requests.
  */
 export function CameraVideo({
+  entityId,
   onPlaying,
   onFail,
 }: {
+  entityId?: string;
   onPlaying: () => void;
   onFail: () => void;
 }) {
@@ -47,7 +50,11 @@ export function CameraVideo({
 
     (async () => {
       try {
-        const res = await fetch("/api/camera/hls");
+        const res = await fetch(
+          entityId
+            ? `/api/camera/hls?entity=${encodeURIComponent(entityId)}`
+            : "/api/camera/hls",
+        );
         if (!res.ok) throw new Error(`stream start: ${res.status}`);
         const { url } = (await res.json()) as { url: string };
         const video = ref.current;
@@ -88,7 +95,7 @@ export function CameraVideo({
       window.clearTimeout(timer);
       hls?.destroy();
     };
-  }, []);
+  }, [entityId]);
 
   return (
     <chakra.video

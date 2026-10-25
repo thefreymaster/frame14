@@ -1,4 +1,5 @@
 import { HStack, Image, Spacer, Text } from "@chakra-ui/react";
+import { FROST, NAV_SURFACE_TINT } from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
   HEADER_ICON_SIZE,
@@ -20,9 +21,11 @@ import { useDesktop } from "../hooks/useDesktop";
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
  * Layout pads the page down by HEADER_CLEARANCE. It's the page's own black
  * (or white), with no edge, so it reads as part of the page rather than a
- * floating bar. Its background runs up through the status-bar inset, so in an
- * iPhone home-screen app nothing shows under the clock and notch, and its row
- * sits a little below the inset (HEADER_TOP), clear of the band iOS blurs. It
+ * floating bar — but frosted as the navs are (FROST at NAV_SURFACE_TINT), so
+ * the page scrolling under it shows through the same blur as under the bottom
+ * bar. Its background runs up through the status-bar inset, so in an iPhone
+ * home-screen app the clock and notch sit on the frost, and its row sits a
+ * little below the inset (HEADER_TOP), clear of the band iOS blurs. It
  * spans the full width; in landscape the floating rail starts below it. The
  * side padding is the cards' PAGE_GUTTER, so the icons line up with the cards'
  * edges.
@@ -50,7 +53,8 @@ export function StatusBanner({
       pl={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
       pr={`calc(env(safe-area-inset-right, 0px) + ${PAGE_GUTTER})`}
       gap="3"
-      bg="bg"
+      bg={`bg/${NAV_SURFACE_TINT}`}
+      {...FROST}
       zIndex="sticky"
       transform={hidden ? "translateY(-100%)" : "translateY(0)"}
       transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"

@@ -68,12 +68,15 @@ export function NavLayoutBoard() {
   );
 
   const [home, ...rest] = layout;
+  const slots = NAV_BAR_ENTRIES[mode];
   const inMore = useMemo(
     () =>
       new Set(
-        splitForBar(shownNavItems(layout, gameDay)).more.map((i) => i.path),
+        splitForBar(shownNavItems(layout, gameDay), slots).more.map(
+          (i) => i.path,
+        ),
       ),
-    [layout, gameDay],
+    [layout, gameDay, slots],
   );
   const customized = !sameNavLayout(layout, defaultNavLayout(mode));
 
@@ -141,9 +144,8 @@ export function NavLayoutBoard() {
         </DndContext>
       </Stack>
       <Text textStyle="sm" color="fg.muted" mt="4">
-        For this device. Drag to reorder. With more than {NAV_BAR_ENTRIES}{" "}
-        shown, the bottom bar keeps the first {NAV_BAR_ENTRIES - 1} and puts
-        the rest under More.
+        For this device. Drag to reorder. With more than {slots} shown, the
+        bottom bar keeps the first {slots - 1} and puts the rest under More.
       </Text>
     </Board>
   );

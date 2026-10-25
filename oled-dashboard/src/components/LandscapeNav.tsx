@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Box, Spacer, Tabs, type SystemStyleObject } from "@chakra-ui/react";
 import { useLocation, useNavigate } from "react-router";
 import { socket } from "../lib/socket";
-import { getDeviceMode } from "../lib/deviceMode";
+import { useDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
 import { ENTRY_RADIUS, NAV_PAD, NAV_SURFACE } from "../lib/floatingSurface";
 import {
@@ -21,7 +21,12 @@ import {
   NAV_RAIL_WIDTH,
   PAGE_GUTTER,
 } from "../lib/navMetrics";
-import { SETTINGS_PATH, splitForBar, type NavItem } from "../lib/navItems";
+import {
+  NAV_BAR_ENTRIES,
+  SETTINGS_PATH,
+  splitForBar,
+  type NavItem,
+} from "../lib/navItems";
 import { useNavItems } from "../lib/navLayout";
 import { NavMoreMenu } from "./NavMoreMenu";
 
@@ -72,11 +77,12 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
     setRoutePath(location.pathname);
     setActiveView(location.pathname);
   }
-  const isFrame = getDeviceMode() === "frame";
+  const mode = useDeviceMode();
+  const isFrame = mode === "frame";
   const { games } = useLiveGame();
   // This device's entries in its order, as /control sets them (lib/navLayout).
   const items = useNavItems(games.length > 0);
-  const { bar, more } = splitForBar(items);
+  const { bar, more } = splitForBar(items, NAV_BAR_ENTRIES[mode]);
   const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,9 +139,10 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
           the screen's sides and bottom, over the home indicator, with only a
           top edge, its bottom corners the screen's own and its top flat;
           elsewhere it floats a gap in from the edges with the cards' corners
-          (NAV_BAR_TOP_RADIUS) and a full border. It has five slots; a longer
-          nav keeps its first four and puts the rest under More (NavMoreMenu),
-          as an iPhone tab bar does. */}
+          (NAV_BAR_TOP_RADIUS) and a full border. It has six slots on the
+          frame and five on a phone (NAV_BAR_ENTRIES); a longer nav keeps all
+          but the last and puts the rest under More there (NavMoreMenu), as an
+          iPhone tab bar does. */}
       <Box
         ref={barRef}
         data-nav="bar"

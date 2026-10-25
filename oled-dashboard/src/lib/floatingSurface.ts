@@ -27,22 +27,36 @@ export const FLOATING_SURFACE = {
  */
 export const NAV_BLUR = "8px";
 
-/** How much of the surface colour the navs keep over that blur, in percent. */
+/**
+ * How much of its own colour a frosted surface keeps over that blur, in
+ * percent.
+ */
 export const NAV_SURFACE_TINT = 72;
+
+const FROST_FILTER = `blur(${NAV_BLUR}) saturate(1.8)`;
+
+/**
+ * The frost itself: a NAV_BLUR blur of what passes beneath, a little more
+ * saturated, under a colour at NAV_SURFACE_TINT — iOS's classic bar material,
+ * not Liquid Glass (no refraction, no highlight). Spread onto a Box with such
+ * a colour: the navs (NAV_SURFACE, the cards' colour) and the header
+ * (StatusBanner, the page's).
+ */
+export const FROST = {
+  backdropFilter: FROST_FILTER,
+  // Older WebKit knows only the prefixed property.
+  css: { WebkitBackdropFilter: FROST_FILTER },
+} as const;
 
 /**
  * The navs' surface: FLOATING_SURFACE made frosted — the cards' colour at
- * NAV_SURFACE_TINT over a NAV_BLUR blur of the page scrolling beneath, a
- * little more saturated: iOS's classic tab-bar material, not Liquid Glass
- * (no refraction, no highlight, the colour stays the cards'). The lights
- * strip keeps the opaque surface.
+ * NAV_SURFACE_TINT over FROST, so the page scrolling beneath shows through
+ * and the colour stays the cards'. The lights strip keeps the opaque surface.
  */
 export const NAV_SURFACE = {
   ...FLOATING_SURFACE,
   bg: `bg.surface/${NAV_SURFACE_TINT}`,
-  backdropFilter: `blur(${NAV_BLUR}) saturate(1.8)`,
-  // Older WebKit knows only the prefixed property.
-  css: { WebkitBackdropFilter: `blur(${NAV_BLUR}) saturate(1.8)` },
+  ...FROST,
 } as const;
 
 /**

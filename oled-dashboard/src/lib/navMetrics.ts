@@ -15,14 +15,15 @@ export const PAGE_GUTTER = "var(--chakra-spacing-gutter)";
 export const HEADER_HEIGHT = "2.75rem";
 
 /**
- * Space above the header's row: the status-bar inset, plus a gap of up to
- * 1.25rem under it. An iPhone home-screen app blurs a band a little deeper than
- * the inset, which smeared the header's icons and version; the gap clears it.
- * min() keeps the gap at zero where there is no inset (the frame, desktops,
- * iPhone landscape).
+ * Space above the header's row: the status-bar inset, so on an iPhone the row
+ * docks right under the status bar and the two read as one frosted band, as
+ * a native navigation bar does (the header's frost is FROST, see
+ * StatusBanner). Zero where there is no inset (the frame, desktops, iPhone
+ * landscape). From 0.56 to 0.84 the row sat a further 1.25rem down, clear of
+ * a band an iPhone home-screen app blurred under the status bar, which had
+ * smeared the header's icons; the user wanted the row docked again (0.85).
  */
-export const HEADER_TOP =
-  "calc(env(safe-area-inset-top, 0px) + min(1.25rem, env(safe-area-inset-top, 0px)))";
+export const HEADER_TOP = "env(safe-area-inset-top, 0px)";
 
 /** Distance from the top of the screen to the bottom of the header. */
 export const HEADER_CLEARANCE = `calc(${HEADER_HEIGHT} + ${HEADER_TOP})`;

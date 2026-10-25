@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.85.0
+
+- Changed: the frame's bottom bar has six slots — five entries and More — where it had a phone's five; a nav of six or fewer now shows whole, and a longer one keeps its first five and puts the rest under More. A phone's bar keeps its five slots (four and More). Settings' Navigation card counts and badges by this device's bar.
+- Changed: the header is frosted like the bottom bar — the page's colour at 72% over the same 8px blur — so a card scrolling under it shows through as it does under the nav, instead of being cut off at an opaque edge.
+- Changed: on an iPhone the header's row docks right under the status bar again, so the status bar and the row make one frosted band as a native navigation bar does. Since 0.56 the row had sat 1.25rem lower, clear of a band iOS blurred under the status bar.
+
 ## 0.84.0
 
 - Removed: the BirdNET-Go detection chip and its `bird_species_entity` option — BirdNET isn't running any more, and the chip had been switched off since the Home header was redesigned. The add-on ignores the option if it is still in its Configuration; delete it there when convenient.

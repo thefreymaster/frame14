@@ -57,6 +57,11 @@ import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { HOME_ONE_COLUMN_QUERY } from "../lib/homeLayout";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
+import {
+  setLightStripShown,
+  useLightStripShown,
+} from "../lib/lightStripVisibility";
+import { useDesktop } from "../hooks/useDesktop";
 import type { ThemeModePreference } from "../lib/themeMode";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
@@ -203,6 +208,10 @@ export function Control() {
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
   // The frames' nav: a remote's own never hides.
   const navVisible = useFramesNavVisible();
+  // The lights strip along the bottom is a desktop's alone, so its switch
+  // shows there alone; this device's setting, not the frames'.
+  const desktop = useDesktop();
+  const lightStripShown = useLightStripShown();
   // A phone (one column) gets the sections in tabs rather than one long page.
   // Measured before the first paint, so a phone never flashes the long page.
   const [phone] = useMediaQuery([HOME_ONE_COLUMN_QUERY], { ssr: false });
@@ -308,6 +317,20 @@ export function Control() {
         >
           Show navigation
         </Switch>
+
+        {desktop && (
+          <Field.Root>
+            <Switch
+              checked={lightStripShown}
+              onCheckedChange={(e) => setLightStripShown(e.checked)}
+            >
+              Show lights strip
+            </Switch>
+            <Field.HelperText>
+              The row of lights along the bottom of this screen.
+            </Field.HelperText>
+          </Field.Root>
+        )}
 
         <Button
           variant="outline"

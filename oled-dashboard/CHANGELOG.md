@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.86.0
+
+- Added: on a desktop, Settings' Display card has a Show lights strip switch for the row of lights along the bottom of the screen. Off, the strip slides away and the page takes the room. It is this computer's own setting; the strip only shows on desktops, so the switch only appears there.
+
 ## 0.85.1
 
 - Fixed: the header's row is back where it was, 1.25rem under an iPhone's status bar. 0.85.0 docked it against the status bar, which wasn't asked for; only the frost was. The frost stays.

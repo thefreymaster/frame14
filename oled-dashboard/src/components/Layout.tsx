@@ -16,6 +16,7 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
 import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
+import { useLightStripShown } from "../lib/lightStripVisibility";
 import { useReleaseSplash } from "../hooks/useReleaseSplash";
 import {
   HEADER_CLEARANCE,
@@ -58,6 +59,10 @@ export function Layout() {
   const showVoice = showNav && micAvailable() && assistConfig?.enabled === true;
   const voiceTap = voice.state === "idle" ? voice.start : voice.cancel;
   const desktop = useDesktop();
+  // The lights strip is a desktop's, and this device's Display switch can put
+  // it away: it slides off like the nav and the page takes the room.
+  const lightStripShown = useLightStripShown();
+  const showLightStrip = showNav && lightStripShown;
 
   const content = (
     <PageTransition key={location.pathname} grow={scrollable}>
@@ -97,7 +102,8 @@ export function Layout() {
           }}
           pb={{
             _portrait: showNav ? NAV_BAR_CLEARANCE : "0px",
-            _landscape: showNav && desktop ? LIGHT_STRIP_CLEARANCE : "0px",
+            _landscape:
+              showLightStrip && desktop ? LIGHT_STRIP_CLEARANCE : "0px",
           }}
         >
           {content}
@@ -106,7 +112,7 @@ export function Layout() {
 
       {!isControl && <DoorbellCard />}
 
-      {desktop && <LightStrip hidden={!showNav} />}
+      {desktop && <LightStrip hidden={!showLightStrip} />}
 
       <VoiceAssistOverlay snapshot={voice} onDismiss={voice.cancel} />
     </>

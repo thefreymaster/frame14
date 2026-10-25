@@ -31,6 +31,7 @@ In the addon's **Configuration** tab, set the following:
 | `weather_forecast_entity` | Hourly forecast entity | `weather.systems_weatherkit` |
 | `light_entities` | List of light/switch entity IDs to control | see below |
 | `climate_entities` | List of climate entity IDs to display | see below |
+| `climate_names` | Optional labels for thermostats, by entity ID (otherwise the entity's name) | see below |
 | `energy_current_production` | Live solar production sensor | `sensor.envoy_xxx_current_power_production` |
 | `energy_current_consumption` | Live power consumption sensor | `sensor.envoy_xxx_current_power_consumption` |
 | `energy_production_today` | Daily solar total sensor | `sensor.envoy_xxx_energy_production_today` |
@@ -46,9 +47,17 @@ In the addon's **Configuration** tab, set the following:
 
 **Example climate_entities:**
 ```yaml
-- climate.1st_floor_ac
-- climate.2nd_floor_ac
-- climate.3rd_floor_ac
+- climate.samsung_airconditioner_1
+- climate.samsung_airconditioner_2
+- climate.samsung_airconditioner_3rd_flr
+```
+
+**Example climate_names** (a thermostat without an entry shows its Home Assistant name):
+```yaml
+- entity: climate.samsung_airconditioner_1
+  name: 1st Floor AC
+- entity: climate.samsung_airconditioner_2
+  name: 2nd Floor AC
 ```
 
 Light names and icons are derived automatically from entity IDs — `light.kitchen_main_lights` becomes "Kitchen Main Lights".

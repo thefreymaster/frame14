@@ -313,10 +313,17 @@ function mapFanState(state: HAState<FanAttributes>): HomeFan {
   };
 }
 
-function mapClimateState(state: HAState<ClimateAttributes>): HomeClimate {
+function mapClimateState(
+  state: HAState<ClimateAttributes>,
+  /** Configured labels (the add-on's climate_names), over the entity's own. */
+  names: Record<string, string>,
+): HomeClimate {
   return {
     entity_id: state.entity_id,
-    name: state.attributes?.friendly_name ?? state.entity_id,
+    name:
+      names[state.entity_id] ??
+      state.attributes?.friendly_name ??
+      state.entity_id,
     state: state.state,
     currentTemp: parseFloatOrNull(state.attributes?.current_temperature),
     targetTemp: parseFloatOrNull(state.attributes?.temperature),
@@ -364,6 +371,7 @@ export function useHomeData() {
     () => [...new Set(entitiesQuery.data?.climate ?? [])],
     [entitiesQuery.data?.climate],
   );
+  const climateNames = entitiesQuery.data?.climateNames ?? {};
   const vacuumEntityIds = useMemo(
     () => [...new Set(entitiesQuery.data?.vacuums ?? [])],
     [entitiesQuery.data?.vacuums],
@@ -525,7 +533,7 @@ export function useHomeData() {
             .map((entityId, index) => {
               const liveState = climateStates[index]?.data;
               return liveState
-                ? mapClimateState(liveState)
+                ? mapClimateState(liveState, climateNames)
                 : (fallbackById.get(entityId) ?? null);
             })
             .filter((climate): climate is HomeClimate => climate != null);

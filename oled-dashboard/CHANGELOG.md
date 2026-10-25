@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.77.0
+
+- Changed: the thermostats are the LocalThings ones (`climate.samsung_airconditioner_*`, local control of the Samsung mini splits) instead of SmartThings'. The add-on's `climate_entities` default lists them; an add-on that was configured before keeps its own list, so swap the four ids in its Configuration.
+- Added: `climate_names`, labels for thermostats by entity id, since LocalThings names its entities after the device ("Localthings 1st FLR AC"). The default names the four as before: 1st, 2nd and 3rd Floor AC and Master Room AC. A thermostat without an entry still shows its Home Assistant name.
+
 ## 0.76.2
 
 - Changed: the house's ring is a little heavier than the other nodes' edges — 3px on the card, 4px in the dialog and on the Energy page — so it reads as a gauge beside them.

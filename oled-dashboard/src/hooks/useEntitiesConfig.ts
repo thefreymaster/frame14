@@ -4,6 +4,8 @@ export interface EntitiesConfig {
   lights: string[];
   weather: { current: string; forecast: string };
   climate: string[];
+  /** Labels for thermostats whose `friendly_name` shouldn't show, by entity id. */
+  climateNames?: Record<string, string>;
   energy: {
     currentProduction: string;
     currentConsumption: string;

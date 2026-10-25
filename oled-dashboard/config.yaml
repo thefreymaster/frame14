@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.76.2"
+version: "0.77.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -50,10 +50,19 @@ options:
     - "light.basement_2"
     - "light.workshop"
   climate_entities:
-    - "climate.1st_floor_ac"
-    - "climate.2nd_floor_ac"
-    - "climate.3rd_floor_ac"
-    - "climate.guest_room_ac"
+    - "climate.samsung_airconditioner_1"
+    - "climate.samsung_airconditioner_2"
+    - "climate.samsung_airconditioner_3rd_flr"
+    - "climate.samsung_airconditioner_3"
+  climate_names:
+    - entity: "climate.samsung_airconditioner_1"
+      name: "1st Floor AC"
+    - entity: "climate.samsung_airconditioner_2"
+      name: "2nd Floor AC"
+    - entity: "climate.samsung_airconditioner_3rd_flr"
+      name: "3rd Floor AC"
+    - entity: "climate.samsung_airconditioner_3"
+      name: "Master Room AC"
   energy_current_production: "sensor.envoy_482518016321_current_power_production"
   energy_current_consumption: "sensor.envoy_482518016321_current_power_consumption"
   energy_production_today: "sensor.envoy_482518016321_energy_production_today"
@@ -126,6 +135,9 @@ schema:
     - str
   climate_entities:
     - str
+  climate_names:
+    - entity: str
+      name: str
   energy_current_production: str
   energy_current_consumption: str
   energy_production_today: str

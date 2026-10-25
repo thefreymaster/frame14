@@ -25,11 +25,17 @@
     "temperature": "sensor.weatherkit_temperature"
   },
   "climate": [
-    "climate.1st_floor_ac",
-    "climate.2nd_floor_ac",
-    "climate.3rd_floor_ac",
-    "climate.guest_room_ac"
+    "climate.samsung_airconditioner_1",
+    "climate.samsung_airconditioner_2",
+    "climate.samsung_airconditioner_3rd_flr",
+    "climate.samsung_airconditioner_3"
   ],
+  "climateNames": {
+    "climate.samsung_airconditioner_1": "1st Floor AC",
+    "climate.samsung_airconditioner_2": "2nd Floor AC",
+    "climate.samsung_airconditioner_3rd_flr": "3rd Floor AC",
+    "climate.samsung_airconditioner_3": "Master Room AC"
+  },
   "energy": {
     "currentProduction": "sensor.envoy_482518016321_current_power_production",
     "currentConsumption": "sensor.envoy_482518016321_current_power_consumption",

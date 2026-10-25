@@ -9,6 +9,25 @@ function loadJson(p) {
   }
 }
 
+/**
+ * The thermostats' labels by entity id: the add-on's `climate_names` list of
+ * `{ entity, name }` (frame14.json may give the same list, or an object
+ * keyed by entity id). A thermostat with no entry is labelled by its
+ * `friendly_name`, as before; an entry replaces that — LocalThings' Samsung
+ * entities are named after the device ("Localthings 1st FLR AC").
+ */
+function climateNamesFrom(raw) {
+  if (Array.isArray(raw)) {
+    return Object.fromEntries(
+      raw
+        .filter((e) => e && typeof e.entity === "string" && typeof e.name === "string" && e.name.trim())
+        .map((e) => [e.entity, e.name.trim()]),
+    );
+  }
+  if (raw && typeof raw === "object") return { ...raw };
+  return {};
+}
+
 function loadEntities() {
   // HA addon: read entity config from options.json
   const options = fs.existsSync("/data/options.json")
@@ -24,6 +43,7 @@ function loadEntities() {
         temperature: options.weather_temperature_entity ?? "",
       },
       climate: options.climate_entities ?? [],
+      climateNames: climateNamesFrom(options.climate_names),
       energy: {
         currentProduction: options.energy_current_production ?? "",
         currentConsumption: options.energy_current_consumption ?? "",
@@ -56,6 +76,7 @@ function loadEntities() {
       lights: frame14.lights ?? [],
       weather: frame14.weather ?? {},
       climate: frame14.climate ?? [],
+      climateNames: climateNamesFrom(frame14.climateNames),
       energy: frame14.energy ?? {},
       circuits: frame14.circuits ?? { main: "", balance: "", items: [] },
       vacuums: frame14.vacuums ?? [],
@@ -74,6 +95,7 @@ function loadEntities() {
     lights: [],
     weather: {},
     climate: [],
+    climateNames: {},
     energy: {},
     circuits: { main: "", balance: "", items: [] },
     vacuums: [],

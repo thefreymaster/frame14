@@ -50,7 +50,8 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
 {
   "lights": ["light.living_room", "switch.sonoff_xxx"],
   "weather": { "current": "weather.systems_weatherkit", "forecast": "weather.systems_weatherkit" },
-  "climate": ["climate.1st_floor_ac"],
+  "climate": ["climate.samsung_airconditioner_1"],
+  "climateNames": { "climate.samsung_airconditioner_1": "1st Floor AC" },
   "energy": {
     "currentProduction": "sensor.envoy_xxx_current_power_production",
     "currentConsumption": "sensor.envoy_xxx_current_power_consumption",
@@ -66,9 +67,11 @@ Priority: `/data/options.json` fields (HA addon) → `frame14.json` (local dev).
 }
 ```
 
+`climateNames` (the add-on's `climate_names`, a list of `{ entity, name }`; frame14.json may use that list or an object keyed by entity id) labels a thermostat in place of its `friendly_name`; one without an entry keeps its Home Assistant name. It exists because the thermostats are LocalThings' Samsung entities since 0.77 (`climate.samsung_airconditioner_*`, local control of the mini splits; SmartThings' `climate.*_floor_ac` before), which are named after their devices ("Localthings 1st FLR AC"). Both the server (`routes/climate.js`) and the client's live mapping (`mapClimateState` in useHomeData) apply it, since the card takes a thermostat's name from whichever it has.
+
 The `printer` field is the printer's status sensor entity ID: ha-bambulab's `sensor.xxx_print_status` or Bambuddy's `sensor.xxx_status`. The suffix picks the integration, and all sibling printer sensors (progress, temps, layers, …) are derived from its prefix with that integration's names in `src/lib/printerEntities.ts`; fields an integration lacks stay empty. Empty string disables the printer card.
 
-In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` including the optional `energy_lifetime_production`/`energy_lifetime_consumption`, `media_player_entity`, `printer_status_entity`, `team_tracker_entities` fields in `config.yaml`).
+In the HA addon, these are configured via the addon's Configuration tab (`light_entities`, `climate_entities`, `climate_names`, `vacuum_entities`, `weather_entity`, `weather_forecast_entity`, `energy_*` including the optional `energy_lifetime_production`/`energy_lifetime_consumption`, `media_player_entity`, `printer_status_entity`, `team_tracker_entities` fields in `config.yaml`).
 
 ## Frontend Routes
 
@@ -330,7 +333,7 @@ routes/
   docs.js         — GET /api/docs, GET /api/docs/openapi.json
   weather.js      — GET /api/weather (entity IDs from entities.js)
   home.js         — GET /api/home/weather, GET /api/home/calendar
-  climate.js      — GET /api/home/climate (fetches HA states for ENTITIES.climate array)
+  climate.js      — GET /api/home/climate (fetches HA states for ENTITIES.climate array; `name` is ENTITIES.climateNames' label when there is one, else `friendly_name`)
   energy.js       — GET /api/energy, /api/energy/today, /api/energy/monthly, /api/energy/yearly (entity IDs from entities.js)
   circuits.js     — GET /api/circuits (the Emporia Vue main, balance and per-circuit power from the state cache, with each circuit's `_energy_today` sibling when the cache has it)
   vacuum.js       — GET /api/home/vacuum (fetches HA states for ENTITIES.vacuums array, each with its maps from the state cache), GET /api/home/vacuum/map/:entityId

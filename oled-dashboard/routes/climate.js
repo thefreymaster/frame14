@@ -26,13 +26,15 @@ router.get("/", async (_req, res) => {
     res.json([]);
     return;
   }
+  // A configured label (climate_names) beats the entity's own name.
+  const names = ENTITIES.climateNames ?? {};
 
   try {
     const states = await Promise.all(ids.map(fetchState));
     res.json(
       states.map((s) => ({
         entity_id: s.entity_id,
-        name: s.attributes?.friendly_name ?? s.entity_id,
+        name: names[s.entity_id] ?? s.attributes?.friendly_name ?? s.entity_id,
         state: s.state,
         currentTemp: s.attributes?.current_temperature ?? null,
         targetTemp: s.attributes?.temperature ?? null,

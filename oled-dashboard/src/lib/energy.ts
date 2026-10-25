@@ -44,6 +44,17 @@ export function coverage(energy: HomeEnergy) {
   return consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
 }
 
+/**
+ * How much of the house's draw the panels are covering right now, 0–1: all
+ * of it (1) whenever they make at least what it uses, the rest coming from
+ * the grid. The home node's ring.
+ */
+export function solarShare(energy: HomeEnergy): number {
+  const { currentProduction, currentConsumption } = energy;
+  if (!(currentConsumption > 0) || !(currentProduction > 0)) return 0;
+  return Math.min(1, currentProduction / currentConsumption);
+}
+
 /** The net grid flow now: how much, which way, and whether it counts. */
 export function grid(energy: HomeEnergy) {
   const draw = energy.currentConsumption - energy.currentProduction;

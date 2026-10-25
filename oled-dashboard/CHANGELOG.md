@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.76.0
+
+- Added: the house in the power flow (the Energy card, its dialog, and the Energy page's Now card) wears a ring: how much of what the house is drawing right now the panels are covering, in solar yellow from the top clockwise, the rest the edge's grey. It's full whenever the panels make at least what the house uses (so all the while power is going out to the grid), part of the way round when the grid makes up the rest, and plain at night. It moves as the figures change.
+
 ## 0.75.0
 
 - Changed: Solar and Power are one page, Energy, with the Home card's bolt in the nav. At the top is the Now card from Solar — the power flow from the Home energy card, the grid figure in its header, collapsible — and under it two tabs: Solar, the month or year chart as it was, and Circuits, the per-circuit breakdown that was the Power page.

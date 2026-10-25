@@ -38,6 +38,8 @@ In the addon's **Configuration** tab, set the following:
 | `energy_consumption_today` | Daily consumption total sensor | `sensor.envoy_xxx_energy_consumption_today` |
 | `camera_entity` | The doorbell card's camera (shown when `person_entity` turns on) | `camera.front_porch_high` |
 | `camera_entities` | The Cameras page's cameras; the doorbell's when empty | `- camera.front_porch_rtsp` |
+| `media_player_entity` | The marquee's Plex player (its poster fills the frame while a movie plays) | `media_player.plex_plex_for_apple_tv_apple_tv` |
+| `media_player_entities` | The Media page's players; the marquee's when empty | `- media_player.living_room_tv` |
 
 **Example light_entities:**
 ```yaml
@@ -87,6 +89,7 @@ Enable **Start on boot** and **Watchdog**, then start it. The dashboard is avail
 | `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames |
 | `/weather` | Now (conditions + advisories from the forecast), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |
 | `/calendar` | The next two weeks across every Home Assistant calendar, a card per day |
+| `/media` | The media players: what is playing, transport, volume and source |
 | `/timer` | Timer; frame-only nav item |
 | `/marquee` | Plex now-playing poster art; auto-routed while a movie plays |
 | `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day |

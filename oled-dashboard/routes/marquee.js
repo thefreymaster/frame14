@@ -60,31 +60,47 @@ async function fetchPlexPoster(ratingKey) {
 }
 
 /**
- * Proxy the poster art for the configured media player.
+ * Proxy the artwork of a configured media player: the marquee's
+ * (`media_player_entity`, the default) or, with `?entity=`, one of the Media
+ * page's (`media_player_entities`, since 0.83).
  *
- * Prefers Plex directly when PLEX_URL/PLEX_TOKEN are set, because HA's
- * media_player_proxy only ever returns a 200x300 thumbnail. Falls back to that
- * proxy when Plex isn't configured or the fetch fails.
+ * For the marquee's Plex player it prefers Plex directly when
+ * PLEX_URL/PLEX_TOKEN are set, because HA's media_player_proxy only ever
+ * returns a 200x300 thumbnail. Falls back to that proxy when Plex isn't
+ * configured or the fetch fails, and uses it for every other player.
  *
- * Neither path takes a URL from the client: the poster is identified from the
- * HA state cache server-side. Forwarding a client-supplied path with the HA
- * bearer token attached would let anyone reach arbitrary internal HA endpoints.
+ * Neither path takes a URL from the client: the entity must be a configured
+ * one, and the picture is identified from the HA state cache server-side.
+ * Forwarding a client-supplied path with the HA bearer token attached would
+ * let anyone reach arbitrary internal HA endpoints.
  *
  * The `?v=` query param is ignored here; the client uses it to cache-bust when
  * the media changes.
  */
-router.get("/art", async (_req, res) => {
-  if (!ENTITIES.mediaPlayer) {
+router.get("/art", async (req, res) => {
+  const players = [ENTITIES.mediaPlayer, ...(ENTITIES.mediaPlayers ?? [])].filter(Boolean);
+  if (players.length === 0) {
     res.status(503).json({ error: "No media player entity configured" });
     return;
   }
+  const requested = req.query.entity;
+  let entityId = ENTITIES.mediaPlayer || players[0];
+  if (requested != null) {
+    if (typeof requested !== "string" || !players.includes(requested)) {
+      res.status(404).json({ error: "Not a configured media player" });
+      return;
+    }
+    entityId = requested;
+  }
 
-  const attributes = getState(ENTITIES.mediaPlayer)?.attributes;
+  const attributes = getState(entityId)?.attributes;
 
-  const poster = await fetchPlexPoster(attributes?.media_content_id);
-  if (poster) {
-    sendImage(res, poster.contentType, poster.buffer);
-    return;
+  if (entityId === ENTITIES.mediaPlayer) {
+    const poster = await fetchPlexPoster(attributes?.media_content_id);
+    if (poster) {
+      sendImage(res, poster.contentType, poster.buffer);
+      return;
+    }
   }
 
   if (!HA_TOKEN) {

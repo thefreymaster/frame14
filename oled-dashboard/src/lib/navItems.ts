@@ -18,6 +18,8 @@ import {
   IoCalendar,
   IoVideocamOutline,
   IoVideocam,
+  IoPlayCircleOutline,
+  IoPlayCircle,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -136,6 +138,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Calendar",
     icon: IoCalendarOutline,
     activeIcon: IoCalendar,
+  },
+  {
+    path: "/media",
+    label: "Media",
+    icon: IoPlayCircleOutline,
+    activeIcon: IoPlayCircle,
   },
   // Comes and goes with the game. Deliberately not local-only: tapping it
   // should move every panel to the game, and "football" is a TRANSIENT_VIEW

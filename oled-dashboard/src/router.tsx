@@ -11,6 +11,7 @@ import { Climate } from "./routes/Climate";
 import { Weather } from "./routes/Weather";
 import { Calendar } from "./routes/Calendar";
 import { Cameras } from "./routes/Cameras";
+import { Media } from "./routes/Media";
 import { Timer } from "./routes/Timer";
 import { Energy } from "./routes/Energy";
 import { Marquee } from "./routes/Marquee";
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
       { path: "/printer", element: <Printer /> },
       { path: "/vacuum", element: <Vacuum /> },
       { path: "/cameras", element: <Cameras /> },
+      { path: "/media", element: <Media /> },
       { path: "/marquee", element: <Marquee /> },
       { path: "/football", element: <Football /> },
     ],

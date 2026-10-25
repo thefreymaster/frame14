@@ -125,6 +125,41 @@ function deviceControlData({ domain, service, entity_id, fan_speed }) {
   return null;
 }
 
+// The Media page's controls (0.83), held to the configured media players as
+// the vacuums' are: media_player.* reaches every speaker and TV in the house.
+const MEDIA_SERVICES = new Set([
+  "media_play", "media_pause", "media_play_pause", "media_stop",
+  "media_next_track", "media_previous_track",
+  "volume_up", "volume_down", "volume_set", "volume_mute",
+  "turn_on", "turn_off", "select_source",
+]);
+// Source names are the device's own ("HDMI 1", "Netflix", "Apple TV+").
+const SOURCE_RE = /^[\w .,:/()'&+-]{1,64}$/;
+
+function configuredMediaPlayers() {
+  return [ENTITIES.mediaPlayer, ...(ENTITIES.mediaPlayers ?? [])].filter(Boolean);
+}
+
+/** Service data for a media player's controls, or null if the call isn't one. */
+function mediaControlData({ service, entity_id, volume_level, is_volume_muted, source }) {
+  if (!MEDIA_SERVICES.has(service)) return null;
+  if (!configuredMediaPlayers().includes(entity_id)) return null;
+  if (service === "volume_set") {
+    const level = Number(volume_level);
+    if (!Number.isFinite(level) || level < 0 || level > 1) return null;
+    return { entity_id, volume_level: Math.round(level * 100) / 100 };
+  }
+  if (service === "volume_mute") {
+    if (typeof is_volume_muted !== "boolean") return null;
+    return { entity_id, is_volume_muted };
+  }
+  if (service === "select_source") {
+    if (typeof source !== "string" || !SOURCE_RE.test(source)) return null;
+    return { entity_id, source };
+  }
+  return { entity_id };
+}
+
 export function getState(entityId) {
   return stateCache.get(entityId);
 }
@@ -133,11 +168,20 @@ export function getAllStates() {
   return stateCache;
 }
 
-export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type }) {
+export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type, volume_level, is_volume_muted, source }) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
 
   if (domain === "vacuum" || domain === "button") {
     const service_data = deviceControlData({ domain, service, entity_id, fan_speed });
+    if (!service_data) return false;
+    haWs.send(JSON.stringify({ id: nextMsgId++, type: "call_service", domain, service, service_data }));
+    return true;
+  }
+
+  // The Media page's controls; play_media (the assist reply) stays on the
+  // allow-list path below.
+  if (domain === "media_player" && service !== "play_media") {
+    const service_data = mediaControlData({ service, entity_id, volume_level, is_volume_muted, source });
     if (!service_data) return false;
     haWs.send(JSON.stringify({ id: nextMsgId++, type: "call_service", domain, service, service_data }));
     return true;

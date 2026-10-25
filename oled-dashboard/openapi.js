@@ -223,10 +223,11 @@ export const openApiDocument = {
       get: {
         tags: ["Marquee"],
         operationId: "getMarqueeArt",
-        summary: "Proxy the poster art of the currently playing media",
+        summary: "Proxy the artwork of a configured media player",
         description:
-          "When PLEX_URL and PLEX_TOKEN are configured, renders the poster at 1280x1920 through Plex's transcoder using the media_content_id (Plex ratingKey) from the cached Home Assistant state. Otherwise — or if that fetch fails — it falls back to proxying entity_picture from the same cached state. Either way clients never need an HA or Plex token. The v parameter is ignored by the server and exists only for client-side cache busting.",
+          "For the marquee's player (media_player_entity, the default), when PLEX_URL and PLEX_TOKEN are configured, renders the poster at 1280x1920 through Plex's transcoder using the media_content_id (Plex ratingKey) from the cached Home Assistant state. Otherwise — or if that fetch fails, or for any other configured player named by `entity` — it proxies entity_picture from the same cached state. Either way clients never need an HA or Plex token. The v parameter is ignored by the server and exists only for client-side cache busting.",
         parameters: [
+          { $ref: "#/components/parameters/MediaPlayerEntity" },
           {
             name: "v",
             in: "query",
@@ -878,6 +879,14 @@ export const openApiDocument = {
   },
   components: {
     parameters: {
+      MediaPlayerEntity: {
+        name: "entity",
+        in: "query",
+        required: false,
+        description:
+          "One of the configured media players (media_player_entity or media_player_entities). Any other id is a 404; without it the marquee's player is meant.",
+        schema: { type: "string", example: "media_player.living_room_tv" },
+      },
       CameraEntity: {
         name: "entity",
         in: "query",

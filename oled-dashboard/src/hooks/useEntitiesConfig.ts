@@ -16,7 +16,10 @@ export interface EntitiesConfig {
   };
   vacuums: string[];
   fans: string[];
+  /** The marquee's media player. */
   mediaPlayer: string;
+  /** The Media page's (`media_player_entities`); the marquee's when empty. */
+  mediaPlayers: string[];
   printer: string;
   bird: string;
   teamTracker: string[];

@@ -98,6 +98,51 @@ export function callVacuumService(
   });
 }
 
+export type MediaService =
+  | "media_play"
+  | "media_pause"
+  | "media_play_pause"
+  | "media_stop"
+  | "media_next_track"
+  | "media_previous_track"
+  | "volume_up"
+  | "volume_down"
+  | "turn_on"
+  | "turn_off";
+
+/**
+ * A media player's controls. The server takes these for the configured
+ * media players only.
+ */
+export function callMediaService(entityId: string, service: MediaService): void;
+export function callMediaService(
+  entityId: string,
+  service: "volume_set",
+  params: { volume_level: number },
+): void;
+export function callMediaService(
+  entityId: string,
+  service: "volume_mute",
+  params: { is_volume_muted: boolean },
+): void;
+export function callMediaService(
+  entityId: string,
+  service: "select_source",
+  params: { source: string },
+): void;
+export function callMediaService(
+  entityId: string,
+  service: string,
+  params?: { volume_level?: number; is_volume_muted?: boolean; source?: string },
+) {
+  socket.emit("entity:call", {
+    domain: "media_player",
+    service,
+    entity_id: entityId,
+    ...params,
+  });
+}
+
 /**
  * Presses a button entity. The server takes the configured printer's pause,
  * resume and stop buttons only.

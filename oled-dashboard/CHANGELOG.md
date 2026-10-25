@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.83.0
+
+- Added: a Media page (`/media`), in the nav after Calendar on every device and among a remote's Views (opening on the remote itself, like Lights). A card per media player: what is playing with its artwork, the artist and album or the series and episode, and the progress through it; then the controls the player supports — previous, play / pause, next, stop, power — the volume with a mute button, and the source.
+- Added: `media_player_entities`, an add-on option listing the Media page's players. It is empty by default, when the page shows the marquee's `media_player_entity` (the Plex player); add the TV and the speakers in the add-on's Configuration.
+- Changed: `/api/marquee/art` takes `?entity=` for one of the configured players (the Plex poster path stays the marquee player's). The media controls go through the socket as the vacuum's do, for the configured players only.
+
 ## 0.82.0
 
 - Added: a Cameras page (`/cameras`): every picture of the house on one page — a card per camera with its live stream (Home Assistant's HLS, as the doorbell card plays it), falling back to a still every five seconds when the stream won't start, a Live / Stills / Offline badge and a retry; the 3D printer's camera while it has one; and each vacuum's map. In the nav after Vacuum on the frame; offered on remotes but off in their nav until turned on, like Printer and Vacuum, and among a remote's Views, which puts the frames on it. Automations can use `/api/change/cameras`.

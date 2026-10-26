@@ -14,7 +14,7 @@ import { useDesktop } from "../hooks/useDesktop";
 /**
  * The header across the top of every view: the app's icon and name at the
  * left; running appliances, the connection, the mic and (on a desktop) the
- * time at the right. (The version is on the Settings page.) The appliance
+ * date and time at the right. (The version is on the Settings page.) The appliance
  * and connection icons each open a small menu on a tap (HeaderMenu).
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
@@ -44,8 +44,8 @@ export function StatusBanner({
   /** The mic, after the status icons (before the clock on a desktop). */
   voice?: React.ReactNode;
 }) {
-  // The clock only on a desktop: a phone shows its own, and the frame has
-  // the big one on Home and /clock.
+  // The date and clock only on a desktop: a phone shows its own, and the
+  // frame has the big ones on Home and /clock.
   const desktop = useDesktop();
 
   return (

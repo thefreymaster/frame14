@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.90.0
+
+- Added: the desktop header shows the date beside the clock, as the macOS menu bar does: "Mon Oct 26  12:23 PM".
+
 ## 0.89.0
 
 - Added: on a desktop the Weather page lays everything out at once instead of behind tabs, and makes use of the width: the current conditions in one band (the temperature and condition at the left, the figures at the right) over the hourly chart and strip, the 10-day forecast in a column beside them, and the radar across the bottom. The page scrolls to the radar, and the old Radar link lands on it. A phone and the frame keep the tabs.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.92.0
+
+- Added: the 3D printer's camera shows a skeleton placeholder filling its picture while the stream starts, in place of the spinner.
+
 ## 0.91.1
 
 - Fixed: the 3D printer's nozzle, bed and chamber temperatures are in °C, as the printer and the slicer have them, instead of the °F Home Assistant converts them to; the unit is written out ("220°C").

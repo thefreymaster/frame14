@@ -28,15 +28,19 @@ function middayOf(datetime: string): string {
  * RAIN_SHOWN_FROM), the low, a bar from the low to the high and the high.
  * Every bar is on one scale, the coldest low to the warmest high, and so is
  * its blue-to-orange fill; today's carries a dot at the temperature now. The
- * forecast dialog's.
+ * forecast dialog's and /weather's; with `fill` (the desktop weather page,
+ * where the card is stretched to the column beside it) the well takes the
+ * card's height and spreads its rows over it.
  */
 export function DailyForecast({
   days,
   current,
+  fill = false,
 }: {
   days: HomeForecastPeriod[];
   /** The temperature now, for today's dot. */
   current: number | null;
+  fill?: boolean;
 }) {
   const now = new Date();
   const temps = [
@@ -51,7 +55,12 @@ export function DailyForecast({
   );
 
   return (
-    <Card.Root size="sm" variant="subtle" borderRadius="sm">
+    <Card.Root
+      size="sm"
+      variant="subtle"
+      borderRadius="sm"
+      flex={fill ? "1" : undefined}
+    >
       <Card.Body>
         {/* One grid for every row, so the columns line up down the list. */}
         <Grid
@@ -59,6 +68,8 @@ export function DailyForecast({
           columnGap="3"
           rowGap="2"
           alignItems="center"
+          flex={fill ? "1" : undefined}
+          alignContent={fill ? "space-between" : undefined}
         >
           {days.map((day) => {
             const label = dayLabel(day.datetime, now);

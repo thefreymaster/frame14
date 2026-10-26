@@ -36,6 +36,9 @@ const SCROLLING_PATHS = new Set([
   "/printer",
   "/vacuum",
 ]);
+// Pages that scroll on a desktop only, where they lay their cards out in
+// full (the frame keeps their fixed, tabbed form).
+const DESKTOP_SCROLLING_PATHS = new Set(["/weather"]);
 
 // Pages that keep the launch splash up until they have data: /home waits for
 // its cards (HomeOverview), and "/" is on its way there. Any other page is
@@ -52,7 +55,11 @@ export function Layout() {
   const navVisible = useNavVisible();
   const showNav = !isBlank && navVisible;
   const isController = getDeviceMode() === "controller";
-  const scrollable = SCROLLING_PATHS.has(location.pathname) || isController;
+  const desktop = useDesktop();
+  const scrollable =
+    SCROLLING_PATHS.has(location.pathname) ||
+    isController ||
+    (desktop && DESKTOP_SCROLLING_PATHS.has(location.pathname));
 
   const voice = useVoiceAssist();
   const { data: assistConfig } = useAssistConfig();
@@ -60,7 +67,6 @@ export function Layout() {
   // hidden — which keeps /blank black and keeps it off photos and posters.
   const showVoice = showNav && micAvailable() && assistConfig?.enabled === true;
   const voiceTap = voice.state === "idle" ? voice.start : voice.cancel;
-  const desktop = useDesktop();
   // The lights strip is a desktop's, and this device's Display switch can put
   // it away: it slides off like the nav and the page takes the room.
   const lightStripShown = useLightStripShown();

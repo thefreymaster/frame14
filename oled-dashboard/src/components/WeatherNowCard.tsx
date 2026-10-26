@@ -1,4 +1,4 @@
-import { SimpleGrid, Stack, Stat } from "@chakra-ui/react";
+import { Box, Flex, SimpleGrid, Stack, Stat } from "@chakra-ui/react";
 import type { HomeWeather } from "../hooks/useHomeData";
 import { compassPoint, roundTemp } from "../lib/forecast";
 import { weatherAdvisories } from "../lib/weatherAdvisories";
@@ -11,8 +11,20 @@ import { WeatherHero } from "./WeatherHero";
  * from the reading), humidity, wind with its compass point, pressure,
  * visibility and the UV index; a figure the entity doesn't report is left
  * out.
+ *
+ * `wide` (a desktop's card, which has the width) puts the hero and the
+ * conditions on one row instead — the hero at its own size at the left, the
+ * Stats in three content-sized columns at the right — so the card is a
+ * single band rather than a hero over a grid spread across the page; the
+ * advisories go under the row. The row wraps if a window is too narrow.
  */
-export function WeatherNowCard({ weather }: { weather: HomeWeather }) {
+export function WeatherNowCard({
+  weather,
+  wide = false,
+}: {
+  weather: HomeWeather;
+  wide?: boolean;
+}) {
   const current = roundTemp(weather.temperature);
   const feels = roundTemp(weather.apparentTemperature);
   const details: { label: string; value: string }[] = [];
@@ -49,20 +61,50 @@ export function WeatherNowCard({ weather }: { weather: HomeWeather }) {
     details.push({ label: "UV index", value: `${Math.round(weather.uvIndex)}` });
   }
 
+  const advisories = (
+    <WeatherAdvisories advisories={weatherAdvisories(weather)} />
+  );
+  const stats = details.length > 0 && (
+    <SimpleGrid
+      columns={wide ? 3 : { base: 2, md: 3 }}
+      gap="3"
+      columnGap={wide ? "8" : undefined}
+      flexShrink={0}
+    >
+      {details.map((d) => (
+        <Stat.Root key={d.label} size="sm">
+          <Stat.Label>{d.label}</Stat.Label>
+          <Stat.ValueText textStyle="lg">{d.value}</Stat.ValueText>
+        </Stat.Root>
+      ))}
+    </SimpleGrid>
+  );
+
+  if (!wide) {
+    return (
+      <Stack gap="4">
+        <WeatherHero weather={weather} />
+        {advisories}
+        {stats}
+      </Stack>
+    );
+  }
   return (
     <Stack gap="4">
-      <WeatherHero weather={weather} />
-      <WeatherAdvisories advisories={weatherAdvisories(weather)} />
-      {details.length > 0 && (
-        <SimpleGrid columns={{ base: 2, md: 3 }} gap="3">
-          {details.map((d) => (
-            <Stat.Root key={d.label} size="sm">
-              <Stat.Label>{d.label}</Stat.Label>
-              <Stat.ValueText textStyle="lg">{d.value}</Stat.ValueText>
-            </Stat.Root>
-          ))}
-        </SimpleGrid>
-      )}
+      <Flex
+        wrap="wrap"
+        justify="space-between"
+        align="center"
+        gap="4"
+        columnGap="10"
+      >
+        {/* At its own width, so the condition sits by the temperature. */}
+        <Box flex="0 1 auto" minW="0">
+          <WeatherHero weather={weather} />
+        </Box>
+        {stats}
+      </Flex>
+      {advisories}
     </Stack>
   );
 }

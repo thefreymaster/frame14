@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.88.2
+
+- Fixed: the header's running-printer icon is now the same 3D printer nozzle the left navigation uses, instead of a different hand-drawn one.
+
 ## 0.88.1
 
 - Fixed: the Climate page puts all four thermostats in one row on a desktop. They sat 2x2 on a laptop because each card asked for more width than four of them could have across the page; the dial shrinks to its card, so the cards now ask for less. The frame keeps 2x2 and a phone one column.

@@ -11,27 +11,10 @@ import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useNow } from "../hooks/useNow";
 import { fmtDuration, fmtWhen, toMinutes } from "../lib/format";
 import { printerEntityIds } from "../lib/printerEntities";
+import { Printer3dOutlineIcon } from "../lib/printerIcons";
 import { printerStatus } from "../lib/printerStatus";
 import { HeaderMenu } from "./HeaderMenu";
 import { DataListItem, DataListRoot } from "./ui/data-list";
-
-function PrinterNozzleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      width="1em"
-      height="1em"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      {...props}
-    >
-      <rect x="9" y="2" width="6" height="3" rx="0.5" />
-      <path d="M5 6h14v4l-5 6h-4l-5-6z" />
-      <path d="M11 16h2v3l-1 1-1-1z" />
-      <path d="M3 20h2v2H3zm16 0h2v2h-2zM3 20h18v1.2H3z" />
-    </svg>
-  );
-}
 
 const APPLIANCES: { id: string; Icon: IconType; name: string }[] = [
   {
@@ -124,7 +107,8 @@ function PrinterRows({ statusId }: { statusId: string }) {
  * each vacuum while it cleans or heads back to its dock. Idle, they show
  * nothing. A tap on one opens a small menu (HeaderMenu) with its status and
  * how long it has been running; the printer's adds its progress and time
- * left.
+ * left. The printer's glyph is the nav's (lib/printerIcons, the outline the
+ * rail shows at rest), so it reads as the same thing wherever it appears.
  */
 export function ApplianceIndicators() {
   const queries = useEntities(APPLIANCES.map((a) => a.id));
@@ -170,7 +154,7 @@ export function ApplianceIndicators() {
       ))}
       {printerActive && (
         <HeaderMenu
-          icon={<PrinterNozzleIcon />}
+          icon={<Printer3dOutlineIcon />}
           label="3D printer running"
           title="3D printer"
           color="fg.success"

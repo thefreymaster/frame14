@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.93.0
+
+- Added: the Lights page shows skeleton tiles, one per light, while their states are on their way, instead of an empty page until they arrive.
+
 ## 0.92.0
 
 - Added: the 3D printer's camera shows a skeleton placeholder filling its picture while the stream starts, in place of the spinner.

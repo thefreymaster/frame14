@@ -14,6 +14,14 @@ export type LightSection = {
   entries: LightEntry[];
 };
 
+/** The tiles' columns (LightsSection, and LightsSkeleton standing in for it):
+ *  two across on a phone, three on the frame and tablets, four in landscape. */
+export const LIGHT_TILE_COLUMNS = {
+  base: "repeat(2, minmax(0, 1fr))",
+  md: "repeat(3, minmax(0, 1fr))",
+  _landscape: "repeat(4, minmax(0, 1fr))",
+};
+
 function entityName(entityId: string): string {
   const slug = entityId.split(".")[1] ?? entityId;
   return slug

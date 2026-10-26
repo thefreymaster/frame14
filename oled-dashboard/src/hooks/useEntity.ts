@@ -54,6 +54,35 @@ export function useEntitiesAnswered() {
   return useSyncExternalStore(subscribeAnswered, entitiesAnswered);
 }
 
+// The entities whose current subscription the server has acked. Unlike the
+// flag above, which is trivially true before anything has asked, an entity
+// counts only once this page's subscribe for it has been answered — so a
+// page can wait for its own states (useEntitiesAcked) from its first render.
+const acked = new Set<string>();
+const ackedListeners = new Set<() => void>();
+
+function notifyAcked() {
+  ackedListeners.forEach((fn) => fn());
+}
+
+function subscribeAcked(fn: () => void) {
+  ackedListeners.add(fn);
+  return () => {
+    ackedListeners.delete(fn);
+  };
+}
+
+/**
+ * Whether the server has answered a subscribe for every one of `entityIds`
+ * (sending each one's cached state first, where it has one). False until the
+ * caller — or anything else — has subscribed them all.
+ */
+export function useEntitiesAcked(entityIds: readonly string[]) {
+  return useSyncExternalStore(subscribeAcked, () =>
+    entityIds.every((entityId) => !entityId || acked.has(entityId)),
+  );
+}
+
 function normalizeEntityIds(entityIds: readonly string[]) {
   const normalized: string[] = [];
   const seen = new Set<string>();
@@ -72,8 +101,14 @@ function refSubscribe(entityId: string) {
   refCounts.set(entityId, cur + 1);
   if (cur === 0) {
     unanswered.add(entityId);
+    acked.delete(entityId);
     setAllAnswered(false);
-    socket.emit("entity:subscribe", entityId, () => answered(entityId));
+    socket.emit("entity:subscribe", entityId, () => {
+      acked.add(entityId);
+      // Behind the state that arrived ahead of the ack, as `answered` is.
+      notifyManager.schedule(notifyAcked);
+      answered(entityId);
+    });
   }
 }
 
@@ -83,6 +118,8 @@ function refUnsubscribe(entityId: string) {
   const next = cur - 1;
   if (next === 0) {
     refCounts.delete(entityId);
+    acked.delete(entityId);
+    notifyManager.schedule(notifyAcked);
     answered(entityId);
     socket.emit("entity:unsubscribe", entityId);
   } else {

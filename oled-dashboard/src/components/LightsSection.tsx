@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Grid } from "@chakra-ui/react";
 import { LightControl } from "./LightControl";
 import { LightDialog } from "./LightDialog";
-import type { LightEntry } from "../lib/lightsConfig";
+import { LIGHT_TILE_COLUMNS, type LightEntry } from "../lib/lightsConfig";
 
 type Props = {
   entries: LightEntry[];
@@ -13,17 +13,7 @@ export function LightsSection({ entries }: Props) {
 
   return (
     <>
-      <Grid
-        gap="3"
-        width="100%"
-        // Wide tiles: two across on a phone, three on the frame and tablets,
-        // four in landscape.
-        templateColumns={{
-          base: "repeat(2, minmax(0, 1fr))",
-          md: "repeat(3, minmax(0, 1fr))",
-          _landscape: "repeat(4, minmax(0, 1fr))",
-        }}
-      >
+      <Grid gap="3" width="100%" templateColumns={LIGHT_TILE_COLUMNS}>
         {entries.map((entry) => (
           <LightControl key={entry.entity_id} {...entry} onOpen={setOpenId} />
         ))}

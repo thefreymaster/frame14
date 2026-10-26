@@ -28,13 +28,19 @@ import { useDesktop } from "../hooks/useDesktop";
  * little below the inset (HEADER_TOP), clear of the band iOS blurs. It
  * spans the full width; in landscape the floating rail starts below it. The
  * side padding is the cards' PAGE_GUTTER, so the icons line up with the cards'
- * edges.
+ * edges. While the page has scrolled under it (`scrolled`, from Layout, which
+ * owns the scroll container) a hairline in the navs' edge colour fades in
+ * along its bottom, as an iOS bar's does: it is drawn over the frost's last
+ * pixel row, so it takes no room and nothing moves when it comes or goes.
  */
 export function StatusBanner({
   hidden = false,
+  scrolled = false,
   voice,
 }: {
   hidden?: boolean;
+  /** The page has scrolled under the header: show its bottom edge. */
+  scrolled?: boolean;
   /** The mic, after the status icons (before the clock on a desktop). */
   voice?: React.ReactNode;
 }) {
@@ -58,6 +64,18 @@ export function StatusBanner({
       zIndex="sticky"
       transform={hidden ? "translateY(-100%)" : "translateY(0)"}
       transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+      _after={{
+        content: '""',
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: "1px",
+        bg: "border.surface",
+        pointerEvents: "none",
+        opacity: scrolled ? 1 : 0,
+        transition: "opacity 0.2s",
+      }}
     >
       <HStack gap="2">
         {/* The app icon, at the status icons' size. */}

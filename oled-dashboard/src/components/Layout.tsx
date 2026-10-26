@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Box, HStack } from "@chakra-ui/react";
 import { SocketViewListener } from "./SocketViewListener";
@@ -18,6 +19,7 @@ import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
 import { useLightStripShown } from "../lib/lightStripVisibility";
 import { useReleaseSplash } from "../hooks/useReleaseSplash";
+import { useScrolledFromTop } from "../hooks/useScrolledFromTop";
 import {
   HEADER_CLEARANCE,
   LIGHT_STRIP_CLEARANCE,
@@ -63,6 +65,10 @@ export function Layout() {
   // it away: it slides off like the nav and the page takes the room.
   const lightStripShown = useLightStripShown();
   const showLightStrip = showNav && lightStripShown;
+  // The page scrolls inside the Box below, not the document. The header
+  // draws its bottom edge while the page has scrolled under it.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrolled = useScrolledFromTop(scrollRef, location.pathname);
 
   const content = (
     <PageTransition key={location.pathname} grow={scrollable}>
@@ -78,6 +84,7 @@ export function Layout() {
           inset in an iPhone home-screen app. */}
       <StatusBanner
         hidden={!showNav}
+        scrolled={scrolled}
         voice={
           showVoice && (
             <VoiceAssistButton onTap={voiceTap} state={voice.state} />
@@ -88,6 +95,7 @@ export function Layout() {
       <HStack gap="0" align="stretch">
         <LandscapeNav hidden={!showNav} />
         <Box
+          ref={scrollRef}
           height="var(--app-height, 100dvh)"
           overflow={scrollable ? "auto" : "hidden"}
           pt={showNav ? HEADER_CLEARANCE : 0}

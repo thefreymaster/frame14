@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.88.0
+
+- Added: the header shows a hairline along its bottom edge while the page has scrolled under it, as an iOS bar does, and loses it again at the top. It is drawn over the header's own last pixel, so nothing on the page moves when it comes or goes.
+
 ## 0.87.0
 
 - Changed: the dots on the power flow's wires run at the pace of the power on them, where every wire ran at one pace: the solar wire by what the panels are making, the grid wire by what is coming in from the grid or going out to it. 1 kW runs as before; four times the power is twice the pace (a few hundred watts still visibly moves, several kilowatts don't blur), from a crawl at 60 W and under to the fastest at 9 kW and over. A new reading changes the pace without the dots jumping.

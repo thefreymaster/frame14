@@ -5,8 +5,10 @@ import { CloseButton } from "./ui/close-button";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity, type HAState } from "../hooks/useEntity";
 import { socket } from "../lib/socket";
-import { useDesktop } from "../hooks/useDesktop";
-import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics";
+// The desktop lights strip is off for now (0.91, see Layout): nothing to
+// clear at the bottom of a desktop.
+// import { useDesktop } from "../hooks/useDesktop"; // lights strip
+// import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics"; // lights strip
 import { CameraVideo } from "./CameraVideo";
 
 /**
@@ -55,7 +57,7 @@ export function DoorbellCard() {
   // Whether any picture has shown this time, and whether a still has failed.
   const [loaded, setLoaded] = useState(false);
   const [stillFailed, setStillFailed] = useState(false);
-  const desktop = useDesktop();
+  // const desktop = useDesktop(); // lights strip
 
   const hideTimer = useRef<number | null>(null);
   const prevState = useRef<string | undefined>(undefined);
@@ -116,12 +118,9 @@ export function DoorbellCard() {
   return (
     <Card.Root
       position="fixed"
-      // Above the lights strip on a desktop.
-      bottom={
-        desktop
-          ? `calc(${LIGHT_STRIP_CLEARANCE} + 1rem)`
-          : "calc(env(safe-area-inset-bottom, 0px) + 1rem)"
-      }
+      // lights strip (above it on a desktop, while it was on):
+      // bottom={desktop ? `calc(${LIGHT_STRIP_CLEARANCE} + 1rem)` : "calc(env(safe-area-inset-bottom, 0px) + 1rem)"}
+      bottom="calc(env(safe-area-inset-bottom, 0px) + 1rem)"
       right="calc(env(safe-area-inset-right, 0px) + 1rem)"
       // Above any open dialog: someone at the door outranks a modal.
       zIndex="toast"

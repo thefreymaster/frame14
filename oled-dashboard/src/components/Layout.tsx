@@ -5,7 +5,11 @@ import { SocketViewListener } from "./SocketViewListener";
 import { PageTransition } from "./PageTransition";
 import { LandscapeNav } from "./LandscapeNav";
 import { DoorbellCard } from "./DoorbellCard";
-import { LightStrip } from "./LightStrip";
+// The lights strip is off for now (0.91): the user isn't sold on it. Its code
+// stays (LightStrip, LightStripItem, lib/lightStripVisibility, the Display
+// switch on /control); uncomment the lines marked "lights strip" to bring it
+// back.
+// import { LightStrip } from "./LightStrip";
 import { useDesktop } from "../hooks/useDesktop";
 import { StatusBanner } from "./StatusBanner";
 import { VoiceAssistButton } from "./VoiceAssistButton";
@@ -17,12 +21,12 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
 import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
-import { useLightStripShown } from "../lib/lightStripVisibility";
+// import { useLightStripShown } from "../lib/lightStripVisibility"; // lights strip
 import { useReleaseSplash } from "../hooks/useReleaseSplash";
 import { useScrolledFromTop } from "../hooks/useScrolledFromTop";
 import {
   HEADER_CLEARANCE,
-  LIGHT_STRIP_CLEARANCE,
+  // LIGHT_STRIP_CLEARANCE, // lights strip
   NAV_BAR_CLEARANCE,
   NAV_RAIL_CLEARANCE,
 } from "../lib/navMetrics";
@@ -69,8 +73,8 @@ export function Layout() {
   const voiceTap = voice.state === "idle" ? voice.start : voice.cancel;
   // The lights strip is a desktop's, and this device's Display switch can put
   // it away: it slides off like the nav and the page takes the room.
-  const lightStripShown = useLightStripShown();
-  const showLightStrip = showNav && lightStripShown;
+  // const lightStripShown = useLightStripShown(); // lights strip
+  // const showLightStrip = showNav && lightStripShown; // lights strip
   // The page scrolls inside the Box below, not the document. The header
   // draws its bottom edge while the page has scrolled under it.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -107,17 +111,18 @@ export function Layout() {
           pt={showNav ? HEADER_CLEARANCE : 0}
           transition="padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
           // Room for the header and the floating nav: the rail on the left in
-          // landscape, the bar at the bottom in portrait, and on a desktop the
-          // lights strip along the bottom. The page scrolls on under the bar,
-          // but its end stops above it.
+          // landscape, the bar at the bottom in portrait (and, while it was
+          // on, a desktop's lights strip along the bottom). The page scrolls
+          // on under the bar, but its end stops above it.
           minW={{ _landscape: "100vw", _portrait: "100%" }}
           pl={{
             _landscape: showNav ? NAV_RAIL_CLEARANCE : "0px",
           }}
           pb={{
             _portrait: showNav ? NAV_BAR_CLEARANCE : "0px",
-            _landscape:
-              showLightStrip && desktop ? LIGHT_STRIP_CLEARANCE : "0px",
+            // lights strip:
+            // _landscape: showLightStrip && desktop ? LIGHT_STRIP_CLEARANCE : "0px",
+            _landscape: "0px",
           }}
         >
           {content}
@@ -126,7 +131,7 @@ export function Layout() {
 
       {!isControl && <DoorbellCard />}
 
-      {desktop && <LightStrip hidden={!showLightStrip} />}
+      {/* {desktop && <LightStrip hidden={!showLightStrip} />} */}
 
       <VoiceAssistOverlay snapshot={voice} onDismiss={voice.cancel} />
     </>

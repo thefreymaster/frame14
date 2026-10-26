@@ -22,7 +22,7 @@ import { EmptyState } from "../components/ui/empty-state";
 import { useDesktop } from "../hooks/useDesktop";
 import { useHomeWeather } from "../hooks/useHomeWeather";
 import { roundTemp } from "../lib/forecast";
-import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics";
+import { PAGE_GUTTER } from "../lib/navMetrics";
 
 type WeatherTab = "hourly" | "daily" | "radar";
 
@@ -74,8 +74,8 @@ export function Weather() {
 
   // On a desktop, `/weather?tab=radar` (the old /radar) lands on the radar:
   // once the forecast above it has its data (and the route's entrance has
-  // played out), the page scrolls so the radar's bottom clears the lights
-  // strip — or the page's end, when the strip is off.
+  // played out), the page scrolls so the radar sits at the page's end, a
+  // gutter above the bottom.
   const radarRef = useRef<HTMLDivElement>(null);
   const landedOnRadar = useRef(false);
   useEffect(() => {
@@ -177,7 +177,7 @@ export function Weather() {
             ref={radarRef}
             gridArea="radar"
             minW="0"
-            scrollMarginBottom={LIGHT_STRIP_CLEARANCE}
+            scrollMarginBottom={PAGE_GUTTER}
           >
             <Board title={<SectionTitle>Radar</SectionTitle>}>
               <RadarMap height={RADAR_DESKTOP_HEIGHT} rounded="sm" />

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.91.0
+
+- Changed: the desktop's row of lights along the bottom of the screen is off for now, and so is its Show lights strip switch in Settings. The page has the room back; the front-door pop-up and the arranging bar sit at the bottom edge again. The code stays, commented out, in case it comes back.
+
 ## 0.90.0
 
 - Added: the desktop header shows the date beside the clock, as the macOS menu bar does: "Mon Oct 26  12:23 PM".

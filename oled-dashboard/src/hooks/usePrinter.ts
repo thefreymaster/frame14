@@ -7,7 +7,8 @@ import { printerEntityIds, printerPartIds } from "../lib/printerEntities";
 export interface PrinterTemp {
   value: number | null;
   target: number | null;
-  /** "°C" or "°F", as the sensor reports it. */
+  /** "°C" (a °F sensor's readings are converted — `celsius`), or "°" when
+   *  the sensor names no unit. */
   unit: string;
 }
 
@@ -60,6 +61,23 @@ function unitOf(state: HAState | undefined): string | undefined {
   return typeof unit === "string" ? unit : undefined;
 }
 
+/**
+ * A temperature in °C. Home Assistant hands a temperature sensor over in
+ * the house's unit (°F here), but a printer's temperatures are Celsius
+ * everywhere else — the slicer, Bambuddy, the printer's own screen — and a
+ * nozzle at "428°" reads as nonsense. A reading already in °C, or with no
+ * unit, passes through.
+ */
+function celsius(n: number | null, unit: string | undefined): number | null {
+  if (n == null || unit !== "°F") return n;
+  return ((n - 32) * 5) / 9;
+}
+
+/** The unit after `celsius`: °F has become °C. */
+function unitShown(unit: string | undefined): string {
+  return unit === "°F" ? "°C" : (unit ?? "°");
+}
+
 export function usePrinter(): PrinterModel {
   const { data: config } = useEntitiesConfig();
   const ids = useMemo(
@@ -79,11 +97,14 @@ export function usePrinter(): PrinterModel {
   for (const q of results) if (q.data) byId.set(q.data.entity_id, q.data);
   const get = (id: string) => (id ? byId.get(id) : undefined);
 
-  const temp = (value: string, target: string): PrinterTemp => ({
-    value: num(get(value)),
-    target: num(get(target)),
-    unit: unitOf(get(value)) ?? unitOf(get(target)) ?? "°",
-  });
+  const temp = (value: string, target: string): PrinterTemp => {
+    const unit = unitOf(get(value)) ?? unitOf(get(target));
+    return {
+      value: celsius(num(get(value)), unit),
+      target: celsius(num(get(target)), unit),
+      unit: unitShown(unit),
+    };
+  };
 
   const statusState = get(ids.status);
   const online = get(parts.online);
@@ -119,7 +140,11 @@ export function usePrinter(): PrinterModel {
     nozzle: temp(ids.nozzleTemp, ids.nozzleTarget),
     bed: temp(ids.bedTemp, ids.bedTarget),
     chamber: chamber
-      ? { value: num(chamber), target: null, unit: unitOf(chamber) ?? "°" }
+      ? {
+          value: celsius(num(chamber), unitOf(chamber)),
+          target: null,
+          unit: unitShown(unitOf(chamber)),
+        }
       : null,
     coverVersion: cover && !DEAD.has(cover.state) ? cover.state : null,
     hasCamera: camera != null && camera.state !== "unavailable",

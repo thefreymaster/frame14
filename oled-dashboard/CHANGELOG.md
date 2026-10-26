@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.91.1
+
+- Fixed: the 3D printer's nozzle, bed and chamber temperatures are in °C, as the printer and the slicer have them, instead of the °F Home Assistant converts them to; the unit is written out ("220°C").
+
 ## 0.91.0
 
 - Changed: the desktop's row of lights along the bottom of the screen is off for now, and so is its Show lights strip switch in Settings. The page has the room back; the front-door pop-up and the arranging bar sit at the bottom edge again. The code stays, commented out, in case it comes back.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.88.1
+
+- Fixed: the Climate page puts all four thermostats in one row on a desktop. They sat 2x2 on a laptop because each card asked for more width than four of them could have across the page; the dial shrinks to its card, so the cards now ask for less. The frame keeps 2x2 and a phone one column.
+- Changed: the Heat / Cool / Fan / Off control fits a narrow thermostat card instead of running past its edges: with four cards across on a laptop, and in a phone's thermostat dialog, its four segments share the card's width equally; in a very narrow one they keep their words and drop their icons.
+
 ## 0.88.0
 
 - Added: the header shows a hairline along its bottom edge while the page has scrolled under it, as an iOS bar does, and loses it again at the top. It is drawn over the header's own last pixel, so nothing on the page moves when it comes or goes.

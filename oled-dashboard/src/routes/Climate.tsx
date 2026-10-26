@@ -12,8 +12,16 @@ import { useClimateHistory } from "../hooks/useClimateHistory";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { climateColumnsCss, isClimateOn } from "../lib/hvac";
 
-/** Narrowest a thermostat's card gets: the dial plus the card's padding. */
-const PANEL_MIN_REM = 20;
+/**
+ * Narrowest a thermostat's card gets. The dial is 18rem but shrinks to its
+ * card (maxW 100%), so this is where it is still comfortable, not its full
+ * size with the card's padding (20rem until 0.88.1): four cards at 20rem
+ * needed an 83rem page, and a laptop's is about 80rem (the root font grows
+ * with the screen), which left a desktop at 2x2. At 16rem four go across on
+ * any desktop from about 1250px wide, and the portrait frame (55rem) stays
+ * 2x2, a phone one column.
+ */
+const PANEL_MIN_REM = 16;
 /** The page's `gutter` between cards, for the column maths. */
 const PANEL_GAP_REM = 1;
 

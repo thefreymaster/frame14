@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { keyframes } from "@emotion/react";
 import { Box, Center, Grid, Icon, Text, chakra } from "@chakra-ui/react";
 import { IoFlash, IoHome } from "react-icons/io5";
@@ -6,8 +7,10 @@ import type { HomeEnergy } from "../hooks/useHomeData";
 import {
   ENERGY_COLORS,
   ENERGY_VARS,
+  FLOW_BASE_SECONDS,
   GRID_ACTIVE_THRESHOLD,
   coverage,
+  flowPace,
   fmtW,
   grid,
 } from "../lib/energy";
@@ -63,7 +66,9 @@ const SIZES = {
  * house, and what it doesn't use goes out through the meter, or the grid
  * makes up what the panels can't. Solar → Home → Grid when exporting,
  * Solar → Home ← Grid when importing. A line with power on it carries dots
- * moving the way it flows, in the flow's colour; an idle line is a hairline.
+ * moving the way it flows, in the flow's colour, at a pace set by the power
+ * on it (`flowPace`: the solar wire by what the panels make, the grid wire by
+ * the net flow); an idle line is a hairline.
  * The house's edge is a ring of today's coverage (`coverage`, the card's big
  * figure): how much of the day's use the solar has made, in solar yellow from
  * the top clockwise over the edge's grey. Past 100% it goes round again in
@@ -91,14 +96,22 @@ export function PowerFlow({
       justifyItems="center"
     >
       <Node icon={<PiSolarRoof />} color={producing ? "solar" : null} size={size} />
-      <Wire color={producing ? "solar" : null} direction="right" />
+      <Wire
+        color={producing ? "solar" : null}
+        direction="right"
+        watts={energy.currentProduction}
+      />
       <Node
         icon={<IoHome />}
         color="home"
         size={size}
         ring={coverage(energy)}
       />
-      <Wire color={gridColor} direction={exporting ? "right" : "left"} />
+      <Wire
+        color={gridColor}
+        direction={exporting ? "right" : "left"}
+        watts={abs}
+      />
       <Node icon={<IoFlash />} color={gridColor} size={size} />
 
       <Value size={size}>{fmtW(energy.currentProduction)}</Value>
@@ -221,16 +234,38 @@ function Ring({
   );
 }
 
+/**
+ * A line between two nodes: a hairline with no power on it, else dots moving
+ * in `direction` at the pace of `watts` (flowPace). The pace is the running
+ * CSS animation's playback rate, set through getAnimations: a change of
+ * animation-duration keeps the start time and so jumps the dots to another
+ * phase at every reading, where a rate change carries on from where they
+ * are. Under reduced motion there is no animation to pace.
+ */
 function Wire({
   color,
   direction,
+  watts,
 }: {
   color: Flow | null;
   direction: "left" | "right";
+  watts: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const pace = flowPace(watts);
+  // A new direction is another keyframe name, and a colour after none the
+  // dots in place of the hairline: both start a fresh animation at the base
+  // rate, so each is a dependency.
+  useEffect(() => {
+    ref.current?.getAnimations().forEach((animation) => {
+      animation.playbackRate = pace;
+    });
+  }, [pace, direction, color]);
+
   if (!color) {
     return (
       <Box
+        ref={ref}
         alignSelf="center"
         width="100%"
         height="1px"
@@ -241,13 +276,14 @@ function Wire({
   }
   return (
     <Box
+      ref={ref}
       width="100%"
       height="1.5"
       aria-hidden
       backgroundImage={`radial-gradient(circle, ${ENERGY_VARS[color]} 0 2.5px, transparent 3px)`}
       backgroundSize={`${DOT_PITCH}px 100%`}
       backgroundRepeat="repeat-x"
-      animation={`${direction === "right" ? flowRight : flowLeft} 0.6s linear infinite`}
+      animation={`${direction === "right" ? flowRight : flowLeft} ${FLOW_BASE_SECONDS}s linear infinite`}
       _motionReduce={{ animation: "none" }}
     />
   );

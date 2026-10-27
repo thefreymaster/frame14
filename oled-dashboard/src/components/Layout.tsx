@@ -40,9 +40,11 @@ const SCROLLING_PATHS = new Set([
   "/printer",
   "/vacuum",
 ]);
-// Pages that scroll on a desktop only, where they lay their cards out in
-// full (the frame keeps their fixed, tabbed form).
-const DESKTOP_SCROLLING_PATHS = new Set(["/weather"]);
+// Pages that scroll on a desktop only: /weather lays its cards out in full
+// there (the frame keeps its fixed, tabbed form), and /energy's Solar tab —
+// the Today card over the month chart — is taller than a landscape screen,
+// where the portrait frame has the height for it.
+const DESKTOP_SCROLLING_PATHS = new Set(["/weather", "/energy"]);
 
 // Pages that keep the launch splash up until they have data: /home waits for
 // its cards (HomeOverview), and "/" is on its way there. Any other page is

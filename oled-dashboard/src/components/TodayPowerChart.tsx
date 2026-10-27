@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Box, HStack, Text } from "@chakra-ui/react";
 import type { EnergyTodayPoint } from "../hooks/useEnergyToday";
 import { useNow } from "../hooks/useNow";
-import { ENERGY_VARS, fmtW } from "../lib/energy";
+import { ENERGY_VARS, fmtKwh, fmtW } from "../lib/energy";
 import {
   curveMax,
   curvePath,
@@ -30,14 +30,19 @@ const timeLabel = (t: number) =>
  * The legend above doubles as the readout: point at, drag across or arrow
  * through the chart and it shows that quarter hour's time and values, with a
  * hairline at it; otherwise the legend names the lines and the day's solar
- * peak. The lines are an SVG stretched to the box; the dots, hairline and
- * labels are HTML on top, so none of them stretch.
+ * peak — or, with `totals`, carries the day's kWh on the keys, as the
+ * history chart does. `lead` sits at the start of the legend row, for the
+ * coverage figure. The lines are an SVG stretched to the box; the dots,
+ * hairline and labels are HTML on top, so none of them stretch.
  */
 export function TodayPowerChart({
   points: raw,
   start,
   end,
   live,
+  totals,
+  lead,
+  ring,
 }: {
   points: EnergyTodayPoint[];
   /** Local midnight today and tomorrow, ms. */
@@ -45,6 +50,11 @@ export function TodayPowerChart({
   end: number;
   /** The values now, W, which the lines end at. */
   live: { production: number; consumption: number };
+  /** The day's totals, kWh: the keys' idle figures when given. */
+  totals?: { production: number; consumption: number };
+  lead?: React.ReactNode;
+  /** The surface the dots sit on, for their ring. */
+  ring?: string;
 }) {
   const [active, setActive] = useState<number | null>(null);
   // When "now" is: the chart mounts as the dialog opens, then keeps time.
@@ -95,35 +105,54 @@ export function TodayPowerChart({
     return d.getTime();
   });
 
-  // While reading, each key shows its value ("—" for a gap); otherwise the names.
-  const reading = (v: number | null | undefined) =>
-    shown ? (v != null ? fmtW(v) : null) : undefined;
+  // While reading, each key shows its value ("—" for a gap); otherwise the
+  // day's total, or the name alone without one.
+  const reading = (v: number | null | undefined, total?: number) =>
+    shown
+      ? v != null
+        ? fmtW(v)
+        : null
+      : total != null
+        ? `${fmtKwh(total)} kWh`
+        : undefined;
 
   return (
     <Box>
-      <HStack
-        justify="space-between"
-        align="baseline"
-        gap="3"
-        mb="5"
-        textStyle="sm"
-        wrap="wrap"
-        rowGap="1"
-        minH="6"
-      >
-        <HStack gap="4" wrap="wrap" rowGap="1">
-          <PowerKey color="solar" label="Solar" value={reading(shown?.production)} />
-          <PowerKey color="home" label="Home" value={reading(shown?.consumption)} />
+      <HStack align="end" gap="4" rowGap="2" mb="5" wrap="wrap">
+        {lead}
+        <HStack
+          flex="1"
+          minW="0"
+          justify="space-between"
+          align="baseline"
+          gap="3"
+          textStyle="sm"
+          wrap="wrap"
+          rowGap="1"
+          minH="6"
+        >
+          <HStack gap="4" wrap="wrap" rowGap="1">
+            <PowerKey
+              color="solar"
+              label="Solar"
+              value={reading(shown?.production, totals?.production)}
+            />
+            <PowerKey
+              color="home"
+              label="Home"
+              value={reading(shown?.consumption, totals?.consumption)}
+            />
+          </HStack>
+          <Text color="fg.muted" whiteSpace="nowrap">
+            {shown
+              ? shown === now
+                ? "Now"
+                : timeLabel(shown.t)
+              : peak && peak.production! > 0
+                ? `Peak ${fmtW(peak.production!)} at ${timeLabel(peak.t)}`
+                : null}
+          </Text>
         </HStack>
-        <Text color="fg.muted" whiteSpace="nowrap">
-          {shown
-            ? shown === now
-              ? "Now"
-              : timeLabel(shown.t)
-            : peak && peak.production! > 0
-              ? `Peak ${fmtW(peak.production!)} at ${timeLabel(peak.t)}`
-              : null}
-        </Text>
       </HStack>
 
       <Box
@@ -231,6 +260,7 @@ export function TodayPowerChart({
             left={pct(marker.t)}
             top={pctY(marker.consumption)}
             color="home"
+            ring={ring}
           />
         )}
         {marker.production != null && (
@@ -238,6 +268,7 @@ export function TodayPowerChart({
             left={pct(marker.t)}
             top={pctY(marker.production)}
             color="solar"
+            ring={ring}
           />
         )}
       </Box>

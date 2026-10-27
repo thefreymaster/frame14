@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.94.0
+
+- Added: the Energy page's Solar tab opens with a Today card above the month chart — how much of the day's use the solar has covered, the day's solar and home totals, and today's power curve, as the Home energy card shows them, with the curve readable by touch like the month chart. It collapses, so the month chart can have the height back.
+- Changed: on a desktop the Energy page scrolls, since the two Solar cards are taller than a landscape screen.
+
 ## 0.93.0
 
 - Added: the Lights page shows skeleton tiles, one per light, while their states are on their way, instead of an empty page until they arrive.

@@ -13,6 +13,7 @@ import { PageShell } from "../components/PageShell";
 import { PowerFlow } from "../components/PowerFlow";
 import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { SolarHistoryCard } from "../components/SolarHistoryCard";
+import { SolarTodayCard } from "../components/SolarTodayCard";
 import { grid } from "../lib/energy";
 
 type EnergyTab = "solar" | "circuits";
@@ -25,9 +26,11 @@ const TABS: { value: EnergyTab; label: string; icon: IconType }[] = [
 /**
  * The /energy page: where the power is going now (PowerFlow, as on the
  * energy card and in its dialog) in a collapsible Now card, then two tabs —
- * Solar, the month or year chart (SolarHistoryCard), and Circuits, the
- * per-circuit draw (CircuitsCard). The tab is in the URL (`?tab=circuits`;
- * none is Solar), so the old /power path can land on its tab.
+ * Solar, today's card (SolarTodayCard: the coverage figure and the day's
+ * curve, as on the Home card) over the month or year chart
+ * (SolarHistoryCard), and Circuits, the per-circuit draw (CircuitsCard). The
+ * tab is in the URL (`?tab=circuits`; none is Solar), so the old /power path
+ * can land on its tab.
  */
 export function Energy() {
   const live = useLiveEnergy();
@@ -95,10 +98,19 @@ export function Energy() {
             minH="0"
             display="flex"
             flexDirection="column"
+            // The cards' gap, as everywhere: Solar stacks two.
+            gap="gutter"
             // The flex display would otherwise beat the hidden attribute.
             css={{ "&[hidden]": { display: "none" } }}
           >
-            {t.value === "solar" ? <SolarHistoryCard /> : <CircuitsCard />}
+            {t.value === "solar" ? (
+              <>
+                <SolarTodayCard energy={live.energy} loading={live.loading} />
+                <SolarHistoryCard />
+              </>
+            ) : (
+              <CircuitsCard />
+            )}
           </Tabs.Content>
         ))}
       </Tabs.Root>

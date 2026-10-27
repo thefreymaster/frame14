@@ -71,6 +71,7 @@ import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { VoiceStatusBoard } from "../components/VoiceStatusBoard";
 import { AlbumSelect } from "../components/AlbumSelect";
 import { NavLayoutBoard } from "../components/NavLayoutBoard";
+import { UpdatesBoard } from "../components/UpdatesBoard";
 import { Printer3dIcon, Printer3dOutlineIcon } from "../lib/printerIcons";
 import { toaster } from "../components/ui/toaster";
 import { Tooltip } from "../components/ui/tooltip";
@@ -444,6 +445,7 @@ export function Control() {
           </Tabs.Content>
           <Tabs.Content value="device" p="0">
             <Stack gap="gutter">
+              <UpdatesBoard />
               <NavLayoutBoard />
               <VoiceStatusBoard />
             </Stack>
@@ -463,6 +465,9 @@ export function Control() {
           )}
           <Flex flex="1" minWidth="0" direction="column" gap="gutter">
             {displayBoard}
+
+            {/* This device's auto refresh on an update */}
+            <UpdatesBoard />
 
             {/* This device's nav: order and what it shows */}
             <NavLayoutBoard />

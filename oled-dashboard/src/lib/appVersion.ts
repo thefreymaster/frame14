@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { getAutoRefresh } from "./autoRefresh";
 import { socket } from "./socket";
 import { toaster } from "../components/ui/toaster";
 
@@ -9,7 +10,10 @@ import { toaster } from "../components/ui/toaster";
  * restarts, the socket reconnects, and the page is still the old one. A
  * phone's home-screen app keeps that old page until it's closed out, so the
  * page offers a reload instead: a toast once per new version, and an Update
- * button beside the version on /control.
+ * button beside the version on /control. A device with /control's auto
+ * refresh on (lib/autoRefresh) reloads itself instead of asking — once per
+ * version, so a reload that somehow still comes up old falls back to the
+ * toast rather than reloading forever.
  *
  * It checks on every socket connect (the first, and each one after a
  * restart) and when the page comes back into view.
@@ -29,6 +33,30 @@ export function reloadApp() {
 const outdated = (version: string) =>
   version !== "" && RUNNING_VERSION !== "" && version !== RUNNING_VERSION;
 
+// The version this tab last reloaded itself for. Session storage survives
+// the reload and nothing else, which is exactly the loop guard's scope.
+const REFRESHED_KEY = "auto-refreshed-for";
+
+function refreshedFor(): string {
+  try {
+    return sessionStorage.getItem(REFRESHED_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/** Reload for `version` now, unless this tab already did. */
+function autoRefresh(version: string): boolean {
+  if (!getAutoRefresh() || refreshedFor() === version) return false;
+  try {
+    sessionStorage.setItem(REFRESHED_KEY, version);
+  } catch {
+    return false; // Without the guard, don't risk the loop.
+  }
+  reloadApp();
+  return true;
+}
+
 async function check() {
   let version: unknown;
   try {
@@ -41,7 +69,8 @@ async function check() {
   installed = version;
   listeners.forEach((l) => l());
 
-  if (outdated(version) && toasted !== version) {
+  if (!outdated(version) || autoRefresh(version)) return;
+  if (toasted !== version) {
     toasted = version;
     toaster.create({
       id: "app-update",

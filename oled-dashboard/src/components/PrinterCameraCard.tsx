@@ -10,16 +10,23 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
  * only while the page is up, which is when HA (and Bambuddy behind it) sends
  * frames. A Skeleton fills the well until the first frame (the <img>'s load
  * event, which an MJPEG stream fires on its first part; the frame covers it
- * either way); a failed stream offers a retry. Titled "Camera" on /printer;
- * /cameras names the printer instead.
+ * either way); a failed stream offers a retry. Titled "Camera" on /printer,
+ * with the chamber light's switch as the header's `action`; /cameras names
+ * the printer instead.
  */
-export function PrinterCameraCard({ title = "Camera" }: { title?: string }) {
+export function PrinterCameraCard({
+  title = "Camera",
+  action,
+}: {
+  title?: string;
+  action?: React.ReactNode;
+}) {
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <Board title={<SectionTitle>{title}</SectionTitle>}>
+    <Board title={<SectionTitle>{title}</SectionTitle>} action={action}>
       <Box
         position="relative"
         aspectRatio="16 / 9"

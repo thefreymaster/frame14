@@ -42,6 +42,8 @@ export interface PrinterModel {
   pause: string | null;
   resume: string | null;
   stop: string | null;
+  /** The chamber light's entity and state, while Home Assistant has it. */
+  chamberLight: { id: string; on: boolean } | null;
 }
 
 const DEAD = new Set(["unknown", "unavailable", ""]);
@@ -112,6 +114,7 @@ export function usePrinter(): PrinterModel {
   const camera = get(parts.camera);
   const exists = (id: string) => (get(id) ? id : null);
   const chamber = get(ids.chamberTemp);
+  const chamberLight = get(parts.chamberLight);
   const remainingState = get(ids.remainingTime);
   const remainingMinutes = toMinutes(
     num(remainingState),
@@ -151,5 +154,9 @@ export function usePrinter(): PrinterModel {
     pause: exists(parts.pause),
     resume: exists(parts.resume),
     stop: exists(parts.stop),
+    chamberLight:
+      chamberLight && !DEAD.has(chamberLight.state)
+        ? { id: parts.chamberLight, on: chamberLight.state === "on" }
+        : null,
   };
 }

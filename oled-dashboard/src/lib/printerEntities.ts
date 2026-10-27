@@ -110,6 +110,12 @@ export interface PrinterParts {
   pause: string;
   resume: string;
   stop: string;
+  /**
+   * The chamber light: a light in ha-bambulab, a switch in Bambuddy. Both
+   * domains go through the server's general light / switch path, so it isn't
+   * in printer-entities.js.
+   */
+  chamberLight: string;
 }
 
 /**
@@ -130,6 +136,7 @@ export function printerPartIds(
     pause: "",
     resume: "",
     stop: "",
+    chamberLight: "",
   };
   let name = "";
   let bambuddy = false;
@@ -150,5 +157,6 @@ export function printerPartIds(
     pause: `button.${name}_pause_${action}`,
     resume: `button.${name}_resume_${action}`,
     stop: `button.${name}_stop_${action}`,
+    chamberLight: `${bambuddy ? "switch" : "light"}.${name}_chamber_light`,
   };
 }

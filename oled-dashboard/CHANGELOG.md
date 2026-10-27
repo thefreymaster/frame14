@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.95.0
+
+- Added: a Chamber light switch on the Printer page, at the right of the Camera card's header (the Print job card's when the printer has no camera). It shows while Home Assistant has the printer's chamber light — ha-bambulab's light or Bambuddy's switch — and holds the asked-for state until the printer reports it.
+
 ## 0.94.0
 
 - Added: the Energy page's Solar tab opens with a Today card above the month chart — how much of the day's use the solar has covered, the day's solar and home totals, and today's power curve, as the Home energy card shows them, with the curve readable by touch like the month chart. It collapses, so the month chart can have the height back.

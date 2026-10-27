@@ -18,10 +18,17 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 /**
  * The print job: the model's thumbnail and name, the progress as a big figure
  * over a bar in the status's colour, then layer, time left and the finish
- * time, and the job's buttons while it runs.
+ * time, and the job's buttons while it runs. The header takes an `action`:
+ * the chamber light's switch, when there's no camera card to hold it.
  * A finished or failed job stays up until the next one starts.
  */
-export function PrinterJobCard({ printer }: { printer: PrinterModel }) {
+export function PrinterJobCard({
+  printer,
+  action,
+}: {
+  printer: PrinterModel;
+  action?: React.ReactNode;
+}) {
   const { palette } = printerStatus(printer.status);
   const active = isPrintActive(printer.status);
   const progress = Math.max(0, Math.min(100, printer.progress ?? 0));
@@ -37,7 +44,7 @@ export function PrinterJobCard({ printer }: { printer: PrinterModel }) {
       : "—";
 
   return (
-    <Board title={<SectionTitle>Print job</SectionTitle>}>
+    <Board title={<SectionTitle>Print job</SectionTitle>} action={action}>
       <Stack gap="6">
         <HStack gap="4">
           {printer.coverVersion && (

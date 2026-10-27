@@ -1,5 +1,6 @@
 import { Badge, Flex, Grid } from "@chakra-ui/react";
 import { Board } from "../components/Board";
+import { ChamberLightSwitch } from "../components/ChamberLightSwitch";
 import { PageHeader } from "../components/PageHeader";
 import { PageShell } from "../components/PageShell";
 import { PrinterCameraCard } from "../components/PrinterCameraCard";
@@ -13,11 +14,19 @@ import { printerStatus } from "../lib/printerStatus";
 /**
  * The 3D printer: its status in the header, the camera, the job and the
  * temperatures. Stacked in portrait; in landscape the camera takes the left
- * and the job and temperatures stack beside it.
+ * and the job and temperatures stack beside it. The chamber light's switch
+ * sits in the camera card's header — it lights the picture — or the job
+ * card's when there's no camera.
  */
 export function Printer() {
   const printer = usePrinter();
   const { label, palette } = printerStatus(printer.status);
+  const light = printer.chamberLight && (
+    <ChamberLightSwitch
+      entityId={printer.chamberLight.id}
+      on={printer.chamberLight.on}
+    />
+  );
 
   return (
     <PageShell>
@@ -54,9 +63,12 @@ export function Printer() {
           gap="gutter"
           alignItems="start"
         >
-          {printer.hasCamera && <PrinterCameraCard />}
+          {printer.hasCamera && <PrinterCameraCard action={light} />}
           <Flex direction="column" gap="gutter" minW="0">
-            <PrinterJobCard printer={printer} />
+            <PrinterJobCard
+              printer={printer}
+              action={printer.hasCamera ? undefined : light}
+            />
             <PrinterTempsCard printer={printer} />
           </Flex>
         </Grid>

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.95.1
+
+- Fixed: on a phone the printer's camera picture died once the app had sat in the background a while, and stayed dead until the page changed. The camera now asks for a fresh stream whenever the app comes back to the front.
+
 ## 0.95.0
 
 - Added: a Chamber light switch on the Printer page, at the right of the Camera card's header (the Print job card's when the printer has no camera). It shows while Home Assistant has the printer's chamber light — ha-bambulab's light or Bambuddy's switch — and holds the asked-for state until the printer reports it.

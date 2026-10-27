@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Box, Button, Center, Skeleton, Text, VStack } from "@chakra-ui/react";
 import { MdVideocamOff } from "react-icons/md";
 import { Board } from "./Board";
@@ -13,6 +13,12 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
  * either way); a failed stream offers a retry. Titled "Camera" on /printer,
  * with the chamber light's switch as the header's `action`; /cameras names
  * the printer instead.
+ *
+ * A phone drops the stream's connection while the app sits in the
+ * background, and the <img> neither errors nor recovers — it shows a broken
+ * picture until something remounts it. So the card asks for a fresh stream
+ * whenever the page becomes visible again, or comes back from the
+ * back-forward cache.
  */
 export function PrinterCameraCard({
   title = "Camera",
@@ -24,6 +30,28 @@ export function PrinterCameraCard({
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+
+  // A new <img> (the key), on a new URL: a new request for the stream.
+  const reconnect = useCallback(() => {
+    setFailed(false);
+    setLoaded(false);
+    setAttempt((n) => n + 1);
+  }, []);
+
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") reconnect();
+    }
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) reconnect();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [reconnect]);
 
   return (
     <Board title={<SectionTitle>{title}</SectionTitle>} action={action}>
@@ -44,11 +72,7 @@ export function PrinterCameraCard({
                 variant="outline"
                 colorPalette="gray"
                 color="gray.200"
-                onClick={() => {
-                  setFailed(false);
-                  setLoaded(false);
-                  setAttempt((n) => n + 1);
-                }}
+                onClick={reconnect}
               >
                 Retry
               </Button>

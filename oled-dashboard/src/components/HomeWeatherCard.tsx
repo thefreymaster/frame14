@@ -11,14 +11,16 @@ import { useNavigate } from "react-router";
 import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { Board } from "./Board";
+import { roundTemp as round } from "../lib/forecast";
 import { conditionLabel, weatherIcon } from "../lib/weatherIcons";
 
 /**
  * The weather now, in one row — what /home's first card is on a phone in
  * place of HomeHeader. No clock (the phone shows one): the icon and the
- * temperature on the left, the condition and humidity on the right.
- * Same card id ("header"), so a saved layout keeps its place. A tap opens
- * /weather.
+ * temperature, with today's high and low under it (from the daily forecast,
+ * as the desktop card's header has them), on the left; the condition and
+ * humidity on the right. Same card id ("header"), so a saved layout keeps
+ * its place. A tap opens /weather.
  */
 export function HomeWeatherCard({
   internet: { connected = true },
@@ -30,6 +32,9 @@ export function HomeWeatherCard({
   loading?: boolean;
 }) {
   const navigate = useNavigate();
+  const today = weather?.forecastDaily?.[0];
+  const high = round(today?.temperature);
+  const low = round(today?.templow);
 
   return (
     <Board
@@ -48,12 +53,22 @@ export function HomeWeatherCard({
           )
         )}
         {loading ? (
-          <Skeleton height="2.5rem" width="4rem" />
+          <VStack align="start" gap="1.5">
+            <Skeleton height="2.5rem" width="4rem" />
+            <Skeleton height="0.875rem" width="5.5rem" />
+          </VStack>
         ) : (
           weather?.temperature != null && (
-            <Text textStyle="5xl" fontWeight="semibold" lineHeight="1">
-              <NumberFlow value={Math.round(weather.temperature)} />°
-            </Text>
+            <VStack align="start" gap="1">
+              <Text textStyle="5xl" fontWeight="semibold" lineHeight="1">
+                <NumberFlow value={Math.round(weather.temperature)} />°
+              </Text>
+              {high != null && low != null && (
+                <Text textStyle="sm" color="fg.muted" whiteSpace="nowrap">
+                  H {high}° · L {low}°
+                </Text>
+              )}
+            </VStack>
           )
         )}
         <Spacer />

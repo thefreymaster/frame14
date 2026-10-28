@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.99.0
+
+- Added: on a phone, the Home page's weather card shows today's high and low under the temperature.
+
 ## 0.98.1
 
 - Fixed: rain chances in the hourly and daily forecasts are whole numbers ("58%"), not "57.99999999%".

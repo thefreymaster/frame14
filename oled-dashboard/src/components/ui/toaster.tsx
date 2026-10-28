@@ -34,7 +34,9 @@ export const Toaster = () => {
             {toast.action && (
               <Toast.ActionTrigger>{toast.action.label}</Toast.ActionTrigger>
             )}
-            {toast.closable && <Toast.CloseTrigger />}
+            {/* Every toast can be put away (0.116.1): the snippet showed
+                the close only for `closable` ones. */}
+            <Toast.CloseTrigger />
           </Toast.Root>
         )}
       </ChakraToaster>

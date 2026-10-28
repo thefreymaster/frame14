@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.115.1
+
+- Changed: nothing on screen. A release to try the Software card against: it should show 0.115.1 as available and install it from the card.
+
 ## 0.115.0
 
 - Added: the Software card's new version can be installed from the card: an Install button asks first, then Home Assistant downloads the version and restarts the add-on. Every screen loses Frame14 for a minute or so, and each device then refreshes to the new version, or offers to, as it does after any update.

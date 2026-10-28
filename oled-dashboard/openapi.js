@@ -126,6 +126,34 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/software/install": {
+      post: {
+        tags: ["Health"],
+        operationId: "installSoftwareUpdate",
+        summary: "Install the add-on store's newer version",
+        description:
+          "Asks Home Assistant to install the add-on's update (`update.install` on its update entity). The Supervisor pulls the new image and restarts the add-on, so the answer only confirms the request was sent.",
+        responses: {
+          202: {
+            description: "The install was requested.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    ok: { type: "boolean", example: true },
+                    version: { type: "string", nullable: true, example: "0.115.0" },
+                  },
+                },
+              },
+            },
+          },
+          404: { description: "No update entity for the add-on (outside the add-on).", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          409: { description: "Nothing newer to install.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "Home Assistant is not connected.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
     "/api/weather": {
       get: {
         tags: ["Weather"],

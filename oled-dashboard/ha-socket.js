@@ -271,6 +271,30 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
   return true;
 }
 
+/**
+ * Installs the add-on's own update through Home Assistant: `update.install`
+ * on its update entity, which Core answers by having the Supervisor pull the
+ * new image and restart the add-on — this server with it, so no result ever
+ * comes back. For routes/software.js alone: the id is the entity it found by
+ * the add-on's name, never a client's (the socket's entity:call can't reach
+ * the update domain).
+ */
+export function installUpdate(entityId) {
+  if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
+  if (typeof entityId !== "string" || !entityId.startsWith("update.")) return false;
+  console.log("[ha-socket] update.install", entityId);
+  haWs.send(
+    JSON.stringify({
+      id: nextMsgId++,
+      type: "call_service",
+      domain: "update",
+      service: "install",
+      service_data: { entity_id: entityId },
+    }),
+  );
+  return true;
+}
+
 export function sendCommand(type, payload, timeoutMs = 15_000) {
   return new Promise((resolve, reject) => {
     if (!haWs || haWs.readyState !== 1) {

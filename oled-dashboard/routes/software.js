@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { ADDON_NAME, VERSION } from "../config.js";
-import { getAllStates } from "../ha-socket.js";
+import { getAllStates, installUpdate } from "../ha-socket.js";
 
 const router = Router();
 
@@ -36,6 +36,27 @@ router.get("/", (_req, res) => {
         }
       : null,
   });
+});
+
+// POST /api/software/install — install the store's newer version: Home
+// Assistant's update.install on the add-on's update entity. The add-on
+// restarts under this request, so the answer says only that it was asked
+// (202); 409 with nothing newer, 404 without the entity, 503 with HA down.
+router.post("/install", (_req, res) => {
+  const s = updateEntity();
+  if (!s) {
+    res.status(404).json({ error: "Home Assistant has no update entity for the add-on" });
+    return;
+  }
+  if (s.state !== "on") {
+    res.status(409).json({ error: "There is nothing newer to install" });
+    return;
+  }
+  if (!installUpdate(s.id)) {
+    res.status(503).json({ error: "Home Assistant is not connected" });
+    return;
+  }
+  res.status(202).json({ ok: true, version: s.attributes?.latest_version ?? null });
 });
 
 export default router;

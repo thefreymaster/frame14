@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.115.0
+
+- Added: the Software card's new version can be installed from the card: an Install button asks first, then Home Assistant downloads the version and restarts the add-on. Every screen loses Frame14 for a minute or so, and each device then refreshes to the new version, or offers to, as it does after any update.
+
 ## 0.114.0
 
 - Fixed: on a phone the bottom bar could end up two thirds of the way down the screen with black beneath it. The app sized itself to the visual viewport, which iOS shrinks for the keyboard, a pinch and some system sheets, and a change it never saw the end of left it stuck; it now sizes itself to the screen's layout and checks again whenever it comes back into view.

@@ -33,6 +33,21 @@ async function fetchSoftware(): Promise<SoftwareInfo> {
 }
 
 /**
+ * POST /api/software/install: asks Home Assistant to install the store's
+ * newer version. Resolves to the version asked for once the request is in;
+ * the add-on then restarts, so nothing more comes back from it.
+ */
+export async function installSoftware(): Promise<string | null> {
+  const res = await fetch("/api/software/install", { method: "POST" });
+  const body = (await res.json().catch(() => ({}))) as {
+    version?: string | null;
+    error?: string;
+  };
+  if (!res.ok) throw new Error(body.error ?? `Install failed: ${res.status}`);
+  return body.version ?? null;
+}
+
+/**
  * The Software card's facts: /api/software (every five minutes and on each
  * return to the page), with the update entity it names followed live over
  * the socket, so a newer version shows the moment Home Assistant sees it.

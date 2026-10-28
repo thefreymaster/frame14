@@ -12,6 +12,7 @@ import { DoorbellCard } from "./DoorbellCard";
 // import { LightStrip } from "./LightStrip";
 import { useDesktop } from "../hooks/useDesktop";
 import { StatusBanner } from "./StatusBanner";
+import { SystemFooter } from "./SystemFooter";
 import { VoiceAssistButton } from "./VoiceAssistButton";
 import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
 import { useThemeMode } from "../hooks/useThemeMode";
@@ -26,6 +27,7 @@ import { useHomeArranging } from "../lib/homeArranging";
 import { useReleaseSplash } from "../hooks/useReleaseSplash";
 import { useScrolledFromTop } from "../hooks/useScrolledFromTop";
 import {
+  FOOTER_CLEARANCE,
   HEADER_CLEARANCE,
   // LIGHT_STRIP_CLEARANCE, // lights strip
   NAV_BAR_CLEARANCE,
@@ -81,6 +83,9 @@ export function Layout() {
   // it away: it slides off like the nav and the page takes the room.
   // const lightStripShown = useLightStripShown(); // lights strip
   // const showLightStrip = showNav && lightStripShown; // lights strip
+  // The system footer is a desktop's too (since 0.102), along the bottom
+  // where the strip was; it comes and goes with the nav.
+  const showFooter = desktop && showNav;
   // The page scrolls inside the Box below, not the document. The header
   // draws its bottom edge while the page has scrolled under it.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -110,7 +115,11 @@ export function Layout() {
       />
 
       <HStack gap="0" align="stretch">
-        <LandscapeNav hidden={!showNav} veiled={arranging} />
+        <LandscapeNav
+          hidden={!showNav}
+          veiled={arranging}
+          aboveFooter={showFooter}
+        />
         <Box
           ref={scrollRef}
           height="var(--app-height, 100dvh)"
@@ -129,7 +138,7 @@ export function Layout() {
             _portrait: showNav ? NAV_BAR_CLEARANCE : "0px",
             // lights strip:
             // _landscape: showLightStrip && desktop ? LIGHT_STRIP_CLEARANCE : "0px",
-            _landscape: "0px",
+            _landscape: showFooter ? FOOTER_CLEARANCE : "0px",
           }}
         >
           {content}
@@ -139,6 +148,8 @@ export function Layout() {
       {!isControl && <DoorbellCard />}
 
       {/* {desktop && <LightStrip hidden={!showLightStrip} />} */}
+
+      {desktop && <SystemFooter hidden={!showFooter} veiled={arranging} />}
 
       <VoiceAssistOverlay snapshot={voice} onDismiss={voice.cancel} />
     </>

@@ -132,3 +132,15 @@ export const LIGHT_STRIP_CLEARANCE = `calc(${LIGHT_STRIP_HEIGHT} + ${NAV_RAIL_BO
 
 /** Distance from the left of the screen to the right edge of the landscape rail. */
 export const NAV_RAIL_CLEARANCE = `calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER} + ${NAV_RAIL_WIDTH})`;
+
+/**
+ * Height of the desktop's system footer (SystemFooter, since 0.102): the
+ * header's row, so the two bars match.
+ */
+export const FOOTER_HEIGHT = HEADER_HEIGHT;
+
+/**
+ * Distance from the bottom of the screen to the top of the footer. A desktop
+ * has no home-indicator inset, so it is the footer itself.
+ */
+export const FOOTER_CLEARANCE = FOOTER_HEIGHT;

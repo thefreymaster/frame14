@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.102.0
+
+- Added: on a desktop, a footer along the bottom of the screen, the header's height and on its frost, with the system in tags: this Frame14's version (and the installed one when the page is running an older build), Home Assistant Core's version, Home Assistant OS's, and the connection at the right (red when the server's link to Home Assistant is down). It comes and goes with the nav, the side rail stops above it, and it is veiled with the header while the Home page is being arranged.
+
 ## 0.101.0
 
 - Changed: the Lights page's tiles are in alphabetical order, by the name each tile shows.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.112.0
+
+- Changed: the Home page's Calendar card offers its link to the Calendar page only while Calendar is in this device's navigation; with Calendar turned off in Settings the link is gone. The link is an arrow now, not a chevron like the collapsed cards'.
+
 ## 0.111.0
 
 - Fixed: a page scrolled down no longer leaves the next page scrolled too; every page opens at its top.

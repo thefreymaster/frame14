@@ -1,11 +1,12 @@
 import { Box, Flex, IconButton, Skeleton, Text } from "@chakra-ui/react";
-import { IoCalendarOutline, IoChevronForward } from "react-icons/io5";
+import { IoArrowForward, IoCalendarOutline } from "react-icons/io5";
 import { useNavigate } from "react-router";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 import { CalendarEventList } from "./CalendarEventList";
 import { CalendarSkeleton } from "./skeletons/CalendarSkeleton";
+import { useNavLayout } from "../lib/navLayout";
 
 const NUMBER_WORDS = [
   "Zero",
@@ -35,8 +36,10 @@ function eventCountLabel(n: number, when: string): string {
 
 /**
  * /home's calendar card: today's events (the first five) and tomorrow's,
- * the count in the header, and a chevron in the header that opens /calendar
- * for the fortnight.
+ * the count in the header, and an arrow in the header that opens /calendar
+ * for the fortnight — only while Calendar is in this device's nav (since
+ * 0.112: a page the device has turned off isn't offered from here; the arrow
+ * replaced a chevron, which read as the collapsed card's own).
  */
 export function CalendarSection({
   today,
@@ -49,6 +52,9 @@ export function CalendarSection({
   loading?: boolean;
 }) {
   const navigate = useNavigate();
+  const calendarInNav = useNavLayout().some(
+    (e) => e.path === "/calendar" && e.shown,
+  );
 
   return (
     <Board
@@ -75,16 +81,18 @@ export function CalendarSection({
         </Flex>
       }
       action={
-        <IconButton
-          size="xs"
-          variant="ghost"
-          // Taller than the title row; don't let it grow the header.
-          my="-1"
-          aria-label="Open the calendar"
-          onClick={() => void navigate("/calendar")}
-        >
-          <IoChevronForward />
-        </IconButton>
+        calendarInNav ? (
+          <IconButton
+            size="xs"
+            variant="ghost"
+            // Taller than the title row; don't let it grow the header.
+            my="-1"
+            aria-label="Open the calendar"
+            onClick={() => void navigate("/calendar")}
+          >
+            <IoArrowForward />
+          </IconButton>
+        ) : null
       }
     >
       {loading ? (

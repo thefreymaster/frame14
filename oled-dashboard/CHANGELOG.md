@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.115.2
+
+- Fixed: on an iPhone the bottom bar sat a status bar's height above the screen's bottom, with black beneath it, since 0.114.0. The app measured its height from the area below the status bar; it measures the whole window again.
+
 ## 0.115.1
 
 - Changed: nothing on screen. A release to try the Software card against: it should show 0.115.1 as available and install it from the card.

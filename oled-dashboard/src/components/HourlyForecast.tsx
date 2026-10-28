@@ -17,10 +17,9 @@ function hourLabel(datetime: string, now: Date): string {
 /**
  * The next hours as columns in a subtle `sm` well, like the calendar's rows:
  * the hour, the condition's icon, the rain chance (a row only when some hour
- * reaches RAIN_SHOWN_FROM) and the temperature. The desktop weather card's
- * and the forecast dialog's; with `scroll` (/weather's full day of hours)
- * the columns keep a readable width and the well scrolls sideways instead of
- * dropping the later hours.
+ * reaches RAIN_SHOWN_FROM) and the temperature. The desktop weather card's;
+ * with `scroll` (/weather's full day of hours) the columns keep a readable
+ * width and the well scrolls sideways instead of dropping the later hours.
  */
 export function HourlyForecast({
   hours,

@@ -86,7 +86,7 @@ export const Board = ({
   children: React.ReactNode;
   /** Makes a non-collapsible card a button. */
   onClick?: () => void;
-  /** What pressing the card does, e.g. "Show the forecast". */
+  /** What pressing the card does, e.g. "Open the weather page". */
   label?: string;
   title?: React.ReactNode;
   /** A control at the right of the header, e.g. a button. */

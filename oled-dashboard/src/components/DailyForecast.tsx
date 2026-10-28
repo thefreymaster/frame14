@@ -27,10 +27,10 @@ function middayOf(datetime: string): string {
  * the day, its icon, the rain chance (a column only when some day reaches
  * RAIN_SHOWN_FROM), the low, a bar from the low to the high and the high.
  * Every bar is on one scale, the coldest low to the warmest high, and so is
- * its blue-to-orange fill; today's carries a dot at the temperature now. The
- * forecast dialog's and /weather's; with `fill` (the desktop weather page,
- * where the card is stretched to the column beside it) the well takes the
- * card's height and spreads its rows over it.
+ * its blue-to-orange fill; today's carries a dot at the temperature now.
+ * /weather's; with `fill` (the desktop weather page, where the card is
+ * stretched to the column beside it) the well takes the card's height and
+ * spreads its rows over it.
  */
 export function DailyForecast({
   days,

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.97.0
+
+- Changed: a tap on the Home page's weather card opens the Weather page, instead of a forecast dialog over the Home page.
+
 ## 0.96.0
 
 - Added: an Updates card on the Control page, above Navigation (in the Device tab on a phone), with a "Refresh automatically" switch for this device. On, the page reloads itself as soon as a new version is installed — once per version, so a reload that still comes up old falls back to the notice. Off, as before, the notice with the Refresh button asks first. Turning it on while an update is waiting takes it at once.

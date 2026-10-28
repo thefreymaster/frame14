@@ -5,9 +5,9 @@ import { conditionLabel, weatherIcon } from "../lib/weatherIcons";
 
 /**
  * The weather now in one row: the condition's icon and the temperature at
- * the left, the condition's words and today's high and low at the right. The
- * forecast dialog's and /weather's Now card's (the desktop Home card draws its
- * own, with a NumberFlow and a narrow-card container query).
+ * the left, the condition's words and today's high and low at the right.
+ * /weather's Now card's (the desktop Home card draws its own, with a
+ * NumberFlow and a narrow-card container query).
  */
 export function WeatherHero({ weather }: { weather: HomeWeather }) {
   const now = new Date();

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.106.0
+
+- Changed: the launch logo is shown only when the launch needs the time. On a device whose last launch was quick, the page stays blank for up to a moment and then appears whole, with no logo and no hand-off; the logo and its hand-off come up only if that moment runs out, and always on a device's first launch.
+
 ## 0.105.0
 
 - Changed: the app starts faster. The page opens on what it last knew — the weather, thermostats, energy, calendar and entity states from the last visit, kept on the device — and refreshes them as the live answers come in, instead of opening on placeholders; the first launch after an update still starts from nothing. The app's own files are kept by the browser between launches and sent compressed when they are needed, the socket connects as a WebSocket straight away, and the burst of entity states that follows a connect is drawn in one go rather than one at a time.

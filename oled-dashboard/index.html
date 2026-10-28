@@ -21,8 +21,13 @@
     <!-- Launch splash. The bundle takes a while to arrive and parse, and until
          it runs nothing gives the page a background, so it showed the
          browser's white even in dark mode. This script and style paint the
-         page in its mode, and the logo below, on the very first frame;
-         src/lib/splash.ts takes the splash down once the page has its data. -->
+         page in its mode on the very first frame, and the logo below only
+         when the launch needs the time: a device whose last launch was ready
+         within QUICK_MS gets a GRACE_MS chance to be as quick again, the page
+         kept hidden ("pending") and shown whole the moment it is ready with
+         no logo and no hand-off; the logo comes up only if the grace runs
+         out. src/lib/splash.ts takes the splash down once the page has its
+         data, and records how long that took for the next launch's say. -->
     <script>
       (function () {
         // lib/themeMode.ts's preference and daylight window, read early; it
@@ -39,7 +44,20 @@
         root.dataset.themeMode = mode;
         root.style.colorScheme = mode === "bright" ? "light" : "dark";
         // /blank stays black: a reload at night shouldn't light the kitchen.
-        if (location.pathname !== "/blank") root.dataset.splash = "up";
+        if (location.pathname === "/blank") return;
+        var QUICK_MS = 1200;
+        var GRACE_MS = 1500;
+        var splash = "up";
+        try {
+          var last = parseInt(localStorage.getItem("launch-ready-ms") || "", 10);
+          if (last > 0 && last <= QUICK_MS) splash = "pending";
+        } catch (e) {}
+        root.dataset.splash = splash;
+        if (splash === "pending") {
+          setTimeout(function () {
+            if (root.dataset.splash === "pending") root.dataset.splash = "up";
+          }, GRACE_MS);
+        }
       })();
     </script>
     <style>
@@ -65,8 +83,13 @@
       html[data-theme-mode="bright"] #splash {
         background: #fff;
       }
-      html[data-splash] #splash {
+      html[data-splash="up"] #splash,
+      html[data-splash="out"] #splash {
         display: grid;
+      }
+      /* Waiting without the logo: nothing of the page until it is ready. */
+      html[data-splash="pending"] #root {
+        visibility: hidden;
       }
 
       /* The app icon: the house and its framed photo on the blue tile. It is

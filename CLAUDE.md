@@ -135,7 +135,14 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   main thread is busy: an SVG stroke drawing (`stroke-dashoffset`) froze half drawn there. `html[data-splash]` drives it: `up` keeps /home's cards hidden, `out` lifts the logo away,
   fades the page in and rises the cards in reading order (`--enter-order`). `lib/splash.ts` flips it,
   `hooks/useReleaseSplash` says when. Not on /blank (a reload at night stays black). Under reduced motion the
-  logo is static and the hand-off is a fade.
+  logo is static and the hand-off is a fade. Since 0.106 the logo is only for a launch that needs the time:
+  `lib/splash.ts` records each launch's time to its data (`launch-ready-ms`, from the navigation's start:
+  `pageReady`, called by useReleaseSplash once the page is `ready` and the entity config is in — the subscribes' acks
+  aren't waited for, there being no rise to protect), and when the last one was within QUICK_MS (1.2s) the inline
+  script marks `pending` instead of `up` — `#root` hidden, no logo — and gives this launch GRACE_MS (1.5s): its data
+  within it, `pageReady` clears the attribute and the page appears whole, nothing played; past it, the script flips
+  `pending` to `up` and the logo and hand-off go as above. A device's first launch, and any after a slow one, shows
+  the logo from the first frame as before.
 - **Start-up** (0.105). What a launch costs, measured on a 4x-throttled phone against the stub (`cold-start.mjs` in the
   preview tooling): the bundle's parse plus the first React render is ~0.8s of main thread, and the page is handed
   over as soon as its data and the entity subscribes' acks are in — but never before the logo has drawn in (~1.2s)
@@ -145,7 +152,7 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   files cache first (precached at install, filled as fetched, old builds' pruned on each fresh page) and Express
   sends them compressed with `immutable` cache headers, the socket opens as a WebSocket first (polling only as the
   fallback), and `useEntity` applies the burst of states after a connect once per frame in one notifyManager batch,
-  the acks behind them. The splash's choreography is the floor that remains.
+  the acks behind them. The splash's choreography is skipped on a quick launch (0.106, see "Launch splash").
 - **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
   `colorPalette`. Where a raw CSS string is needed (SVG strokes in the climate dialog's dial and the analog
   clock, the energy charts' lines), use the variable, e.g. `var(--chakra-colors-orange-solid)`.
@@ -348,7 +355,7 @@ src/
     navMetrics.ts                 — `PAGE_GUTTER` (spacing.gutter, the page's padding around the cards and the gap between them, which the header icons and the rail also keep to); HEADER_TOP (iPhone status-bar inset + 1.25rem, above the header's row: clear of the band iOS blurs under the status bar. Keep it — 0.85.0 docked the row against the status bar and the user wanted the spacing back, 0.85.1) / HEADER_CLEARANCE (screen top to the header's bottom); nav bar height, side inset (= the bottom gap: 0 on an iPhone, 1rem elsewhere), the bar's iPhone shape (NAV_BAR_TOP_RADIUS / NAV_BAR_BOTTOM_RADIUS, NAV_BAR_SIDE_BORDER, NAV_BAR_LIFT, NAV_BAR_SIDE_ROOM, NAV_BAR_END_ENTRY_RADIUS, all switched on the home-indicator inset) and `NAV_BAR_CLEARANCE` (screen bottom to the bar's top) / rail width, shared by Layout, the header, the arranging bar and the Photos/Marquee eye button; LIGHT_STRIP_ITEM_WIDTH, LIGHT_STRIP_HEIGHT (the portrait bar's) and LIGHT_STRIP_CLEARANCE for the desktop lights strip
     hvac.ts                       — thermostat model shared by the climate card, the modal and /climate: modes, hvac colours (Chakra palettes), action detection, `isClimateOn`, `climateStatus` (how a unit reads everywhere: the mode drawn, on / running, "Heating to 70°" / "Heat · set 70°" / "Off"), and the column rules (`climateColumnsCss` for any tile width and gap; `climateGridCss` is the card's tiles)
     thermostatArc.ts              — geometry of the thermostat's 120° tick arc
-    splash.ts                     — the launch splash's hand-off (see "Launch splash"): `releaseSplash()` waits for the logo's draw-in (its CSS animations; 3s after the app starts at most), numbers the visible /home cards top to bottom, sets `data-splash="out"`, and when the hand-off has played removes `#splash` and clears the attribute
+    splash.ts                     — the launch splash's hand-off (see "Launch splash"): `releaseSplash()` waits for the logo's draw-in (its CSS animations; 3s after the app starts at most), numbers the visible /home cards top to bottom, sets `data-splash="out"`, and when the hand-off has played removes `#splash` and clears the attribute; `pageReady()` records the time to the page's data in `launch-ready-ms` and, on a `pending` launch (index.html held the logo back), clears the attribute at once with nothing to play (since 0.106)
     appVersion.ts                 — RUNNING_VERSION (`__APP_VERSION__`) vs the installed one (/api `version`), checked on every socket connect (so after the add-on restarts with an update) and when the page becomes visible. Outdated: with this device's auto refresh on (lib/autoRefresh, since 0.96) it reloads at once — once per version, remembered in sessionStorage (`auto-refreshed-for`) so a reload that still comes up old falls back to the toast rather than looping; otherwise one persistent toast per new version with a Refresh action (`window.location.reload()`; the service worker fetches navigations network-first, so a reload gets the new hashed assets), and `useAppVersion()` gives /control its running version and Update link
     forecast.ts                   — RAIN_SHOWN_FROM (20%: rain chances below aren't shown), `roundTemp` and `compassPoint` (a bearing as "NW"), shared by the forecasts and the weather page
     weatherAdvisories.ts          — `weatherAdvisories(weather)`: the forecast's heads-ups, the same signals the user's HA weather automations watch (freeze in the next two nights, thunderstorms, snow / sleet / hail, high winds ≥ 30, a 15° drop within 6 hours, rain ≥ 50% on the way while it isn't raining), read from the hourly (24h) and daily forecasts — there is no alerts feed (NWS is disabled; WeatherKit has none). Thresholds are the file's constants

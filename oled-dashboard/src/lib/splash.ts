@@ -11,6 +11,14 @@
  * /home's cards rise into place in reading order. When that has played, the
  * splash is removed and the attribute cleared. The CSS for all of it is in
  * index.html.
+ *
+ * The logo is only for a launch that needs the time (since 0.106). Each
+ * launch records how long it took to have its data (`launch-ready-ms`,
+ * pageReady); when the last one was quick, index.html marks "pending"
+ * instead of "up" — the page hidden, no logo — and gives this one a grace to
+ * be as quick: with its data within it, the page is shown whole at once,
+ * with nothing to play; past it, the logo comes up and the launch goes as
+ * above.
  */
 
 // Never hold a page longer than this after the app starts, whatever it is
@@ -28,7 +36,9 @@ const root = document.documentElement;
 const splash = document.getElementById("splash");
 const appStart = performance.now();
 // index.html leaves it down on /blank.
-let released = root.dataset.splash !== "up" || splash == null;
+let released =
+  (root.dataset.splash !== "up" && root.dataset.splash !== "pending") ||
+  splash == null;
 if (released) splash?.remove();
 
 function sleep(ms: number) {
@@ -86,3 +96,32 @@ export async function releaseSplash() {
 }
 
 setTimeout(() => void releaseSplash(), MAX_WAIT_MS);
+
+let noted = false;
+
+/**
+ * The page could be shown now: it has its data (on /home every card's first
+ * data, elsewhere the page has mounted). Records how long that took, from
+ * the navigation's start, as the next launch's say on whether the logo is
+ * needed at all (index.html); and on a "pending" launch — the logo held back
+ * — shows the page at once, whole, with nothing to play: the live states that
+ * follow update it as they would at any other time. On an "up" launch the
+ * hand-off is releaseSplash's, which the page calls once its entity
+ * subscribes are answered too, so nothing re-packs under the cards' rise.
+ */
+export function pageReady() {
+  if (noted) return;
+  noted = true;
+  try {
+    localStorage.setItem(
+      "launch-ready-ms",
+      String(Math.round(performance.now())),
+    );
+  } catch {
+    // No storage: every launch shows the logo, as before.
+  }
+  if (released || !splash || root.dataset.splash !== "pending") return;
+  released = true;
+  delete root.dataset.splash;
+  splash.remove();
+}

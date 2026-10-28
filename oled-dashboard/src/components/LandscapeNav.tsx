@@ -6,7 +6,6 @@ import { useDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
 import { ENTRY_RADIUS, NAV_PAD, NAV_SURFACE } from "../lib/floatingSurface";
 import {
-  FOOTER_CLEARANCE,
   HEADER_CLEARANCE,
   NAV_BAR_BOTTOM,
   NAV_BAR_BOTTOM_RADIUS,
@@ -69,14 +68,11 @@ interface LandscapeNavProps {
   hidden?: boolean;
   /** /home is being arranged: both navs blurred, dimmed and out of reach (ArrangingVeil). */
   veiled?: boolean;
-  /** A desktop's SystemFooter is up: the rail stops a gutter above it. */
-  aboveFooter?: boolean;
 }
 
 export function LandscapeNav({
   hidden = false,
   veiled = false,
-  aboveFooter = false,
 }: LandscapeNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -211,7 +207,7 @@ export function LandscapeNav({
         top={`calc(${HEADER_CLEARANCE} + ${PAGE_GUTTER})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
         width={NAV_RAIL_WIDTH}
-        height={`calc(var(--app-height, 100dvh) - ${HEADER_CLEARANCE} - ${PAGE_GUTTER} - ${aboveFooter ? `(${FOOTER_CLEARANCE} + ${PAGE_GUTTER})` : NAV_RAIL_BOTTOM})`}
+        height={`calc(var(--app-height, 100dvh) - ${HEADER_CLEARANCE} - ${PAGE_GUTTER} - ${NAV_RAIL_BOTTOM})`}
         // Off past the screen edge, shadow and all.
         transform={
           hidden

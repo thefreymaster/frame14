@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.103.0
+
+- Removed: the desktop footer from 0.102.0 (the version, Home Assistant and connection tags along the bottom of the screen). The side rail and the page have their room back. Frame14's version and the connection are still in the header's connection menu, and the version on the Control page.
+
 ## 0.102.0
 
 - Added: on a desktop, a footer along the bottom of the screen, the header's height and on its frost, with the system in tags: this Frame14's version (and the installed one when the page is running an older build), Home Assistant Core's version, Home Assistant OS's, and the connection at the right (red when the server's link to Home Assistant is down). It comes and goes with the nav, the side rail stops above it, and it is veiled with the header while the Home page is being arranged.

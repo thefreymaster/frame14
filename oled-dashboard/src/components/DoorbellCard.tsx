@@ -5,11 +5,10 @@ import { CloseButton } from "./ui/close-button";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity, type HAState } from "../hooks/useEntity";
 import { socket } from "../lib/socket";
-// The desktop lights strip is off for now (0.91, see Layout); the system
-// footer (0.102) is what a desktop clears at the bottom now.
+// The desktop lights strip is off for now (0.91, see Layout): nothing to
+// clear at the bottom of a desktop.
+// import { useDesktop } from "../hooks/useDesktop"; // lights strip
 // import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics"; // lights strip
-import { useDesktop } from "../hooks/useDesktop";
-import { FOOTER_CLEARANCE } from "../lib/navMetrics";
 import { CameraVideo } from "./CameraVideo";
 
 /**
@@ -39,7 +38,6 @@ interface NamedAttributes {
 }
 
 export function DoorbellCard() {
-  const desktop = useDesktop();
   const { data: entities } = useEntitiesConfig();
   const personId = entities?.person ?? "";
   const cameraId = entities?.camera ?? "";
@@ -122,12 +120,7 @@ export function DoorbellCard() {
       position="fixed"
       // lights strip (above it on a desktop, while it was on):
       // bottom={desktop ? `calc(${LIGHT_STRIP_CLEARANCE} + 1rem)` : "calc(env(safe-area-inset-bottom, 0px) + 1rem)"}
-      // Above the system footer on a desktop.
-      bottom={
-        desktop
-          ? `calc(${FOOTER_CLEARANCE} + 1rem)`
-          : "calc(env(safe-area-inset-bottom, 0px) + 1rem)"
-      }
+      bottom="calc(env(safe-area-inset-bottom, 0px) + 1rem)"
       right="calc(env(safe-area-inset-right, 0px) + 1rem)"
       // Above any open dialog: someone at the door outranks a modal.
       zIndex="toast"

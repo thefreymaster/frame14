@@ -15,6 +15,10 @@ export interface ClimateDayHistory {
 }
 
 /**
+ * Unused since 0.110: /climate shows the Home card's tiles (ClimateTiles)
+ * instead. Kept, with ClimateHistoryChart and useClimateHistory, for a page
+ * that wants the controls open.
+ *
  * One thermostat's card on /climate: its name under its mode's icon and its
  * status as a Badge in the header ("Heating to 70°" solid in the mode's
  * colour while it runs, "Cool · set 70°" subtle while idle, a grey "Off");

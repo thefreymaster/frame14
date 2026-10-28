@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.110.0
+
+- Changed: the Climate page shows the thermostats as the Home page's Climate card does — a tile each with the room temperature and what it's doing, two or four across as the screen allows, a tap opening the thermostat's controls — in place of a full card per thermostat with the dial, mode, fan speed and today's temperature strip open on the page.
+
 ## 0.109.0
 
 - Changed: the navigation's default order is now Home, Lights, Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Calendar, Football, Settings (Clock after Home on a frame), and on a phone only Home, Lights, Climate, Photos and Settings start on; the rest are off until turned on in Settings. A device whose navigation was never arranged follows the defaults; one that was keeps its own.

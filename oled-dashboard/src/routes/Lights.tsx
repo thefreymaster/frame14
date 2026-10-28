@@ -6,7 +6,7 @@ import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
 import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { LightsSkeleton } from "../components/skeletons/LightsSkeleton";
-import { buildLightSections } from "../lib/lightsConfig";
+import { buildLightSections, sortLightSections } from "../lib/lightsConfig";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, useEntitiesAcked } from "../hooks/useEntity";
 import { LightsAllOffButton } from "../components/LightsAllOffButton";
@@ -27,8 +27,19 @@ const slugify = (s: string) =>
 export function Lights() {
   const { data: entities, isPending: configPending } = useEntitiesConfig();
   const ids = entities?.lights ?? EMPTY;
-  const sections = buildLightSections(ids);
   const states = useEntities(ids);
+  // Alphabetical, by the name each tile shows: Home Assistant's friendly name
+  // once its state is in, the id's words until then.
+  const nameById = new Map(
+    states.map((q) => {
+      const name = q.data?.attributes?.friendly_name;
+      return [q.data?.entity_id, typeof name === "string" ? name : undefined];
+    }),
+  );
+  const sections = sortLightSections(
+    buildLightSections(ids),
+    (entry) => nameById.get(entry.entity_id) ?? entry.name,
+  );
   const onIds = states
     .filter((q) => q.data?.state === "on")
     .map((q) => q.data!.entity_id);

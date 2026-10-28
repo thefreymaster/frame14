@@ -54,3 +54,24 @@ export function buildLightSections(entityIds: string[]): LightSection[] {
   if (switches.length > 0) sections.push({ title: "Switches", entries: switches });
   return sections;
 }
+
+/**
+ * The sections with their entries in alphabetical order of `labelOf` — the
+ * name each tile shows (Home Assistant's friendly name once known) — ignoring
+ * case, with numbers in order ("Lamp 2" before "Lamp 10"). Since 0.101.
+ */
+export function sortLightSections(
+  sections: LightSection[],
+  labelOf: (entry: LightEntry) => string,
+): LightSection[] {
+  const collator = new Intl.Collator(undefined, {
+    sensitivity: "base",
+    numeric: true,
+  });
+  return sections.map((section) => ({
+    ...section,
+    entries: [...section.entries].sort((a, b) =>
+      collator.compare(labelOf(a), labelOf(b)),
+    ),
+  }));
+}

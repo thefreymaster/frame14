@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.101.0
+
+- Changed: the Lights page's tiles are in alphabetical order, by the name each tile shows.
+
 ## 0.100.0
 
 - Changed: the Home page's Fans card is reworked. Each fan is a tile laid out like the thermostat tiles: its name and the fan icon (spinning while it runs), then the speed and what it's doing, with a teal ring and status while it's on and a grey Off badge otherwise. The tiles take their columns from the card's width, as the thermostats do, and a tap still opens the fan's controls.

@@ -9,10 +9,14 @@
  * their own layouts, because widths that suit one rarely suit the other; a
  * phone shows the two-column order with every card full width.
  *
+ * A card can also be hidden (since 0.98): it stays in the list, in its place
+ * and at its width, and the board leaves it off the page until it is shown
+ * again.
+ *
  * Saved per device in localStorage — the frame and a phone in remote mode are
- * arranged independently. Nothing is written until someone actually moves or
- * resizes a card, so a device that never customises keeps following the
- * defaults below.
+ * arranged independently. Nothing is written until someone actually moves,
+ * resizes or hides a card, so a device that never customises keeps following
+ * the defaults below.
  */
 
 export const HOME_CARD_IDS = [
@@ -31,7 +35,12 @@ export type HomeCardId = (typeof HOME_CARD_IDS)[number];
 export type HomeColumns = 1 | 2 | 4;
 /** The grids that keep a layout of their own; a one-column phone reads the two-column one. */
 export type HomeGrid = 2 | 4;
-export type HomeCardPlacement = { id: HomeCardId; span: number };
+/** `hidden`: taken off the page by its user (the eye while arranging). */
+export type HomeCardPlacement = {
+  id: HomeCardId;
+  span: number;
+  hidden?: boolean;
+};
 export type HomeLayout = HomeCardPlacement[];
 
 /** Shown while arranging — for a card that is hidden right now, the hint says when it appears. */
@@ -135,9 +144,9 @@ export function defaultHomeLayout(grid: HomeGrid): HomeLayout {
 
 /**
  * Trusts nothing it reads back: unknown ids and duplicates are dropped, a width
- * is clamped to the grid, and any card missing from the saved layout — one
- * added in a later version, say — is appended at its default width rather than
- * vanishing.
+ * is clamped to the grid, a card is hidden only by an explicit `true`, and any
+ * card missing from the saved layout — one added in a later version, say — is
+ * appended at its default width rather than vanishing.
  */
 function normalize(grid: HomeGrid, saved: unknown): HomeLayout {
   const fallback = defaultHomeLayout(grid);
@@ -150,9 +159,11 @@ function normalize(grid: HomeGrid, saved: unknown): HomeLayout {
     if (!isCardId(id) || seen.has(id)) continue;
     seen.add(id);
     const span = Math.round(Number((entry as { span?: unknown }).span));
+    const hidden = (entry as { hidden?: unknown }).hidden === true;
     layout.push({
       id,
       span: Number.isFinite(span) ? Math.min(Math.max(span, 1), grid) : 1,
+      ...(hidden ? { hidden } : {}),
     });
   }
   for (const card of fallback) {

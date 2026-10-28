@@ -21,6 +21,7 @@ import { useAssistConfig } from "../hooks/useAssistConfig";
 import { getDeviceMode } from "../lib/deviceMode";
 import { micAvailable } from "../lib/voiceRecorder";
 import { useNavVisible } from "../lib/navVisibility";
+import { useHomeArranging } from "../lib/homeArranging";
 // import { useLightStripShown } from "../lib/lightStripVisibility"; // lights strip
 import { useReleaseSplash } from "../hooks/useReleaseSplash";
 import { useScrolledFromTop } from "../hooks/useScrolledFromTop";
@@ -60,6 +61,9 @@ export function Layout() {
   const isBlank = location.pathname === "/blank";
   const navVisible = useNavVisible();
   const showNav = !isBlank && navVisible;
+  // While /home is being arranged the header and the navs are veiled and
+  // inert (ArrangingVeil): Done is the way out, not a tap on a nav entry.
+  const arranging = useHomeArranging();
   const isController = getDeviceMode() === "controller";
   const desktop = useDesktop();
   const scrollable =
@@ -96,6 +100,7 @@ export function Layout() {
           inset in an iPhone home-screen app. */}
       <StatusBanner
         hidden={!showNav}
+        veiled={arranging}
         scrolled={scrolled}
         voice={
           showVoice && (
@@ -105,7 +110,7 @@ export function Layout() {
       />
 
       <HStack gap="0" align="stretch">
-        <LandscapeNav hidden={!showNav} />
+        <LandscapeNav hidden={!showNav} veiled={arranging} />
         <Box
           ref={scrollRef}
           height="var(--app-height, 100dvh)"

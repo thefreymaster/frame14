@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.98.0
+
+- Added: cards on the Home page can be hidden. While arranging (press and hold), every card has an eye at its top-left corner: the crossed-out eye takes the card off the page, and the card stays as a dashed stand-in while arranging, where an open eye brings it back. Hidden cards are saved with this device's layout, and Reset shows them all again.
+- Changed: while the Home page is being arranged, the header and the nav are blurred, dimmed and out of reach until Done, so a stray tap can't leave the page mid-arrange.
+
 ## 0.97.0
 
 - Changed: a tap on the Home page's weather card opens the Weather page, instead of a forecast dialog over the Home page.

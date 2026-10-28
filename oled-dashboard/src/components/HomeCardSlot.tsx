@@ -1,5 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { HomeCardFace } from "./HomeCardFace";
+import { HomeCardHideButton } from "./HomeCardHideButton";
 import { HomeCardWidthPicker } from "./HomeCardWidthPicker";
 import type { HomeCardId, HomeGrid } from "../lib/homeLayout";
 
@@ -7,7 +8,9 @@ import type { HomeCardId, HomeGrid } from "../lib/homeLayout";
  * One card's place on /home: a grid item spanning `span` columns. Outside
  * arranging it is an inert wrapper — the card underneath behaves exactly as it
  * did before cards could move. While arranging the whole card is the drag
- * handle, and on a grid of more than one column it carries a width picker.
+ * handle, with the hide / show eye at its corner, and on a grid of more than
+ * one column it carries a width picker. A hidden card is only ever here while
+ * arranging (HomeBoard leaves it out otherwise), as its stand-in.
  *
  * Its height in rows is set by HomeBoard (`grid-row-end`), which measures the
  * card; see "Packing" there.
@@ -18,7 +21,9 @@ export function HomeCardSlot({
   span,
   grid,
   resizable,
+  hidden,
   onSpanChange,
+  onHiddenChange,
   children,
 }: {
   id: HomeCardId;
@@ -28,7 +33,10 @@ export function HomeCardSlot({
   grid: HomeGrid;
   /** Offer the width picker (not on a one-column phone). */
   resizable: boolean;
+  /** Taken off the page by its user; shown as a stand-in while arranging. */
+  hidden: boolean;
   onSpanChange: (span: number) => void;
+  onHiddenChange: (hidden: boolean) => void;
   children: React.ReactNode;
 }) {
   // No transform: the board reorders the real list while a card is in the air
@@ -46,12 +54,16 @@ export function HomeCardSlot({
       data-card={id}
       data-editing={editing || undefined}
       data-dragging={isDragging || undefined}
+      data-hidden={hidden || undefined}
       style={{ gridColumn: `span ${span}` }}
       {...(editing ? { ...attributes, ...listeners } : {})}
     >
-      <HomeCardFace id={id} editing={editing}>
+      <HomeCardFace id={id} editing={editing} hidden={hidden}>
         {children}
       </HomeCardFace>
+      {editing && (
+        <HomeCardHideButton id={id} hidden={hidden} onChange={onHiddenChange} />
+      )}
       {editing && resizable && (
         <HomeCardWidthPicker
           id={id}

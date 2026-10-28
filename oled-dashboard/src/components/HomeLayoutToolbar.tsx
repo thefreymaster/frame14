@@ -45,8 +45,8 @@ export function HomeLayoutToolbar({
           <ActionBar.Content>
             <Text display={{ base: "none", md: "block" }} textStyle="sm">
               {resizable
-                ? "Drag cards to move them · pick a width under each"
-                : "Drag cards to rearrange"}
+                ? "Drag cards to move them · pick a width under each · the eye hides one"
+                : "Drag cards to rearrange · the eye hides one"}
             </Text>
             <ActionBar.Separator />
             <Button variant="outline" size="sm" onClick={onReset}>

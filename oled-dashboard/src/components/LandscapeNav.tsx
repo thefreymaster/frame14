@@ -28,6 +28,7 @@ import {
   type NavItem,
 } from "../lib/navItems";
 import { useNavItems } from "../lib/navLayout";
+import { ArrangingVeil } from "./ArrangingVeil";
 import { NavMoreMenu } from "./NavMoreMenu";
 
 const LOCAL_ONLY_PATHS = new Set([
@@ -65,9 +66,14 @@ function entryCss(placement: "bar" | "rail"): SystemStyleObject {
 
 interface LandscapeNavProps {
   hidden?: boolean;
+  /** /home is being arranged: both navs blurred, dimmed and out of reach (ArrangingVeil). */
+  veiled?: boolean;
 }
 
-export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
+export function LandscapeNav({
+  hidden = false,
+  veiled = false,
+}: LandscapeNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState(location.pathname);
@@ -146,6 +152,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
       <Box
         ref={barRef}
         data-nav="bar"
+        inert={veiled || undefined}
         {...NAV_SURFACE}
         borderLeftWidth={NAV_BAR_SIDE_BORDER}
         borderRightWidth={NAV_BAR_SIDE_BORDER}
@@ -187,12 +194,14 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
             )}
           </Tabs.List>
         </Tabs.Root>
+        <ArrangingVeil shown={veiled} />
       </Box>
 
       {/* Landscape: the same frosted surface down the left, on the cards'
           PAGE_GUTTER: its top lines up with the first card's. */}
       <Box
         data-nav="rail"
+        inert={veiled || undefined}
         {...NAV_SURFACE}
         display={{ base: "none", _landscape: "block" }}
         top={`calc(${HEADER_CLEARANCE} + ${PAGE_GUTTER})`}
@@ -221,6 +230,7 @@ export function LandscapeNav({ hidden = false }: LandscapeNavProps) {
             {railFoot.map((item) => renderItem(item, "rail"))}
           </Tabs.List>
         </Tabs.Root>
+        <ArrangingVeil shown={veiled} />
       </Box>
     </>
   );

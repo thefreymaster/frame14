@@ -27,6 +27,7 @@ import { HomeLayoutToolbar } from "./HomeLayoutToolbar";
 import { toaster } from "./ui/toaster";
 import { useLongPress } from "../hooks/useLongPress";
 import { PACKED_ROW_PX, usePackedRows } from "../hooks/usePackedRows";
+import { setHomeArranging } from "../lib/homeArranging";
 import {
   clearHomeLayout,
   defaultHomeLayout,
@@ -52,9 +53,15 @@ const noTransforms = () => null;
 
 /**
  * The /home cards, rearrangeable. Press and hold any card to start arranging;
- * cards then drag to a new place and, on a grid of more than one column, take
- * a width from the picker under each card. The result is saved for this
- * device and grid (lib/homeLayout.ts).
+ * cards then drag to a new place, on a grid of more than one column take a
+ * width from the picker under each card, and hide or show with the eye at
+ * each card's corner (HomeCardHideButton). A hidden card is left off the page,
+ * and comes back as a stand-in while arranging so it can be shown again. The
+ * result is saved for this device and grid (lib/homeLayout.ts).
+ *
+ * While arranging, the rest of the shell steps back: HomeBoard tells
+ * lib/homeArranging, and Layout veils the header and the navs and makes them
+ * inert until Done.
  *
  * The page is one grid of `columns` equal columns. Cards differ in height, and
  * a plain grid would make every card in a row as tall as the tallest, leaving
@@ -107,10 +114,17 @@ export function HomeBoard({
     return hits.length > 0 ? hits : closestCenter(args);
   }, []);
 
-  const order = layout.map((card) => card.id);
+  // Hidden cards are on the board only while arranging, as stand-ins.
+  const shown = editing ? layout : layout.filter((card) => !card.hidden);
+  const order = shown.map((card) => card.id);
   const orderKey = order.join();
 
   usePackedRows(gridRef, [orderKey, columns, editing]);
+
+  useEffect(() => {
+    setHomeArranging(editing);
+    return () => setHomeArranging(false);
+  }, [editing]);
 
   useEffect(() => {
     if (!editing) return;
@@ -182,13 +196,25 @@ export function HomeBoard({
     setActivity((n) => n + 1);
   }
 
+  function setHidden(id: HomeCardId, hidden: boolean) {
+    const next = layout.map((card) =>
+      card.id === id
+        ? { id: card.id, span: card.span, ...(hidden ? { hidden } : {}) }
+        : card,
+    );
+    setLayout(next);
+    saveHomeLayout(grid, next);
+    setActivity((n) => n + 1);
+  }
+
   function reset() {
     clearHomeLayout(grid);
     setLayout(defaultHomeLayout(grid));
     setActivity((n) => n + 1);
     toaster.create({
       title: "Layout reset",
-      description: "Cards are back in their default places and widths.",
+      description:
+        "Cards are back in their default places and widths, all shown.",
       type: "info",
     });
   }
@@ -257,7 +283,7 @@ export function HomeBoard({
             rowGap="0"
             alignItems="start"
           >
-            {layout.map((card) => (
+            {shown.map((card) => (
               <HomeCardSlot
                 key={card.id}
                 id={card.id}
@@ -265,7 +291,9 @@ export function HomeBoard({
                 span={spanOf(card.span)}
                 grid={grid}
                 resizable={columns > 1}
+                hidden={card.hidden === true}
                 onSpanChange={(span) => setSpan(card.id, span)}
+                onHiddenChange={(hidden) => setHidden(card.id, hidden)}
               >
                 {cards[card.id]}
               </HomeCardSlot>
@@ -285,7 +313,11 @@ export function HomeBoard({
               shadow="lg"
               rounded="surface"
             >
-              <HomeCardFace id={activeId} editing>
+              <HomeCardFace
+                id={activeId}
+                editing
+                hidden={layout.some((c) => c.id === activeId && c.hidden)}
+              >
                 {cards[activeId]}
               </HomeCardFace>
             </Box>

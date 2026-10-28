@@ -7,6 +7,7 @@ import {
   PAGE_GUTTER,
 } from "../lib/navMetrics";
 import { ApplianceIndicators } from "./ApplianceIndicators";
+import { ArrangingVeil } from "./ArrangingVeil";
 import { ConnectionMenu } from "./ConnectionMenu";
 import { HeaderClock } from "./HeaderClock";
 import { useDesktop } from "../hooks/useDesktop";
@@ -32,13 +33,18 @@ import { useDesktop } from "../hooks/useDesktop";
  * owns the scroll container) a hairline in the navs' edge colour fades in
  * along its bottom, as an iOS bar's does: it is drawn over the frost's last
  * pixel row, so it takes no room and nothing moves when it comes or goes.
+ * While /home is being arranged (`veiled`, from Layout) it is inert under an
+ * ArrangingVeil, like the navs.
  */
 export function StatusBanner({
   hidden = false,
+  veiled = false,
   scrolled = false,
   voice,
 }: {
   hidden?: boolean;
+  /** /home is being arranged: blurred, dimmed and out of reach. */
+  veiled?: boolean;
   /** The page has scrolled under the header: show its bottom edge. */
   scrolled?: boolean;
   /** The mic, after the status icons (before the clock on a desktop). */
@@ -62,6 +68,7 @@ export function StatusBanner({
       bg={`bg/${NAV_SURFACE_TINT}`}
       {...FROST}
       zIndex="sticky"
+      inert={veiled || undefined}
       transform={hidden ? "translateY(-100%)" : "translateY(0)"}
       transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
       _after={{
@@ -95,6 +102,7 @@ export function StatusBanner({
       <ConnectionMenu />
       {voice}
       {desktop && <HeaderClock />}
+      <ArrangingVeil shown={veiled} />
     </HStack>
   );
 }

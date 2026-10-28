@@ -8,21 +8,27 @@ import { HOME_CARDS, type HomeCardId } from "../lib/homeLayout";
  * stand-in is switched by CSS on whether the card rendered anything — see
  * "Home layout" in src/index.css — because the card decides that from its own
  * subscriptions and never tells this component.
+ *
+ * A card its user has hidden (`hidden`, the eye while arranging) has no
+ * contents at all, so the stand-in is all there is of it, and its line says
+ * how to bring it back rather than when it would show.
  */
 export function HomeCardFace({
   id,
   editing,
+  hidden = false,
   children,
 }: {
   id: HomeCardId;
   editing: boolean;
+  hidden?: boolean;
   children: React.ReactNode;
 }) {
   const { label, hiddenHint } = HOME_CARDS[id];
 
   return (
     <>
-      <div className="home-card-body">{children}</div>
+      {!hidden && <div className="home-card-body">{children}</div>}
       {editing && (
         <>
           {/* Sized like Board, so a stand-in matches the cards around it. */}
@@ -33,10 +39,14 @@ export function HomeCardFace({
           >
             <Card.Body>
               <Card.Title>{label}</Card.Title>
-              {hiddenHint && (
-                <Card.Description>
-                  Hidden now · {hiddenHint.toLowerCase()}
-                </Card.Description>
+              {hidden ? (
+                <Card.Description>Hidden · the eye shows it again</Card.Description>
+              ) : (
+                hiddenHint && (
+                  <Card.Description>
+                    Hidden now · {hiddenHint.toLowerCase()}
+                  </Card.Description>
+                )
               )}
             </Card.Body>
           </Card.Root>

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.107.0
+
+- Changed: the app's files are compressed once, at build time, at the highest level, and sent as they are — a tenth smaller again than compressing them on the way out — and the API's answers are compressed harder. The socket's messages stay as they are: a few hundred bytes each, under the size compression pays for.
+
 ## 0.106.0
 
 - Changed: the launch logo is shown only when the launch needs the time. On a device whose last launch was quick, the page stays blank for up to a moment and then appears whole, with no logo and no hand-off; the logo and its hand-off come up only if that moment runs out, and always on a device's first launch.

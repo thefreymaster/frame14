@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { constants as zlib } from "node:zlib";
 import { Server } from "socket.io";
 
 process.on("uncaughtException", (err) => {
@@ -165,11 +166,44 @@ io.on("connection", (socket) => {
   attachAssistSocket(socket);
 });
 
-// The bundle is 1.2 MB of JavaScript, a third of that gzipped; the forecasts
-// and the energy curves are tens of KB of JSON. Streams (the cameras' MJPEG,
-// the videos) aren't compressible and pass through untouched.
+// The bundle's files, compressed once at build (scripts/precompress.mjs:
+// brotli 11, gzip 9, a .br and a .gz beside each) and sent as they are: a
+// quarter the size of the raw file, and a tenth smaller again than
+// compressing it on each request at a speed fit for live responses. Vite
+// names them by content, hence `immutable`.
+app.get("/assets/*file", (req, res, next) => {
+  const file = path.join(clientBuildDir, req.path);
+  if (!file.startsWith(path.join(clientBuildDir, "assets") + path.sep)) {
+    next();
+    return;
+  }
+  const accepts = String(req.headers["accept-encoding"] ?? "");
+  for (const [encoding, ext] of [
+    ["br", ".br"],
+    ["gzip", ".gz"],
+  ]) {
+    if (!accepts.includes(encoding) || !fs.existsSync(file + ext)) continue;
+    res.type(path.extname(file));
+    res.set({
+      "Content-Encoding": encoding,
+      Vary: "Accept-Encoding",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    });
+    res.sendFile(file + ext);
+    return;
+  }
+  next();
+});
+
+// The live responses — the forecasts and the energy curves are tens of KB of
+// JSON — compressed on the way out, as hard as is quick enough for that
+// (gzip 9; brotli 5, past which it gets slow for little). Streams (the
+// cameras' MJPEG, the assist audio, the videos) aren't compressible and pass
+// through untouched, as does anything under 1 KB.
 app.use(
   compression({
+    level: zlib.Z_BEST_COMPRESSION,
+    brotli: { params: { [zlib.BROTLI_PARAM_QUALITY]: 5 } },
     filter: (req, res) =>
       !/^\/(api\/(camera|printer\/camera|assist)|videos)\//.test(req.path) &&
       compression.filter(req, res),

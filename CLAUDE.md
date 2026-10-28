@@ -150,7 +150,8 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   launch's home and entity queries from localStorage before the first render (marked invalidated, so they refetch
   as they mount; the entity ones take their live state over the socket), `public/sw.js` serves the page's hashed
   files cache first (precached at install, filled as fetched, old builds' pruned on each fresh page) and Express
-  sends them compressed with `immutable` cache headers, the socket opens as a WebSocket first (polling only as the
+  sends them pre-compressed (`npm run build` ends in scripts/precompress.mjs: brotli 11 and gzip 9 beside each file,
+  since 0.107) with `immutable` cache headers, the socket opens as a WebSocket first (polling only as the
   fallback), and `useEntity` applies the burst of states after a connect once per frame in one notifyManager batch,
   the acks behind them. The splash's choreography is skipped on a quick launch (0.106, see "Launch splash").
 - **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
@@ -376,7 +377,8 @@ src/
 ## Backend Structure
 
 ```
-index.js          — app setup, Socket.IO, mounts routers; `compression` (not for the camera, printer camera, assist and video streams) and the static build's cache headers (`assets/` immutable, the rest no-cache, the SPA fallback too)
+index.js          — app setup, Socket.IO, mounts routers; serves `assets/` from the `.br` / `.gz` beside each file (scripts/precompress.mjs, since 0.107; `immutable`), `compression` for the live responses (gzip 9 / brotli 5; not for the camera, printer camera, assist and video streams, nor under 1 KB) and the static build's cache headers (the rest no-cache, the SPA fallback too). Socket.IO's messages aren't compressed (a state is a few hundred bytes; perMessageDeflate is off, its default)
+scripts/precompress.mjs — the end of `npm run build`: a .br (brotli 11) and a .gz (gzip 9) beside each text file in dist/assets, for index.js to send as they are (since 0.107)
 config.js         — reads credentials from /data/options.json or .env
 entities.js       — reads entity IDs from /data/options.json (HA addon) or frame14.json (local dev)
 frame14.json      — local dev entity ID config (not used in HA addon)

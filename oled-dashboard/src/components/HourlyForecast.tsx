@@ -83,7 +83,7 @@ export function HourlyForecast({
                     color="blue.fg"
                     visibility={rain >= RAIN_SHOWN_FROM ? undefined : "hidden"}
                   >
-                    {rain}%
+                    {rain.toFixed(0)}%
                   </Text>
                 )}
                 <Text textStyle="lg" fontWeight="medium">

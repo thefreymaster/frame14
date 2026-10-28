@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.98.1
+
+- Fixed: rain chances in the hourly and daily forecasts are whole numbers ("58%"), not "57.99999999%".
+
 ## 0.98.0
 
 - Added: cards on the Home page can be hidden. While arranging (press and hold), every card has an eye at its top-left corner: the crossed-out eye takes the card off the page, and the card stays as a dashed stand-in while arranging, where an open eye brings it back. Hidden cards are saved with this device's layout, and Reset shows them all again.

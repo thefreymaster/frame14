@@ -97,7 +97,7 @@ export function DailyForecast({
                     textAlign="end"
                     visibility={rain >= RAIN_SHOWN_FROM ? undefined : "hidden"}
                   >
-                    {rain}%
+                    {rain.toFixed(0)}%
                   </Text>
                 )}
                 <Text textStyle="lg" color="fg.muted" textAlign="end">

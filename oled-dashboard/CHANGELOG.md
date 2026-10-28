@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.108.0
+
+- Added: the Home page's Energy card header carries the solar coverage figure — how much of today's use the solar has covered — as a tag beside the grid tag, so it reads with the card collapsed too.
+
 ## 0.107.0
 
 - Changed: the app's files are compressed once, at build time, at the highest level, and sent as they are — a tenth smaller again than compressing them on the way out — and the API's answers are compressed harder. The socket's messages stay as they are: a few hundred bytes each, under the size compression pays for.

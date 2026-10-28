@@ -21,6 +21,7 @@ import {
   grid,
 } from "../lib/energy";
 import { Board } from "./Board";
+import { CoverageBadge } from "./CoverageBadge";
 import { EnergyDialog } from "./EnergyDialog";
 import { GridBadge } from "./GridBadge";
 import { PowerFlow } from "./PowerFlow";
@@ -61,8 +62,10 @@ function Total({
  * The energy card: where the power is going now (PowerFlow, the dialog's
  * diagram at its small size), then today — how much of the day's use the
  * solar covered, as the one big figure, beside the day's curve
- * (TodaySparkline) with the two totals over it. A tap on the body opens
- * EnergyDialog, which has the full chart and the split totals.
+ * (TodaySparkline) with the two totals over it. The header carries that
+ * coverage as a tag (CoverageBadge) beside the grid flow (GridBadge), so
+ * both read with the card collapsed. A tap on the body opens EnergyDialog,
+ * which has the full chart and the split totals.
  */
 export function EnergySection({
   energy,
@@ -91,11 +94,12 @@ export function EnergySection({
         title={
           <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
             <SectionTitle icon={<IoFlash />}>Energy</SectionTitle>
-            {grid(energy).active && (
-              <Box ms="auto">
-                <GridBadge energy={energy} />
-              </Box>
-            )}
+            <HStack gap="2" ms="auto">
+              {!loading && energy.consumptionToday > 0 && (
+                <CoverageBadge energy={energy} />
+              )}
+              {grid(energy).active && <GridBadge energy={energy} />}
+            </HStack>
           </Flex>
         }
       >

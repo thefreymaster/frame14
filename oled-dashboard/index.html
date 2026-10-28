@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Dashboard" />
     <!-- No webfont: the UI runs on the platform's own system stack. See the
          body / display font tokens in src/theme/tokens.ts. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Frame14</title>
     <!-- Launch splash. The bundle takes a while to arrive and parse, and until
          it runs nothing gives the page a background, so it showed the
@@ -30,6 +30,12 @@
          data, and records how long that took for the next launch's say. -->
     <script>
       (function () {
+        // No pinch zoom (0.114): a kiosk and a remote, not a page. The
+        // viewport meta above asks for it; Safari ignores that one and
+        // honours this (and index.css's touch-action).
+        document.addEventListener("gesturestart", function (e) {
+          e.preventDefault();
+        });
         // lib/themeMode.ts's preference and daylight window, read early; it
         // takes over (and syncs with the server) once the bundle runs.
         var mode = "dark";

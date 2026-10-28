@@ -18,10 +18,15 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+// The app's height (`--app-height`: Layout's scroll Box, the navs' place):
+// the layout viewport's, which iOS keeps whole while the keyboard, a pinch
+// or a system sheet shrinks the visual one. It followed visualViewport.height
+// until 0.114, and a resize the page never saw the end of — a sheet over a
+// home-screen app — left the bar two thirds of the way down the screen with
+// black under it until the next real resize. Re-read whenever the page comes
+// back into view as well, in case a size change happened out of sight.
 function updateAppHeight() {
-  const h =
-    (window.visualViewport && window.visualViewport.height) ||
-    window.innerHeight;
+  const h = document.documentElement.clientHeight || window.innerHeight;
   document.documentElement.style.setProperty("--app-height", `${h}px`);
 }
 updateAppHeight();
@@ -30,7 +35,10 @@ window.addEventListener("resize", updateAppHeight);
 window.addEventListener("orientationchange", updateAppHeight);
 window.addEventListener("pageshow", updateAppHeight);
 window.addEventListener("load", updateAppHeight);
-window.visualViewport?.addEventListener("resize", updateAppHeight);
+window.addEventListener("focus", updateAppHeight);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") updateAppHeight();
+});
 setTimeout(updateAppHeight, 100);
 setTimeout(updateAppHeight, 300);
 setTimeout(updateAppHeight, 600);

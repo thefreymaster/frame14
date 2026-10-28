@@ -173,9 +173,9 @@ with Chakra's own fonts, radii, shadows, borders and colours.
 
 ```
 src/
-  main.tsx                        — Provider (Chakra defaultSystem + colour mode) + QueryClientProvider + Toaster; imports lib/themeMode and lib/appVersion for their side effects; restores and then keeps persisting the query cache (lib/persistedQueries) before the first render; registers public/sw.js
+  main.tsx                        — sets `--app-height` (Layout's scroll Box and the navs' place) from the layout viewport (documentElement.clientHeight; the visual viewport until 0.114 — iOS shrinks that for the keyboard, a pinch and system sheets, and a resize the page missed the end of left the bar mid-screen), re-read on resize / orientationchange / pageshow / focus / visibilitychange; Provider (Chakra defaultSystem + colour mode) + QueryClientProvider + Toaster; imports lib/themeMode and lib/appVersion for their side effects; restores and then keeps persisting the query cache (lib/persistedQueries) before the first render; registers public/sw.js
   globals.d.ts                    — `__APP_VERSION__`, the add-on version the bundle was built as (vite.config.ts reads config.yaml's `version` into `define`)
-  index.css                       — the one global scale knob (root font-size) + full-height shell + /home hide-when-empty rules
+  index.css                       — the one global scale knob (root font-size), `touch-action: pan-x pan-y` on html (no pinch or double-tap zoom, since 0.114, with the viewport meta's `maximum-scale=1, user-scalable=no` and a `gesturestart` preventDefault in index.html for Safari) + full-height shell + /home hide-when-empty rules
   App.tsx                         — RouterProvider
   router.tsx                      — createBrowserRouter, Layout wraps all routes
   routes/

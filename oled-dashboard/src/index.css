@@ -4,6 +4,8 @@
    page), and it never drops below the browser's 16px on a phone. */
 html {
   font-size: clamp(16px, 1.75vmin, 32px);
+  /* No pinch or double-tap zoom (0.114): panning only, everywhere. */
+  touch-action: pan-x pan-y;
 }
 
 /* Full-height shell: the app owns scrolling inside Layout. */

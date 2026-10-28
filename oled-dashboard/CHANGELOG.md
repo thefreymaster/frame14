@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.105.0
+
+- Changed: the app starts faster. The page opens on what it last knew — the weather, thermostats, energy, calendar and entity states from the last visit, kept on the device — and refreshes them as the live answers come in, instead of opening on placeholders; the first launch after an update still starts from nothing. The app's own files are kept by the browser between launches and sent compressed when they are needed, the socket connects as a WebSocket straight away, and the burst of entity states that follows a connect is drawn in one go rather than one at a time.
+
 ## 0.104.0
 
 - Added: an All off button in the Fans card's header while a fan is on, like the Climate card's: it turns off every fan that's on.

@@ -1,3 +1,4 @@
+import compression from "compression";
 import express from "express";
 import fs from "node:fs";
 import { createServer } from "node:http";
@@ -164,8 +165,32 @@ io.on("connection", (socket) => {
   attachAssistSocket(socket);
 });
 
+// The bundle is 1.2 MB of JavaScript, a third of that gzipped; the forecasts
+// and the energy curves are tens of KB of JSON. Streams (the cameras' MJPEG,
+// the videos) aren't compressible and pass through untouched.
+app.use(
+  compression({
+    filter: (req, res) =>
+      !/^\/(api\/(camera|printer\/camera|assist)|videos)\//.test(req.path) &&
+      compression.filter(req, res),
+  }),
+);
 app.use(express.json());
-app.use(express.static(clientBuildDir));
+app.use(
+  express.static(clientBuildDir, {
+    setHeaders(res, filePath) {
+      // Vite names the bundle's files by content, so a browser can keep one
+      // for good; everything else (index.html, sw.js, the icons) is checked
+      // with the server each time, which the ETag makes a 304.
+      res.setHeader(
+        "Cache-Control",
+        /[\\/]assets[\\/]/.test(filePath)
+          ? "public, max-age=31536000, immutable"
+          : "no-cache",
+      );
+    },
+  }),
+);
 
 // API routes
 app.use("/api", healthRouter);
@@ -190,7 +215,9 @@ app.use("/videos", videosRouter);
 
 // SPA fallback
 app.get("/{*path}", (_req, res) => {
-  res.sendFile(path.join(clientBuildDir, "index.html"));
+  res.sendFile(path.join(clientBuildDir, "index.html"), {
+    headers: { "Cache-Control": "no-cache" },
+  });
 });
 
 // Global Express error handler

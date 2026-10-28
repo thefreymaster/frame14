@@ -4,6 +4,7 @@ import {
   useQueries,
   useQuery,
   useQueryClient,
+  type QueryClient,
   type UseQueryResult,
 } from "@tanstack/react-query";
 import { socket } from "../lib/socket";
@@ -83,6 +84,50 @@ export function useEntitiesAcked(entityIds: readonly string[]) {
   );
 }
 
+// Live states arrive in bursts — every subscribed entity's at once after a
+// connect, forty-odd on /home — and applied one by one each would re-render
+// the page. They are gathered and applied together, once per frame, in one
+// React Query batch (one render). The subscribes' acks are answered in the
+// same flush, behind the states, so `answered` never turns true before the
+// cards have drawn them.
+const pendingStates = new Map<
+  string,
+  { qc: QueryClient; entityId: string; data: HAState }
+>();
+const pendingAcks: (() => void)[] = [];
+let flushScheduled = false;
+
+function flush() {
+  flushScheduled = false;
+  const states = [...pendingStates.values()];
+  pendingStates.clear();
+  const acks = pendingAcks.splice(0);
+  notifyManager.batch(() => {
+    for (const { qc, entityId, data } of states) {
+      qc.setQueryData<HAState>(["entity", entityId], data);
+    }
+    for (const ack of acks) ack();
+  });
+}
+
+function scheduleFlush() {
+  if (flushScheduled) return;
+  flushScheduled = true;
+  // A hidden page has no frames; a timer keeps the acks (and the splash) moving.
+  if (document.hidden) setTimeout(flush, 0);
+  else requestAnimationFrame(flush);
+}
+
+function queueState(qc: QueryClient, entityId: string, data: HAState) {
+  pendingStates.set(entityId, { qc, entityId, data });
+  scheduleFlush();
+}
+
+function queueAck(fn: () => void) {
+  pendingAcks.push(fn);
+  scheduleFlush();
+}
+
 function normalizeEntityIds(entityIds: readonly string[]) {
   const normalized: string[] = [];
   const seen = new Set<string>();
@@ -104,10 +149,12 @@ function refSubscribe(entityId: string) {
     acked.delete(entityId);
     setAllAnswered(false);
     socket.emit("entity:subscribe", entityId, () => {
-      acked.add(entityId);
-      // Behind the state that arrived ahead of the ack, as `answered` is.
-      notifyManager.schedule(notifyAcked);
-      answered(entityId);
+      // Behind the state that arrived ahead of the ack (queueState).
+      queueAck(() => {
+        acked.add(entityId);
+        notifyManager.schedule(notifyAcked);
+        answered(entityId);
+      });
     });
   }
 }
@@ -141,7 +188,7 @@ export function useEntity<A = Record<string, unknown>>(entityId: string) {
     if (!entityId) return;
 
     function onUpdate(data: HAState<A>) {
-      qc.setQueryData<HAState<A>>(["entity", entityId], data);
+      queueState(qc, entityId, data as HAState);
     }
 
     socket.on(entityId, onUpdate);
@@ -176,7 +223,7 @@ export function useEntities<A = Record<string, unknown>>(
 
     for (const entityId of normalizedEntityIds) {
       const onUpdate = (data: HAState<A>) => {
-        qc.setQueryData<HAState<A>>(["entity", entityId], data);
+        queueState(qc, entityId, data as HAState);
       };
 
       handlers.set(entityId, onUpdate);

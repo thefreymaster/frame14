@@ -19,7 +19,7 @@ For full-stack development, run both `npm run dev` and `node index.js` concurren
 
 Two separate processes:
 
-**Client** (`src/`) — Vite + React 19 + TypeScript. Entry: `src/main.tsx`. Providers: `Provider` (`src/components/ui/provider.tsx` — `ChakraProvider value={defaultSystem}` + Chakra's colour mode) + `QueryClientProvider` (TanStack Query), plus the Chakra `Toaster`. See "UI system" below. Built output (`dist/`) is served statically by Express in production.
+**Client** (`src/`) — Vite + React 19 + TypeScript. Entry: `src/main.tsx`. Providers: `Provider` (`src/components/ui/provider.tsx` — `ChakraProvider value={defaultSystem}` + Chakra's colour mode) + `QueryClientProvider` (TanStack Query), plus the Chakra `Toaster`. See "UI system" below. Built output (`dist/`) is served statically by Express in production, compressed, the hashed `assets/` files `immutable` and the rest `no-cache`; `public/sw.js` keeps the page and its files between launches (see "Start-up").
 
 **Server** (`index.js`) — Express 5 + Socket.IO (JavaScript, not TypeScript). Config is read from `/data/options.json` (HA addon) with `.env` fallback via `config.js`. Entity IDs are read from `options.json` (HA addon) or `frame14.json` (local dev) via `entities.js`. Routes are split into `routes/` files and mounted in `index.js`. The OpenAPI document lives in `openapi.js`.
 
@@ -136,6 +136,16 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   fades the page in and rises the cards in reading order (`--enter-order`). `lib/splash.ts` flips it,
   `hooks/useReleaseSplash` says when. Not on /blank (a reload at night stays black). Under reduced motion the
   logo is static and the hand-off is a fade.
+- **Start-up** (0.105). What a launch costs, measured on a 4x-throttled phone against the stub (`cold-start.mjs` in the
+  preview tooling): the bundle's parse plus the first React render is ~0.8s of main thread, and the page is handed
+  over as soon as its data and the entity subscribes' acks are in — but never before the logo has drawn in (~1.2s)
+  — then the hand-off plays ~1.2s. So the page is kept cheap to open: `lib/persistedQueries` restores the last
+  launch's home and entity queries from localStorage before the first render (marked invalidated, so they refetch
+  as they mount; the entity ones take their live state over the socket), `public/sw.js` serves the page's hashed
+  files cache first (precached at install, filled as fetched, old builds' pruned on each fresh page) and Express
+  sends them compressed with `immutable` cache headers, the socket opens as a WebSocket first (polling only as the
+  fallback), and `useEntity` applies the burst of states after a connect once per frame in one notifyManager batch,
+  the acks behind them. The splash's choreography is the floor that remains.
 - **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
   `colorPalette`. Where a raw CSS string is needed (SVG strokes in the climate dialog's dial and the analog
   clock, the energy charts' lines), use the variable, e.g. `var(--chakra-colors-orange-solid)`.
@@ -155,7 +165,7 @@ with Chakra's own fonts, radii, shadows, borders and colours.
 
 ```
 src/
-  main.tsx                        — Provider (Chakra defaultSystem + colour mode) + QueryClientProvider + Toaster; imports lib/themeMode and lib/appVersion for their side effects
+  main.tsx                        — Provider (Chakra defaultSystem + colour mode) + QueryClientProvider + Toaster; imports lib/themeMode and lib/appVersion for their side effects; restores and then keeps persisting the query cache (lib/persistedQueries) before the first render; registers public/sw.js
   globals.d.ts                    — `__APP_VERSION__`, the add-on version the bundle was built as (vite.config.ts reads config.yaml's `version` into `define`)
   index.css                       — the one global scale knob (root font-size) + full-height shell + /home hide-when-empty rules
   App.tsx                         — RouterProvider
@@ -287,7 +297,7 @@ src/
     useLiveEnergy.ts              — the house's energy now and today as HomeEnergy: /api/energy every 30s (the day's totals from the lifetime meters) plus the four energy entities live over the socket (W; a kW sensor is scaled), with `loading` until /api/energy's first answer. /home (useHomeData) and /energy's Now card share its one query and one set of subscriptions
     useHomeData.ts                — weather (useHomeWeather)+climate (useClimate)+energy (useLiveEnergy)+calendar+people+printer+vacuum; energy polls /api/energy every 30s. Returns `loading` per data source (weather, climate, energy, energyCurve, calendar, fan, vacuum), true only until the first answer — the REST snapshot, or live socket states for every entity; energy waits for /api/energy. `energyCurve` is /api/energy/today (the card's strip, read here through the same `useEnergyToday` query): the card draws without it, so only the splash waits on it. There is no page-wide loading state: /home renders the board at once and each card shows its own placeholder (on a first load the launch splash covers it until every flag has cleared)
     useEntitiesConfig.ts          — fetches /api/entities (entity ID config), staleTime: Infinity
-    useEntity.ts                  — subscribes to a single HA entity via Socket.IO room (`useEntity`, `useEntities`). The server acks each subscribe after the cached state; `useEntitiesAnswered` / `entitiesAnswered()` say every subscribe so far has its answer, published through React Query's notifyManager so it can't turn true before the states ahead of it have rendered; `useEntitiesAcked(ids)` (since 0.93) says the given entities' current subscribes have each been acked — false until the page has subscribed them, where the global flag is trivially true — for a page's own loading state (/lights)
+    useEntity.ts                  — subscribes to a single HA entity via Socket.IO room (`useEntity`, `useEntities`). The server acks each subscribe after the cached state; `useEntitiesAnswered` / `entitiesAnswered()` say every subscribe so far has its answer, published through React Query's notifyManager so it can't turn true before the states ahead of it have rendered; `useEntitiesAcked(ids)` (since 0.93) says the given entities' current subscribes have each been acked — false until the page has subscribed them, where the global flag is trivially true — for a page's own loading state (/lights). Live states are gathered and applied once per frame in one notifyManager batch — one render for the burst after a connect, not forty — with the acks answered in the same flush behind them (since 0.105)
     useScrolledFromTop.ts         — `useScrolledFromTop(ref, resetKey)`: whether the scroll container in `ref` is off its top (scrollTop > 0; iOS's negative rubber band counts as the top), a useSyncExternalStore over its scroll events, resubscribed and re-read when `resetKey` changes (Layout passes the pathname: a shorter page clamps the scroll back without an event). The header's bottom edge
     useReleaseSplash.ts           — `useReleaseSplash(ready)`: takes the launch splash down once ready, the entity config has loaded and every subscribe is answered (TeamTracker and the printer subscribe only after the config, and arriving late re-packed the board). Called by Layout (any page but "/" and /home, on mount) and HomeOverview (every card's `loading` clear); it reads entitiesAnswered() in its effect, after the children's subscribing effects
     useLiveGame.ts                — tracked games worth showing now; `useGames(window)` takes the window predicate, `useLiveGame()` is the route's tighter one. Ticks every 60s so windows open/close on the clock
@@ -316,7 +326,8 @@ src/
     useRegionLuminance.ts         — samples top-left region of an image to determine dark/light
   lib/
     queryClient.ts                — TanStack QueryClient singleton
-    socket.ts                     — socket.io-client singleton (connects to window.location.origin)
+    persistedQueries.ts           — the query cache in localStorage between launches (`query-cache:<version>`, 7 days, ≤1MB; the home, entity, energy, entities-config and assist-config keys only): `restoreQueries` hydrates it before the first render and marks everything invalidated, `persistQueries` saves it 2s after a change and on visibilitychange / pagehide (since 0.105)
+    socket.ts                     — socket.io-client singleton (connects to window.location.origin); WebSocket first, long-polling only as the fallback (`tryAllTransports`, since 0.105)
     connection.ts                 — ConnectionStatus from the socket over time: "connecting" while it is down but within DISCONNECTED_AFTER_MS (60s) of the app's start or of the drop, then "disconnected"; socket.io keeps retrying regardless. `useConnectionStatus`, `useConnectionSince` (when it last connected or dropped; connecting → disconnected keeps the drop time) and `connectionLabel` ("Connecting…" before the first connection, "Reconnecting…" after a drop). The header's ConnectionMenu and /control's Status both read it
     lightsConfig.ts               — buildLightSections(ids): derives name (slug→title case) and icons (domain-based; a lit bulb while on) from entity IDs; no static registry. LIGHT_TILE_COLUMNS: the tiles' grid columns, shared by LightsSection and LightsSkeleton. sortLightSections(sections, labelOf): each section's entries alphabetical by the shown name (Intl.Collator, case-insensitive, numeric: "Lamp 2" before "Lamp 10"), since 0.101
     lightStripVisibility.ts       — (unused since 0.91, the strip being off) this device's lights-strip setting: localStorage `light-strip` ("hidden", or absent = shown); getLightStripShown / setLightStripShown / useLightStripShown (useSyncExternalStore, deviceMode's pattern); per device, not synced — the strip is a desktop's alone
@@ -358,7 +369,7 @@ src/
 ## Backend Structure
 
 ```
-index.js          — app setup, Socket.IO, mounts routers
+index.js          — app setup, Socket.IO, mounts routers; `compression` (not for the camera, printer camera, assist and video streams) and the static build's cache headers (`assets/` immutable, the rest no-cache, the SPA fallback too)
 config.js         — reads credentials from /data/options.json or .env
 entities.js       — reads entity IDs from /data/options.json (HA addon) or frame14.json (local dev)
 frame14.json      — local dev entity ID config (not used in HA addon)

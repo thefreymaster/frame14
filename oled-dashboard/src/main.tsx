@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import { queryClient } from "./lib/queryClient";
+import { persistQueries, restoreQueries } from "./lib/persistedQueries";
 import "./index.css";
 // Applies the saved theme mode before the first paint.
 import "./lib/themeMode";
@@ -34,6 +35,11 @@ setTimeout(updateAppHeight, 100);
 setTimeout(updateAppHeight, 300);
 setTimeout(updateAppHeight, 600);
 setTimeout(updateAppHeight, 1200);
+
+// The last launch's data, so the cards draw at once while the live answers
+// come in (lib/persistedQueries).
+restoreQueries(queryClient);
+persistQueries(queryClient);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

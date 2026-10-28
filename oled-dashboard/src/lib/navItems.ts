@@ -18,8 +18,8 @@ import {
   IoCalendar,
   IoVideocamOutline,
   IoVideocam,
-  IoPlayCircleOutline,
-  IoPlayCircle,
+  // IoPlayCircleOutline, // media page
+  // IoPlayCircle, // media page
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -40,7 +40,11 @@ export type NavItem = {
   frameOnly?: boolean;
   /** Only on remotes. */
   remoteOnly?: boolean;
-  /** Offered on a remote, but out of its nav until turned on in /control. */
+  /**
+   * Offered on a remote, but out of its nav until turned on in /control: a
+   * phone's bar starts as Home, Lights, Climate, Photos and Settings (since
+   * 0.109; the devices alone were off before).
+   */
   remoteOff?: boolean;
   /** In the nav only while a tracked team is playing (useLiveGame). */
   gameDay?: boolean;
@@ -53,9 +57,12 @@ export const HOME_PATH = "/home";
 export const SETTINGS_PATH = "/control";
 
 /**
- * Every nav entry, in the default order. Each device shows the ones for its
- * mode, in the order and with the ones hidden that /control sets for it
- * (lib/navLayout).
+ * Every nav entry, in the default order (since 0.109: Home, Clock, Lights,
+ * Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Calendar,
+ * Football, Settings — Lights and Climate before Photos, Weather with Energy
+ * before the devices; a remote starts with everything from Energy to Football
+ * off, `remoteOff`). Each device shows the ones for its mode, in the order
+ * and with the ones hidden that /control sets for it (lib/navLayout).
  */
 export const NAV_ITEMS: NavItem[] = [
   {
@@ -70,6 +77,18 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoTimeOutline,
     activeIcon: IoTime,
     frameOnly: true,
+  },
+  {
+    path: "/lights",
+    label: "Lights",
+    icon: RiLightbulbLine,
+    activeIcon: RiLightbulbFill,
+  },
+  {
+    path: "/climate",
+    label: "Climate",
+    icon: IoThermometerOutline,
+    activeIcon: IoThermometer,
   },
   {
     path: "/photos",
@@ -87,22 +106,20 @@ export const NAV_ITEMS: NavItem[] = [
     remoteOnly: true,
   },
   {
-    path: "/lights",
-    label: "Lights",
-    icon: RiLightbulbLine,
-    activeIcon: RiLightbulbFill,
-  },
-  {
-    path: "/climate",
-    label: "Climate",
-    icon: IoThermometerOutline,
-    activeIcon: IoThermometer,
-  },
-  {
     path: "/energy",
     label: "Energy",
     icon: IoFlashOutline,
     activeIcon: IoFlash,
+    remoteOff: true,
+  },
+  // In Radar's old place (RENAMED_PATHS keeps a saved layout's), and on
+  // every device, where Radar was the frame's alone.
+  {
+    path: "/weather",
+    label: "Weather",
+    icon: IoPartlySunnyOutline,
+    activeIcon: IoPartlySunny,
+    remoteOff: true,
   },
   {
     path: "/printer",
@@ -125,26 +142,25 @@ export const NAV_ITEMS: NavItem[] = [
     activeIcon: IoVideocam,
     remoteOff: true,
   },
-  // In Radar's old place (RENAMED_PATHS keeps a saved layout's), and on
-  // every device, where Radar was the frame's alone.
-  {
-    path: "/weather",
-    label: "Weather",
-    icon: IoPartlySunnyOutline,
-    activeIcon: IoPartlySunny,
-  },
   {
     path: "/calendar",
     label: "Calendar",
     icon: IoCalendarOutline,
     activeIcon: IoCalendar,
+    remoteOff: true,
   },
-  {
-    path: "/media",
-    label: "Media",
-    icon: IoPlayCircleOutline,
-    activeIcon: IoPlayCircle,
-  },
+  // The Media page is off for now (0.109): its route (router.tsx) and its
+  // Views tile (Control.tsx) are commented out with this entry; the page
+  // and its parts stay (routes/Media, MediaPlayerCard, lib/mediaPlayer,
+  // callMediaService, the server's media controls). A saved layout that
+  // had it drops it (lib/navLayout). Uncomment the lines marked "media
+  // page" to bring it back.
+  // {
+  //   path: "/media",
+  //   label: "Media",
+  //   icon: IoPlayCircleOutline,
+  //   activeIcon: IoPlayCircle,
+  // },
   // Comes and goes with the game. Deliberately not local-only: tapping it
   // should move every panel to the game, and "football" is a TRANSIENT_VIEW
   // server-side so it is never remembered as the route to wake up on.
@@ -154,6 +170,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoAmericanFootballOutline,
     activeIcon: IoAmericanFootball,
     gameDay: true,
+    remoteOff: true,
   },
   {
     path: SETTINGS_PATH,

@@ -34,8 +34,8 @@ import {
   IoCalendar,
   IoVideocamOutline,
   IoVideocam,
-  IoPlayCircleOutline,
-  IoPlayCircle,
+  // IoPlayCircleOutline, // media page
+  // IoPlayCircle, // media page
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
@@ -146,12 +146,13 @@ const VIEWS: {
     icon: IoCalendarOutline,
     activeIcon: IoCalendar,
   },
-  {
-    path: "/media",
-    label: "Media",
-    icon: IoPlayCircleOutline,
-    activeIcon: IoPlayCircle,
-  },
+  // The Media page is off for now (0.109, see lib/navItems).
+  // {
+  //   path: "/media",
+  //   label: "Media",
+  //   icon: IoPlayCircleOutline,
+  //   activeIcon: IoPlayCircle,
+  // }, // media page
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
   // Always listed here, unlike the nav bar's tab which only appears on game
   // day — the remote is where you go to put the frame on something, so the
@@ -171,7 +172,7 @@ const LOCAL_ONLY_PATHS = new Set([
   "/climate",
   "/weather",
   "/calendar",
-  "/media",
+  // "/media", // media page
   "/timer",
 ]);
 

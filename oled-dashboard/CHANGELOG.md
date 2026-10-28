@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.109.0
+
+- Changed: the navigation's default order is now Home, Lights, Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Calendar, Football, Settings (Clock after Home on a frame), and on a phone only Home, Lights, Climate, Photos and Settings start on; the rest are off until turned on in Settings. A device whose navigation was never arranged follows the defaults; one that was keeps its own.
+- Removed: the Media page, for now. It is out of the navigation and the remote's Views; the code stays, commented out.
+
 ## 0.108.0
 
 - Added: the Home page's Energy card header carries the solar coverage figure — how much of today's use the solar has covered — as a tag beside the grid tag, so it reads with the card collapsed too.

@@ -126,6 +126,32 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/software/check": {
+      post: {
+        tags: ["Health"],
+        operationId: "checkSoftwareUpdates",
+        summary: "Check the add-on store for a newer version",
+        description:
+          "What Home Assistant's \"Check for updates\" does, from here: the Supervisor reloads the add-on store (every repository fetched again, through Core's supervisor/api passthrough — the token's user must be an admin), the add-on's update entity is refreshed, and the answer is GET /api/software's a moment later, with `checkedAt`.",
+        responses: {
+          200: {
+            description: "The software after the check.",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/SoftwareInfo" },
+                    { type: "object", properties: { checkedAt: { type: "string", format: "date-time", example: "2026-10-28T20:41:00.000Z" } } },
+                  ],
+                },
+              },
+            },
+          },
+          502: { description: "Home Assistant couldn't reload the store (not an admin's token, or no Supervisor).", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "Home Assistant is not connected.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
     "/api/software/install": {
       post: {
         tags: ["Health"],

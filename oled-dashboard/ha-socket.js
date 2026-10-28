@@ -295,6 +295,43 @@ export function installUpdate(entityId) {
   return true;
 }
 
+/**
+ * Has the Supervisor reload the add-on store — every repository fetched
+ * again, what Home Assistant's "Check for updates" does — through Core's
+ * `supervisor/api` passthrough, an admin's command (the long-lived token's
+ * user must be one; Core rejects it otherwise, and this rejects with its
+ * words). Resolves once the reload is done: a fetch per repository, so it
+ * can take a while.
+ */
+export function reloadAddonStore() {
+  return sendCommand(
+    "supervisor/api",
+    { endpoint: "/store/reload", method: "post", timeout: 60 },
+    65_000,
+  );
+}
+
+/**
+ * Asks Home Assistant to refresh one entity's state now
+ * (homeassistant.update_entity): the add-on's update entity after a store
+ * reload, so its latest_version is the store's without the integration's
+ * own wait. For the server's own ids (routes/software.js).
+ */
+export function refreshEntity(entityId) {
+  if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
+  if (typeof entityId !== "string" || !ENTITY_ID_RE.test(entityId)) return false;
+  haWs.send(
+    JSON.stringify({
+      id: nextMsgId++,
+      type: "call_service",
+      domain: "homeassistant",
+      service: "update_entity",
+      service_data: { entity_id: entityId },
+    }),
+  );
+  return true;
+}
+
 export function sendCommand(type, payload, timeoutMs = 15_000) {
   return new Promise((resolve, reject) => {
     if (!haWs || haWs.readyState !== 1) {

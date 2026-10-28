@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { ADDON_NAME, VERSION } from "../config.js";
-import { getAllStates, installUpdate } from "../ha-socket.js";
+import {
+  getAllStates,
+  installUpdate,
+  isHaConnected,
+  refreshEntity,
+  reloadAddonStore,
+} from "../ha-socket.js";
 
 const router = Router();
 
@@ -20,11 +26,11 @@ function updateEntity() {
   return null;
 }
 
-// GET /api/software — the installed version and what the store has.
-router.get("/", (_req, res) => {
+/** The software as the server knows it: GET's answer. */
+function softwareInfo() {
   const s = updateEntity();
   const a = s?.attributes ?? {};
-  res.json({
+  return {
     installed: VERSION,
     update: s
       ? {
@@ -35,7 +41,38 @@ router.get("/", (_req, res) => {
           releaseUrl: a.release_url ?? null,
         }
       : null,
-  });
+  };
+}
+
+// How long the refreshed update entity gets to arrive over the WebSocket
+// before a check answers with what the cache has.
+const REFRESH_WAIT_MS = 2_000;
+
+// GET /api/software — the installed version and what the store has.
+router.get("/", (_req, res) => {
+  res.json(softwareInfo());
+});
+
+// POST /api/software/check — "Check for updates" without opening Home
+// Assistant: the Supervisor reloads the add-on store, the add-on's update
+// entity is refreshed, and the answer is GET's a moment later, with
+// `checkedAt`. 502 when Home Assistant couldn't (the token's user must be
+// an admin; the Supervisor must be there), 503 with HA down.
+router.post("/check", async (_req, res) => {
+  if (!isHaConnected()) {
+    res.status(503).json({ error: "Home Assistant is not connected" });
+    return;
+  }
+  try {
+    await reloadAddonStore();
+  } catch (e) {
+    res.status(502).json({ error: `Home Assistant couldn't reload the add-on store: ${e.message}` });
+    return;
+  }
+  const s = updateEntity();
+  if (s) refreshEntity(s.id);
+  await new Promise((r) => setTimeout(r, REFRESH_WAIT_MS));
+  res.json({ ...softwareInfo(), checkedAt: new Date().toISOString() });
 });
 
 // POST /api/software/install — install the store's newer version: Home

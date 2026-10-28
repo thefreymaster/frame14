@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.116.0
+
+- Added: a Check for updates button on the Software card. It does what Home Assistant's own "Check for updates" does, without opening Home Assistant: the add-on store is reloaded and the card says whether a newer Frame14 is there, ready to install from the card. Home Assistant checks on its own every few hours; this is for a version just published.
+
 ## 0.115.2
 
 - Fixed: on an iPhone the bottom bar sat a status bar's height above the screen's bottom, with black beneath it, since 0.114.0. The app measured its height from the area below the status bar; it measures the whole window again.

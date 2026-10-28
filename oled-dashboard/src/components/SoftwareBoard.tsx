@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, Dialog, Portal, Text } from "@chakra-ui/react";
-import { IoCloudDownloadOutline } from "react-icons/io5";
+import { Badge, Button, Dialog, HStack, Portal, Text } from "@chakra-ui/react";
+import { IoCloudDownloadOutline, IoRefreshOutline } from "react-icons/io5";
 import { installSoftware, useSoftware } from "../hooks/useSoftware";
 import { useAppVersion } from "../lib/appVersion";
 import { Board } from "./Board";
@@ -22,12 +22,16 @@ const INSTALLING_MS = 5 * 60_000;
  * a minute, and this device refreshes to the new version, or asks to, as
  * lib/appVersion does on the reconnect. "Up to date" when the store has
  * nothing newer; no tag when Home Assistant has no update entity for it
- * (outside the add-on).
+ * (outside the add-on). Check for updates (since 0.116) is Home Assistant's
+ * own, from here: the store reloaded and the entity refreshed (useSoftware's
+ * `check`), a toast saying what it found — the Supervisor does this on its
+ * own every few hours, so a version just published needs it.
  */
 export function SoftwareBoard() {
   const page = useAppVersion();
-  const { loading, installed, update } = useSoftware();
+  const { loading, installed, update, check } = useSoftware();
   const [confirming, setConfirming] = useState(false);
+  const [checking, setChecking] = useState(false);
   // The version asked for, until it is the installed one (or too long passes).
   const [installing, setInstalling] = useState<string | null>(null);
   const available = update?.available === true && update.latest != null;
@@ -59,6 +63,30 @@ export function SoftwareBoard() {
     }
   }
 
+  async function checkNow() {
+    setChecking(true);
+    try {
+      const info = await check();
+      const found = info.update?.available ? info.update.latest : null;
+      toaster.create({
+        type: found ? "success" : "info",
+        title: found ? `Frame14 ${found} is available` : "Up to date",
+        description: found
+          ? "Install it from the Software card."
+          : `Nothing newer than ${info.update?.latest ?? info.installed} in the add-on store.`,
+        duration: 6000,
+      });
+    } catch (e) {
+      toaster.create({
+        type: "error",
+        title: "Couldn't check for updates",
+        description: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setChecking(false);
+    }
+  }
+
   return (
     <Board
       title={<SectionTitle>Software</SectionTitle>}
@@ -84,22 +112,37 @@ export function SoftwareBoard() {
           device refreshes to it once it's back.
         </Text>
       ) : (
-        available && (
-          <>
+        <>
+          {available && (
             <Text textStyle="sm" color="fg.muted" mt="4">
               Frame14 {update.latest} is ready to download.
             </Text>
-            <Button
-              mt="3"
-              size="sm"
-              variant="outline"
-              onClick={() => setConfirming(true)}
-            >
-              <IoCloudDownloadOutline />
-              Install {update.latest}
-            </Button>
-          </>
-        )
+          )}
+          {update && (
+            <HStack mt={available ? "3" : "4"} gap="3" wrap="wrap">
+              {available && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setConfirming(true)}
+                >
+                  <IoCloudDownloadOutline />
+                  Install {update.latest}
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                loading={checking}
+                loadingText="Checking"
+                onClick={() => void checkNow()}
+              >
+                <IoRefreshOutline />
+                Check for updates
+              </Button>
+            </HStack>
+          )}
+        </>
       )}
 
       <Dialog.Root

@@ -107,6 +107,25 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/software": {
+      get: {
+        tags: ["Health"],
+        operationId: "getSoftwareInfo",
+        summary: "Describe the installed add-on and the store's latest",
+        description:
+          "The installed add-on version and, in the add-on, its update entity in Home Assistant (found by title in the state cache): the installed and latest versions and whether the add-on store has a newer one to download. `update` is null outside the add-on.",
+        responses: {
+          200: {
+            description: "The software as the server knows it.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/SoftwareInfo" },
+              },
+            },
+          },
+        },
+      },
+    },
     "/api/weather": {
       get: {
         tags: ["Weather"],
@@ -935,6 +954,24 @@ export const openApiDocument = {
             properties: {
               host: { type: "string", example: "supervisor" },
               connected: { type: "boolean", example: true },
+            },
+          },
+        },
+      },
+      SoftwareInfo: {
+        type: "object",
+        required: ["installed", "update"],
+        properties: {
+          installed: { type: "string", example: "0.113.0" },
+          update: {
+            type: "object",
+            nullable: true,
+            properties: {
+              entityId: { type: "string", example: "update.frame14_update" },
+              installed: { type: "string", nullable: true, example: "0.113.0" },
+              latest: { type: "string", nullable: true, example: "0.114.0" },
+              available: { type: "boolean", example: true },
+              releaseUrl: { type: "string", nullable: true, example: "https://github.com/thefreymaster/ha-oled-frame" },
             },
           },
         },

@@ -62,6 +62,9 @@ function loadManifestValue(key) {
 }
 
 export const VERSION = loadManifestValue("version");
+// The add-on's name (config.yaml), which titles its update entity in Home
+// Assistant (routes/software.js).
+export const ADDON_NAME = loadManifestValue("name");
 
 // Where Home Assistant's "Open Web UI" button and the add-on's sidebar entry
 // send the browser (routes/ingress.js). Empty = they say how to set it.

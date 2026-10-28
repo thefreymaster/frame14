@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.113.0
+
+- Added: a Software card on the Control page (first on a phone's Device tab): the version this device is running, the version installed, and the latest in Home Assistant's add-on store. When a newer Frame14 is published and the store has it, the card says "Update available" with the version and where to install it; it follows Home Assistant live, so it changes as soon as the store refreshes.
+
 ## 0.112.0
 
 - Changed: the Home page's Calendar card offers its link to the Calendar page only while Calendar is in this device's navigation; with Calendar turned off in Settings the link is gone. The link is an arrow now, not a chevron like the collapsed cards'.

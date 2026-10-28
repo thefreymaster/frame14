@@ -121,23 +121,30 @@ export function Layout() {
         <LandscapeNav hidden={!showNav} veiled={arranging} />
         <Box
           ref={scrollRef}
-          height="var(--app-height, 100dvh)"
+          // The app's height, plus whatever a browser's own bar covers below
+          // it (`--browser-bar`, index.css: Safari on an iPhone, 0 elsewhere),
+          // so the page runs on under that bar and shows through its glass.
+          height="calc(var(--app-height, 100dvh) + var(--browser-bar, 0px))"
           overflow={scrollable ? "auto" : "hidden"}
           pt={showNav ? HEADER_CLEARANCE : 0}
           transition="padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
           // Room for the header and the floating nav: the rail on the left in
           // landscape, the bar at the bottom in portrait (and, while it was
           // on, a desktop's lights strip along the bottom). The page scrolls
-          // on under the bar, but its end stops above it.
+          // on under the bar, but its end stops above it — and above the
+          // browser's bar, which the nav keeps clear of too (it is placed
+          // from --app-height alone).
           minW={{ _landscape: "100vw", _portrait: "100%" }}
           pl={{
             _landscape: showNav ? NAV_RAIL_CLEARANCE : "0px",
           }}
           pb={{
-            _portrait: showNav ? NAV_BAR_CLEARANCE : "0px",
+            _portrait: showNav
+              ? `calc(${NAV_BAR_CLEARANCE} + var(--browser-bar, 0px))`
+              : "var(--browser-bar, 0px)",
             // lights strip:
             // _landscape: showLightStrip && desktop ? LIGHT_STRIP_CLEARANCE : "0px",
-            _landscape: "0px",
+            _landscape: "var(--browser-bar, 0px)",
           }}
         >
           {content}

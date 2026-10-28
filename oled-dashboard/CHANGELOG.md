@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.117.0
+
+- Changed: in Safari on an iPhone (the site in the browser, not the home-screen app) the page runs on under Safari's bar, as any site does, so the bar shows the cards through its glass instead of a black strip. The navigation bar stays above Safari's, and the last card still scrolls clear of both.
+
 ## 0.116.1
 
 - Changed: every toast has a close button, so any of them can be put away rather than waited out.

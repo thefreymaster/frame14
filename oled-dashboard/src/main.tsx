@@ -33,6 +33,16 @@ function updateAppHeight() {
   const h = window.innerHeight;
   document.documentElement.style.setProperty("--app-height", `${h}px`);
 }
+// Safari on an iPhone, not the home-screen app (0.117): its bar floats over
+// the page's bottom, and index.css lets the page run on under it
+// (`--browser-bar`), as every site does, so the bar shows it through its
+// glass instead of a strip of nothing.
+if (
+  /iPhone|iPod/.test(navigator.userAgent) &&
+  !(navigator as { standalone?: boolean }).standalone
+) {
+  document.documentElement.dataset.safariBar = "";
+}
 updateAppHeight();
 requestAnimationFrame(updateAppHeight);
 window.addEventListener("resize", updateAppHeight);

@@ -16,19 +16,19 @@ body,
   overflow: hidden;
 }
 
-/* How far the page runs on below the app's height (--app-height, the
-   viewport above a browser's bar): nothing, except in Safari on an iPhone
-   (data-safari-bar, from main.tsx; not the home-screen app), where it is the
-   bar's depth — the large viewport (the bar out of the way) less the dynamic
-   one — so the page extends under the bar, which draws it blurred through
-   its glass as it does any site's (0.117). Layout adds it to its scroll
-   Box's height and bottom padding; the nav bar keeps to --app-height, above
-   the browser's bar. */
-html {
-  --browser-bar: 0px;
-}
-html[data-safari-bar] {
-  --browser-bar: max(0px, calc(100lvh - var(--app-height, 100dvh)));
+/* Safari on an iPhone (data-safari-bar, from main.tsx; not the home-screen
+   app): the document scrolls, as any site's does, so Safari shrinks its bar
+   as the page moves and the content runs on under it (0.117.1 — 0.117.0
+   stretched the scroll Box under the bar instead, which this shell clipped
+   and Safari never painted). Layout's Box is then as tall as the page, not a
+   scroller, and the header and nav bar stay fixed to the visual viewport,
+   above the bar wherever it is. */
+html[data-safari-bar],
+html[data-safari-bar] body,
+html[data-safari-bar] #root {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
 }
 
 /* iOS PWA: force a viewport recalc on first load so env(safe-area-inset-*)

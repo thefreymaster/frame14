@@ -33,10 +33,9 @@ function updateAppHeight() {
   const h = window.innerHeight;
   document.documentElement.style.setProperty("--app-height", `${h}px`);
 }
-// Safari on an iPhone, not the home-screen app (0.117): its bar floats over
-// the page's bottom, and index.css lets the page run on under it
-// (`--browser-bar`), as every site does, so the bar shows it through its
-// glass instead of a strip of nothing.
+// Safari on an iPhone, not the home-screen app (0.117): there the document
+// scrolls (index.css, Layout), as every site's does, so Safari shrinks its
+// bar as the page moves and the content runs on under it.
 if (
   /iPhone|iPod/.test(navigator.userAgent) &&
   !(navigator as { standalone?: boolean }).standalone

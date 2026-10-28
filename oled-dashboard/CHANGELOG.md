@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.117.1
+
+- Fixed: 0.117.0 changed nothing in Safari after all. Now, in Safari on an iPhone (the site in the browser, not the home-screen app), the page scrolls as a web page does, so Safari shrinks its bar as you scroll and the content runs on under it; the header and the navigation bar stay put above Safari's bar. The home-screen app is unchanged.
+
 ## 0.117.0
 
 - Changed: in Safari on an iPhone (the site in the browser, not the home-screen app) the page runs on under Safari's bar, as any site does, so the bar shows the cards through its glass instead of a black strip. The navigation bar stays above Safari's, and the last card still scrolls clear of both.

@@ -70,6 +70,13 @@ export function Layout() {
     SCROLLING_PATHS.has(location.pathname) ||
     isController ||
     (desktop && DESKTOP_SCROLLING_PATHS.has(location.pathname));
+  // A scrolling page in Safari on an iPhone (main.tsx marks html before the
+  // first render; read here, not at module load, which is before that): the
+  // Box grows with the page and the document scrolls (since 0.117.1), so
+  // Safari's bar shrinks as it moves and the content runs on under it, as on
+  // any site. The fixed views keep their height there too.
+  const documentScrolls =
+    scrollable && "safariBar" in document.documentElement.dataset;
 
   const voice = useVoiceAssist();
   const { data: assistConfig } = useAssistConfig();
@@ -86,12 +93,14 @@ export function Layout() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrolled = useScrolledFromTop(scrollRef, location.pathname);
   // A new route starts at the top (since 0.111). The scroll position is the
-  // Box's, which outlives the page: a long page scrolled down and a nav tap
-  // left the next page scrolled too, unless it was short enough to clamp.
-  // Before paint, so the new page never shows scrolled; the pathname alone,
-  // so a tab change within a page (`?tab=`) keeps its place.
+  // Box's (the document's, where that scrolls), which outlives the page: a
+  // long page scrolled down and a nav tap left the next page scrolled too,
+  // unless it was short enough to clamp. Before paint, so the new page never
+  // shows scrolled; the pathname alone, so a tab change within a page
+  // (`?tab=`) keeps its place.
   useLayoutEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    window.scrollTo(0, 0);
   }, [location.pathname]);
 
   const content = (
@@ -121,30 +130,28 @@ export function Layout() {
         <LandscapeNav hidden={!showNav} veiled={arranging} />
         <Box
           ref={scrollRef}
-          // The app's height, plus whatever a browser's own bar covers below
-          // it (`--browser-bar`, index.css: Safari on an iPhone, 0 elsewhere),
-          // so the page runs on under that bar and shows through its glass.
-          height="calc(var(--app-height, 100dvh) + var(--browser-bar, 0px))"
-          overflow={scrollable ? "auto" : "hidden"}
+          // The scroller, the app's height tall — or, where the document
+          // scrolls, as tall as the page and at least the screen.
+          height={documentScrolls ? "auto" : "var(--app-height, 100dvh)"}
+          minHeight={documentScrolls ? "var(--app-height, 100dvh)" : undefined}
+          overflow={
+            documentScrolls ? "visible" : scrollable ? "auto" : "hidden"
+          }
           pt={showNav ? HEADER_CLEARANCE : 0}
           transition="padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
           // Room for the header and the floating nav: the rail on the left in
           // landscape, the bar at the bottom in portrait (and, while it was
           // on, a desktop's lights strip along the bottom). The page scrolls
-          // on under the bar, but its end stops above it — and above the
-          // browser's bar, which the nav keeps clear of too (it is placed
-          // from --app-height alone).
+          // on under the bar, but its end stops above it.
           minW={{ _landscape: "100vw", _portrait: "100%" }}
           pl={{
             _landscape: showNav ? NAV_RAIL_CLEARANCE : "0px",
           }}
           pb={{
-            _portrait: showNav
-              ? `calc(${NAV_BAR_CLEARANCE} + var(--browser-bar, 0px))`
-              : "var(--browser-bar, 0px)",
+            _portrait: showNav ? NAV_BAR_CLEARANCE : "0px",
             // lights strip:
             // _landscape: showLightStrip && desktop ? LIGHT_STRIP_CLEARANCE : "0px",
-            _landscape: "var(--browser-bar, 0px)",
+            _landscape: "0px",
           }}
         >
           {content}

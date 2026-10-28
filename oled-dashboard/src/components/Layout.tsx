@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Box, HStack } from "@chakra-ui/react";
 import { SocketViewListener } from "./SocketViewListener";
@@ -85,6 +85,14 @@ export function Layout() {
   // draws its bottom edge while the page has scrolled under it.
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrolled = useScrolledFromTop(scrollRef, location.pathname);
+  // A new route starts at the top (since 0.111). The scroll position is the
+  // Box's, which outlives the page: a long page scrolled down and a nav tap
+  // left the next page scrolled too, unless it was short enough to clamp.
+  // Before paint, so the new page never shows scrolled; the pathname alone,
+  // so a tab change within a page (`?tab=`) keeps its place.
+  useLayoutEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [location.pathname]);
 
   const content = (
     <PageTransition key={location.pathname} grow={scrollable}>

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.111.0
+
+- Fixed: a page scrolled down no longer leaves the next page scrolled too; every page opens at its top.
+
 ## 0.110.0
 
 - Changed: the Climate page shows the thermostats as the Home page's Climate card does — a tile each with the room temperature and what it's doing, two or four across as the screen allows, a tap opening the thermostat's controls — in place of a full card per thermostat with the dial, mode, fan speed and today's temperature strip open on the page.

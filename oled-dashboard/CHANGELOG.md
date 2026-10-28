@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.104.0
+
+- Added: an All off button in the Fans card's header while a fan is on, like the Climate card's: it turns off every fan that's on.
+
 ## 0.103.0
 
 - Removed: the desktop footer from 0.102.0 (the version, Home Assistant and connection tags along the bottom of the screen). The side rail and the page have their room back. Frame14's version and the connection are still in the header's connection menu, and the version on the Control page.

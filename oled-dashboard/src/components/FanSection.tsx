@@ -16,6 +16,7 @@ import { PiFanFill } from "react-icons/pi";
 import type { HomeFan } from "../hooks/useHomeData";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
+import { FanAllOffButton } from "./FanAllOffButton";
 import { FanSkeleton } from "./skeletons/FanSkeleton";
 import { CloseButton } from "./ui/close-button";
 import { Slider } from "./ui/slider";
@@ -312,7 +313,8 @@ export function FanSection({
   const [open, setOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   if (!loading && fan.length === 0) return null;
-  const onCount = fan.filter((f) => f.state === "on").length;
+  const onIds = fan.filter((f) => f.state === "on").map((f) => f.entity_id);
+  const onCount = onIds.length;
   const anyOn = onCount > 0;
   const selected = fan.find((f) => f.entity_id === selectedEntityId) ?? null;
 
@@ -320,6 +322,8 @@ export function FanSection({
     <Board
       collapsible
       storageKey="fan"
+      // The climate card's All off, for fans: there only while one is on.
+      action={anyOn ? <FanAllOffButton entityIds={onIds} /> : null}
       title={
         <HStack width="100%" align="center" gap="3">
           <SectionTitle

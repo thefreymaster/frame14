@@ -21,6 +21,7 @@ process.on("unhandledRejection", (reason) => {
 });
 
 import { INGRESS_PORT, PORT } from "./config.js";
+import { refreshLightAreas, scheduleLightAreasRefresh } from "./ha-areas.js";
 import {
   startHaSocket,
   getState,
@@ -265,7 +266,12 @@ app.use((err, _req, res, _next) => {
 httpServer.listen(PORT, () => {
   console.log(`Frame14 server running on port ${PORT}`);
   io.emit("ready");
-  startHaSocket(io);
+  startHaSocket(io, {
+    // The lights by room (ha-areas.js): read HA's registries once the cache is
+    // primed, and again a moment after any of them changes.
+    onPrimed: () => void refreshLightAreas(io),
+    onRegistryChanged: () => scheduleLightAreasRefresh(io),
+  });
 });
 
 // Home Assistant's ingress (the add-on's Open Web UI button and sidebar

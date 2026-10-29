@@ -30,6 +30,7 @@ In the addon's **Configuration** tab, set the following:
 | `weather_entity` | Current conditions entity | `weather.systems_weatherkit` |
 | `weather_forecast_entity` | Hourly forecast entity | `weather.systems_weatherkit` |
 | `light_entities` | List of light/switch entity IDs to control | see below |
+| `light_areas` | List of rooms (Home Assistant areas, by name or id) whose lights are all included | see below |
 | `climate_entities` | List of climate entity IDs to display | see below |
 | `climate_names` | Optional labels for thermostats, by entity ID (otherwise the entity's name) | see below |
 | `energy_current_production` | Live solar production sensor | `sensor.envoy_xxx_current_power_production` |
@@ -63,6 +64,15 @@ In the addon's **Configuration** tab, set the following:
 - entity: climate.samsung_airconditioner_2
   name: 2nd Floor AC
 ```
+
+**Example light_areas** (every light in these rooms is included, no need to list them; `light_entities` still adds lights and switches elsewhere):
+```yaml
+- Living Room
+- Kitchen
+- Outside
+```
+
+The Lights page groups the lights by room — the areas they (or their devices) are assigned to in Home Assistant, the listed rooms first in that order. A light in no area shows under "Other lights". Lights disabled or hidden in Home Assistant, and config or diagnostic entities such as a plug's indicator LED, are not imported from a room.
 
 Light names and icons are derived automatically from entity IDs — `light.kitchen_main_lights` becomes "Kitchen Main Lights".
 

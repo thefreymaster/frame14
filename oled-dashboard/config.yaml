@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.121.0"
+version: "0.122.0"
 slug: frame14
 description: Home dashboard with overview, clock, weather, and Immich photo slideshow
 url: https://github.com/thefreymaster/ha-oled-frame
@@ -49,6 +49,7 @@ options:
     - "light.aidens_hatch_light"
     - "light.basement_2"
     - "light.workshop"
+  light_areas: []
   climate_entities:
     - "climate.samsung_airconditioner_1"
     - "climate.samsung_airconditioner_2"
@@ -133,6 +134,8 @@ schema:
   weather_forecast_entity: str
   weather_temperature_entity: str
   light_entities:
+    - str
+  light_areas:
     - str
   climate_entities:
     - str

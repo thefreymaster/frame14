@@ -1,7 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "../lib/queryClient";
+import { socket } from "../lib/socket";
+
+/** A room (a Home Assistant area) and the configured lights and switches in it. */
+export interface LightRoom {
+  id: string;
+  name: string;
+  lights: string[];
+}
 
 export interface EntitiesConfig {
+  /** The configured lights and switches, plus every light in `lightAreas`. */
   lights: string[];
+  /** The `light_areas` option, as configured. */
+  lightAreas?: string[];
+  /** The lights by room (ha-areas.js, since 0.122): /lights' groups. */
+  rooms?: LightRoom[];
   weather: { current: string; forecast: string };
   climate: string[];
   /** Labels for thermostats whose `friendly_name` shouldn't show, by entity id. */
@@ -34,6 +48,13 @@ async function fetchEntitiesConfig(): Promise<EntitiesConfig> {
   if (!res.ok) throw new Error(`Entities config fetch failed: ${res.status}`);
   return res.json() as Promise<EntitiesConfig>;
 }
+
+// The server sends the config again when Home Assistant's rooms resolve or
+// change (ha-areas.js): take it as the query's answer, so /lights regroups
+// without a reload.
+socket.on("entities", (config: EntitiesConfig) => {
+  queryClient.setQueryData(["entities-config"], config);
+});
 
 export function useEntitiesConfig() {
   return useQuery<EntitiesConfig>({

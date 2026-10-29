@@ -36,21 +36,50 @@ function domainIcons(entityId: string): Pick<LightEntry, "Icon" | "ActiveIcon"> 
   return { Icon: MdOutlineLightbulb, ActiveIcon: MdLightbulb };
 }
 
-export function buildLightSections(entityIds: string[]): LightSection[] {
-  const lights: LightEntry[] = [];
-  const switches: LightEntry[] = [];
+/** A room as GET /api/entities gives it (useEntitiesConfig's LightRoom). */
+export type LightRoomLike = { id: string; name: string; lights: string[] };
 
-  for (const id of entityIds) {
-    const entry: LightEntry = { entity_id: id, name: entityName(id), ...domainIcons(id) };
-    if (id.startsWith("switch.")) {
-      switches.push(entry);
-    } else {
-      lights.push(entry);
-    }
+/**
+ * The page's groups: a section per room (0.122: Home Assistant's areas, in
+ * the server's order, each holding the configured lights and switches in
+ * it), then the lights in no room ("Lights" when there are no rooms — the
+ * page's one untitled group, as before — else "Other lights") and the
+ * switches in no room ("Switches").
+ */
+export function buildLightSections(
+  entityIds: string[],
+  rooms: LightRoomLike[] = [],
+): LightSection[] {
+  const entry = (id: string): LightEntry => ({
+    entity_id: id,
+    name: entityName(id),
+    ...domainIcons(id),
+  });
+  const ids = new Set(entityIds);
+  const placed = new Set<string>();
+  const sections: LightSection[] = [];
+
+  for (const room of rooms) {
+    const entries = room.lights
+      .filter((id) => ids.has(id) && !placed.has(id))
+      .map(entry);
+    if (entries.length === 0) continue;
+    for (const e of entries) placed.add(e.entity_id);
+    sections.push({ title: room.name, entries });
   }
 
-  const sections: LightSection[] = [];
-  if (lights.length > 0) sections.push({ title: "Lights", entries: lights });
+  const lights: LightEntry[] = [];
+  const switches: LightEntry[] = [];
+  for (const id of entityIds) {
+    if (placed.has(id)) continue;
+    (id.startsWith("switch.") ? switches : lights).push(entry(id));
+  }
+  if (lights.length > 0) {
+    sections.push({
+      title: sections.length > 0 ? "Other lights" : "Lights",
+      entries: lights,
+    });
+  }
   if (switches.length > 0) sections.push({ title: "Switches", entries: switches });
   return sections;
 }

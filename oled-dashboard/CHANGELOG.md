@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.122.0
+
+- Added: the Lights page groups the lights by room. The rooms are Home Assistant's areas: each light (and switch) goes under the area it, or its device, is assigned to, and a light in no area sits under "Other lights" (switches in none under "Switches"). Moving a light to another area in Home Assistant regroups it on the page a moment later, with no reload.
+- Added: `light_areas` option — list rooms by name (or area id) and every light in them is included, without listing the lights one by one; `light_entities` still works beside it for lights and switches elsewhere. The listed rooms come first on the page, in that order. Set it in the add-on's Configuration tab; it is empty by default, so nothing is added until you do. Lights Home Assistant has disabled or hidden, and config or diagnostic entities such as a plug's indicator LED, are left out.
+
 ## 0.121.0
 
 - Changed: the Control page's header no longer shows the version beside Connected — the Software card on the Device tab has this device's, the installed and the latest versions. The Update link still appears there when this page is older than the add-on.

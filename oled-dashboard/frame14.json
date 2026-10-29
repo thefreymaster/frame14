@@ -19,6 +19,7 @@
     "light.basement_2",
     "light.workshop"
   ],
+  "lightAreas": [],
   "weather": {
     "current": "weather.systems_weatherkit",
     "forecast": "weather.systems_weatherkit",

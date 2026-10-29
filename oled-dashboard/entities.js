@@ -37,6 +37,7 @@ function loadEntities() {
   if (options && options.weather_entity) {
     return {
       lights: options.light_entities ?? [],
+      lightAreas: options.light_areas ?? [],
       weather: {
         current: options.weather_entity ?? "",
         forecast: options.weather_forecast_entity ?? options.weather_entity ?? "",
@@ -75,6 +76,7 @@ function loadEntities() {
   if (frame14) {
     return {
       lights: frame14.lights ?? [],
+      lightAreas: frame14.lightAreas ?? [],
       weather: frame14.weather ?? {},
       climate: frame14.climate ?? [],
       climateNames: climateNamesFrom(frame14.climateNames),
@@ -95,6 +97,7 @@ function loadEntities() {
   console.warn("[entities] no entity config found — using empty defaults");
   return {
     lights: [],
+    lightAreas: [],
     weather: {},
     climate: [],
     climateNames: {},

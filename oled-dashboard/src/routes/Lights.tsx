@@ -37,7 +37,7 @@ export function Lights() {
     }),
   );
   const sections = sortLightSections(
-    buildLightSections(ids),
+    buildLightSections(ids, entities?.rooms),
     (entry) => nameById.get(entry.entity_id) ?? entry.name,
   );
   const onIds = states

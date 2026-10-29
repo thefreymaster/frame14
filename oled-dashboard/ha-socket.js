@@ -73,6 +73,12 @@ export const TRANSIENT_VIEWS = new Set(["blank", "marquee", "football"]);
 
 const GET_STATES_ID = 1;
 const SUBSCRIBE_EVENTS_ID = 2;
+// The registry events (0.122, for ha-areas.js's rooms): one subscription each.
+const REGISTRY_EVENT_IDS = new Map([
+  [3, "area_registry_updated"],
+  [4, "device_registry_updated"],
+  [5, "entity_registry_updated"],
+]);
 
 const stateCache = new Map();
 const pendingResults = new Map(); // id -> { resolve, reject }
@@ -83,7 +89,7 @@ const pendingResults = new Map(); // id -> { resolve, reject }
 const pendingSubscriptions = new Map(); // id -> { onEvent, onError, onClose }
 
 let haWs = null;
-let nextMsgId = 3;
+let nextMsgId = 6;
 
 const ALLOWED_DOMAINS = new Set(["light", "switch", "climate", "fan", "media_player"]);
 const ALLOWED_SERVICES = new Set([
@@ -495,7 +501,12 @@ export async function setLastRoute(route) {
   }
 }
 
-export function startHaSocket(io) {
+/**
+ * `hooks` (0.122): `onPrimed()` once the cache is primed after a connect, and
+ * `onRegistryChanged(eventType)` on an area / device / entity registry event
+ * — index.js wires both to ha-areas.js, the lights by room.
+ */
+export function startHaSocket(io, hooks = {}) {
   if (!HA_TOKEN) {
     console.warn("[ha-socket] HA_TOKEN not set — HA socket disabled");
     return;
@@ -684,6 +695,9 @@ export function startHaSocket(io) {
             event_type: "state_changed",
           }),
         );
+        for (const [id, event_type] of REGISTRY_EVENT_IDS) {
+          ws.send(JSON.stringify({ id, type: "subscribe_events", event_type }));
+        }
         return;
       }
 
@@ -706,6 +720,7 @@ export function startHaSocket(io) {
         // holds "IN" while only its attributes change, so the edge test below
         // would never fire and a restart at kickoff would miss the whole game.
         onFootballState();
+        hooks.onPrimed?.();
         return;
       }
 
@@ -734,6 +749,11 @@ export function startHaSocket(io) {
         pendingResults.delete(msg.id);
         if (msg.success) resolve(msg.result);
         else reject(new Error(msg.error?.message ?? "HA WebSocket command failed"));
+        return;
+      }
+
+      if (msg.type === "event" && REGISTRY_EVENT_IDS.has(msg.id)) {
+        hooks.onRegistryChanged?.(REGISTRY_EVENT_IDS.get(msg.id));
         return;
       }
 

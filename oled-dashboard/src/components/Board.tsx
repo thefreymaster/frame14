@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Card, chakra, Collapsible } from "@chakra-ui/react";
 import { LuChevronDown } from "react-icons/lu";
-import { DARK_RAISED } from "../lib/floatingSurface";
+import { DARK_RAISED, SURFACE_SHADOW } from "../lib/floatingSurface";
 
 const STORAGE_PREFIX = "board-collapsed:";
 
@@ -137,6 +137,8 @@ export const Board = ({
       size={{ base: "sm", md: "md" }}
       bg={bg ?? "bg.surface"}
       borderColor="border.surface"
+      // The navs' shadow (0.126): a card casts the same shade as the rail.
+      shadow={SURFACE_SHADOW}
       css={{
         _dark: bg ? undefined : DARK_RAISED,
         "--card-padding": { mdDown: "spacing.3" },

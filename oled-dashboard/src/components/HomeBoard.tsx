@@ -26,7 +26,7 @@ import { HomeCardFace } from "./HomeCardFace";
 import { HomeLayoutToolbar } from "./HomeLayoutToolbar";
 import { toaster } from "./ui/toaster";
 import { useLongPress } from "../hooks/useLongPress";
-import { PACKED_ROW_PX, usePackedRows } from "../hooks/usePackedRows";
+import { PACKED_ROW_PX, usePackedGrid } from "../hooks/usePackedGrid";
 import { setHomeArranging } from "../lib/homeArranging";
 import {
   clearHomeLayout,
@@ -65,9 +65,14 @@ const noTransforms = () => null;
  *
  * The page is one grid of `columns` equal columns. Cards differ in height, and
  * a plain grid would make every card in a row as tall as the tallest, leaving
- * gaps under the short ones, so the grid is packed (hooks/usePackedRows): cards
- * stack under each other column by column, as the old fixed columns did,
- * while any card can span any number of them.
+ * gaps under the short ones, so the grid is packed (hooks/usePackedGrid,
+ * lib/packCards): each card's column is fixed by its place in the order, and
+ * it sits directly under the cards above it in those columns, as the old
+ * fixed columns did, while any card can span any number of them. A card
+ * changing height — a section expanding, data arriving — moves only the cards
+ * under it; no card moves sideways (0.126; the `row dense` grid before put a
+ * card in the first hole it fit, so one card's height could move another's
+ * column).
  *
  * Dragging reorders the real list while the card is in the air (onDragOver),
  * so the grid packs around it and shows exactly where it will land.
@@ -114,12 +119,18 @@ export function HomeBoard({
     return hits.length > 0 ? hits : closestCenter(args);
   }, []);
 
+  // A phone shows the two-column order, every card full width.
+  const spanOf = (span: number) => Math.min(span, columns);
+
   // Hidden cards are on the board only while arranging, as stand-ins.
   const shown = editing ? layout : layout.filter((card) => !card.hidden);
   const order = shown.map((card) => card.id);
-  const orderKey = order.join();
+  // The set, order and widths of the cards: a new width re-packs too.
+  const layoutKey = shown
+    .map((card) => `${card.id}:${spanOf(card.span)}`)
+    .join();
 
-  usePackedRows(gridRef, [orderKey, columns, editing]);
+  usePackedGrid(gridRef, columns, [layoutKey, columns, editing]);
 
   useEffect(() => {
     setHomeArranging(editing);
@@ -219,9 +230,6 @@ export function HomeBoard({
     });
   }
 
-  // A phone shows the two-column order, every card full width.
-  const spanOf = (span: number) => Math.min(span, columns);
-
   return (
     <DndContext
       sensors={sensors}
@@ -278,7 +286,6 @@ export function HomeBoard({
             position="relative"
             templateColumns={`repeat(${columns}, minmax(0, 1fr))`}
             autoRows={`${PACKED_ROW_PX}px`}
-            autoFlow="row dense"
             columnGap="gutter"
             rowGap="0"
             alignItems="start"

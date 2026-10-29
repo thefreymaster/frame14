@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, IconButton, Spinner, Text } from "@chakra-ui/react";
+import { SURFACE_SHADOW } from "../lib/floatingSurface";
 import {
   IoEyeOutline,
   IoEyeOffOutline,
@@ -297,6 +298,7 @@ export function Photos() {
       rounded={framed ? "surface" : undefined}
       borderWidth={framed ? "1px" : undefined}
       borderColor={framed ? "border.surface" : undefined}
+      shadow={framed ? SURFACE_SHADOW : undefined}
     >
       {photosPending && (
         <Box

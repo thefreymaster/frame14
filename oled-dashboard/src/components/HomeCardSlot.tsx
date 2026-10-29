@@ -12,8 +12,9 @@ import type { HomeCardId, HomeGrid } from "../lib/homeLayout";
  * one column it carries a width picker. A hidden card is only ever here while
  * arranging (HomeBoard leaves it out otherwise), as its stand-in.
  *
- * Its height in rows is set by HomeBoard (`grid-row-end`), which measures the
- * card; see "Packing" there.
+ * Its place — the column it starts at and the rows it spans — is set by
+ * HomeBoard (usePackedGrid), which measures the card and reads its width from
+ * `data-span`; this slot sets only how many columns it spans.
  */
 export function HomeCardSlot({
   id,
@@ -55,7 +56,8 @@ export function HomeCardSlot({
       data-editing={editing || undefined}
       data-dragging={isDragging || undefined}
       data-hidden={hidden || undefined}
-      style={{ gridColumn: `span ${span}` }}
+      data-span={span}
+      style={{ gridColumnEnd: `span ${span}` }}
       {...(editing ? { ...attributes, ...listeners } : {})}
     >
       <HomeCardFace id={id} editing={editing} hidden={hidden}>

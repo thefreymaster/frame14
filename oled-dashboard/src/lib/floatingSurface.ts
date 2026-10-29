@@ -6,6 +6,13 @@
 export const NAV_PAD = "0.375rem";
 
 /**
+ * The drop shadow of a floating surface — and, since 0.126, of every card
+ * (Board, and the framed Photos on a desktop): the user asked for the cards
+ * to have the same shade as the side navigation.
+ */
+export const SURFACE_SHADOW = "lg";
+
+/**
  * The cards' colour (the theme's `bg.surface`) and corners (the theme's
  * `surface` radius), set apart from a card passing beneath by a border and
  * shadow. Spread onto a Box; the caller places it.
@@ -16,7 +23,7 @@ export const FLOATING_SURFACE = {
   borderWidth: "1px",
   borderColor: "border.surface",
   rounded: "surface",
-  shadow: "lg",
+  shadow: SURFACE_SHADOW,
   zIndex: "sticky",
   p: NAV_PAD,
 } as const;

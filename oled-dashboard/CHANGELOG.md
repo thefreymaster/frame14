@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.126.0
+
+- Changed: a card on the Home page that expands or collapses (a section opening, data arriving) now moves only the cards under it, in its own columns, down or up. Each card's column is set by its place in the order — press and hold to change it — so no card jumps to another column when a neighbour changes height. A saved layout may sit a little differently at first; arranging it again puts it right.
+- Changed: every card has the drop shadow the side navigation has.
+
 ## 0.125.0
 
 - Added: a light's tile shows a spinner from the tap until Home Assistant reports the light off (or on), and ignores taps meanwhile. If Home Assistant refuses the call, doesn't answer, or the light never reports the change, the spinner stops and an error toast says why.

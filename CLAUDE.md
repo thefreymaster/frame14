@@ -541,6 +541,9 @@ to confirm landscape still works.
 - `run.sh` — entry point; exports scalar env vars via bashio (arrays read directly from options.json by entities.js)
 - `Dockerfile` — multi-stage build; the runtime stage copies the server's root files **by name** (plus `routes/`), so a new root module (e.g. `ha-proxy.js`, `printer-entities.js`) must be added to that COPY line or the add-on dies on start
 - `ha-automation.yaml` — example motion sensor automation
+- `README.md` (the repo root; the add-on folder has none) — the add-on's page on GitHub, in the shape of the official add-on READMEs (2026-10-29, the user's ask): the icon over "Home Assistant Add-on: Frame14"; shields (the latest GitHub release as `version`, the Build and Release workflows' status as `build` / `release`, maintenance, the Home Assistant add-on badge, the four arch badges); the My Home Assistant buttons — add the repository, and open the add-on, whose slug `a49505b0_frame14` is the first 8 hex of sha1 of the repository URL lower-cased (the Supervisor's rule; an instance holding the repo under its old name `ha-oled-frame` has `a93886c7_frame14` instead, and config.yaml's `url` still names that old URL, which GitHub redirects); About, Installation, every option in grouped tables with examples, the pages, the motion automation, Changelog & releases, Local development, Authors
+- `.github/workflows/build.yml` — Build: `npm ci`, `npm run lint` and `npm run build` in oled-dashboard on every push to main and every PR (Node 24, the Dockerfile's); the README's build badge
+- `.github/workflows/release.yml` — Release (2026-10-29, the user: "releases ... published on GitHub too"): on every push to main (and by hand, workflow_dispatch) it reads config.yaml's `version` and, when no `v<version>` release exists yet, publishes one at that commit — tag and title `v<version>`, the CHANGELOG's `## <version>` section as the notes (`gh release create` with the workflow's own token; `contents: write`). A push without a bump does nothing. The add-on store never reads releases — they are the GitHub side of a version; the Supervisor still reads config.yaml on main. `oled-dashboard/.github/workflows/bump-version.yml` is dead: not at the repo root, GitHub never ran it
 
 ## Changelog (required for every user-visible change)
 
@@ -559,6 +562,7 @@ Home Assistant renders `oled-dashboard/CHANGELOG.md` in the addon's Changelog ta
 3. Heading must be `## <version>` matching `config.yaml` exactly — HA matches sections by version string.
 4. Write entries user-facing: what changed on screen or in config, not which file was edited. Skip internal refactors that change nothing for the user.
 5. If a change adds or renames a `config.yaml` option, say so explicitly — users must re-configure the addon.
+6. The section is also the GitHub release's notes: a push to main publishes `v<version>` with it (`.github/workflows/release.yml`, see "Home Assistant Addon"), so write it to be read on its own there too.
 
 ## Adding API Endpoints
 

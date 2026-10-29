@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.124.0
+
+- Changed: on the frame the Climate page's thermostats are the larger tiles a desktop has had since 0.120 — bigger type, more room — two by two on the frame's portrait screen. The phone keeps its squares and the Home card its tiles.
+
 ## 0.123.0
 
 - Changed: the Lights page lays its rooms out in columns — three on a desktop, two on a smaller screen such as the frame or a tablet, one on a phone — each row as tall as its tallest room. On a desktop the lights inside a room fit the room's width, so their names aren't cut short.

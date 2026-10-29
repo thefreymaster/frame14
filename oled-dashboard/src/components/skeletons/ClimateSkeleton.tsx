@@ -1,6 +1,6 @@
 import { Box, Card, Grid, HStack, Skeleton, Stack } from "@chakra-ui/react";
 import { useEntitiesConfig } from "../../hooks/useEntitiesConfig";
-import { climateGridCss } from "../../lib/hvac";
+import { climateGridCss, TILE_MIN_LG_REM } from "../../lib/hvac";
 import type { ClimateTileSize } from "../ClimateTiles";
 
 // Until /api/entities answers (it usually has — staleTime: Infinity).
@@ -24,7 +24,10 @@ export function ClimateSkeleton({
 
   return (
     <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-      <Grid css={climateGridCss(count)} width="100%">
+      <Grid
+        css={climateGridCss(count, lg ? TILE_MIN_LG_REM : undefined)}
+        width="100%"
+      >
         {Array.from({ length: count }).map((_, i) => (
           <Card.Root
             key={i}

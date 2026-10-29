@@ -164,6 +164,11 @@ export const MODE_ICON: Record<ClimateVisualMode, typeof IoFlame> = {
 // Narrowest a home-card tile gets, and the grid gap between tiles, in rem.
 const TILE_MIN_REM = 9;
 const TILE_GAP_REM = 0.75;
+// Narrowest a `lg` thermostat tile gets (/climate on a desktop and the frame,
+// 0.124): its 6xl figure and md status need the room — the frame's 28px rem
+// makes it 392px, so four units go 2x2 there, while a desktop's 18.9px rem
+// keeps four across in a 1920px window.
+export const TILE_MIN_LG_REM = 14;
 
 /**
  * Columns for `count` thermostats at least `minRem` wide with `gapRem`
@@ -197,9 +202,9 @@ export function climateColumnsCss(
  * phone, and one row in landscape; a very narrow card falls back to a single
  * column.
  */
-export function climateGridCss(count: number) {
+export function climateGridCss(count: number, minRem = TILE_MIN_REM) {
   return {
     gap: `${TILE_GAP_REM}rem`,
-    ...climateColumnsCss(count),
+    ...climateColumnsCss(count, minRem),
   };
 }

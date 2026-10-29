@@ -8,6 +8,7 @@ import {
   fmtClimateTemp,
   hvacPalette,
   MODE_ICON,
+  TILE_MIN_LG_REM,
 } from "../lib/hvac";
 
 /** How big a tile's type is: `lg` is /climate on a desktop (0.120). */
@@ -153,7 +154,13 @@ export function ClimateTiles({
   return (
     <>
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <Grid css={climateGridCss(climate.length)} width="100%">
+        <Grid
+          css={climateGridCss(
+            climate.length,
+            size === "lg" ? TILE_MIN_LG_REM : undefined,
+          )}
+          width="100%"
+        >
           {climate.map((unit) => (
             <ClimateTile
               key={unit.entity_id || unit.name}

@@ -1,0 +1,75 @@
+# Release: publishes the version main is at as a GitHub release — tag
+# v<version>, titled the same, with that version's CHANGELOG section as the
+# notes — unless that release already exists. It runs on every push to main,
+# so a push that didn't bump the version does nothing, and a version bump is
+# released the moment it lands. "Run workflow" publishes the current version
+# by hand.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish the release
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the version
+        id: version
+        run: |
+          version=$(sed -n 's/^version: *"\(.*\)"/\1/p' oled-dashboard/config.yaml)
+          if [ -z "$version" ]; then
+            echo "::error::No version in oled-dashboard/config.yaml"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$version is already published — nothing to do"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Collect the release notes
+        if: steps.version.outputs.published != 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # The "## <version>" section of the changelog, without the blank
+          # lines around it.
+          awk -v v="$VERSION" '
+            $0 == "## " v { on = 1; next }
+            /^## /        { on = 0 }
+            on            { lines[n++] = $0 }
+            END {
+              s = 0; e = n - 1
+              while (s <= e && lines[s] ~ /^[[:space:]]*$/) s++
+              while (e >= s && lines[e] ~ /^[[:space:]]*$/) e--
+              for (i = s; i <= e; i++) print lines[i]
+            }' oled-dashboard/CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::warning::CHANGELOG.md has no '## $VERSION' section"
+            echo "See [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/oled-dashboard/CHANGELOG.md)." > notes.md
+          fi
+          echo "Notes for v$VERSION:"
+          cat notes.md
+
+      - name: Publish
+        if: steps.version.outputs.published != 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSION" \
+            --notes-file notes.md \
+            --latest
+          echo "Published v$VERSION"

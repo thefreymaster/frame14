@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.123.0
+
+- Changed: the Lights page lays its rooms out in columns — three on a desktop, two on a smaller screen such as the frame or a tablet, one on a phone — each row as tall as its tallest room. On a desktop the lights inside a room fit the room's width, so their names aren't cut short.
+
 ## 0.122.0
 
 - Added: the Lights page groups the lights by room. The rooms are Home Assistant's areas: each light (and switch) goes under the area it, or its device, is assigned to, and a light in no area sits under "Other lights" (switches in none under "Switches"). Moving a light to another area in Home Assistant regroups it on the page a moment later, with no reload.

@@ -13,9 +13,16 @@ import { LIGHT_TILE_COLUMNS } from "../../lib/lightsConfig";
  * `count` tiles in the tiles' grid, each the shape of a LightControl — the
  * round badge and the status across the top, the name under them.
  */
-export function LightsSkeleton({ count }: { count: number }) {
+export function LightsSkeleton({
+  count,
+  columns = LIGHT_TILE_COLUMNS,
+}: {
+  count: number;
+  /** As LightsSection's. */
+  columns?: typeof LIGHT_TILE_COLUMNS | string;
+}) {
   return (
-    <Grid gap="3" width="100%" templateColumns={LIGHT_TILE_COLUMNS}>
+    <Grid gap="3" width="100%" templateColumns={columns}>
       {Array.from({ length: count }).map((_, i) => (
         <Card.Root
           key={i}

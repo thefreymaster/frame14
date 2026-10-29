@@ -1,4 +1,4 @@
-import { Box, Text } from "@chakra-ui/react";
+import { Box, SimpleGrid, Text } from "@chakra-ui/react";
 import { MdOutlineLightbulb } from "react-icons/md";
 import { LightsSection } from "../components/LightsSection";
 import { Board } from "../components/Board";
@@ -6,7 +6,12 @@ import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
 import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { LightsSkeleton } from "../components/skeletons/LightsSkeleton";
-import { buildLightSections, sortLightSections } from "../lib/lightsConfig";
+import {
+  buildLightSections,
+  LIGHT_TILE_COLUMNS_FLUID,
+  sortLightSections,
+} from "../lib/lightsConfig";
+import { useDesktop } from "../hooks/useDesktop";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, useEntitiesAcked } from "../hooks/useEntity";
 import { LightsAllOffButton } from "../components/LightsAllOffButton";
@@ -26,6 +31,12 @@ const slugify = (s: string) =>
 
 export function Lights() {
   const { data: entities, isPending: configPending } = useEntitiesConfig();
+  // The groups' columns (0.123): three on a desktop, two on a smaller screen
+  // from Chakra's lg up (the frame, a tablet, a narrow desktop window), one
+  // on a phone. A desktop's third-width groups size their tiles to the group
+  // (LIGHT_TILE_COLUMNS_FLUID) rather than the viewport.
+  const desktop = useDesktop();
+  const tileColumns = desktop ? LIGHT_TILE_COLUMNS_FLUID : undefined;
   const ids = entities?.lights ?? EMPTY;
   const states = useEntities(ids);
   // Alphabetical, by the name each tile shows: Home Assistant's friendly name
@@ -71,45 +82,64 @@ export function Lights() {
 
       {configPending ? (
         <Board>
-          <LightsSkeleton count={DEFAULT_SKELETON_TILES} />
+          <LightsSkeleton
+            count={DEFAULT_SKELETON_TILES}
+            columns={tileColumns}
+          />
         </Board>
       ) : (
-        sections.map((section) => {
-          // The "Lights" group is what the page is — labelling its card again
-          // would just repeat the page header. Only the switches group, which
-          // is the exception on this page, carries a title of its own.
-          const named = section.title !== "Lights";
-          return (
-            // A section whose entities are all unavailable renders no entries —
-            // drop the whole tile rather than leaving an empty header on the
-            // page (not while the skeleton stands in for them).
-            <Box
-              key={section.title}
-              minW="0"
-              css={
-                loading
-                  ? undefined
-                  : { "&:not(:has([data-light-entry]))": { display: "none" } }
-              }
-            >
-              <Board
-                collapsible={named}
-                storageKey={`lights-${slugify(section.title)}`}
-                title={
-                  named ? (
-                    <SectionTitle>{section.title}</SectionTitle>
-                  ) : undefined
+        // The groups in columns, each row as tall as its tallest group, the
+        // shorter ones top-aligned.
+        <SimpleGrid
+          columns={desktop ? 3 : { base: 1, lg: 2 }}
+          gap="gutter"
+          width="100%"
+          alignItems="start"
+        >
+          {sections.map((section) => {
+            // The "Lights" group is what the page is — labelling its card
+            // again would just repeat the page header. Only a group that is
+            // the exception on this page (a room, the switches) carries a
+            // title of its own.
+            const named = section.title !== "Lights";
+            return (
+              // A section whose entities are all unavailable renders no
+              // entries — drop the whole tile rather than leaving an empty
+              // header on the page (not while the skeleton stands in for them).
+              <Box
+                key={section.title}
+                minW="0"
+                css={
+                  loading
+                    ? undefined
+                    : { "&:not(:has([data-light-entry]))": { display: "none" } }
                 }
               >
-                {loading ? (
-                  <LightsSkeleton count={section.entries.length} />
-                ) : (
-                  <LightsSection entries={section.entries} />
-                )}
-              </Board>
-            </Box>
-          );
-        })
+                <Board
+                  collapsible={named}
+                  storageKey={`lights-${slugify(section.title)}`}
+                  title={
+                    named ? (
+                      <SectionTitle>{section.title}</SectionTitle>
+                    ) : undefined
+                  }
+                >
+                  {loading ? (
+                    <LightsSkeleton
+                      count={section.entries.length}
+                      columns={tileColumns}
+                    />
+                  ) : (
+                    <LightsSection
+                      entries={section.entries}
+                      columns={tileColumns}
+                    />
+                  )}
+                </Board>
+              </Box>
+            );
+          })}
+        </SimpleGrid>
       )}
     </PageShell>
   );

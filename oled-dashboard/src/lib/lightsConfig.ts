@@ -22,6 +22,12 @@ export const LIGHT_TILE_COLUMNS = {
   _landscape: "repeat(4, minmax(0, 1fr))",
 };
 
+/** The tiles' columns where the group is a third of the screen (/lights on a
+ *  desktop, 0.123): as many 8rem-or-wider tiles as the group's own width
+ *  holds, sharing it — three in a 1920px window, two in a 1280px one —
+ *  rather than the viewport's four, which cut the names short there. */
+export const LIGHT_TILE_COLUMNS_FLUID = "repeat(auto-fill, minmax(8rem, 1fr))";
+
 function entityName(entityId: string): string {
   const slug = entityId.split(".")[1] ?? entityId;
   return slug

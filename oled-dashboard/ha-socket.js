@@ -174,14 +174,38 @@ export function getAllStates() {
   return stateCache;
 }
 
+/**
+ * A call_service with its answer (0.125): resolves `{ ok: true }` once Home
+ * Assistant has run it, `{ ok: false, error }` when HA rejects it or hasn't
+ * answered in 10s. Never rejects — a caller that doesn't wait loses nothing,
+ * and the process's unhandledRejection handler exits.
+ */
+function sendServiceCall(domain, service, service_data) {
+  return sendCommand("call_service", { domain, service, service_data }, 10_000)
+    .then(() => ({ ok: true }))
+    .catch((e) => {
+      console.warn(`[ha-socket] ${domain}.${service} failed:`, e.message);
+      // sendCommand's timeout names the message id; the user needs the gist.
+      const error = /timed out/.test(e.message)
+        ? "Home Assistant didn't answer within 10s"
+        : e.message;
+      return { ok: false, error };
+    });
+}
+
+/**
+ * Validates and sends a service call. `false` when the socket is down or the
+ * call isn't one the server passes on; otherwise sendServiceCall's promise
+ * (truthy — `if (!ok)` keeps working — and awaited by index.js's entity:call
+ * for its ack, since 0.125).
+ */
 export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type, volume_level, is_volume_muted, source }) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
 
   if (domain === "vacuum" || domain === "button") {
     const service_data = deviceControlData({ domain, service, entity_id, fan_speed });
     if (!service_data) return false;
-    haWs.send(JSON.stringify({ id: nextMsgId++, type: "call_service", domain, service, service_data }));
-    return true;
+    return sendServiceCall(domain, service, service_data);
   }
 
   // The Media page's controls; play_media (the assist reply) stays on the
@@ -189,8 +213,7 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
   if (domain === "media_player" && service !== "play_media") {
     const service_data = mediaControlData({ service, entity_id, volume_level, is_volume_muted, source });
     if (!service_data) return false;
-    haWs.send(JSON.stringify({ id: nextMsgId++, type: "call_service", domain, service, service_data }));
-    return true;
+    return sendServiceCall(domain, service, service_data);
   }
 
   if (!ALLOWED_DOMAINS.has(domain)) return false;
@@ -265,16 +288,7 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
     service_data.percentage = Math.round(pct);
   }
 
-  haWs.send(
-    JSON.stringify({
-      id: nextMsgId++,
-      type: "call_service",
-      domain,
-      service,
-      service_data,
-    }),
-  );
-  return true;
+  return sendServiceCall(domain, service, service_data);
 }
 
 /**

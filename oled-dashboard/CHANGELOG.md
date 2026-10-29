@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.125.0
+
+- Added: a light's tile shows a spinner from the tap until Home Assistant reports the light off (or on), and ignores taps meanwhile. If Home Assistant refuses the call, doesn't answer, or the light never reports the change, the spinner stops and an error toast says why.
+- Changed: toasts are quieter. A success, error or warning toast keeps the plain panel face and white text, with a thin border and icon in its colour, instead of being filled green, red or orange.
+- Changed: All off on the Lights page leaves the kid's hatch light alone — it's a night light. The button goes away when that is the only light still on.
+
 ## 0.124.0
 
 - Changed: on the frame the Climate page's thermostats are the larger tiles a desktop has had since 0.120 — bigger type, more room — two by two on the frame's portrait screen. The phone keeps its squares and the Home card its tiles.

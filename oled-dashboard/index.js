@@ -27,6 +27,7 @@ import {
   getState,
   setLastRoute,
   callService,
+  isHaConnected,
   TRANSIENT_VIEWS,
 } from "./ha-socket.js";
 import healthRouter from "./routes/health.js";
@@ -153,11 +154,30 @@ io.on("connection", (socket) => {
     socket.leave(`entity:${entityId}`);
   });
 
-  socket.on("entity:call", (payload) => {
+  // Acked (0.125) once Home Assistant answers the call: `{ ok: true }`, or
+  // `{ ok: false, error }` when it rejects it, doesn't answer in time, isn't
+  // connected, or the call isn't one the server passes on — the light tile
+  // shows the error. A client that sends no ack callback just gets the log.
+  socket.on("entity:call", async (payload, ack) => {
     if (!payload || typeof payload !== "object") return;
-    const ok = callService(payload);
-    if (ok) console.log("[entity:call] sent", payload);
-    else console.warn("[entity:call] rejected", payload);
+    const reply = (result) => {
+      if (typeof ack === "function") ack(result);
+    };
+    const sent = callService(payload);
+    if (!sent) {
+      console.warn("[entity:call] rejected", payload);
+      reply({
+        ok: false,
+        error: isHaConnected()
+          ? "The server doesn't pass that call on"
+          : "Home Assistant isn't connected",
+      });
+      return;
+    }
+    console.log("[entity:call] sent", payload);
+    const result = await sent;
+    if (!result.ok) console.warn("[entity:call] failed", payload, result.error);
+    reply(result);
   });
 
   // The connection menu's round-trip check: answered at once.

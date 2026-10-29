@@ -3,10 +3,37 @@ import { socket } from "./socket";
 export type ServiceName = "toggle" | "turn_on" | "turn_off";
 export type HvacMode = "heat" | "cool" | "off" | "auto" | "fan_only";
 
-export function callService(entityId: string, service: ServiceName = "toggle") {
+/** How a call went: the server's ack (0.125), from Home Assistant's answer. */
+export type CallResult = { ok: true } | { ok: false; error: string };
+
+// How long to wait for the server's ack — it waits up to 10s on HA itself.
+const CALL_TIMEOUT_MS = 12_000;
+
+/**
+ * A light, switch or fan service. Resolves with the server's ack (0.125):
+ * ok once Home Assistant has run the call, or not ok with why — HA rejected
+ * it, didn't answer, isn't connected, or the server never answered. It never
+ * rejects, so a caller that doesn't care can ignore it.
+ */
+export function callService(
+  entityId: string,
+  service: ServiceName = "toggle",
+): Promise<CallResult> {
   const domain = entityId.split(".")[0];
-  if (domain !== "light" && domain !== "switch" && domain !== "fan") return;
-  socket.emit("entity:call", { domain, service, entity_id: entityId });
+  if (domain !== "light" && domain !== "switch" && domain !== "fan")
+    return Promise.resolve({ ok: false, error: "Not a light, switch or fan" });
+  return new Promise((resolve) => {
+    socket
+      .timeout(CALL_TIMEOUT_MS)
+      .emit(
+        "entity:call",
+        { domain, service, entity_id: entityId },
+        (err: Error | null, result?: CallResult) => {
+          if (err) resolve({ ok: false, error: "No answer from the server" });
+          else resolve(result ?? { ok: true });
+        },
+      );
+  });
 }
 
 export function callClimateService(

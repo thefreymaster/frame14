@@ -10,6 +10,7 @@ import {
   cardAnatomy,
   dialogAnatomy,
   segmentGroupAnatomy,
+  toastAnatomy,
 } from "@chakra-ui/react/anatomy";
 import { ColorModeProvider } from "./color-mode";
 import { PHONE_MEDIA } from "../../lib/homeLayout";
@@ -29,6 +30,11 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * tiles excepted).
  *
  * Dialog backdrops blur the page behind them as well as dimming it.
+ *
+ * Toasts are outlined, not solid (0.125, the user's ask): every type keeps the
+ * panel face and `fg` text, with a 1px border in its colour — green, red,
+ * orange — where Chakra fills the whole toast with it; the snippet
+ * (ui/toaster.tsx) colours the indicator to match.
  *
  * Spacing has a named `xs` (0.25rem, 4px at the base size), `sm` (0.5rem) and
  * `md` (1rem), and `gutter`, the page's padding around the cards and the gap
@@ -90,6 +96,34 @@ const system = createSystem(
         segmentGroup: {
           slots: segmentGroupAnatomy.keys(),
           base: { root: { "--segment-radius": "radii.full" } },
+        },
+        toast: {
+          slots: toastAnatomy.keys(),
+          base: {
+            root: {
+              borderWidth: "1px",
+              borderColor: "border",
+              boxShadow: "lg",
+              ...Object.fromEntries(
+                (
+                  [
+                    ["warning", "orange"],
+                    ["success", "green"],
+                    ["error", "red"],
+                  ] as const
+                ).map(([type, palette]) => [
+                  `&[data-type=${type}]`,
+                  {
+                    bg: "bg.panel",
+                    color: "fg",
+                    borderColor: `${palette}.solid`,
+                    "--toast-trigger-bg": "colors.bg.muted",
+                    "--toast-border-color": "colors.border",
+                  },
+                ]),
+              ),
+            },
+          },
         },
       },
     },

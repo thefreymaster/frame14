@@ -1,12 +1,15 @@
+import { useEffect, useState } from "react";
 import {
   Box,
   Card,
   Circle,
   HStack,
   Icon,
+  Spinner,
   Text,
   VStack,
 } from "@chakra-ui/react";
+import { toaster } from "./ui/toaster";
 import { useEntity } from "../hooks/useEntity";
 import { useLongPress } from "../hooks/useLongPress";
 import { callService } from "../lib/callService";
@@ -25,6 +28,11 @@ type Props = LightEntry & {
   onOpen: (entityId: string) => void;
 };
 
+// A tap's pending spinner gives up — with a toast — if Home Assistant hasn't
+// reported the light in its new state by then. Longer than the call's own
+// timeout (lib/callService), so a rejected call shows its error first.
+const STATE_TIMEOUT_MS = 15_000;
+
 /**
  * One light or switch as a tile, in the manner of Apple Home: a round badge
  * with the bulb and what it's doing ("80%", "On", "Off") across the top, the
@@ -36,8 +44,13 @@ type Props = LightEntry & {
  * and a stronger wash fills the tile from the left to the brightness level.
  * Off, it is the plain outline card with a grey badge.
  *
- * A tap toggles. Press and hold on a dimmable light opens LightDialog
- * (brightness, warmth, colour).
+ * A tap turns it off or on (0.125: the explicit service, not toggle, so the
+ * state it waits for is known). From the tap until Home Assistant reports
+ * the light in that state the badge shows a spinner and further taps are
+ * ignored; the server's ack carries Home Assistant's answer, and a refusal —
+ * or no new state within STATE_TIMEOUT_MS — ends the spinner with an error
+ * toast. Press and hold on a dimmable light opens LightDialog (brightness,
+ * warmth, colour).
  */
 export function LightControl({
   entity_id,
@@ -58,6 +71,43 @@ export function LightControl({
   const longPress = useLongPress(() => onOpen(entity_id), {
     enabled: features.brightness,
   });
+  // The state a tap is waiting for, or null. Done once the light reports
+  // that state — reset during render, as React allows for a derived reset.
+  const [pending, setPending] = useState<"on" | "off" | null>(null);
+  if (pending && state === pending) setPending(null);
+
+  // Give up, and say so, if it never does.
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => {
+      setPending(null);
+      toaster.create({
+        type: "error",
+        title: `${label} didn't turn ${pending}`,
+        description:
+          "Home Assistant took the call, but the light hasn't reported the change.",
+      });
+    }, STATE_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [pending, label]);
+
+  async function tap() {
+    if (pending) return;
+    const target = isOn ? "off" : "on";
+    setPending(target);
+    const result = await callService(
+      entity_id,
+      target === "off" ? "turn_off" : "turn_on",
+    );
+    if (!result.ok) {
+      setPending(null);
+      toaster.create({
+        type: "error",
+        title: `Couldn't turn ${target} ${label}`,
+        description: result.error,
+      });
+    }
+  }
 
   if (unavailable) return null;
 
@@ -85,8 +135,9 @@ export function LightControl({
       <button
         type="button"
         aria-pressed={isOn}
+        aria-busy={pending != null}
         aria-label={`${label}: ${status}`}
-        onClick={() => callService(entity_id, "toggle")}
+        onClick={() => void tap()}
         {...longPress}
       >
         {color && pct != null && (
@@ -109,9 +160,13 @@ export function LightControl({
               color={color ? inkOn(color) : "fg.muted"}
               transition="background-color 300ms ease"
             >
-              <Icon boxSize="5">
-                <BadgeIcon />
-              </Icon>
+              {pending ? (
+                <Spinner size="sm" borderWidth="2px" />
+              ) : (
+                <Icon boxSize="5">
+                  <BadgeIcon />
+                </Icon>
+              )}
             </Circle>
             <Text
               textStyle="sm"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.121.0
+
+- Changed: the Control page's header no longer shows the version beside Connected — the Software card on the Device tab has this device's, the installed and the latest versions. The Update link still appears there when this page is older than the add-on.
+
 ## 0.120.0
 
 - Changed: the Climate page's thermostats on the phone are square tiles — the room's name and mode icon along the top, the temperature and what it's doing along the bottom — and on a desktop they are the wide tiles with larger type and more room, so the row of four fills its card instead of sitting in a thin strip.

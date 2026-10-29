@@ -10,7 +10,6 @@ import {
   SimpleGrid,
   Stack,
   Tabs,
-  Text,
   useMediaQuery,
 } from "@chakra-ui/react";
 import { MdSkipNext, MdRefresh } from "react-icons/md";
@@ -367,11 +366,8 @@ export function Control() {
         title="Control"
         actions={
           <>
-            {version.running && (
-              <Text textStyle="sm" color="fg.muted">
-                v{version.running}
-              </Text>
-            )}
+            {/* The running version was here until 0.121; SoftwareBoard
+                (Device) has it, with the installed and latest ones. */}
             {/* This page is older than the add-on: reload into the new one. */}
             {version.outdated && (
               <Button

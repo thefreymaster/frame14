@@ -19,7 +19,7 @@ For full-stack development, run both `npm run dev` and `node index.js` concurren
 
 Two separate processes:
 
-**Client** (`src/`) — Vite + React 19 + TypeScript. Entry: `src/main.tsx`. Providers: `Provider` (`src/components/ui/provider.tsx` — `ChakraProvider value={defaultSystem}` + Chakra's colour mode) + `QueryClientProvider` (TanStack Query), plus the Chakra `Toaster`. See "UI system" below. Built output (`dist/`) is served statically by Express in production, compressed, the hashed `assets/` files `immutable` and the rest `no-cache`; `public/sw.js` keeps the page and its files between launches (see "Start-up").
+**Client** (`src/`) — Vite + React 19 + TypeScript. Entry: `src/main.tsx`. Providers: `Provider` (`src/components/ui/provider.tsx` — `ChakraProvider value={defaultSystem}` + Chakra's colour mode) + `QueryClientProvider` (TanStack Query), plus the Chakra `Toaster`. See "UI system" below. Built output (`dist/`) is served statically by Express in production, compressed, the hashed `assets/` files `immutable` and the rest `no-cache`; `public/sw.js` keeps the page and its files between launches (see "Start-up"); `public/manifest.json` is the web app manifest (see "PWA").
 
 **Server** (`index.js`) — Express 5 + Socket.IO (JavaScript, not TypeScript). Config is read from `/data/options.json` (HA addon) with `.env` fallback via `config.js`. Entity IDs are read from `options.json` (HA addon) or `frame14.json` (local dev) via `entities.js`. Routes are split into `routes/` files and mounted in `index.js`. The OpenAPI document lives in `openapi.js`.
 
@@ -154,6 +154,22 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   since 0.107) with `immutable` cache headers, the socket opens as a WebSocket first (polling only as the
   fallback), and `useEntity` applies the burst of states after a connect once per frame in one notifyManager batch,
   the acks behind them. The splash's choreography is skipped on a quick launch (0.106, see "Launch splash").
+- **PWA** (0.118). `public/manifest.json` (linked from index.html) makes the site installable: `name` Frame14,
+  `start_url` /, `display` standalone, and the icons `public/web-app-manifest-192x192.png` / `-512x512.png` (purpose
+  `any`, the 512 again as `maskable`: the blue tile fills the square with the house inside the safe zone), which the
+  shortcuts (Clock, Photos, Remote) share; index.html's tab icon is `favicon-96x96.png` (beside `favicon.svg`) and its
+  apple-touch-icon `apple-touch-icon.png`. Those PNGs and `favicon.ico` are the icon set (RealFaviconGenerator's
+  names, replaced whole when the logo changes; its `site.webmanifest` came along and is unused — manifest.json is the
+  one linked). Until 0.118 the manifest and index.html still named the `icon-*.png` files from before that rename, and
+  since the SPA fallback answers any path with index.html those downloaded as HTML: Chrome fell through to the
+  manifest's `favicon.svg` entry (so it was installable even then — with no SVG it reports `no-acceptable-icon`), while
+  the apple-touch-icon and the shortcut icons had nothing. Chrome's and Edge's address-bar install button wants a
+  secure context — HTTPS, or localhost; never a LAN `http://` address — and a manifest with a name, a `start_url`, a
+  standalone display and an icon that decodes (a service worker with a fetch handler stopped being required on desktop
+  in Chrome 112; `sw.js` has one regardless); Safari on a Mac has no button, only File › Add to Dock. The preview
+  tooling's `pwa-install-check.mjs` runs Chrome's own check (`Page.getInstallabilityErrors`, DevTools' Manifest pane;
+  full Chrome only, `CHROME=` its binary — the headless shell always answers an empty list) and shows what each icon
+  URL serves.
 - **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
   `colorPalette`. Where a raw CSS string is needed (SVG strokes in the climate dialog's dial and the analog
   clock, the energy charts' lines), use the variable, e.g. `var(--chakra-colors-orange-solid)`.

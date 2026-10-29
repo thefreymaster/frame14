@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.118.0
+
+- Added: Frame14 installs as an app on a desktop. Open it at its HTTPS address in Chrome or Edge and the install button sits at the right end of the address bar (and "Install Frame14" is in the browser's menu); it opens in its own window with the Frame14 icon, the way the iPhone home-screen app does. A plain http:// address never gets the offer, and Safari on a Mac installs from File › Add to Dock instead.
+- Fixed: the app's PNG icons had pointed at files that no longer existed since the logo changed, so the installed app, the browser tab and the iPhone home screen made do with whatever the browser could find. The tab icon, the home-screen icon and the app's icons all name the right files again.
+
 ## 0.117.1
 
 - Fixed: 0.117.0 changed nothing in Safari after all. Now, in Safari on an iPhone (the site in the browser, not the home-screen app), the page scrolls as a web page does, so Safari shrinks its bar as you scroll and the content runs on under it; the header and the navigation bar stay put above Safari's bar. The home-screen app is unchanged.

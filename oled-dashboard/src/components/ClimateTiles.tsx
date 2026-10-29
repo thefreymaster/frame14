@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Badge, Box, Card, Grid, HStack, Icon, Stat } from "@chakra-ui/react";
 import type { HomeClimate } from "../hooks/useHomeData";
+import { useSquareThermostats } from "../hooks/useSquareThermostats";
 import { ClimateDialog } from "./ClimateDialog";
 import {
   climateGridCss,
@@ -8,11 +9,16 @@ import {
   fmtClimateTemp,
   hvacPalette,
   MODE_ICON,
+  thermostatGridCss,
 } from "../lib/hvac";
 
 /**
  * One thermostat as a Stat tile: the name and a mode icon, then the room
- * temperature and what it's doing. A unit that's on gets the dialog's ring: a
+ * temperature and what it's doing. `square` (0.119, see useSquareThermostats)
+ * makes it a square — its width the grid's column (thermostatGridCss), its
+ * height the same — with the name along the top and the reading along the
+ * bottom, the middle open between them; otherwise it is the wide tile, the
+ * two rows one under the other. A unit that's on gets the dialog's ring: a
  * 0.25rem border in its mode's colour (orange heat, blue cool, teal fan, from
  * hvacPalette, so the tile and the dial it opens match), with the icon and
  * status line in that colour. The status says whether it's running now
@@ -24,9 +30,11 @@ import {
 export function ClimateTile({
   unit,
   onTap,
+  square = false,
 }: {
   unit: HomeClimate;
   onTap: () => void;
+  square?: boolean;
 }) {
   const { shown, on, running, status, spoken } = climateStatus(unit);
   const { accent, ring, palette } = hvacPalette(shown);
@@ -48,6 +56,7 @@ export function ClimateTile({
       cursor="pointer"
       focusVisibleRing="outside"
       _active={{ bg: "bg.emphasized" }}
+      aspectRatio={square ? "1" : undefined}
     >
       <button
         type="button"
@@ -55,7 +64,12 @@ export function ClimateTile({
         onClick={onTap}
       >
         <Card.Body p="3">
-          <Stat.Root size="lg">
+          {/* The body is already a flex column that fills the card. */}
+          <Stat.Root
+            size="lg"
+            flex="1"
+            justifyContent={square ? "space-between" : undefined}
+          >
             {/* A narrow tile (a phone, or four across in landscape) wraps the
                 name rather than cutting it off. */}
             <HStack justify="space-between" align="start" gap="2">
@@ -106,22 +120,32 @@ export function ClimateTile({
  * 1600px wide, so it clears Chakra's xl, but the Home card is only the 1.15fr
  * cell of the bento. The container query asks how wide the card actually is,
  * which is right on the frame, on a phone and in a wide desktop window alike.
- * See climateGridCss for the columns.
+ * See climateGridCss for the columns, and thermostatGridCss for the square
+ * tiles' (capped at a tile's width).
  */
 export function ClimateTiles({ climate }: { climate: HomeClimate[] }) {
   const [open, setOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+  const square = useSquareThermostats();
   const selectedUnit =
     climate.find((unit) => unit.entity_id === selectedEntityId) ?? null;
 
   return (
     <>
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <Grid css={climateGridCss(climate.length)} width="100%">
+        <Grid
+          css={
+            square
+              ? thermostatGridCss(climate.length)
+              : climateGridCss(climate.length)
+          }
+          width="100%"
+        >
           {climate.map((unit) => (
             <ClimateTile
               key={unit.entity_id || unit.name}
               unit={unit}
+              square={square}
               onTap={() => {
                 setSelectedEntityId(unit.entity_id);
                 setOpen(true);

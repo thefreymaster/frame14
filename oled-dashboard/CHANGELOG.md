@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.119.0
+
+- Changed: the thermostats are square tiles on a desktop and on the phone — the room's name and mode icon along the top, the temperature and what it's doing along the bottom — on the Home card and on the Climate page alike. A desktop shows a row of them at a sensible size rather than stretching four across the whole card; the phone has them two by two. The kitchen frame keeps its wide tiles.
+
 ## 0.118.1
 
 - Fixed: behind Cloudflare Access (or any sign-in that lives in a cookie) the browser never offered the install, because it asks for the app's manifest without cookies and got the sign-in page instead. The manifest is now requested with the session, so Chrome's and Edge's install button appears at frame's HTTPS address as it should.

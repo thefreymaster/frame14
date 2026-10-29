@@ -164,10 +164,6 @@ export const MODE_ICON: Record<ClimateVisualMode, typeof IoFlame> = {
 // Narrowest a home-card tile gets, and the grid gap between tiles, in rem.
 const TILE_MIN_REM = 9;
 const TILE_GAP_REM = 0.75;
-// Widest a thermostat tile gets, in rem. The thermostat tiles are squares
-// (0.119), so this is their height too: a row of four on a desktop stops here
-// rather than filling the card with squares the size of the card's height.
-const TILE_MAX_REM = 12;
 
 /**
  * Columns for `count` thermostats at least `minRem` wide with `gapRem`
@@ -175,19 +171,16 @@ const TILE_MAX_REM = 12;
  * wrapper a size container. One column, then two, then one row for every
  * unit once they all fit; never a row of three with one left over. In rem so
  * the steps follow the root size. The gap itself is the caller's to set.
- * Each column is `minmax(0, maxTrack)`: `1fr` shares the width out, a length
- * caps a column at it and leaves the rest of the row empty.
  */
 export function climateColumnsCss(
   count: number,
   minRem = TILE_MIN_REM,
   gapRem = TILE_GAP_REM,
-  maxTrack = "1fr",
 ) {
   const atLeast = (n: number) =>
     `@container (min-width: ${n * minRem + (n - 1) * gapRem}rem)`;
   const columns = (n: number) => ({
-    gridTemplateColumns: `repeat(${n}, minmax(0, ${maxTrack}))`,
+    gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
   });
   const pair = Math.max(1, Math.min(2, count));
   const all = Math.max(1, count);
@@ -199,37 +192,14 @@ export function climateColumnsCss(
 }
 
 /**
- * The home card's tiles (and their skeletons): the fans', and the thermostats'
- * wide tiles on the frame (a desktop and a phone have the squares of
- * thermostatGridCss since 0.119). climateColumnsCss at the tiles' width and
- * gap, the columns sharing the width. Four units are 2x2 on the portrait
- * frame and on a phone, and one row in landscape; a very narrow card falls
- * back to a single column.
+ * The home card's thermostat tiles (and their skeleton): climateColumnsCss at
+ * the tiles' width and gap. Four units are 2x2 on the portrait frame and on a
+ * phone, and one row in landscape; a very narrow card falls back to a single
+ * column.
  */
 export function climateGridCss(count: number) {
   return {
     gap: `${TILE_GAP_REM}rem`,
     ...climateColumnsCss(count),
-  };
-}
-
-/**
- * The square thermostat tiles' grid (ClimateTiles and ClimateSkeleton on a
- * desktop and a phone, useSquareThermostats; the Home card and /climate):
- * climateGridCss's columns, each capped at TILE_MAX_REM, since the tiles are
- * squares (0.119) — as wide as the row allows up to that, and the row
- * left-aligned with the rest empty, rather than a desktop's four stretched to
- * 400px squares. On a phone two columns are under the cap, so the tiles fill
- * the card as before, now 2x2 squares.
- */
-export function thermostatGridCss(count: number) {
-  return {
-    gap: `${TILE_GAP_REM}rem`,
-    ...climateColumnsCss(
-      count,
-      TILE_MIN_REM,
-      TILE_GAP_REM,
-      `${TILE_MAX_REM}rem`,
-    ),
   };
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.120.0
+
+- Changed: the Climate page's thermostats on the phone are square tiles — the room's name and mode icon along the top, the temperature and what it's doing along the bottom — and on a desktop they are the wide tiles with larger type and more room, so the row of four fills its card instead of sitting in a thin strip.
+- Changed: the Home card's thermostats are the wide tiles again on every device, as before 0.119; the kitchen frame's Climate page is unchanged.
+
 ## 0.119.0
 
 - Changed: the thermostats are square tiles on a desktop and on the phone — the room's name and mode icon along the top, the temperature and what it's doing along the bottom — on the Home card and on the Climate page alike. A desktop shows a row of them at a sensible size rather than stretching four across the whole card; the phone has them two by two. The kitchen frame keeps its wide tiles.

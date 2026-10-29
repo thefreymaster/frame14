@@ -8,7 +8,9 @@ import { PageShell } from "../components/PageShell";
 import { ClimateSkeleton } from "../components/skeletons/ClimateSkeleton";
 import { EmptyState } from "../components/ui/empty-state";
 import { useClimate } from "../hooks/useClimate";
+import { useDesktop } from "../hooks/useDesktop";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
+import { useDeviceMode } from "../lib/deviceMode";
 import { isClimateOn } from "../lib/hvac";
 
 /**
@@ -16,11 +18,17 @@ import { isClimateOn } from "../lib/hvac";
  * two or four across as the width allows, a tap opening the thermostat
  * dialog) in one card under the header, which counts the units that are on
  * and carries All off. Since 0.110; a ClimatePanel each (the dial, mode and
- * fan speed open on the page, over today's temperature strip) before.
+ * fan speed open on the page, over today's temperature strip) before. Since
+ * 0.120 the tiles are squares on a phone (controller mode: the user liked
+ * 0.119's there) and, on a desktop, the wide tiles at the `lg` size (larger
+ * type and padding, so the row of four fills its card); the frame keeps the
+ * Home card's plain tile, as the Home card does everywhere.
  */
 export function Climate() {
   const { data: config, isPending } = useEntitiesConfig();
   const { climate, loading } = useClimate();
+  const size = useDesktop() ? "lg" : "md";
+  const square = useDeviceMode() === "controller";
 
   const configured = (config?.climate?.length ?? 0) > 0;
   const onIds = climate.filter(isClimateOn).map((unit) => unit.entity_id);
@@ -54,7 +62,11 @@ export function Climate() {
         // The "Climate" group is what the page is — labelling its card again
         // would just repeat the page header (as /lights).
         <Board>
-          {loading ? <ClimateSkeleton /> : <ClimateTiles climate={climate} />}
+          {loading ? (
+            <ClimateSkeleton size={size} square={square} />
+          ) : (
+            <ClimateTiles climate={climate} size={size} square={square} />
+          )}
         </Board>
       )}
     </PageShell>

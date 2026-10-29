@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Badge, Box, Card, Grid, HStack, Icon, Stat } from "@chakra-ui/react";
 import type { HomeClimate } from "../hooks/useHomeData";
-import { useSquareThermostats } from "../hooks/useSquareThermostats";
 import { ClimateDialog } from "./ClimateDialog";
 import {
   climateGridCss,
@@ -9,16 +8,18 @@ import {
   fmtClimateTemp,
   hvacPalette,
   MODE_ICON,
-  thermostatGridCss,
 } from "../lib/hvac";
+
+/** How big a tile's type is: `lg` is /climate on a desktop (0.120). */
+export type ClimateTileSize = "md" | "lg";
 
 /**
  * One thermostat as a Stat tile: the name and a mode icon, then the room
- * temperature and what it's doing. `square` (0.119, see useSquareThermostats)
- * makes it a square — its width the grid's column (thermostatGridCss), its
- * height the same — with the name along the top and the reading along the
- * bottom, the middle open between them; otherwise it is the wide tile, the
- * two rows one under the other. A unit that's on gets the dialog's ring: a
+ * temperature and what it's doing. `square` (0.120, /climate on a phone: the
+ * user liked 0.119's squares there) makes it a square with the name row
+ * along the top and the reading along the bottom, the middle open; `size`
+ * lg (/climate on a desktop) is the same tile with larger type and more
+ * padding, so a row of four fills its card. A unit that's on gets the dialog's ring: a
  * 0.25rem border in its mode's colour (orange heat, blue cool, teal fan, from
  * hvacPalette, so the tile and the dial it opens match), with the icon and
  * status line in that colour. The status says whether it's running now
@@ -30,12 +31,15 @@ import {
 export function ClimateTile({
   unit,
   onTap,
+  size = "md",
   square = false,
 }: {
   unit: HomeClimate;
   onTap: () => void;
+  size?: ClimateTileSize;
   square?: boolean;
 }) {
+  const lg = size === "lg";
   const { shown, on, running, status, spoken } = climateStatus(unit);
   const { accent, ring, palette } = hvacPalette(shown);
   const ModeIcon = MODE_ICON[shown];
@@ -63,8 +67,9 @@ export function ClimateTile({
         aria-label={`${unit.name}: ${reading}, ${spoken}`}
         onClick={onTap}
       >
-        <Card.Body p="3">
-          {/* The body is already a flex column that fills the card. */}
+        <Card.Body p={lg ? "5" : "3"}>
+          {/* The body is a flex column filling the card, so a square tile
+              can push its reading to the bottom. */}
           <Stat.Root
             size="lg"
             flex="1"
@@ -73,12 +78,16 @@ export function ClimateTile({
             {/* A narrow tile (a phone, or four across in landscape) wraps the
                 name rather than cutting it off. */}
             <HStack justify="space-between" align="start" gap="2">
-              <Stat.Label minW="0" lineClamp="2">
+              <Stat.Label
+                minW="0"
+                lineClamp="2"
+                textStyle={lg ? "lg" : undefined}
+              >
                 {unit.name}
               </Stat.Label>
               <Icon
                 color={on ? accent : "fg.subtle"}
-                boxSize="5"
+                boxSize={lg ? "7" : "5"}
                 animation={
                   running ? "pulse 2s ease-in-out infinite" : undefined
                 }
@@ -89,6 +98,7 @@ export function ClimateTile({
             <HStack justify="space-between" gap="2" wrap="wrap">
               <Stat.ValueText
                 lineHeight="1"
+                textStyle={lg ? "6xl" : undefined}
                 color={on ? undefined : "fg.muted"}
               >
                 {reading}
@@ -96,13 +106,15 @@ export function ClimateTile({
               {on ? (
                 <Stat.HelpText
                   color={accent}
-                  textStyle="xs"
+                  textStyle={lg ? "md" : "xs"}
                   fontWeight="semibold"
                 >
                   {status}
                 </Stat.HelpText>
               ) : (
-                <Badge colorPalette="gray">{status}</Badge>
+                <Badge colorPalette="gray" size={lg ? "lg" : undefined}>
+                  {status}
+                </Badge>
               )}
             </HStack>
           </Stat.Root>
@@ -115,36 +127,38 @@ export function ClimateTile({
 /**
  * The thermostats as tiles, as many across as the width allows, each opening
  * ClimateDialog: the Home card's body, and /climate's since 0.110 (it laid
- * out a ClimatePanel each before). Measured against the card it is in, not
+ * out a ClimatePanel each before), which passes the tile's `size` and
+ * `square` (0.120: squares on a phone, lg type on a desktop; the Home card
+ * and the frame take the plain tile). Measured against the card it is in, not
  * the viewport: a viewport breakpoint gets the frame wrong — Frame14 is
  * 1600px wide, so it clears Chakra's xl, but the Home card is only the 1.15fr
  * cell of the bento. The container query asks how wide the card actually is,
  * which is right on the frame, on a phone and in a wide desktop window alike.
- * See climateGridCss for the columns, and thermostatGridCss for the square
- * tiles' (capped at a tile's width).
+ * See climateGridCss for the columns.
  */
-export function ClimateTiles({ climate }: { climate: HomeClimate[] }) {
+export function ClimateTiles({
+  climate,
+  size,
+  square,
+}: {
+  climate: HomeClimate[];
+  size?: ClimateTileSize;
+  square?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
-  const square = useSquareThermostats();
   const selectedUnit =
     climate.find((unit) => unit.entity_id === selectedEntityId) ?? null;
 
   return (
     <>
       <Box css={{ containerType: "inline-size" }} width="100%" minW="0">
-        <Grid
-          css={
-            square
-              ? thermostatGridCss(climate.length)
-              : climateGridCss(climate.length)
-          }
-          width="100%"
-        >
+        <Grid css={climateGridCss(climate.length)} width="100%">
           {climate.map((unit) => (
             <ClimateTile
               key={unit.entity_id || unit.name}
               unit={unit}
+              size={size}
               square={square}
               onTap={() => {
                 setSelectedEntityId(unit.entity_id);

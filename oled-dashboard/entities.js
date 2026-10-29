@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 function loadJson(p) {
@@ -70,8 +71,11 @@ function loadEntities() {
     };
   }
 
-  // Local dev fallback: frame14.json
-  const localPath = fileURLToPath(new URL("./frame14.json", import.meta.url));
+  // Local dev fallback: frame14.json — or the file FRAME14_CONFIG names (the
+  // end-to-end tests point it at tests/stub/frame14.test.json).
+  const localPath = process.env.FRAME14_CONFIG
+    ? path.resolve(process.env.FRAME14_CONFIG)
+    : fileURLToPath(new URL("./frame14.json", import.meta.url));
   const frame14 = fs.existsSync(localPath) ? loadJson(localPath) : null;
   if (frame14) {
     return {

@@ -24,3 +24,8 @@ photos/
 *.njsproj
 *.sln
 *.sw?
+
+# Tests
+test-results
+playwright-report
+coverage

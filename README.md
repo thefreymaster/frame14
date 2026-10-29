@@ -6,6 +6,7 @@
 
 [![Version][version-shield]][releases]
 [![Build][build-shield]][build]
+[![Tests][tests-shield]][tests]
 [![Release][publish-shield]][publish]
 ![Project Maintenance][maintenance-shield]
 [![Home Assistant Add-on][addon-shield]][repository]
@@ -239,6 +240,18 @@ npm run build
 ```
 
 Swagger UI: `http://localhost:4000/api/docs`
+
+### Tests
+
+Unit tests run with [Vitest](https://vitest.dev) and the end-to-end tests with [Playwright](https://playwright.dev), against a stub Home Assistant that ships with the repository (`tests/stub/stub-ha.mjs`), so neither needs a real Home Assistant. Both run on every pull request and every push to `main`.
+
+```bash
+npm test                              # the unit tests: the client's libs and components, the server's routes and socket
+npm run test:watch                    # the same, re-run as files change
+npm run build && npm run test:e2e     # the end-to-end tests: the built app in a desktop and a phone browser
+npx playwright install chromium       # once, for the browser the end-to-end tests drive
+```
+
 ## Authors & contributors
 
 The original setup of this repository is by [Evan Freymiller][thefreymaster].
@@ -247,6 +260,8 @@ The original setup of this repository is by [Evan Freymiller][thefreymaster].
 [version-shield]: https://img.shields.io/github/v/release/thefreymaster/frame14?label=version
 [build]: https://github.com/thefreymaster/frame14/actions/workflows/build.yml
 [build-shield]: https://img.shields.io/github/actions/workflow/status/thefreymaster/frame14/build.yml?branch=main&label=build
+[tests]: https://github.com/thefreymaster/frame14/actions/workflows/test.yml
+[tests-shield]: https://img.shields.io/github/actions/workflow/status/thefreymaster/frame14/test.yml?branch=main&label=tests
 [publish]: https://github.com/thefreymaster/frame14/actions/workflows/release.yml
 [publish-shield]: https://img.shields.io/github/actions/workflow/status/thefreymaster/frame14/release.yml?branch=main&label=release
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2026.svg

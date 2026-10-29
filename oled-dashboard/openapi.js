@@ -107,6 +107,45 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/entities": {
+      get: {
+        tags: ["Health"],
+        operationId: "getEntities",
+        summary: "The entity configuration, with the lights by room",
+        description:
+          "The entity ids the add-on is configured with (options.json, or frame14.json outside the add-on). `lights` is the explicit light_entities list grown by every light in the configured light_areas, and `rooms` groups the lights and switches by Home Assistant area — the configured areas first, then any other area a light is in. Until the registries have been read, `lights` is the explicit list and `rooms` is empty. Pushed again over Socket.IO (\"entities\") when the rooms change.",
+        responses: {
+          200: {
+            description: "The entity configuration.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    lights: { type: "array", items: { type: "string" } },
+                    rooms: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", example: "living_room" },
+                          name: { type: "string", example: "Living Room" },
+                          lights: { type: "array", items: { type: "string" } },
+                        },
+                      },
+                    },
+                    climate: { type: "array", items: { type: "string" } },
+                    vacuums: { type: "array", items: { type: "string" } },
+                    fans: { type: "array", items: { type: "string" } },
+                  },
+                  additionalProperties: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     "/api/software": {
       get: {
         tags: ["Health"],
@@ -234,6 +273,27 @@ export const openApiDocument = {
           500: {
             description: "Failed to fetch weather from Home Assistant.",
             content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+        },
+      },
+    },
+    "/api/photos/config": {
+      get: {
+        tags: ["Photos"],
+        operationId: "getPhotosConfig",
+        summary: "The slideshow's album",
+        description: "The album the slideshow plays (`defaultAlbumId`), from the configuration.",
+        responses: {
+          200: {
+            description: "The photos configuration.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { defaultAlbumId: { type: "string", nullable: true } },
+                },
+              },
+            },
           },
         },
       },
@@ -637,6 +697,37 @@ export const openApiDocument = {
           404: { description: "Not a configured vacuum's map.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           502: { description: "Home Assistant returned an error.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           503: { description: "HA_TOKEN is missing.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/home/fan": {
+      get: {
+        tags: ["Vacuum"],
+        operationId: "getHomeFans",
+        summary: "The configured fans' states",
+        description:
+          "Every fan in fan_entities as the Home page's Fans card reads it: the state, the speed as a percentage and the preset mode.",
+        responses: {
+          200: {
+            description: "The fans.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      entity_id: { type: "string" },
+                      name: { type: "string" },
+                      state: { type: "string", example: "on" },
+                      percentage: { type: "number", nullable: true },
+                      presetMode: { type: "string", nullable: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },

@@ -166,10 +166,14 @@ with Chakra's own fonts, radii, shadows, borders and colours.
   the apple-touch-icon and the shortcut icons had nothing. Chrome's and Edge's address-bar install button wants a
   secure context — HTTPS, or localhost; never a LAN `http://` address — and a manifest with a name, a `start_url`, a
   standalone display and an icon that decodes (a service worker with a fetch handler stopped being required on desktop
-  in Chrome 112; `sw.js` has one regardless); Safari on a Mac has no button, only File › Add to Dock. The preview
-  tooling's `pwa-install-check.mjs` runs Chrome's own check (`Page.getInstallabilityErrors`, DevTools' Manifest pane;
-  full Chrome only, `CHROME=` its binary — the headless shell always answers an empty list) and shows what each icon
-  URL serves.
+  in Chrome 112; `sw.js` has one regardless); Safari on a Mac has no button, only File › Add to Dock. The manifest link
+  carries `crossorigin="use-credentials"` (0.118.1): a browser fetches the manifest without cookies otherwise, and
+  behind Cloudflare Access (the user's frame.unserver23.net) that request gets the sign-in redirect, so Chrome reported
+  `manifest-parsing-or-network-error` and offered nothing; with it the manifest and then the icons come with the
+  session. The preview tooling's `pwa-install-check.mjs` runs Chrome's own check (`Page.getInstallabilityErrors`,
+  DevTools' Manifest pane; full Chrome only, `CHROME=` its binary — the headless shell always answers an empty list),
+  shows what each icon URL serves, and with `BASE=http://127.0.0.1:4101 COOKIE=1` runs through `access-proxy.mjs`, an
+  Access stand-in that sends any cookieless request to a sign-in page and logs it.
 - **Colour from tokens.** Use semantic tokens (`fg`, `fg.muted`, `bg.muted`, `border`, `fg.success`, …) or a
   `colorPalette`. Where a raw CSS string is needed (SVG strokes in the climate dialog's dial and the analog
   clock, the energy charts' lines), use the variable, e.g. `var(--chakra-colors-orange-solid)`.

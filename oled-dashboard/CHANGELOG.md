@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.118.1
+
+- Fixed: behind Cloudflare Access (or any sign-in that lives in a cookie) the browser never offered the install, because it asks for the app's manifest without cookies and got the sign-in page instead. The manifest is now requested with the session, so Chrome's and Edge's install button appears at frame's HTTPS address as it should.
+
 ## 0.118.0
 
 - Added: Frame14 installs as an app on a desktop. Open it at its HTTPS address in Chrome or Edge and the install button sits at the right end of the address bar (and "Install Frame14" is in the browser's menu); it opens in its own window with the Frame14 icon, the way the iPhone home-screen app does. A plain http:// address never gets the offer, and Safari on a Mac installs from File › Add to Dock instead.

@@ -14,6 +14,7 @@ import { isPrintActive, printerStatus } from "../lib/printerStatus";
 import { Board } from "./Board";
 import { PrinterControls } from "./PrinterControls";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { Printer3dOutlineIcon } from "../lib/printerIcons";
 
 /**
  * The print job: the model's thumbnail and name, the progress as a big figure
@@ -44,7 +45,10 @@ export function PrinterJobCard({
       : "—";
 
   return (
-    <Board title={<SectionTitle>Print job</SectionTitle>} action={action}>
+    <Board
+      title={<SectionTitle icon={<Printer3dOutlineIcon />}>Print job</SectionTitle>}
+      action={action}
+    >
       <Stack gap="6">
         <HStack gap="4">
           {printer.coverVersion && (

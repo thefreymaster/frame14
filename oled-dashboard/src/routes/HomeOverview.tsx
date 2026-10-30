@@ -124,7 +124,7 @@ export function HomeOverview() {
     ),
     // Active-only sections: they claim a tile while running and are gone
     // when they aren't (the header's icons say they're running, too).
-    printer: <PrinterSection printer={data.printer} />,
+    printer: <PrinterSection />,
     vacuum: <VacuumSection vacuum={data.vacuum} />,
   };
 

@@ -37,6 +37,7 @@ import {
   shownNavItems,
   useNavLayout,
 } from "../lib/navLayout";
+import { IoCompassOutline } from "react-icons/io5";
 
 // The rows only move up and down.
 const verticalOnly: Modifier = ({ transform }) => ({ ...transform, x: 0 });
@@ -97,7 +98,7 @@ export function NavLayoutBoard() {
 
   return (
     <Board
-      title={<SectionTitle>Navigation</SectionTitle>}
+      title={<SectionTitle icon={<IoCompassOutline />}>Navigation</SectionTitle>}
       action={
         customized && (
           <Button

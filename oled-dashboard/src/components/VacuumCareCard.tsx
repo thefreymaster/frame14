@@ -10,6 +10,7 @@ import {
 import type { VacuumModel, VacuumPart } from "../hooks/useVacuum";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { IoConstructOutline } from "react-icons/io5";
 
 // Under a tenth of its life left: soon.
 const SOON = 0.1;
@@ -46,7 +47,7 @@ export function VacuumCareCard({ vacuum }: { vacuum: VacuumModel }) {
     <Board
       title={
         <Flex align="center" gap="3" width="100%">
-          <SectionTitle>Maintenance</SectionTitle>
+          <SectionTitle icon={<IoConstructOutline />}>Maintenance</SectionTitle>
           <Spacer />
           <Badge colorPalette={summary.palette}>{summary.text}</Badge>
         </Flex>

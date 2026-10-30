@@ -11,8 +11,12 @@ import {
   TILE_MIN_LG_REM,
 } from "../lib/hvac";
 
-/** How big a tile's type is: `lg` is /climate on a desktop (0.120). */
-export type ClimateTileSize = "md" | "lg";
+/**
+ * How big a tile's type is: `lg` is /climate on the frame (0.120, a desktop's
+ * then), `xl` /climate on a desktop (0.127): the lg tile with the reading a
+ * size larger, 7xl.
+ */
+export type ClimateTileSize = "md" | "lg" | "xl";
 
 /**
  * One thermostat as a Stat tile: the name and a mode icon, then the room
@@ -40,7 +44,8 @@ export function ClimateTile({
   size?: ClimateTileSize;
   square?: boolean;
 }) {
-  const lg = size === "lg";
+  const lg = size !== "md";
+  const xl = size === "xl";
   const { shown, on, running, status, spoken } = climateStatus(unit);
   const { accent, ring, palette } = hvacPalette(shown);
   const ModeIcon = MODE_ICON[shown];
@@ -99,7 +104,7 @@ export function ClimateTile({
             <HStack justify="space-between" gap="2" wrap="wrap">
               <Stat.ValueText
                 lineHeight="1"
-                textStyle={lg ? "6xl" : undefined}
+                textStyle={xl ? "7xl" : lg ? "6xl" : undefined}
                 color={on ? undefined : "fg.muted"}
               >
                 {reading}
@@ -157,7 +162,7 @@ export function ClimateTiles({
         <Grid
           css={climateGridCss(
             climate.length,
-            size === "lg" ? TILE_MIN_LG_REM : undefined,
+            size && size !== "md" ? TILE_MIN_LG_REM : undefined,
           )}
           width="100%"
         >

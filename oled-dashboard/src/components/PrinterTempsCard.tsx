@@ -3,6 +3,7 @@ import type { PrinterModel, PrinterTemp } from "../hooks/usePrinter";
 import { heaterOn } from "../lib/printerStatus";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { IoThermometerOutline } from "react-icons/io5";
 
 /** "220°C": the unit is written out, since the rest of the app's degrees
  *  are the house's °F. */
@@ -33,7 +34,11 @@ function TempStat({ label, temp }: { label: string; temp: PrinterTemp }) {
  */
 export function PrinterTempsCard({ printer }: { printer: PrinterModel }) {
   return (
-    <Board title={<SectionTitle>Temperatures</SectionTitle>}>
+    <Board
+      title={
+        <SectionTitle icon={<IoThermometerOutline />}>Temperatures</SectionTitle>
+      }
+    >
       <SimpleGrid columns={printer.chamber ? 3 : 2} gap="4">
         <TempStat label="Nozzle" temp={printer.nozzle} />
         <TempStat label="Bed" temp={printer.bed} />

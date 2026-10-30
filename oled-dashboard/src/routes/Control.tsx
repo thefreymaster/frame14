@@ -33,11 +33,15 @@ import {
   IoCalendar,
   IoVideocamOutline,
   IoVideocam,
-  // IoPlayCircleOutline, // media page
-  // IoPlayCircle, // media page
+  // IoPlayCircleOutline,
+  // media page
+  // IoPlayCircle,
+  // media page
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
+  IoBrowsersOutline,
+  IoTabletPortraitOutline,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -47,7 +51,6 @@ import {
 } from "react-icons/ri";
 import { TbVacuumCleaner } from "react-icons/tb";
 import type { IconType } from "react-icons";
-import { useNavigate } from "react-router";
 import { useSocket } from "../hooks/useSocket";
 import { connectionLabel } from "../lib/connection";
 import { reloadApp, useAppVersion } from "../lib/appVersion";
@@ -165,17 +168,6 @@ const VIEWS: {
   },
 ];
 
-// Control surfaces open on this device (a remote's user wants the lights and
-// thermostats in hand, not on the frame); the rest put the frames there.
-const LOCAL_ONLY_PATHS = new Set([
-  "/lights",
-  "/climate",
-  "/weather",
-  "/calendar",
-  // "/media", // media page
-  "/timer",
-]);
-
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "auto", label: "Auto" },
   { value: "bright", label: "Bright" },
@@ -206,7 +198,6 @@ export function Control() {
   const { status: connection } = useSocket();
   const version = useAppVersion();
   const { preference, effectiveMode, setPreference } = useThemeMode();
-  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<string | null>(null);
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
   // The frames' nav: a remote's own never hides.
@@ -236,17 +227,16 @@ export function Control() {
     };
   }, []);
 
+  // Every tile sends the frames there (0.127): the card is the frames'
+  // remote, and this device's nav is the way to its own pages. Lights,
+  // Climate, Weather, Calendar and Timer used to open on the remote instead.
   function changeView(path: string) {
-    if (LOCAL_ONLY_PATHS.has(path)) {
-      navigate(path);
-      return;
-    }
     socket.emit("change", path.replace("/", ""));
     setActiveView(path);
   }
 
   const viewsBoard = (
-    <Board title={<SectionTitle>Views</SectionTitle>}>
+    <Board title={<SectionTitle icon={<IoBrowsersOutline />}>Views</SectionTitle>}>
       <SimpleGrid columns={3} gap="3">
         {VIEWS.map((v) => {
           const isActive = activeView === v.path;
@@ -296,7 +286,7 @@ export function Control() {
     <Board
       title={
         <HStack justify="space-between" width="100%">
-          <SectionTitle>Display</SectionTitle>
+          <SectionTitle icon={<IoTabletPortraitOutline />}>Display</SectionTitle>
           {preference === "auto" && <Badge>auto · {effectiveMode}</Badge>}
         </HStack>
       }
@@ -354,7 +344,7 @@ export function Control() {
   );
 
   const albumBoard = (
-    <Board title={<SectionTitle>Album</SectionTitle>}>
+    <Board title={<SectionTitle icon={<IoImagesOutline />}>Album</SectionTitle>}>
       <AlbumSelect />
     </Board>
   );

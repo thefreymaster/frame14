@@ -22,6 +22,7 @@ import {
   IoPlaySkipForward,
   IoPowerOutline,
   IoStop,
+  IoTvOutline,
   IoVolumeMedium,
   IoVolumeMute,
 } from "react-icons/io5";
@@ -72,7 +73,7 @@ export function MediaPlayerCard({ entityId }: { entityId: string }) {
     <Board
       title={
         <Flex align="center" gap="3" width="100%">
-          <SectionTitle>{m.name}</SectionTitle>
+          <SectionTitle icon={<IoTvOutline />}>{m.name}</SectionTitle>
           <Spacer />
           <Badge colorPalette={m.palette}>{m.label}</Badge>
         </Flex>

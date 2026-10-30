@@ -1,7 +1,7 @@
 import { Box, Flex, Skeleton, Tabs } from "@chakra-ui/react";
 import { useSearchParams } from "react-router";
 import type { IconType } from "react-icons";
-import { IoFlash } from "react-icons/io5";
+import { IoFlash, IoFlashOutline } from "react-icons/io5";
 import { MdElectricBolt } from "react-icons/md";
 import { PiSolarRoof } from "react-icons/pi";
 import { useLiveEnergy } from "../hooks/useLiveEnergy";
@@ -51,7 +51,7 @@ export function Energy() {
         storageKey="energy-now"
         title={
           <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
-            <SectionTitle>Now</SectionTitle>
+            <SectionTitle icon={<IoFlashOutline />}>Now</SectionTitle>
             {grid(live.energy).active && (
               <Box ms="auto">
                 <GridBadge energy={live.energy} />

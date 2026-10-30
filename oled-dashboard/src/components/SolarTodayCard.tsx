@@ -5,6 +5,7 @@ import { coverage } from "../lib/energy";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { TodayPowerChart } from "./TodayPowerChart";
+import { IoSunnyOutline } from "react-icons/io5";
 
 /** The plot's height in TodayPowerChart, which the placeholder keeps to. */
 const PLOT_HEIGHT = { base: "9rem", md: "11rem" };
@@ -51,7 +52,7 @@ export function SolarTodayCard({
     <Board
       collapsible
       storageKey="energy-today"
-      title={<SectionTitle>Today</SectionTitle>}
+      title={<SectionTitle icon={<IoSunnyOutline />}>Today</SectionTitle>}
     >
       {loading || today.isPending ? (
         <SolarTodaySkeleton />

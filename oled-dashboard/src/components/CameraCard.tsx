@@ -4,6 +4,7 @@ import { useEntity } from "../hooks/useEntity";
 import { Board } from "./Board";
 import { CameraFeed, type CameraFeedState } from "./CameraFeed";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { IoVideocamOutline } from "react-icons/io5";
 
 interface NamedAttributes {
   friendly_name?: string | null;
@@ -43,7 +44,7 @@ export function CameraCard({ entityId }: { entityId: string }) {
     <Board
       title={
         <Flex align="center" gap="3" width="100%">
-          <SectionTitle>{name}</SectionTitle>
+          <SectionTitle icon={<IoVideocamOutline />}>{name}</SectionTitle>
           <Spacer />
           {badge && <Badge colorPalette={badge.palette}>{badge.label}</Badge>}
         </Flex>

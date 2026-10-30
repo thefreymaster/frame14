@@ -10,6 +10,7 @@ import { socket } from "../lib/socket";
 // import { useDesktop } from "../hooks/useDesktop"; // lights strip
 // import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics"; // lights strip
 import { CameraVideo } from "./CameraVideo";
+import { IoVideocamOutline } from "react-icons/io5";
 
 /**
  * Front-door card.
@@ -199,6 +200,9 @@ export function DoorbellCard() {
         <Status.Root colorPalette="red">
           <Status.Indicator animation="pulse 1.6s ease-in-out infinite" />
         </Status.Root>
+        <Icon color="fg.muted" boxSize="5" flexShrink={0}>
+          <IoVideocamOutline />
+        </Icon>
         <Box minW="0">
           <Card.Title truncate>{label}</Card.Title>
           <Card.Description>Person detected</Card.Description>

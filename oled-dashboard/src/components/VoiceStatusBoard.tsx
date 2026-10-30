@@ -4,6 +4,7 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { useAssistConfig } from "../hooks/useAssistConfig";
 import { micAvailable } from "../lib/voiceRecorder";
 import { DataListItem, DataListRoot } from "./ui/data-list";
+import { IoMicOutline } from "react-icons/io5";
 
 function Notice({
   status,
@@ -37,7 +38,7 @@ export function VoiceStatusBoard() {
   const hasMic = micAvailable();
 
   return (
-    <Board title={<SectionTitle>Voice</SectionTitle>}>
+    <Board title={<SectionTitle icon={<IoMicOutline />}>Voice</SectionTitle>}>
       <VStack align="stretch" gap="4">
         {isPending && <Text color="fg.muted">Checking…</Text>}
 

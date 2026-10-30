@@ -6,7 +6,6 @@ import { useHomeWeather } from "./useHomeWeather";
 import { useLiveEnergy } from "./useLiveEnergy";
 import { useEntitiesConfig } from "./useEntitiesConfig";
 import { useEntities, useEntity, type HAState } from "./useEntity";
-import { printerEntityIds } from "../lib/printerEntities";
 
 export interface HomeForecastPeriod {
   datetime: string;
@@ -64,27 +63,6 @@ export interface HomeClimate {
 export interface HomePerson {
   name: string;
   state: string;
-}
-
-export interface HomePrinter {
-  status: string;
-  progress: number;
-  remainingTime: number;
-  taskName: string | null;
-  nozzleTemp: number | null;
-  nozzleTarget: number | null;
-  bedTemp: number | null;
-  bedTarget: number | null;
-  currentLayer: number | null;
-  totalLayers: number | null;
-  currentStage: string | null;
-  endTime: string | null;
-  startTime: string | null;
-  printLength: number | null;
-  printWeight: number | null;
-  activeTray: string | null;
-  speedProfile: string | null;
-  gcodeFilename: string | null;
 }
 
 export interface HomeVacuum {
@@ -149,7 +127,7 @@ export interface HomeData {
   weather: HomeWeather | null;
   climate: HomeClimate[];
   people: HomePerson[];
-  printer: HomePrinter;
+  // The printer card reads usePrinter itself (0.127), as the pages do.
   vacuum: HomeVacuum[];
   fan: HomeFan[];
   energy: HomeEnergy;
@@ -183,41 +161,12 @@ const PERSON_ENTITIES = [
   { id: "person.elizabeth", name: "Elizabeth" },
 ] as const;
 
-const PRINTER_EXTRA_KEYS = [
-  "nozzleTemp",
-  "nozzleTarget",
-  "bedTemp",
-  "bedTarget",
-  "currentLayer",
-  "totalLayers",
-  "currentStage",
-  "endTime",
-  "startTime",
-  "printLength",
-  "printWeight",
-  "activeTray",
-  "speedProfile",
-  "gcodeFilename",
-] as const;
-
-type PrinterExtraKey = (typeof PRINTER_EXTRA_KEYS)[number];
-
-function cleanString(value: string | undefined | null): string | null {
-  if (!value) return null;
-  if (value === "unavailable" || value === "unknown") return null;
-  return value;
-}
-
 function parseFloatOrNull(
   value: number | string | undefined | null,
 ): number | null {
   if (value == null) return null;
   const n = typeof value === "number" ? value : parseFloat(value);
   return Number.isNaN(n) ? null : n;
-}
-
-function parseFloatOrZero(value: string | undefined | null): number {
-  return parseFloatOrNull(value) ?? 0;
 }
 
 /** Every entity has pushed a live state, so the REST snapshot isn't needed. */
@@ -346,26 +295,6 @@ export function useHomeData() {
   const personEvan = useEntity(PERSON_ENTITIES[0].id);
   const personElizabeth = useEntity(PERSON_ENTITIES[1].id);
 
-  // Printer — entity IDs derived from the configured status sensor
-  // (ha-bambulab or Bambuddy naming, see lib/printerEntities)
-  const printerIds = useMemo(
-    () => printerEntityIds(entitiesQuery.data?.printer),
-    [entitiesQuery.data?.printer],
-  );
-  // useEntities drops empty IDs from its results, so only ask for the fields
-  // this integration has; results then line up with printerExtraKeys.
-  const printerExtraKeys = useMemo(
-    () => PRINTER_EXTRA_KEYS.filter((key) => printerIds[key]),
-    [printerIds],
-  );
-  const printerStatus = useEntity(printerIds.status);
-  const printerProgress = useEntity(printerIds.progress);
-  const printerRemaining = useEntity(printerIds.remainingTime);
-  const printerTask = useEntity(printerIds.taskName);
-  const printerExtras = useEntities(
-    printerExtraKeys.map((key) => printerIds[key]),
-  );
-
   // Internet
   const ping = useEntity("binary_sensor.1_1_1_1");
 
@@ -440,36 +369,6 @@ export function useHomeData() {
     [personEvan.data, personElizabeth.data],
   );
 
-  const printerExtraStateByKey: Record<PrinterExtraKey, string | undefined> =
-    printerExtraKeys.reduce(
-      (acc, key, index) => {
-        acc[key] = printerExtras[index]?.data?.state;
-        return acc;
-      },
-      {} as Record<PrinterExtraKey, string | undefined>,
-    );
-  const homePrinter: HomePrinter = {
-    // Bambuddy reports RUNNING / PAUSE; ha-bambulab running / pause.
-    status: printerStatus.data?.state?.toLowerCase() ?? "unknown",
-    progress: parseFloatOrZero(printerProgress.data?.state),
-    remainingTime: parseFloatOrZero(printerRemaining.data?.state),
-    taskName: cleanString(printerTask.data?.state),
-    nozzleTemp: parseFloatOrNull(printerExtraStateByKey.nozzleTemp),
-    nozzleTarget: parseFloatOrNull(printerExtraStateByKey.nozzleTarget),
-    bedTemp: parseFloatOrNull(printerExtraStateByKey.bedTemp),
-    bedTarget: parseFloatOrNull(printerExtraStateByKey.bedTarget),
-    currentLayer: parseFloatOrNull(printerExtraStateByKey.currentLayer),
-    totalLayers: parseFloatOrNull(printerExtraStateByKey.totalLayers),
-    currentStage: cleanString(printerExtraStateByKey.currentStage),
-    endTime: cleanString(printerExtraStateByKey.endTime),
-    startTime: cleanString(printerExtraStateByKey.startTime),
-    printLength: parseFloatOrNull(printerExtraStateByKey.printLength),
-    printWeight: parseFloatOrNull(printerExtraStateByKey.printWeight),
-    activeTray: cleanString(printerExtraStateByKey.activeTray),
-    speedProfile: cleanString(printerExtraStateByKey.speedProfile),
-    gcodeFilename: cleanString(printerExtraStateByKey.gcodeFilename),
-  };
-
   const homeInternet = useMemo<HomeInternet>(
     () => ({ connected: ping.data === undefined || ping.data.state === "on" }),
     [ping.data],
@@ -480,7 +379,6 @@ export function useHomeData() {
       weather: homeWeather,
       climate: homeClimate,
       people: homePeople,
-      printer: homePrinter,
       vacuum: homeVacuum,
       fan: homeFan,
       energy: homeEnergy,
@@ -491,7 +389,6 @@ export function useHomeData() {
       homeWeather,
       homeClimate,
       homePeople,
-      homePrinter,
       homeVacuum,
       homeFan,
       homeEnergy,

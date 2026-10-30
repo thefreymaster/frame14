@@ -28,6 +28,20 @@ test.describe("the Climate page", () => {
     await expect(page.getByRole("button", { name: /^2nd Floor AC: 68°, Heat, set to 68°/ })).toBeVisible();
   });
 
+  test("a desktop's tiles show the temperature a size larger", async ({ page, isMobile }) => {
+    test.skip(isMobile, "a phone's tiles are the squares at the md size");
+    await page.goto("/climate");
+    const tile = page.getByRole("button", { name: /^1st Floor AC:/ });
+    await expect(tile).toBeVisible();
+    // 7xl, 4.5rem (0.127; the frame's lg tile is 6xl, 3.75rem). The root's
+    // size grows with the screen, so compare with it rather than a pixel count.
+    const sizes = await tile.getByText("64°").evaluate((el) => ({
+      reading: parseFloat(getComputedStyle(el).fontSize),
+      root: parseFloat(getComputedStyle(document.documentElement).fontSize),
+    }));
+    expect(sizes.reading / sizes.root).toBeCloseTo(4.5, 1);
+  });
+
   test("a live change from Home Assistant updates the tile", async ({ page, request }) => {
     await page.goto("/climate");
     await expect(page.getByRole("button", { name: /^1st Floor AC: 64°, Heating to 70°/ })).toBeVisible();

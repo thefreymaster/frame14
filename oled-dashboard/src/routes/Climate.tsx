@@ -8,6 +8,7 @@ import { PageShell } from "../components/PageShell";
 import { ClimateSkeleton } from "../components/skeletons/ClimateSkeleton";
 import { EmptyState } from "../components/ui/empty-state";
 import { useClimate } from "../hooks/useClimate";
+import { useDesktop } from "../hooks/useDesktop";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useDeviceMode } from "../lib/deviceMode";
 import { isClimateOn } from "../lib/hvac";
@@ -22,13 +23,16 @@ import { isClimateOn } from "../lib/hvac";
  * 0.119's there) and otherwise — a desktop, and the frame since 0.124 — the
  * wide tiles at the `lg` size (larger type and padding, with a wider minimum
  * column: four across in a desktop window, 2x2 on the frame); the Home card
- * keeps the plain tile everywhere.
+ * keeps the plain tile everywhere. Since 0.127 a desktop (useDesktop: the
+ * user's Mac, not the Android frame) takes the `xl` size — the same tile
+ * with the temperature a size larger.
  */
 export function Climate() {
   const { data: config, isPending } = useEntitiesConfig();
   const { climate, loading } = useClimate();
   const square = useDeviceMode() === "controller";
-  const size = square ? "md" : "lg";
+  const desktop = useDesktop();
+  const size = square ? "md" : desktop ? "xl" : "lg";
 
   const configured = (config?.climate?.length ?? 0) > 0;
   const onIds = climate.filter(isClimateOn).map((unit) => unit.entity_id);

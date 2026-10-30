@@ -25,4 +25,20 @@ test.describe("the Settings page", () => {
     await expect(page).toHaveURL(/\/home$/);
     await expect(page.getByRole("tab", { name: "Clock" })).toBeVisible();
   });
+
+  test("the Views card sends every view to the frames, and this remote stays on Settings", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "the Views card is a remote's");
+    await page.goto("/control");
+    // Lights (with Climate, Weather, Calendar and Timer) used to open on the
+    // remote itself (0.127).
+    const lights = page.getByRole("button", { name: "Lights", exact: true });
+    await expect(lights).toHaveAttribute("aria-pressed", "false");
+    await lights.click();
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/\/control$/);
+    await expect(lights).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "Clock", exact: true }).click();
+    await expect(page).toHaveURL(/\/control$/);
+    await expect(page.getByRole("button", { name: "Clock", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
 });

@@ -17,6 +17,7 @@ import { EnergyHistoryChart, type HistoryPoint } from "./EnergyHistoryChart";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { SegmentedControl } from "./ui/segmented-control";
 import { fmtKwh } from "../lib/energy";
+import { IoStatsChartOutline } from "react-icons/io5";
 
 const MONTHS = [
   "January",
@@ -216,7 +217,7 @@ export function SolarHistoryCard() {
             </IconButton>
             {/* Wide enough for the longest month, so the arrows stay put. */}
             <Box minW="9rem" textAlign="center">
-              <SectionTitle>{title}</SectionTitle>
+              <SectionTitle icon={<IoStatsChartOutline />}>{title}</SectionTitle>
             </Box>
             <IconButton
               aria-label={view === "month" ? "Next month" : "Next year"}

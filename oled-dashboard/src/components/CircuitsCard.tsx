@@ -3,6 +3,7 @@ import { useCircuits } from "../hooks/useCircuits";
 import { Board } from "./Board";
 import { CircuitBreakdown } from "./CircuitBreakdown";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { IoGridOutline } from "react-icons/io5";
 
 /**
  * The Energy page's Circuits tab: every monitored circuit's draw right now
@@ -17,7 +18,7 @@ export function CircuitsCard() {
     <Board
       fill
       title={
-        <SectionTitle>
+        <SectionTitle icon={<IoGridOutline />}>
           Circuits
           {totalWatts != null ? ` · ${(totalWatts / 1000).toFixed(1)} kW` : ""}
         </SectionTitle>

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pageErrors, resetStub } from "./helpers";
+import { pageErrors, resetStub, stub } from "./helpers";
 
 test.beforeEach(async ({ request }) => {
   await resetStub(request);
@@ -19,6 +19,29 @@ test("the home page comes up with live cards and no errors", async ({ page }) =>
   await expect(page.getByText("Solar covered today")).toBeVisible();
 
   expect(errors).toEqual([]);
+});
+
+test("the 3D printer card shows the job, its status and progress, follows a pause, and opens the Printer page", async ({ page, request }) => {
+  await page.goto("/home");
+  // The stub's A1 is printing a Benchy: 63%, 1.4 h to go, layer 142 of 226.
+  const card = page.locator('[data-card="printer"]');
+  await expect(card.getByRole("heading", { name: "3D printer" })).toBeVisible();
+  await expect(card.getByText("Printing")).toBeVisible();
+  await expect(card.getByText("1h 24m left")).toBeVisible();
+  await expect(card.getByText("Benchy_0.2mm_PLA")).toBeVisible();
+  await expect(card.getByText(/^Layer 142 of 226 · finishes \d+:\d\d/)).toBeVisible();
+  await expect(card.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "63");
+  await expect(card.locator('img[src^="/api/printer/cover"]')).toBeVisible();
+
+  await stub(request, "/_stub/state", {
+    entity_id: "sensor.a1_03919c442700723_print_status",
+    state: "pause",
+  });
+  await expect(card.getByText("Paused")).toBeVisible();
+  await expect(card.getByText("Layer 142 of 226", { exact: true })).toBeVisible();
+
+  await card.getByRole("button", { name: "Open the printer page" }).click();
+  await expect(page).toHaveURL(/\/printer$/);
 });
 
 test("the navigation reaches every main page", async ({ page }) => {

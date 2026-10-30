@@ -5,6 +5,7 @@ import { fmtWhen } from "../lib/format";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { SegmentedControl } from "./ui/segmented-control";
+import { IoMapOutline } from "react-icons/io5";
 
 /**
  * The vacuum's map, as its integration draws it (an image entity), in a
@@ -31,7 +32,7 @@ export function VacuumMapCard({
     <Board
       title={
         <Flex align="center" gap="3" width="100%">
-          <SectionTitle>{title}</SectionTitle>
+          <SectionTitle icon={<IoMapOutline />}>{title}</SectionTitle>
           <Spacer />
           {live && <Badge colorPalette="green">Live</Badge>}
         </Flex>

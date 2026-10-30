@@ -10,6 +10,7 @@ import { EmptyState } from "../components/ui/empty-state";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { usePrinter } from "../hooks/usePrinter";
 import { useVacuumMaps, type VacuumMap } from "../hooks/useVacuum";
+import { Printer3dOutlineIcon } from "../lib/printerIcons";
 
 // Stable empties while the config loads (useEntities re-subscribes when an
 // array changes identity).
@@ -66,7 +67,11 @@ export function Cameras() {
             <CameraCard key={id} entityId={id} />
           ))}
           {printer.configured && printer.hasCamera && (
-            <PrinterCameraCard title="3D printer" />
+            <PrinterCameraCard
+              title="3D printer"
+              icon={<Printer3dOutlineIcon />}
+              badge
+            />
           )}
           {vacuums.map((id) => (
             <VacuumMapPanel key={id} entityId={id} maps={maps.get(id) ?? NO_MAPS} />

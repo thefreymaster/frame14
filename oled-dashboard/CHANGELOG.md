@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.127.0
+
+- Changed: the 3D printer card on Home is the Printer page's job card in brief. Its header says the print's status (Printing, or Paused in orange) and the time left, so a collapsed card still tells you how it's going; the body shows the model's picture and name over the layer and the finish time, the progress as one figure, and the bar in the status's colour. A tap opens the Printer page. The pop-up it used to open was written for ha-bambulab's sensors and showed dashes for the Bambuddy printer's.
+- Changed: on a desktop, the Climate page's thermostat tiles show the room temperature a size larger.
+- Changed: every card with a title has an icon beside it, as the Home cards had: the Energy page's Now, Today, month and Circuits cards; Weather's Now, Hourly, daily and Radar; the Printer page's Print job, Camera and Temperatures; the Vacuum page's cards and its map; the Lights page's rooms (and a toggle for Switches); the Calendar page's days; the Cameras page's cameras; the Media page's players; the Settings page's Software, Updates, Navigation, Voice, Views, Display and Album; the doorbell card; and the stand-ins while arranging Home.
+- Added: on the Cameras page, the 3D printer's card has the Live badge the other cameras have (Offline when its stream fails), and the printer's icon.
+- Fixed: the navigation's highlighted entry no longer jumps to Home — or wherever the frames were sent — while the page stays where it is. It used to follow every view change broadcast, which a remote, and a frame on Settings, don't act on; now it follows the page on screen.
+
 ## 0.126.2
 
 - Changed: the add-on's build type-checks the test suite again, with the memory it needs — the build's limit goes from 512 MB to 1 GB — in place of 0.126.1's split type check.

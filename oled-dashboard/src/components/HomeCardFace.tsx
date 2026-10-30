@@ -1,6 +1,24 @@
-import { Card, Circle, Icon } from "@chakra-ui/react";
+import { Card, Circle, HStack, Icon } from "@chakra-ui/react";
 import { MdDragIndicator } from "react-icons/md";
 import { HOME_CARDS, type HomeCardId } from "../lib/homeLayout";
+import { IoCalendarOutline, IoFlash, IoPartlySunnyOutline, IoRainyOutline, IoThermometerOutline, IoTrophyOutline } from "react-icons/io5";
+import { PiFan } from "react-icons/pi";
+import { TbVacuumCleaner } from "react-icons/tb";
+import { type IconType } from "react-icons";
+import { Printer3dOutlineIcon } from "../lib/printerIcons";
+
+// The stand-in's icon: the card's own (0.127, every titled card has one).
+const CARD_ICON: Record<HomeCardId, IconType> = {
+  header: IoPartlySunnyOutline,
+  teamTracker: IoTrophyOutline,
+  radar: IoRainyOutline,
+  energy: IoFlash,
+  climate: IoThermometerOutline,
+  fan: PiFan,
+  calendar: IoCalendarOutline,
+  printer: Printer3dOutlineIcon,
+  vacuum: TbVacuumCleaner,
+};
 
 /**
  * A card's contents plus, while arranging, its drag grip and the stand-in shown
@@ -25,6 +43,7 @@ export function HomeCardFace({
   children: React.ReactNode;
 }) {
   const { label, hiddenHint } = HOME_CARDS[id];
+  const CardIcon = CARD_ICON[id];
 
   return (
     <>
@@ -38,7 +57,12 @@ export function HomeCardFace({
             borderStyle="dashed"
           >
             <Card.Body>
-              <Card.Title>{label}</Card.Title>
+              <HStack gap="2">
+                <Icon color="fg.muted" boxSize="5">
+                  <CardIcon />
+                </Icon>
+                <Card.Title>{label}</Card.Title>
+              </HStack>
               {hidden ? (
                 <Card.Description>Hidden · the eye shows it again</Card.Description>
               ) : (

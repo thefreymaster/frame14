@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Badge, Button, Dialog, HStack, Portal, Text } from "@chakra-ui/react";
-import { IoCloudDownloadOutline, IoRefreshOutline } from "react-icons/io5";
+import {
+  IoCloudDownloadOutline,
+  IoCubeOutline,
+  IoRefreshOutline,
+} from "react-icons/io5";
 import { installSoftware, useSoftware } from "../hooks/useSoftware";
 import { useAppVersion } from "../lib/appVersion";
 import { Board } from "./Board";
@@ -89,7 +93,7 @@ export function SoftwareBoard() {
 
   return (
     <Board
-      title={<SectionTitle>Software</SectionTitle>}
+      title={<SectionTitle icon={<IoCubeOutline />}>Software</SectionTitle>}
       action={
         available ? (
           <Badge colorPalette="green">Update available</Badge>

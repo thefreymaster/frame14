@@ -3,6 +3,7 @@ import type { HomeCalendarEvent } from "../hooks/useHomeData";
 import { Board } from "./Board";
 import { CalendarEventList } from "./CalendarEventList";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { IoCalendarOutline } from "react-icons/io5";
 
 /** A "YYYY-MM-DD" as a local Date (not UTC midnight, which is the day before). */
 function localDate(date: string): Date {
@@ -56,7 +57,7 @@ export function CalendarDayCard({
     <Board
       title={
         <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
-          <SectionTitle>{title}</SectionTitle>
+          <SectionTitle icon={<IoCalendarOutline />}>{title}</SectionTitle>
           <Text textStyle="sm" color="fg.muted" ms="auto">
             {summary}
           </Text>

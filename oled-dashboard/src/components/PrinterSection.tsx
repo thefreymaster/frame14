@@ -1,220 +1,134 @@
-import { useState } from "react";
-import {
-  Badge,
-  Box,
-  HStack,
-  Progress,
-  SimpleGrid,
-  Stat,
-  Text,
-} from "@chakra-ui/react";
-import { Printer3dOutlineIcon } from "../lib/printerIcons";
+import { Badge, Box, HStack, Progress, Stack, Text } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
-import type { HomePrinter } from "../hooks/useHomeData";
-import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { useNavigate } from "react-router";
+import { usePrinter } from "../hooks/usePrinter";
+import { fmtClock, fmtDuration } from "../lib/format";
+import { Printer3dOutlineIcon } from "../lib/printerIcons";
+import { printerStatus } from "../lib/printerStatus";
 import { Board } from "./Board";
-import { PanelDialog } from "./PanelDialog";
+import { SectionTitle } from "./SectionTitle/SectionTitle";
 
-function fmtMins(minutes: number) {
-  if (!isFinite(minutes) || minutes <= 0) return "—";
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
+// The card is up while a job prints or sits paused — the states the header's
+// printer icon shows for too (ApplianceIndicators) — and gone otherwise.
+const SHOWN = new Set(["running", "printing", "pause"]);
 
-function fmtTime(iso: string | null) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  const h = d.getHours() % 12 || 12;
-  const m = String(d.getMinutes()).padStart(2, "0");
-  const ampm = d.getHours() < 12 ? "am" : "pm";
-  return `${h}:${m}${ampm}`;
-}
+/**
+ * The 3D printer's Home card: the /printer page's job card in brief (0.127).
+ * The header carries the status ("Printing" green, "Paused" orange, from
+ * printerStatus) and the time left, so the card still says how the print is
+ * going when it's collapsed. The body has the model's picture and name over
+ * the layer and the finish time, the progress as one big figure beside them,
+ * and the bar in the status's colour. A tap on the body opens the Printer
+ * page, as the weather card opens /weather (0.97): the dialog it used to open
+ * listed ha-bambulab's extra sensors and showed dashes for the Bambuddy
+ * printer's.
+ */
+export function PrinterSection() {
+  const printer = usePrinter();
+  const navigate = useNavigate();
+  if (!SHOWN.has(printer.status)) return null;
 
-function fmtNum(n: number | null, digits = 0): string {
-  if (n == null || isNaN(n)) return "—";
-  return n.toFixed(digits);
-}
-
-function titleCase(s: string): string {
-  return s.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-export function PrinterSection({ printer }: { printer: HomePrinter }) {
-  const [open, setOpen] = useState(false);
-  const isActive =
-    printer.status === "running" ||
-    printer.status === "printing" ||
-    printer.status === "pause";
-
-  if (!isActive) return null;
-
-  const cardProgress = Math.max(0, Math.min(100, printer.progress || 0));
+  const { label, palette } = printerStatus(printer.status);
+  const paused = printer.status === "pause";
+  const progress = Math.max(0, Math.min(100, printer.progress ?? 0));
+  const remaining = printer.remainingMinutes;
+  // Paused, the time left stands still and the finish time is anyone's guess.
+  const finishes =
+    !paused && printer.finishesAt ? fmtClock(printer.finishesAt) : null;
+  const layer =
+    printer.currentLayer != null && printer.totalLayers != null
+      ? `Layer ${printer.currentLayer} of ${printer.totalLayers}`
+      : null;
+  const detail = [layer, finishes && `finishes ${finishes}`]
+    .filter(Boolean)
+    .join(" · ");
+  const open = () => void navigate("/printer");
 
   return (
-    <>
-      <PrinterModal
-        printer={printer}
-        open={open}
-        onClose={() => setOpen(false)}
-      />
-      <Board
-        collapsible
-        storageKey="printer"
-        title={
-          <HStack width="100%" gap="3">
-            <SectionTitle icon={<Printer3dOutlineIcon />}>
-              3D printer
-            </SectionTitle>
-            <Box flex="1" minW="0" />
-            <Badge colorPalette="green">
-              <NumberFlow value={printer.progress} />%
-            </Badge>
-            <Text textStyle="sm" color="fg.muted">
-              {fmtMins(printer.remainingTime)}
+    <Board
+      collapsible
+      storageKey="printer"
+      title={
+        <HStack width="100%" gap="3">
+          <SectionTitle icon={<Printer3dOutlineIcon />}>3D printer</SectionTitle>
+          <Box flex="1" minW="0" />
+          <Badge colorPalette={palette}>{label}</Badge>
+          {remaining != null && remaining > 0 && (
+            <Text textStyle="sm" color="fg.muted" whiteSpace="nowrap">
+              {fmtDuration(remaining)} left
+            </Text>
+          )}
+        </HStack>
+      }
+    >
+      <Box
+        role="button"
+        tabIndex={0}
+        aria-label="Open the printer page"
+        onClick={open}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open();
+          }
+        }}
+        cursor="pointer"
+        rounded="sm"
+        _focusVisible={{
+          outline: "2px solid",
+          outlineColor: "colorPalette.focusRing",
+          outlineOffset: "2px",
+        }}
+      >
+        <Stack gap="3">
+          <HStack gap="4" align="center">
+            {printer.coverVersion && (
+              <Box
+                flexShrink={0}
+                boxSize={{ base: "14", md: "16" }}
+                rounded="sm"
+                bg="bg.muted"
+                overflow="hidden"
+              >
+                <img
+                  src={`/api/printer/cover?v=${encodeURIComponent(printer.coverVersion)}`}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              </Box>
+            )}
+            <Box minW="0" flex="1">
+              <Text textStyle="lg" fontWeight="semibold" truncate>
+                {printer.taskName ?? "No job loaded"}
+              </Text>
+              {/* Wraps on a phone's narrow card rather than cutting the
+                  finish time short. */}
+              {detail && (
+                <Text textStyle="sm" color="fg.muted">
+                  {detail}
+                </Text>
+              )}
+            </Box>
+            <Text
+              textStyle="4xl"
+              fontWeight="semibold"
+              lineHeight="1"
+              flexShrink={0}
+            >
+              <NumberFlow value={Math.round(progress)} />%
             </Text>
           </HStack>
-        }
-      >
-        <Box
-          role="button"
-          aria-label="Show printer detail"
-          onClick={() => setOpen(true)}
-          cursor="pointer"
-        >
-          <Progress.Root value={cardProgress} colorPalette="green" size="lg">
-            <HStack justify="space-between" align="baseline" gap="4">
-              <Progress.Label textStyle="lg" fontWeight="normal" truncate>
-                {printer.taskName ?? "—"}
-              </Progress.Label>
-              <Text textStyle="3xl" fontWeight="semibold">
-                <NumberFlow value={printer.progress} />%
-              </Text>
-            </HStack>
-            <Progress.Track mt="3">
+          <Progress.Root value={progress} colorPalette={palette} size="lg">
+            <Progress.Track>
               <Progress.Range />
             </Progress.Track>
           </Progress.Root>
-        </Box>
-      </Board>
-    </>
-  );
-}
-
-function PrinterModal({
-  printer,
-  open,
-  onClose,
-}: {
-  printer: HomePrinter;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const etaLabel = fmtTime(printer.endTime);
-  const startLabel = fmtTime(printer.startTime);
-  const layerPct =
-    printer.totalLayers &&
-    printer.totalLayers > 0 &&
-    printer.currentLayer != null
-      ? Math.round((printer.currentLayer / printer.totalLayers) * 100)
-      : null;
-  const progress = Math.max(0, Math.min(100, printer.progress || 0));
-  const stageLabel = printer.currentStage
-    ? titleCase(printer.currentStage)
-    : titleCase(printer.status);
-
-  return (
-    <PanelDialog
-      open={open}
-      onClose={onClose}
-      title={printer.taskName ?? "3D printer"}
-    >
-      <Box>
-        <Badge colorPalette="green">{stageLabel}</Badge>
-        {printer.gcodeFilename && (
-          <Text textStyle="sm" color="fg.muted" mt="2" truncate>
-            {printer.gcodeFilename}
-          </Text>
-        )}
+        </Stack>
       </Box>
-
-      <Progress.Root value={progress} colorPalette="green" size="lg">
-        <HStack justify="space-between" align="end">
-          <Stat.Root>
-            <Stat.Label>Progress</Stat.Label>
-            <Stat.ValueText>
-              <NumberFlow value={progress} />%
-            </Stat.ValueText>
-          </Stat.Root>
-          <Stat.Root alignItems="end">
-            <Stat.Label>Remaining</Stat.Label>
-            <Stat.ValueText>{fmtMins(printer.remainingTime)}</Stat.ValueText>
-          </Stat.Root>
-        </HStack>
-        <Progress.Track mt="3">
-          <Progress.Range />
-        </Progress.Track>
-        <HStack justify="space-between" mt="2" textStyle="sm" color="fg.muted">
-          {startLabel && <Text>Started {startLabel}</Text>}
-          {etaLabel && <Text ms="auto">ETA {etaLabel}</Text>}
-        </HStack>
-      </Progress.Root>
-
-      <Box borderTopWidth="1px" pt="6">
-        <SimpleGrid columns={2} gap="6">
-          <StatTile
-            label="Layer"
-            value={
-              printer.currentLayer != null && printer.totalLayers != null
-                ? `${printer.currentLayer} / ${printer.totalLayers}${
-                    layerPct != null ? ` · ${layerPct}%` : ""
-                  }`
-                : "—"
-            }
-          />
-          <StatTile
-            label="Speed"
-            value={printer.speedProfile ? titleCase(printer.speedProfile) : "—"}
-          />
-          <StatTile
-            label="Nozzle"
-            value={`${fmtNum(printer.nozzleTemp)}° / ${fmtNum(printer.nozzleTarget)}°`}
-          />
-          <StatTile
-            label="Bed"
-            value={`${fmtNum(printer.bedTemp)}° / ${fmtNum(printer.bedTarget)}°`}
-          />
-          <StatTile label="Filament" value={printer.activeTray ?? "—"} />
-          <StatTile
-            label="Weight"
-            value={
-              printer.printWeight != null
-                ? `${fmtNum(printer.printWeight, 1)} g`
-                : "—"
-            }
-          />
-          <StatTile
-            label="Length"
-            value={
-              printer.printLength != null
-                ? `${fmtNum(printer.printLength, 1)} m`
-                : "—"
-            }
-          />
-          <StatTile label="Stage" value={stageLabel} />
-        </SimpleGrid>
-      </Box>
-    </PanelDialog>
-  );
-}
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <Stat.Root size="sm">
-      <Stat.Label>{label}</Stat.Label>
-      <Stat.ValueText>{value}</Stat.ValueText>
-    </Stat.Root>
+    </Board>
   );
 }

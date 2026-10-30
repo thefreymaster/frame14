@@ -18,7 +18,8 @@ export function ClimateSkeleton({
   size?: ClimateTileSize;
   square?: boolean;
 }) {
-  const lg = size === "lg";
+  const lg = size !== "md";
+  const xl = size === "xl";
   const { data: config } = useEntitiesConfig();
   const count = config?.climate?.length || DEFAULT_COUNT;
 
@@ -44,7 +45,7 @@ export function ClimateSkeleton({
               >
                 <Skeleton height={lg ? "7" : "5"} width="60%" />
                 <HStack justify="space-between" gap="2">
-                  <Skeleton height={lg ? "16" : "8"} width="30%" />
+                  <Skeleton height={xl ? "4.5rem" : lg ? "16" : "8"} width="30%" />
                   <Skeleton height={lg ? "6" : "5"} width="40%" />
                 </HStack>
               </Stack>

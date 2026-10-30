@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Box, Spacer, Tabs, type SystemStyleObject } from "@chakra-ui/react";
 import { useLocation, useNavigate } from "react-router";
 import { socket } from "../lib/socket";
@@ -76,13 +76,13 @@ export function LandscapeNav({
 }: LandscapeNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState(location.pathname);
-  // Follow route changes (derived during render rather than in an effect).
-  const [routePath, setRoutePath] = useState(location.pathname);
-  if (routePath !== location.pathname) {
-    setRoutePath(location.pathname);
-    setActiveView(location.pathname);
-  }
+  // The selected entry is the route on screen (0.127). The nav used to keep
+  // its own state and move it on every change_view broadcast — the frames'
+  // — so on a remote, or on /control, which stay put, it showed Home (or
+  // wherever the frames were sent) while the page didn't move. The devices
+  // that follow a broadcast are navigated by SocketViewListener, and the
+  // location says so here.
+  const activeView = location.pathname;
   const mode = useDeviceMode();
   const isFrame = mode === "frame";
   const { games } = useLiveGame();
@@ -91,22 +91,11 @@ export function LandscapeNav({
   const { bar, more } = splitForBar(items, NAV_BAR_ENTRIES[mode]);
   const barRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function onChangeView(view: string) {
-      setActiveView(`/${view}`);
-    }
-    socket.on("change_view", onChangeView);
-    return () => {
-      socket.off("change_view", onChangeView);
-    };
-  }, []);
-
   function handleClick(path: string) {
     navigate(path);
     if (isFrame && !LOCAL_ONLY_PATHS.has(path)) {
       socket.emit("change", path.replace("/", ""));
     }
-    setActiveView(path);
   }
 
   // Each nav entry is a Tabs trigger: the selected tab is the view on screen.

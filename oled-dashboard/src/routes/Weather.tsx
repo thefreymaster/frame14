@@ -134,7 +134,7 @@ export function Weather() {
     <Board
       collapsible
       storageKey="weather-now"
-      title={<SectionTitle>Now</SectionTitle>}
+      title={<SectionTitle icon={<IoPartlySunnyOutline />}>Now</SectionTitle>}
     >
       {loading ? (
         <Skeleton height="7rem" />
@@ -163,13 +163,16 @@ export function Weather() {
             {nowBoard}
           </Box>
           <Box gridArea="hourly" minW="0">
-            <Board title={<SectionTitle>Hourly</SectionTitle>}>
+            <Board title={<SectionTitle icon={<IoTimeOutline />}>Hourly</SectionTitle>}>
               {forecastBody("hourly")}
             </Board>
           </Box>
           {/* A flex column, so the Board (`fill`) stretches to the two rows. */}
           <Flex gridArea="daily" direction="column" minW="0">
-            <Board fill title={<SectionTitle>{dailyLabel}</SectionTitle>}>
+            <Board
+            fill
+            title={<SectionTitle icon={<IoCalendarOutline />}>{dailyLabel}</SectionTitle>}
+          >
               {forecastBody("daily")}
             </Board>
           </Flex>
@@ -179,7 +182,7 @@ export function Weather() {
             minW="0"
             scrollMarginBottom={PAGE_GUTTER}
           >
-            <Board title={<SectionTitle>Radar</SectionTitle>}>
+            <Board title={<SectionTitle icon={<MdRadar />}>Radar</SectionTitle>}>
               <RadarMap height={RADAR_DESKTOP_HEIGHT} rounded="sm" />
             </Board>
           </Box>

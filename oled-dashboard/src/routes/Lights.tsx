@@ -15,6 +15,7 @@ import { useDesktop } from "../hooks/useDesktop";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, useEntitiesAcked } from "../hooks/useEntity";
 import { LightsAllOffButton } from "../components/LightsAllOffButton";
+import { IoToggleOutline } from "react-icons/io5";
 
 // A stable empty list while the config loads: useEntities re-subscribes when
 // the array changes identity.
@@ -120,7 +121,17 @@ export function Lights() {
                   storageKey={`lights-${slugify(section.title)}`}
                   title={
                     named ? (
-                      <SectionTitle>{section.title}</SectionTitle>
+                      <SectionTitle
+                        icon={
+                          section.title === "Switches" ? (
+                            <IoToggleOutline />
+                          ) : (
+                            <MdOutlineLightbulb />
+                          )
+                        }
+                      >
+                        {section.title}
+                      </SectionTitle>
                     ) : undefined
                   }
                 >

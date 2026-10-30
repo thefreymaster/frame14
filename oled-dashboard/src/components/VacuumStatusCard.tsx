@@ -28,6 +28,7 @@ import { fanSpeedLabel, vacuumState } from "../lib/vacuum";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { SegmentedControl } from "./ui/segmented-control";
+import { TbVacuumCleaner } from "react-icons/tb";
 
 function fmtArea(area: number | null, unit: string): string {
   if (area == null || area <= 0) return "—";
@@ -70,7 +71,7 @@ export function VacuumStatusCard({ vacuum }: { vacuum: VacuumModel }) {
     <Board
       title={
         <Flex align="center" gap="3" width="100%">
-          <SectionTitle>{vacuum.name}</SectionTitle>
+          <SectionTitle icon={<TbVacuumCleaner />}>{vacuum.name}</SectionTitle>
           <Spacer />
           {!vacuum.loading && <Badge colorPalette={palette}>{label}</Badge>}
         </Flex>

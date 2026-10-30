@@ -4,6 +4,7 @@ import { setAutoRefresh, useAutoRefresh } from "../lib/autoRefresh";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Switch } from "./ui/switch";
+import { IoCloudDownloadOutline } from "react-icons/io5";
 
 /**
  * /control's Updates card: this device's auto refresh. On, the page reloads
@@ -16,7 +17,9 @@ export function UpdatesBoard() {
   const version = useAppVersion();
 
   return (
-    <Board title={<SectionTitle>Updates</SectionTitle>}>
+    <Board
+      title={<SectionTitle icon={<IoCloudDownloadOutline />}>Updates</SectionTitle>}
+    >
       <Field.Root>
         <Switch
           checked={autoRefresh}

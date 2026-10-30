@@ -33,9 +33,11 @@ const MONTHS = [
 ];
 
 /**
- * The date, the clock and the weather now. The clock is the device's own, so
- * it shows at once; while the weather is loading its two figures are
- * placeholders. Once it has landed, a tap opens /weather.
+ * The date, the clock and the weather now — the condition, humidity and
+ * today's high and low (0.127) on the top line, the temperature beside the
+ * clock. The clock is the device's own, so it shows at once; while the
+ * weather is loading its two figures are placeholders. Once it has landed, a
+ * tap opens /weather.
  */
 export function HomeHeader({
   internet: { connected = true },
@@ -62,6 +64,10 @@ export function HomeHeader({
   const date = now.getDate();
 
   const label = weather ? conditionLabel(weather.state) : "";
+  // Today's high and low: the daily forecast's first day is today.
+  const today = weather?.forecastDaily[0];
+  const high = today?.temperature != null ? Math.round(today.temperature) : null;
+  const low = today?.templow != null ? Math.round(today.templow) : null;
 
   return (
     <Board
@@ -84,6 +90,7 @@ export function HomeHeader({
           <Text color="fg.muted" flexShrink={0}>
             {label}
             {weather.humidity != null && ` ${weather.humidity}%`}
+            {high != null && low != null && ` · H ${high}° · L ${low}°`}
           </Text>
         )}
       </HStack>

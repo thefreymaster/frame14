@@ -248,6 +248,7 @@ Unit tests run with [Vitest](https://vitest.dev) and the end-to-end tests with [
 ```bash
 npm test                              # the unit tests: the client's libs and components, the server's routes and socket
 npm run test:watch                    # the same, re-run as files change
+npm run typecheck                     # the TypeScript check of everything, the tests included
 npm run build && npm run test:e2e     # the end-to-end tests: the built app in a desktop and a phone browser
 npx playwright install chromium       # once, for the browser the end-to-end tests drive
 ```

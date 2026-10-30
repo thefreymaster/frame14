@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.126.1
+
+- Fixed: 0.126.0 failed to install. The add-on's build type-checked the test suite along with the app and ran out of memory under the limit the build runs with; the build now checks the app alone, and the tests are type-checked by the repository's Tests workflow instead.
+
 ## 0.126.0
 
 - Changed: a card on the Home page that expands or collapses (a section opening, data arriving) now moves only the cards under it, in its own columns, down or up. Each card's column is set by its place in the order — press and hold to change it — so no card jumps to another column when a neighbour changes height. A saved layout may sit a little differently at first; arranging it again puts it right.

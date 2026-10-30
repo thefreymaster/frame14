@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "start": "node index.js",
-    "build": "tsc -b tsconfig.app.json tsconfig.node.json && vite build && node scripts/precompress.mjs",
-    "typecheck": "tsc -b",
+    "build": "tsc -b && vite build && node scripts/precompress.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

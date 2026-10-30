@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.126.2
+
+- Changed: the add-on's build type-checks the test suite again, with the memory it needs — the build's limit goes from 512 MB to 1 GB — in place of 0.126.1's split type check.
+
 ## 0.126.1
 
 - Fixed: 0.126.0 failed to install. The add-on's build type-checked the test suite along with the app and ran out of memory under the limit the build runs with; the build now checks the app alone, and the tests are type-checked by the repository's Tests workflow instead.

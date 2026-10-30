@@ -28,8 +28,6 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run typecheck
-
       - run: npm test
 
   e2e:

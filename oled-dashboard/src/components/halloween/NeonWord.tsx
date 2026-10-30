@@ -1,5 +1,6 @@
 import { Box } from "@chakra-ui/react";
 import { NEON } from "../../lib/halloween";
+import { NeonSparkles } from "./NeonSparkles";
 
 // Creepster (index.css's @font-face, src/assets/fonts/creepster) with the
 // heaviest faces a device is likely to have behind it.
@@ -18,6 +19,8 @@ const LIFT = [0.02, -0.03, 0.01, -0.02, 0.03, -0.01, 0.02, -0.03, 0];
  * One word in neon: a letter per tube, the NEON colours in turn from
  * `from`, each glowing in its own; the word rises and falls (hw-bob) or
  * rocks (hw-sway), and one letter's tube can be on its way out (hw-flicker).
+ * It sparkles (0.128.1): glints wink over the letters (NeonSparkles) and a
+ * faint brightening ripples along the word, a letter at a time (hw-shimmer).
  */
 export function NeonWord({
   word,
@@ -26,6 +29,7 @@ export function NeonWord({
   flicker,
   sway = false,
   delay = "0s",
+  sparkles = 10,
 }: {
   word: string;
   /** The font size, a CSS length. */
@@ -38,10 +42,13 @@ export function NeonWord({
   sway?: boolean;
   /** The movement's phase, as an animation-delay. */
   delay?: string;
+  /** How many glints sparkle over the word. */
+  sparkles?: number;
 }) {
   return (
     <Box
       as="span"
+      position="relative"
       display="block"
       whiteSpace="nowrap"
       lineHeight="1"
@@ -64,14 +71,19 @@ export function NeonWord({
             textShadow={glow(colour)}
             style={{
               transform: `rotate(${TILT[i % TILT.length]}deg) translateY(${LIFT[i % LIFT.length]}em)`,
-              animation:
-                i === flicker ? "hw-flicker 7s linear infinite" : undefined,
+              animation: [
+                i === flicker ? "hw-flicker 7s linear infinite" : "",
+                `hw-shimmer 2.8s ease-in-out ${-i * 0.35}s infinite alternate`,
+              ]
+                .filter(Boolean)
+                .join(", "),
             }}
           >
             {letter}
           </Box>
         );
       })}
+      <NeonSparkles seed={from + word.length} count={sparkles} />
     </Box>
   );
 }

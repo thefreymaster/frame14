@@ -1,15 +1,8 @@
 import { Box } from "@chakra-ui/react";
+import { seeded } from "../../lib/halloween";
 
-// The stars' places and timings are fixed — a seeded generator (mulberry32)
-// — so the sky is the same on every visit and in every screenshot.
-function seeded(seed: number) {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// The stars' places and timings are fixed (lib/halloween's seeded
+// generator), so the sky is the same on every visit and in every screenshot.
 
 const STAR_TINTS = ["#ffffff", "#ffffff", "#fff1c4", "#e4c6ff"];
 

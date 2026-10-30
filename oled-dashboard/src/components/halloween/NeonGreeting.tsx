@@ -29,13 +29,14 @@ export function NeonGreeting() {
       {/* The vw terms size the portrait frame's, the vh terms a landscape
           desktop's: Halloween at 19vw is 304px on the frame, four fifths of
           its width. */}
-      <NeonWord word="Happy" size="min(12.5vw, 15vh)" from={1} sway />
+      <NeonWord word="Happy" size="min(12.5vw, 15vh)" from={1} sway sparkles={8} />
       <NeonWord
         word="Halloween"
         size="min(19vw, 24vh)"
         from={0}
         flicker={4}
         delay="-2.5s"
+        sparkles={14}
       />
     </Box>
   );

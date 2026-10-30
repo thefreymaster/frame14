@@ -50,6 +50,7 @@ import {
   RiLightbulbFill,
 } from "react-icons/ri";
 import { TbVacuumCleaner } from "react-icons/tb";
+import { GiPumpkinLantern } from "react-icons/gi";
 import type { IconType } from "react-icons";
 import { useSocket } from "../hooks/useSocket";
 import { connectionLabel } from "../lib/connection";
@@ -58,6 +59,7 @@ import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { HOME_ONE_COLUMN_QUERY } from "../lib/homeLayout";
 import { useThemeMode } from "../hooks/useThemeMode";
+import { useHalloween } from "../hooks/useHalloween";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
 // The lights strip is off for now (0.91, see Layout); its switch with it.
 // import {
@@ -82,12 +84,14 @@ import { SegmentedControl } from "../components/ui/segmented-control";
 import { Status } from "../components/ui/status";
 import { Switch } from "../components/ui/switch";
 
-const VIEWS: {
+type View = {
   path: string;
   label: string;
   icon: IconType;
   activeIcon: IconType;
-}[] = [
+};
+
+const VIEWS: View[] = [
   {
     path: "/home",
     label: "Overview",
@@ -168,6 +172,15 @@ const VIEWS: {
   },
 ];
 
+// Oct 30 and 31 only (useHalloween), after the year-round views: like the
+// nav's entry it comes and goes with the date.
+const HALLOWEEN_VIEW: View = {
+  path: "/halloween",
+  label: "Halloween",
+  icon: GiPumpkinLantern,
+  activeIcon: GiPumpkinLantern,
+};
+
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "auto", label: "Auto" },
   { value: "bright", label: "Bright" },
@@ -210,6 +223,8 @@ export function Control() {
   // Measured before the first paint, so a phone never flashes the long page.
   const [phone] = useMediaQuery([HOME_ONE_COLUMN_QUERY], { ssr: false });
   const showViews = deviceMode !== "frame";
+  const halloween = useHalloween();
+  const views = halloween ? [...VIEWS, HALLOWEEN_VIEW] : VIEWS;
   const [tab, setTab] = useState<string>(showViews ? "views" : "display");
 
   useEffect(() => {
@@ -238,7 +253,7 @@ export function Control() {
   const viewsBoard = (
     <Board title={<SectionTitle icon={<IoBrowsersOutline />}>Views</SectionTitle>}>
       <SimpleGrid columns={3} gap="3">
-        {VIEWS.map((v) => {
+        {views.map((v) => {
           const isActive = activeView === v.path;
           const Icon = isActive ? v.activeIcon : v.icon;
           return (

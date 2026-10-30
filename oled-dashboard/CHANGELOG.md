@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.128.0
+
+- Added: a Halloween page, for Oct 30 and 31. "Happy Halloween" in neon tubes — orange, green, violet and pink, a letter each, one of them flickering — under a full moon, twinkling stars and a few bats, over a hill of glowing jack-o'-lanterns and a bare tree; and now and then a witch flies through on her broom. On those two days it is in the navigation (a remote's Navigation card offers it, off until turned on, like Football) and on a remote's Views card, which puts every frame on it; on any other day neither lists it, and a frame still on it at midnight on Nov 1 goes back to Home. Full screen like the movie posters: the navigation hides, and the eye at the corner brings it back. The `/halloween` path works all year for an automation (`GET /api/change/halloween`); the frames are never woken onto it by the motion sensor.
+
 ## 0.127.0
 
 - Changed: the 3D printer card on Home is the Printer page's job card in brief. Its header says the print's status (Printing, or Paused in orange) and the time left, so a collapsed card still tells you how it's going; the body shows the model's picture and name over the layer and the finish time, the progress as one figure, and the bar in the status's colour. A tap opens the Printer page. The pop-up it used to open was written for ha-bambulab's sensors and showed dashes for the Bambuddy printer's.

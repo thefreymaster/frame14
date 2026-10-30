@@ -19,6 +19,7 @@ import { Marquee } from "./routes/Marquee";
 import { Football } from "./routes/Football";
 import { Printer } from "./routes/Printer";
 import { Vacuum } from "./routes/Vacuum";
+import { Halloween } from "./routes/Halloween";
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +57,9 @@ export const router = createBrowserRouter([
       // { path: "/media", element: <Media /> }, // media page
       { path: "/marquee", element: <Marquee /> },
       { path: "/football", element: <Football /> },
+      // Offered on Oct 30 and 31 (lib/halloween); routed all year, for an
+      // automation or a bookmark.
+      { path: "/halloween", element: <Halloween /> },
     ],
   },
 ]);

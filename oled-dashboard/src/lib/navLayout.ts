@@ -137,18 +137,34 @@ export function useNavLayout(): NavEntry[] {
   return useSyncExternalStore(subscribe, get, get);
 }
 
-/**
- * This device's nav: the entries it shows, in its order. Football only while
- * a game is on (`gameDay`).
- */
-export function useNavItems(gameDay: boolean): NavItem[] {
-  const layout = useNavLayout();
-  return useMemo(() => shownNavItems(layout, gameDay), [layout, gameDay]);
+/** What today is, for the entries that come and go with the calendar. */
+export interface NavToday {
+  /** A tracked team is playing (useLiveGame): Football. */
+  gameDay: boolean;
+  /** Oct 30 or 31 (useHalloween): Halloween. */
+  halloween: boolean;
 }
 
-export function shownNavItems(layout: NavEntry[], gameDay: boolean): NavItem[] {
+/**
+ * This device's nav: the entries it shows, in its order. Football only while
+ * a game is on, Halloween on its two days (`today`).
+ */
+export function useNavItems({ gameDay, halloween }: NavToday): NavItem[] {
+  const layout = useNavLayout();
+  return useMemo(
+    () => shownNavItems(layout, { gameDay, halloween }),
+    [layout, gameDay, halloween],
+  );
+}
+
+export function shownNavItems(layout: NavEntry[], today: NavToday): NavItem[] {
   return layout
     .filter((e) => e.shown)
     .map((e) => NAV_ITEM_BY_PATH.get(e.path))
-    .filter((i): i is NavItem => i != null && (gameDay || !i.gameDay));
+    .filter(
+      (i): i is NavItem =>
+        i != null &&
+        (today.gameDay || !i.gameDay) &&
+        (today.halloween || !i.halloween),
+    );
 }

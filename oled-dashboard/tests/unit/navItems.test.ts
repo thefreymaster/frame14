@@ -18,11 +18,19 @@ describe("NAV_ITEMS", () => {
     expect(paths(NAV_ITEMS)).not.toContain("/media");
   });
 
-  it("keeps the 0.109 order", () => {
+  it("keeps the 0.109 order, Halloween (0.128) before Settings", () => {
     expect(paths(NAV_ITEMS)).toEqual([
       "/home", "/clock", "/lights", "/climate", "/photos", "/album", "/energy",
-      "/weather", "/printer", "/vacuum", "/cameras", "/calendar", "/football", "/control",
+      "/weather", "/printer", "/vacuum", "/cameras", "/calendar", "/football", "/halloween", "/control",
     ]);
+  });
+
+  it("Football and Halloween come and go with the day, and start off on a remote", () => {
+    const football = NAV_ITEMS.find((i) => i.path === "/football");
+    const halloween = NAV_ITEMS.find((i) => i.path === "/halloween");
+    expect(football).toMatchObject({ gameDay: true, remoteOff: true });
+    expect(halloween).toMatchObject({ halloween: true, remoteOff: true });
+    expect(halloween?.gameDay).toBeUndefined();
   });
 });
 

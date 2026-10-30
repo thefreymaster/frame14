@@ -189,6 +189,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/timer` | Timer; frame-only nav item |
 | `/marquee` | Plex now-playing poster art; auto-routed while a movie plays |
 | `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day |
+| `/halloween` | Happy Halloween in neon over a hill of jack-o'-lanterns, a witch flying through now and then; in the nav and on a remote's Views card on Oct 30 and 31 only |
 | `/blank` | Black screen (motion off) |
 | `/control` | Settings + remote control: device mode, this device's navigation, software updates |
 

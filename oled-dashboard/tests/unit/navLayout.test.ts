@@ -123,16 +123,31 @@ describe("save and reset", () => {
 });
 
 describe("shownNavItems", () => {
+  const everyday = { gameDay: false, halloween: false };
+
   it("is the shown entries as nav items, Football on game day only", () => {
     const layout = defaultNavLayout("frame");
-    const everyday = shownNavItems(layout, false).map((i) => i.path);
-    expect(everyday).not.toContain("/football");
-    const gameDay = shownNavItems(layout, true).map((i) => i.path);
+    const plain = shownNavItems(layout, everyday).map((i) => i.path);
+    expect(plain).not.toContain("/football");
+    const gameDay = shownNavItems(layout, { ...everyday, gameDay: true }).map((i) => i.path);
     expect(gameDay).toContain("/football");
     const hidden = shownNavItems(
       layout.map((e) => (e.path === "/lights" ? { ...e, shown: false } : e)),
-      false,
+      everyday,
     ).map((i) => i.path);
     expect(hidden).not.toContain("/lights");
+  });
+
+  it("Halloween on Oct 30 and 31 only, and only while the device shows it", () => {
+    const layout = defaultNavLayout("frame");
+    expect(shownNavItems(layout, everyday).map((i) => i.path)).not.toContain("/halloween");
+    const halloween = shownNavItems(layout, { ...everyday, halloween: true }).map((i) => i.path);
+    expect(halloween).toContain("/halloween");
+    expect(halloween).not.toContain("/football");
+    // A remote starts with it off; turned on, it comes with the day too.
+    expect(shownNavItems(defaultNavLayout("controller"), { ...everyday, halloween: true }).map((i) => i.path)).not.toContain("/halloween");
+    const turnedOn = defaultNavLayout("controller").map((e) => (e.path === "/halloween" ? { ...e, shown: true } : e));
+    expect(shownNavItems(turnedOn, { ...everyday, halloween: true }).map((i) => i.path)).toContain("/halloween");
+    expect(shownNavItems(turnedOn, everyday).map((i) => i.path)).not.toContain("/halloween");
   });
 });

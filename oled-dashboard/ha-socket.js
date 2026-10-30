@@ -67,9 +67,16 @@ const FOOTBALL_FINAL_HOLD_MS = 5 * 60 * 1000;
  *
  * setLastRoute() writes ROUTE_ENTITY, which the motion watcher reads back on
  * wake. Persisting a transient view would strand the frame there long after the
- * reason for showing it is gone.
+ * reason for showing it is gone — a finished game, a stopped movie, or
+ * Halloween (0.128: the page is offered on Oct 30 and 31 only, and a frame
+ * woken onto it in November would be stuck there).
  */
-export const TRANSIENT_VIEWS = new Set(["blank", "marquee", "football"]);
+export const TRANSIENT_VIEWS = new Set([
+  "blank",
+  "marquee",
+  "football",
+  "halloween",
+]);
 
 const GET_STATES_ID = 1;
 const SUBSCRIBE_EVENTS_ID = 2;

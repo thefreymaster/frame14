@@ -17,7 +17,7 @@ export default defineConfig({
           name: "client",
           environment: "jsdom",
           include: ["tests/unit/**/*.test.{ts,tsx}"],
-          setupFiles: ["tests/setup.ts"],
+          setupFiles: ["tests/setup-dom.ts", "tests/setup.ts"],
           css: false,
         },
         define: { __APP_VERSION__: JSON.stringify("0.0.0-test") },

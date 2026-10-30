@@ -28,6 +28,7 @@ import {
   RiLightbulbFill,
 } from "react-icons/ri";
 import { TbVacuumCleaner } from "react-icons/tb";
+import { GiPumpkinLantern } from "react-icons/gi";
 import type { DeviceMode } from "./deviceMode";
 import { Printer3dIcon, Printer3dOutlineIcon } from "./printerIcons";
 
@@ -48,6 +49,8 @@ export type NavItem = {
   remoteOff?: boolean;
   /** In the nav only while a tracked team is playing (useLiveGame). */
   gameDay?: boolean;
+  /** In the nav on Oct 30 and 31 only (useHalloween). */
+  halloween?: boolean;
 };
 
 /** Always first in the nav, and always in it. */
@@ -59,9 +62,9 @@ export const SETTINGS_PATH = "/control";
 /**
  * Every nav entry, in the default order (since 0.109: Home, Clock, Lights,
  * Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Calendar,
- * Football, Settings — Lights and Climate before Photos, Weather with Energy
- * before the devices; a remote starts with everything from Energy to Football
- * off, `remoteOff`). Each device shows the ones for its mode, in the order
+ * Football, Halloween (0.128: Oct 30 and 31), Settings — Lights and Climate
+ * before Photos, Weather with Energy before the devices; a remote starts with
+ * everything from Energy to Halloween off, `remoteOff`). Each device shows the ones for its mode, in the order
  * and with the ones hidden that /control sets for it (lib/navLayout).
  */
 export const NAV_ITEMS: NavItem[] = [
@@ -170,6 +173,17 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoAmericanFootballOutline,
     activeIcon: IoAmericanFootball,
     gameDay: true,
+    remoteOff: true,
+  },
+  // Oct 30 and 31 only (lib/halloween). Like Football it moves every frame
+  // (not local-only) and "halloween" is a TRANSIENT_VIEW server-side, so no
+  // frame is woken onto it in November.
+  {
+    path: "/halloween",
+    label: "Halloween",
+    icon: GiPumpkinLantern,
+    activeIcon: GiPumpkinLantern,
+    halloween: true,
     remoteOff: true,
   },
   {

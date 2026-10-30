@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router";
 import { socket } from "../lib/socket";
 import { useDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
+import { useHalloween } from "../hooks/useHalloween";
 import { ENTRY_RADIUS, NAV_PAD, NAV_SURFACE } from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
@@ -87,7 +88,8 @@ export function LandscapeNav({
   const isFrame = mode === "frame";
   const { games } = useLiveGame();
   // This device's entries in its order, as /control sets them (lib/navLayout).
-  const items = useNavItems(games.length > 0);
+  const halloween = useHalloween();
+  const items = useNavItems({ gameDay: games.length > 0, halloween });
   const { bar, more } = splitForBar(items, NAV_BAR_ENTRIES[mode]);
   const barRef = useRef<HTMLDivElement>(null);
 

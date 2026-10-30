@@ -34,7 +34,7 @@ vi.mock("../../ha-socket.js", () => ({
   isHaConnected: () => mocks.connected,
   getState: (id) => mocks.states.get(id),
   setLastRoute: mocks.setLastRoute,
-  TRANSIENT_VIEWS: new Set(["blank", "marquee", "football"]),
+  TRANSIENT_VIEWS: new Set(["blank", "marquee", "football", "halloween"]),
 }));
 vi.mock("../../ha-areas.js", () => ({ entitiesPayload: mocks.entitiesPayload }));
 

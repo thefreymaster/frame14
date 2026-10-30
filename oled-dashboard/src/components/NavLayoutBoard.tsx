@@ -21,6 +21,7 @@ import { NavLayoutRow } from "./NavLayoutRow";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { SortableNavLayoutRow } from "./SortableNavLayoutRow";
 import { useLiveGame } from "../hooks/useLiveGame";
+import { useHalloween } from "../hooks/useHalloween";
 import { useDeviceMode } from "../lib/deviceMode";
 import {
   HOME_PATH,
@@ -46,6 +47,7 @@ const NOTES: Record<string, string> = {
   [HOME_PATH]: "Always first",
   [SETTINGS_PATH]: "Always shown",
   "/football": "Game days only",
+  "/halloween": "Oct 30 and 31 only",
 };
 
 /**
@@ -61,6 +63,7 @@ export function NavLayoutBoard() {
   const layout = useNavLayout();
   const { games } = useLiveGame();
   const gameDay = games.length > 0;
+  const halloween = useHalloween();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
@@ -73,11 +76,11 @@ export function NavLayoutBoard() {
   const inMore = useMemo(
     () =>
       new Set(
-        splitForBar(shownNavItems(layout, gameDay), slots).more.map(
+        splitForBar(shownNavItems(layout, { gameDay, halloween }), slots).more.map(
           (i) => i.path,
         ),
       ),
-    [layout, gameDay, slots],
+    [layout, gameDay, halloween, slots],
   );
   const customized = !sameNavLayout(layout, defaultNavLayout(mode));
 

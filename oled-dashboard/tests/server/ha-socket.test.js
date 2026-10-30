@@ -226,7 +226,7 @@ describe("the rest", () => {
   });
 
   it("the transient views are never remembered", () => {
-    expect([...ha.TRANSIENT_VIEWS].sort()).toEqual(["blank", "football", "marquee"]);
+    expect([...ha.TRANSIENT_VIEWS].sort()).toEqual(["blank", "football", "halloween", "marquee"]);
   });
 
   it("installUpdate, refreshEntity and reloadAddonStore go through the socket", async () => {

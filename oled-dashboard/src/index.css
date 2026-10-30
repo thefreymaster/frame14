@@ -81,3 +81,71 @@ body {
 .home-card-body:has(> :not(:empty)) + .home-card-placeholder {
   display: none;
 }
+
+/* The Halloween page (routes/Halloween, components/halloween): its display
+   face and its animations. Creepster (SIL Open Font License; the file and
+   its licence in src/assets/fonts/creepster) is the app's one webfont, and
+   the browser fetches it only while that page shows it. */
+@font-face {
+  font-family: "Creepster";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/creepster/Creepster-Regular.ttf") format("truetype");
+}
+
+@keyframes hw-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes hw-bob {
+  from { transform: translateY(-1.5%); }
+  to { transform: translateY(1.5%); }
+}
+@keyframes hw-sway {
+  from { transform: rotate(-2deg) translateY(1%); }
+  to { transform: rotate(2deg) translateY(-1%); }
+}
+@keyframes hw-flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.3; }
+  56% { opacity: 0.6; }
+}
+@keyframes hw-candle {
+  0%, 100% { opacity: 1; }
+  40% { opacity: 0.78; }
+  60% { opacity: 0.92; }
+}
+@keyframes hw-fly-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(190vw); }
+}
+@keyframes hw-fly-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-190vw); }
+}
+@keyframes hw-ride {
+  from { transform: translateY(-6%) rotate(-3deg); }
+  to { transform: translateY(6%) rotate(3deg); }
+}
+@keyframes hw-spark {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-22px, 8px) scale(1.2); }
+}
+@keyframes hw-flap {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(0.35); }
+}
+@keyframes hw-drift {
+  from { transform: translate(0, 0); }
+  to { transform: translate(3vmin, -2vmin); }
+}
+
+/* Nothing in the scene moves for someone who asked for less motion; the
+   witch stays home too (WitchFlight checks the same query). */
+@media (prefers-reduced-motion: reduce) {
+  .hw-scene * {
+    animation: none !important;
+  }
+}

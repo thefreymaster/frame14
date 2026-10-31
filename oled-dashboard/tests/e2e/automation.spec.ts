@@ -66,3 +66,28 @@ test("GET /api/screen/:state turns a frame's screen off and on through Fully, an
   await expect.poll(calls).toEqual(["off", "on"]);
   expect((await request.get("/api/screen/dim")).status()).toBe(400);
 });
+
+// 0.130: the header's power button is the same command from the frame's own
+// header, so the server knows the screen is off; a remote has no button.
+test("the header's power button turns a frame's screen off, and a remote has none", async ({ page, request, isMobile }) => {
+  await resetStub(request);
+  await request.get("/api/screen/on");
+  await page.addInitScript(() => {
+    const calls: string[] = [];
+    Object.assign(window, {
+      screenCalls: calls,
+      fully: { turnScreenOn: () => calls.push("on"), turnScreenOff: () => calls.push("off") },
+    });
+  });
+  await page.goto("/home");
+  await expect(page.getByText("1st Floor AC")).toBeVisible();
+  const power = page.getByRole("button", { name: "Turn the screen off" });
+  if (isMobile) {
+    await expect(power).toHaveCount(0);
+    return;
+  }
+  await power.click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { screenCalls: string[] }).screenCalls)).toEqual(["off"]);
+  expect(await (await request.get("/api/screen")).json()).toMatchObject({ state: "off" });
+  await request.get("/api/screen/on");
+});

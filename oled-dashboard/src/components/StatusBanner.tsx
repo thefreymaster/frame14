@@ -14,8 +14,9 @@ import { useDesktop } from "../hooks/useDesktop";
 
 /**
  * The header across the top of every view: the app's icon and name at the
- * left; running appliances, the connection, the mic and (on a desktop) the
- * date and time at the right. (The version is on the Settings page.) The appliance
+ * left; running appliances, the connection, the mic, a frame's power button
+ * and (on a desktop) the date and time at the right. (The version is on the
+ * Settings page.) The appliance
  * and connection icons each open a small menu on a tap (HeaderMenu).
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
@@ -41,6 +42,7 @@ export function StatusBanner({
   veiled = false,
   scrolled = false,
   voice,
+  screen,
 }: {
   hidden?: boolean;
   /** /home is being arranged: blurred, dimmed and out of reach. */
@@ -49,6 +51,8 @@ export function StatusBanner({
   scrolled?: boolean;
   /** The mic, after the status icons (before the clock on a desktop). */
   voice?: React.ReactNode;
+  /** A frame's power button (ScreenOffButton), after the mic. */
+  screen?: React.ReactNode;
 }) {
   // The date and clock only on a desktop: a phone shows its own, and the
   // frame has the big ones on Home and /clock.
@@ -101,6 +105,7 @@ export function StatusBanner({
       <ApplianceIndicators />
       <ConnectionMenu />
       {voice}
+      {screen}
       {desktop && <HeaderClock />}
       <ArrangingVeil shown={veiled} />
     </HStack>

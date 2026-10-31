@@ -206,7 +206,7 @@ rest_command:
     url: "http://<YOUR_HA_ADDON_IP>:4000/api/screen/off"
 ```
 
-A remote (a phone) and any browser outside Fully ignore the command. The Settings page's **Screen** card does the same by hand — a switch — and keeps a schedule, the hours the screen is on, which the add-on runs itself: the screen goes off and on at those times whether or not a remote is open, and the switch works in between. `GET /api/screen` answers the state and the schedule; `PUT /api/screen/schedule` sets it.
+A remote (a phone) and any browser outside Fully ignore the command. The Settings page's **Screen** card does the same by hand — a switch — and on a frame the power button at the header's right turns the screen off with a tap; the card also keeps a schedule, the hours the screen is on, which the add-on runs itself: the screen goes off and on at those times whether or not a remote is open, and the switch works in between. `GET /api/screen` answers the state and the schedule; `PUT /api/screen/schedule` sets it.
 
 ## Changelog & releases
 

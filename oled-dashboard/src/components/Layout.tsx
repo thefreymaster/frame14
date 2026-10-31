@@ -15,6 +15,7 @@ import { useDesktop } from "../hooks/useDesktop";
 import { StatusBanner } from "./StatusBanner";
 import { VoiceAssistButton } from "./VoiceAssistButton";
 import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
+import { ScreenOffButton } from "./ScreenOffButton";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useReady } from "../hooks/useReady";
 import { useVoiceAssist } from "../hooks/useVoiceAssist";
@@ -126,6 +127,8 @@ export function Layout() {
             <VoiceAssistButton onTap={voiceTap} state={voice.state} />
           )
         }
+        // The power button decides for itself: a frame's only (0.130).
+        screen={<ScreenOffButton />}
       />
 
       <HStack gap="0" align="stretch">

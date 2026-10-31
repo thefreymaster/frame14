@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.130.0
+
+- Added: on a frame, a power button at the header's right, after the mic, turns the frames' screen off — the same call as the Screen card's switch, so the card on every device shows it off — and kitchen motion or the schedule's on-time brings it back. A remote (a phone) has no button: its screen is its own.
+
 ## 0.129.0
 
 - Added: Home Assistant can turn the frames' screen off and on through the add-on — `GET /api/screen/off` and `GET /api/screen/on` — instead of through Fully Kiosk Browser's Remote Admin API, whose entities kept dropping offline. A frame running in Fully gets the command over its own connection to the add-on and asks Fully to switch the screen; a remote and any other browser ignore it. In Fully, turn on **Enable JavaScript Interface** (Advanced Web Settings) and **Prevent Device from Sleep while Screen Off** (Device Management), so the tablet keeps its connection while dark; then point a `rest_command` at each address — the README has the YAML.

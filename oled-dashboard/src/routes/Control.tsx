@@ -77,6 +77,7 @@ import { AlbumSelect } from "../components/AlbumSelect";
 import { NavLayoutBoard } from "../components/NavLayoutBoard";
 import { UpdatesBoard } from "../components/UpdatesBoard";
 import { SoftwareBoard } from "../components/SoftwareBoard";
+import { ScreenBoard } from "../components/ScreenBoard";
 import { Printer3dIcon, Printer3dOutlineIcon } from "../lib/printerIcons";
 import { toaster } from "../components/ui/toaster";
 import { Tooltip } from "../components/ui/tooltip";
@@ -443,6 +444,7 @@ export function Control() {
           <Tabs.Content value="display" p="0">
             <Stack gap="gutter">
               {displayBoard}
+              <ScreenBoard />
               {albumBoard}
             </Stack>
           </Tabs.Content>
@@ -469,6 +471,9 @@ export function Control() {
           )}
           <Flex flex="1" minWidth="0" direction="column" gap="gutter">
             {displayBoard}
+
+            {/* The frames' screen: off / on, and the hours it is on */}
+            <ScreenBoard />
 
             {/* The versions: this page, installed, the store's latest */}
             <SoftwareBoard />

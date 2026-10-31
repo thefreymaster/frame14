@@ -11,7 +11,7 @@ describe("the OpenAPI document", () => {
     for (const path of [
       "/api", "/api/entities", "/api/software", "/api/connection", "/api/weather",
       "/api/home/weather", "/api/home/climate", "/api/home/calendar", "/api/energy",
-      "/api/energy/today", "/api/circuits", "/api/change/{view}",
+      "/api/energy/today", "/api/circuits", "/api/change/{view}", "/api/screen", "/api/screen/{state}", "/api/screen/schedule",
     ]) {
       expect(openApiDocument.paths, path).toHaveProperty(path);
     }

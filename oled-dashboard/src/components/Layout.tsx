@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Box, HStack } from "@chakra-ui/react";
 import { SocketViewListener } from "./SocketViewListener";
+import { ScreenListener } from "./ScreenListener";
 import { PageTransition } from "./PageTransition";
 import { LandscapeNav } from "./LandscapeNav";
 import { DoorbellCard } from "./DoorbellCard";
@@ -112,6 +113,7 @@ export function Layout() {
   return (
     <>
       <SocketViewListener />
+      <ScreenListener />
 
       {/* On every view while the nav is up. It also masks the status-bar
           inset in an iPhone home-screen app. */}

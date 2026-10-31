@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { pageErrors, resetStub } from "./helpers";
+import { pageErrors, resetStub, stub } from "./helpers";
 
 // The Halloween page is Oct 30 and 31's (lib/halloween), so the browser's
 // clock is fixed to the day — and to a day in November — in the house's
@@ -7,6 +7,8 @@ import { pageErrors, resetStub } from "./helpers";
 test.use({ timezoneId: "America/New_York" });
 const HALLOWEEN = new Date("2026-10-31T18:30:00-04:00");
 const NOVEMBER = new Date("2026-11-04T18:30:00-05:00");
+const MOTION = "binary_sensor.kitchen_motion_sensor_motion";
+const ROUTE = "input_select.oledos_route";
 
 test.describe("the Halloween page", () => {
   test.beforeEach(async ({ request }) => {
@@ -59,6 +61,31 @@ test.describe("the Halloween page", () => {
     await request.get("/api/change/halloween");
     await expect(page).toHaveURL(/\/halloween$/);
     await expect(page.getByRole("heading", { name: "Happy Halloween" })).toBeVisible();
+  });
+
+  test("kitchen motion leaves a frame on it", async ({ page, request, isMobile }) => {
+    test.skip(isMobile, "a remote never follows the frames' view changes");
+    await page.clock.setFixedTime(HALLOWEEN);
+    // The server's view and saved route are the clock's to begin with (the
+    // spec before may have left the frames on Halloween).
+    await request.get("/api/change/clock");
+    await page.goto("/home");
+    await expect(page.getByText("1st Floor AC")).toBeVisible();
+    await stub(request, "/_stub/state", { entity_id: ROUTE, state: "clock" });
+    // Motion wakes the frames onto the saved route — so first, that the
+    // watcher is awake at all...
+    await stub(request, "/_stub/state", { entity_id: MOTION, state: "on" });
+    await expect(page).toHaveURL(/\/clock$/);
+    await stub(request, "/_stub/state", { entity_id: MOTION, state: "off" });
+    // ...then that it leaves Halloween up (0.129.0). It used to put the
+    // frames back on the saved route, which Halloween never is.
+    await page.getByRole("tab", { name: "Halloween" }).click();
+    await expect(page).toHaveURL(/\/halloween$/);
+    await stub(request, "/_stub/state", { entity_id: MOTION, state: "on" });
+    await page.waitForTimeout(1500);
+    await expect(page).toHaveURL(/\/halloween$/);
+    await expect(page.getByRole("heading", { name: "Happy Halloween" })).toBeVisible();
+    await stub(request, "/_stub/state", { entity_id: MOTION, state: "off" });
   });
 
   test("in November neither the nav nor the Views card has it", async ({ page, isMobile }) => {

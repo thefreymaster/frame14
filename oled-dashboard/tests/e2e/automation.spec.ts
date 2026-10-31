@@ -38,3 +38,31 @@ test("a remote's nav keeps its selected entry when the frames are sent elsewhere
   await expect(page.getByRole("tab", { name: "Lights", selected: true })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Home", selected: true })).toHaveCount(0);
 });
+
+// 0.129: GET /api/screen/:state reaches Fully Kiosk Browser's JavaScript
+// interface on a frame. Playwright's Chromium has no Fully, so `window.fully`
+// is a stub that records the calls.
+test("GET /api/screen/:state turns a frame's screen off and on through Fully, and never a remote's", async ({ page, request, isMobile }) => {
+  await resetStub(request);
+  await page.addInitScript(() => {
+    const calls: string[] = [];
+    Object.assign(window, {
+      screenCalls: calls,
+      fully: { turnScreenOn: () => calls.push("on"), turnScreenOff: () => calls.push("off") },
+    });
+  });
+  await page.goto("/home");
+  await expect(page.getByText("1st Floor AC")).toBeVisible();
+  const calls = () => page.evaluate(() => (window as unknown as { screenCalls: string[] }).screenCalls);
+
+  expect((await request.get("/api/screen/off")).status()).toBe(200);
+  if (isMobile) {
+    await page.waitForTimeout(1000);
+    expect(await calls()).toEqual([]);
+    return;
+  }
+  await expect.poll(calls).toEqual(["off"]);
+  await request.get("/api/screen/on");
+  await expect.poll(calls).toEqual(["off", "on"]);
+  expect((await request.get("/api/screen/dim")).status()).toBe(400);
+});

@@ -217,6 +217,27 @@ describe("the watchers", () => {
     await until(() => io.currentView === "photos");
     stub.setState("binary_sensor.kitchen_motion_sensor_motion", "off");
   });
+
+  it("kitchen motion wakes a blank frame onto the last route", async () => {
+    stub.setState("input_select.oledos_route", "clock");
+    io.currentView = "blank";
+    stub.setState("binary_sensor.kitchen_motion_sensor_motion", "on");
+    await until(() => io.currentView === "clock");
+    stub.setState("binary_sensor.kitchen_motion_sensor_motion", "off");
+  });
+
+  it("kitchen motion leaves a frame on Halloween, a game or a movie where it is", async () => {
+    stub.setState("input_select.oledos_route", "home");
+    for (const view of ["halloween", "football", "marquee"]) {
+      io.currentView = view;
+      io.emit.mockClear();
+      stub.setState("binary_sensor.kitchen_motion_sensor_motion", "on");
+      await new Promise((r) => setTimeout(r, 200));
+      expect(io.currentView, view).toBe(view);
+      expect(io.emit).not.toHaveBeenCalledWith("change_view", expect.anything());
+      stub.setState("binary_sensor.kitchen_motion_sensor_motion", "off");
+    }
+  });
 });
 
 describe("the rest", () => {

@@ -13,7 +13,8 @@ test.beforeEach(async ({ request }) => {
 test("GET /api is up, at config.yaml's version", async ({ request }) => {
   const version = readFileSync(new URL("../../config.yaml", import.meta.url), "utf-8").match(/^version:\s*"([^"]+)"/m)?.[1];
   const body = await (await request.get("/api")).json();
-  expect(body).toMatchObject({ ok: true, version, screenType: "oled" });
+  expect(body).toMatchObject({ ok: true, version });
+  expect(body).not.toHaveProperty("screenType");
 });
 
 test("GET /api/entities resolves the lights by room", async ({ request }) => {

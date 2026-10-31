@@ -53,7 +53,10 @@ yanked off what you were doing before kickoff.
 **`"football"` must stay in `TRANSIENT_VIEWS`.** That set is what stops
 `setLastRoute()` writing the view to `input_select.oledos_route`, which the
 motion watcher reads back on wake. Drop it and a motion trip next Tuesday
-strands the panel on a finished game.
+strands the panel on a finished game. And since 0.129.0 the motion watcher
+leaves the frames alone while `io.currentView` is a transient view other than
+blank — a walk past the kitchen sensor during a game used to send the panel
+back to the saved route — so `onMotionOn` reads that set too.
 
 **The watcher is edge-triggered on `state` only.** Attributes churn every few
 seconds during a game; only the phase can start or end the view. This is why

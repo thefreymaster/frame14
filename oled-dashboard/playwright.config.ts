@@ -53,6 +53,8 @@ export default defineConfig({
         HA_URL: STUB_URL,
         HA_TOKEN: "e2e-token",
         FRAME14_CONFIG: "tests/stub/frame14.test.json",
+        // The screen schedule's file (screen.js), cleared with each run.
+        FRAME14_DATA_DIR: "test-results/data",
         IMMICH_URL: "",
         IMMICH_API_KEY: "",
         PLEX_URL: "",

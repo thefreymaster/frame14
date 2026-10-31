@@ -61,7 +61,6 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | `ha_token` | A long-lived access token. An administrator's: the Software card's *Check for updates* asks the Supervisor to reload the store | |
 | `port` | The port the dashboard listens on | `4000` |
 | `web_ui_url` | Where **Open Web UI** and the sidebar entry send the browser — the add-on's address as your devices reach it, e.g. `http://192.168.1.10:4000`. Ingress only redirects there | |
-| `screen_type` | `oled` or `lcd` | `oled` |
 
 ### Photos, media and voice
 
@@ -191,11 +190,23 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day |
 | `/halloween` | Happy Halloween in neon over a hill of jack-o'-lanterns, a witch flying through now and then; in the nav and on a remote's Views card on Oct 30 and 31 only |
 | `/blank` | Black screen (motion off) |
-| `/control` | Settings + remote control: device mode, this device's navigation, software updates |
+| `/control` | Settings + remote control: device mode, this device's navigation, software updates, the frames' screen and the hours it is on |
 
 ## Home Assistant automation (motion)
 
-`oled-dashboard/ha-automation.yaml` is a reference automation: it calls `GET /api/change/:view` to switch the frames' view when motion is detected or times out.
+`oled-dashboard/ha-automation.yaml` is a reference automation: it calls `GET /api/change/:view` to switch the frames' view when motion is detected or times out. The add-on's own motion watcher also puts the frames back on the view they were last sent to when the kitchen sensor trips — unless they are on a game, a movie poster or the Halloween page, which stay up until they end on their own.
+
+The frames' screen can be turned off and on the same way: `GET /api/screen/off` and `GET /api/screen/on` reach a frame running in Fully Kiosk Browser through Fully's JavaScript interface, over the frame's own connection to the add-on, so the automations don't depend on Fully's Remote Admin API or the Fully Kiosk integration. In Fully, turn on **Enable JavaScript Interface** (Settings › Advanced Web Settings) and **Prevent Device from Sleep while Screen Off** (Settings › Device Management), so the tablet keeps its connection while the screen is dark. Then, in `configuration.yaml`:
+
+```yaml
+rest_command:
+  frame14_screen_on:
+    url: "http://<YOUR_HA_ADDON_IP>:4000/api/screen/on"
+  frame14_screen_off:
+    url: "http://<YOUR_HA_ADDON_IP>:4000/api/screen/off"
+```
+
+A remote (a phone) and any browser outside Fully ignore the command. The Settings page's **Screen** card does the same by hand — a switch — and keeps a schedule, the hours the screen is on, which the add-on runs itself: the screen goes off and on at those times whether or not a remote is open, and the switch works in between. `GET /api/screen` answers the state and the schedule; `PUT /api/screen/schedule` sets it.
 
 ## Changelog & releases
 

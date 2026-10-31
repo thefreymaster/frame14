@@ -215,7 +215,19 @@ export function LandscapeNav({
           activationMode="manual"
           height="100%"
         >
-          <Tabs.List width="100%" height="100%" gap="1">
+          <Tabs.List
+            width="100%"
+            height="100%"
+            gap="1"
+            // More entries than the rail is tall — a game day that is also
+            // Halloween, on a 1080px screen (0.129) — and the list scrolls,
+            // its scrollbar hidden, instead of running Settings off the foot.
+            overflowY="auto"
+            css={{
+              scrollbarWidth: "none",
+              "&::-webkit-scrollbar": { display: "none" },
+            }}
+          >
             {railTop.map((item) => renderItem(item, "rail"))}
             <Spacer />
             {railFoot.map((item) => renderItem(item, "rail"))}

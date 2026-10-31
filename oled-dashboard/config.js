@@ -38,7 +38,6 @@ export const IMMICH_API_KEY = get("immich_api_key", "IMMICH_API_KEY", "");
 export const PLEX_URL = get("plex_url", "PLEX_URL", "").replace(/\/+$/, "");
 export const PLEX_TOKEN = get("plex_token", "PLEX_TOKEN", "");
 export const PORT = Number(get("port", "PORT", "4000"));
-export const SCREEN_TYPE = get("screen_type", "SCREEN_TYPE", "oled");
 
 // Assist pipeline the mic button runs. Empty = use whichever pipeline Home
 // Assistant has marked preferred, so the button works before it is configured.

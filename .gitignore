@@ -29,3 +29,6 @@ photos/
 test-results
 playwright-report
 coverage
+
+# The screen schedule outside the add-on (oled-dashboard/screen.js)
+.data/

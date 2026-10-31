@@ -30,11 +30,13 @@ import {
   isHaConnected,
   TRANSIENT_VIEWS,
 } from "./ha-socket.js";
+import { startScreen } from "./screen.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
 import photosRouter from "./routes/photos.js";
 import viewsRouter from "./routes/views.js";
+import screenRouter from "./routes/screen.js";
 import videosRouter from "./routes/videos.js";
 import energyRouter from "./routes/energy.js";
 import circuitsRouter from "./routes/circuits.js";
@@ -68,6 +70,9 @@ const io = new Server(httpServer, {
 
 // Make io available to route handlers via app.locals
 app.locals.io = io;
+// The frames' screen: the state last asked for and the hours it is on.
+const screen = startScreen(io);
+app.locals.screen = screen;
 io.currentView = "clock";
 io.themeMode = "dark";
 io.navVisible = true;
@@ -84,6 +89,7 @@ io.on("connection", (socket) => {
   socket.emit("current_theme_mode", io.themeMode);
   socket.emit("nav_visibility", io.navVisible);
   socket.emit("photos_shown", photosShown());
+  socket.emit("screen_state", screen.state());
 
   socket.on("change", (view) => {
     console.log({ io: "change", view });
@@ -254,6 +260,7 @@ app.use("/api/docs", docsRouter);
 app.use("/api/weather", weatherRouter);
 app.use("/api/photos", photosRouter);
 app.use("/api", viewsRouter);
+app.use("/api", screenRouter);
 app.use("/api/energy", energyRouter);
 app.use("/api/circuits", circuitsRouter);
 app.use("/api/entities", entitiesRouter);

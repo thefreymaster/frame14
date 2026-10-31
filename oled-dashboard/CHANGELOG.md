@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.129.0
+
+- Added: Home Assistant can turn the frames' screen off and on through the add-on — `GET /api/screen/off` and `GET /api/screen/on` — instead of through Fully Kiosk Browser's Remote Admin API, whose entities kept dropping offline. A frame running in Fully gets the command over its own connection to the add-on and asks Fully to switch the screen; a remote and any other browser ignore it. In Fully, turn on **Enable JavaScript Interface** (Advanced Web Settings) and **Prevent Device from Sleep while Screen Off** (Device Management), so the tablet keeps its connection while dark; then point a `rest_command` at each address — the README has the YAML.
+- Added: a Screen card on the Settings page (under Display on a phone): a switch that turns the frames' screen off and on, and a schedule — the hours the screen is on — that the add-on keeps and runs itself, so the screen goes off at night and comes on in the morning without a Home Assistant automation. The switch works in between: the screen holds whatever it was last told until the next scheduled time.
+- Fixed: a frame sent to the Halloween page stayed there only until someone walked past the kitchen motion sensor, which put every frame back on its usual page. Motion now leaves a frame on Halloween — and on a game or a movie poster — where it is; each of those ends on its own (midnight on Nov 1, the game's final, the movie stopping). A blank frame still wakes onto its last page.
+- Fixed: on a landscape screen, the side navigation scrolls when it has more entries than fit — a game day that is also Halloween, on a 1080px-tall screen — instead of cutting Settings off at the bottom.
+- Removed: the `screen_type` option (OLED or LCD) from the add-on's configuration. Nothing used it — every page is the same on either — so it's gone from the Configuration tab, and `GET /api` no longer reports it. A value still saved for it is ignored.
+
 ## 0.128.1
 
 - Changed: the Halloween greeting sparkles — small glints wink in and out over the letters, and a faint brightening ripples along each word.

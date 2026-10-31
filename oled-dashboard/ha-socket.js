@@ -69,7 +69,9 @@ const FOOTBALL_FINAL_HOLD_MS = 5 * 60 * 1000;
  * wake. Persisting a transient view would strand the frame there long after the
  * reason for showing it is gone — a finished game, a stopped movie, or
  * Halloween (0.128: the page is offered on Oct 30 and 31 only, and a frame
- * woken onto it in November would be stuck there).
+ * woken onto it in November would be stuck there). The watcher also leaves a
+ * frame alone while it is on one of these — blank apart, which is what it
+ * wakes from — since 0.129.0: see onMotionOn.
  */
 export const TRANSIENT_VIEWS = new Set([
   "blank",
@@ -540,6 +542,17 @@ export function startHaSocket(io, hooks = {}) {
   }
 
   async function onMotionOn() {
+    // A frame on a view that is up for its own reason — a game, a movie's
+    // poster, Halloween — stays there (0.129.0): each ends in its own way
+    // (the final, the movie stopping, Nov 1). The wake-up is for a frame
+    // that is blank or on an everyday page. It used to run regardless, and
+    // every walk past the sensor put the frames back on the saved route,
+    // which a transient view never is.
+    const view = io.currentView;
+    if (view !== "blank" && TRANSIENT_VIEWS.has(view)) {
+      console.log(`[ha-socket] motion detected, ${view} stays up`);
+      return;
+    }
     const lastRoute = await getLastRoute();
     console.log(`[ha-socket] motion detected, restoring route: ${lastRoute}`);
     broadcastView(lastRoute);

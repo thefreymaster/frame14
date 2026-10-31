@@ -59,6 +59,11 @@ export const openApiDocument = {
       description: "Endpoints that broadcast view changes to connected clients.",
     },
     {
+      name: "Screen",
+      description:
+        "The frames' screen, on or off, through Fully Kiosk Browser's JavaScript interface on each frame.",
+    },
+    {
       name: "Energy",
       description: "Solar production and consumption data proxied from Home Assistant.",
     },
@@ -1006,6 +1011,82 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/screen": {
+      get: {
+        tags: ["Screen"],
+        operationId: "getScreen",
+        summary: "The frames' screen: the state last asked for, and the schedule",
+        responses: {
+          200: {
+            description: "The state the add-on last asked the frames for, and the hours the screen is on.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ScreenState" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/screen/schedule": {
+      put: {
+        tags: ["Screen"],
+        operationId: "setScreenSchedule",
+        summary: "Save the hours the screen is on",
+        description:
+          "Saves the schedule and applies it at once: with it on, the screen goes on or off now according to the hours, and then at each `on` and `off` time of day (local time). Between those times a frame keeps whatever it was last told. The add-on keeps the schedule across restarts.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ScreenSchedule" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "The schedule was saved; the state and the schedule as they are now.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ScreenState" },
+              },
+            },
+          },
+          400: {
+            description: "Not a schedule: `enabled` must be a boolean, `on` and `off` HH:MM and different.",
+          },
+        },
+      },
+    },
+    "/api/screen/{state}": {
+      get: {
+        tags: ["Screen"],
+        operationId: "setScreen",
+        summary: "Turn the frames' screen on or off",
+        description:
+          "Emits a `screen` Socket.IO event to all connected clients. A frame running in Fully Kiosk Browser turns its screen on or off through Fully's JavaScript interface; a remote and any other browser ignore it. For a Home Assistant automation, in place of Fully's Remote Admin API.",
+        parameters: [
+          {
+            name: "state",
+            in: "path",
+            required: true,
+            description: "`on` or `off`.",
+            schema: {
+              type: "string",
+              enum: ["on", "off"],
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "The screen command was broadcast.",
+          },
+          400: {
+            description: "The state was neither `on` nor `off`.",
+          },
+        },
+      },
+    },
     "/videos/{file}": {
       get: {
         tags: ["Videos"],
@@ -1061,6 +1142,37 @@ export const openApiDocument = {
       },
     },
     schemas: {
+      ScreenSchedule: {
+        type: "object",
+        required: ["enabled", "on", "off"],
+        properties: {
+          enabled: { type: "boolean", example: true },
+          on: {
+            type: "string",
+            pattern: "^([01]\\d|2[0-3]):[0-5]\\d$",
+            example: "06:30",
+            description: "When the screen turns on, HH:MM local time.",
+          },
+          off: {
+            type: "string",
+            pattern: "^([01]\\d|2[0-3]):[0-5]\\d$",
+            example: "23:00",
+            description: "When the screen turns off, HH:MM local time; earlier than `on` for hours across midnight.",
+          },
+        },
+      },
+      ScreenState: {
+        type: "object",
+        required: ["state", "schedule"],
+        properties: {
+          state: {
+            type: "string",
+            enum: ["on", "off"],
+            description: "The state the add-on last asked the frames for.",
+          },
+          schedule: { $ref: "#/components/schemas/ScreenSchedule" },
+        },
+      },
       ApiStatus: {
         type: "object",
         required: ["ok", "message"],

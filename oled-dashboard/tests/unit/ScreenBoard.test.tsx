@@ -3,10 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "./helpers/render";
 
 // The socket (its handlers kept, so a test can play the server's
-// screen_state) and the toaster.
+// screen_state), the toaster, and whether this is a desktop.
 const mocks = vi.hoisted(() => ({
   handlers: new Map<string, (v: unknown) => void>(),
   toast: vi.fn(),
+  desktop: false,
 }));
 vi.mock("../../src/lib/socket", () => ({
   socket: {
@@ -20,33 +21,42 @@ vi.mock("../../src/lib/socket", () => ({
 vi.mock("../../src/components/ui/toaster", () => ({
   toaster: { create: mocks.toast },
 }));
+vi.mock("../../src/hooks/useDesktop", () => ({
+  useDesktop: () => mocks.desktop,
+}));
 
 import { ScreenBoard } from "../../src/components/ScreenBoard";
 
 const HOURS = { enabled: false, on: "06:30", off: "23:00" };
+const DARK = { enabled: false, from: "21:00", to: "06:30" };
+const SERVER = { state: "on", schedule: HOURS, brightness: 128, dark: DARK };
 const fromServer = (v: unknown) => act(() => mocks.handlers.get("screen_state")?.(v));
 
 describe("the Screen card", () => {
   const fetchMock = vi.fn();
-  const puts = () =>
+  const puts = (path: string) =>
     fetchMock.mock.calls
-      .filter((c) => (c[1] as RequestInit | undefined)?.method === "PUT")
-      .map((c) => JSON.parse(String((c[1] as RequestInit).body)) as typeof HOURS);
+      .filter((c) => c[0] === path && (c[1] as RequestInit | undefined)?.method === "PUT")
+      .map((c) => JSON.parse(String((c[1] as RequestInit).body)) as Record<string, unknown>);
 
   beforeEach(() => {
+    mocks.desktop = false;
     fetchMock.mockReset();
-    // The server: a state command is taken; a schedule comes back applied,
-    // unless its two times are the same.
-    fetchMock.mockImplementation(async (_url: string, init?: RequestInit) => {
+    // The server: a state or brightness command is taken; a pair of hours
+    // comes back applied, unless its two times are the same.
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (init?.method === "PUT") {
-        const schedule = JSON.parse(String(init.body)) as typeof HOURS;
-        if (schedule.on === schedule.off) return { ok: false, status: 400, json: async () => ({}) };
-        return { ok: true, status: 200, json: async () => ({ state: "on", schedule }) };
+        const body = JSON.parse(String(init.body)) as Record<string, string | boolean>;
+        const dark = url.endsWith("/dark");
+        const [start, end] = dark ? [body.from, body.to] : [body.on, body.off];
+        if (start === end) return { ok: false, status: 400, json: async () => ({}) };
+        const next = dark ? { ...SERVER, dark: body } : { ...SERVER, schedule: body };
+        return { ok: true, status: 200, json: async () => next };
       }
-      return { ok: true, status: 200, json: async () => ({}) };
+      return { ok: true, status: 200, json: async () => SERVER };
     });
     vi.stubGlobal("fetch", fetchMock);
-    fromServer({ state: "on", schedule: HOURS });
+    fromServer(SERVER);
   });
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -69,12 +79,12 @@ describe("the Screen card", () => {
     renderWithProviders(<ScreenBoard />);
     fireEvent.click(dom.getByRole("checkbox", { name: "On a schedule" }));
     await waitFor(() => expect(dom.getByRole("checkbox", { name: "On a schedule" })).toBeChecked());
-    expect(puts().at(-1)).toEqual({ ...HOURS, enabled: true });
+    expect(puts("/api/screen/schedule").at(-1)).toEqual({ ...HOURS, enabled: true });
     fireEvent.change(dom.getByLabelText("On at"), { target: { value: "07:00" } });
-    await waitFor(() => expect(puts().at(-1)).toEqual({ enabled: true, on: "07:00", off: "23:00" }));
+    await waitFor(() => expect(puts("/api/screen/schedule").at(-1)).toEqual({ enabled: true, on: "07:00", off: "23:00" }));
     await waitFor(() => expect(dom.getByLabelText("On at")).toHaveValue("07:00"));
     fireEvent.change(dom.getByLabelText("Off at"), { target: { value: "22:00" } });
-    await waitFor(() => expect(puts().at(-1)).toEqual({ enabled: true, on: "07:00", off: "22:00" }));
+    await waitFor(() => expect(puts("/api/screen/schedule").at(-1)).toEqual({ enabled: true, on: "07:00", off: "22:00" }));
   });
 
   it("keeps what it had when the server refuses, and says so", async () => {
@@ -86,10 +96,58 @@ describe("the Screen card", () => {
 
   it("follows the frames' screen as the server reports it", () => {
     renderWithProviders(<ScreenBoard />);
-    fromServer({ state: "off", schedule: { enabled: true, on: "08:00", off: "21:00" } });
+    fromServer({ state: "off", schedule: { enabled: true, on: "08:00", off: "21:00" }, brightness: 51, dark: { enabled: true, from: "22:00", to: "05:00" } });
     expect(dom.getByRole("checkbox", { name: "Screen on" })).not.toBeChecked();
     expect(dom.getByRole("checkbox", { name: "On a schedule" })).toBeChecked();
     expect(dom.getByLabelText("On at")).toHaveValue("08:00");
     expect(dom.getByLabelText("Off at")).toHaveValue("21:00");
+    expect(dom.getByRole("slider", { name: "Brightness" })).toHaveAttribute("aria-valuenow", "51");
+    expect(dom.getByText("20%")).toBeInTheDocument();
+    expect(dom.getByRole("checkbox", { name: "Dark hours" })).toBeChecked();
+    expect(dom.getByLabelText("Dark from")).toHaveValue("22:00");
+    expect(dom.getByLabelText("Dark until")).toHaveValue("05:00");
+  });
+
+  it("sets the frames' brightness from the slider (0.131)", async () => {
+    renderWithProviders(<ScreenBoard />);
+    const slider = dom.getByRole("slider", { name: "Brightness" });
+    expect(slider).toHaveAttribute("aria-valuenow", "128");
+    expect(dom.getByText("50%")).toBeInTheDocument();
+    // The thumb takes keys once focused, as in a browser.
+    fireEvent.focus(slider);
+    fireEvent.keyDown(slider, { key: "Home" });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/screen/brightness/0"));
+    expect(dom.getByText("0%")).toBeInTheDocument();
+  });
+
+  it("shows no level until the server has one", () => {
+    renderWithProviders(<ScreenBoard />);
+    fromServer({ ...SERVER, brightness: null });
+    expect(dom.getByText("—")).toBeInTheDocument();
+  });
+
+  it("saves the dark hours: on, and the range (0.131)", async () => {
+    renderWithProviders(<ScreenBoard />);
+    fireEvent.click(dom.getByRole("checkbox", { name: "Dark hours" }));
+    await waitFor(() => expect(dom.getByRole("checkbox", { name: "Dark hours" })).toBeChecked());
+    expect(puts("/api/screen/dark").at(-1)).toEqual({ ...DARK, enabled: true });
+    fireEvent.change(dom.getByLabelText("Dark from"), { target: { value: "20:00" } });
+    await waitFor(() => expect(puts("/api/screen/dark").at(-1)).toEqual({ enabled: true, from: "20:00", to: "06:30" }));
+    fireEvent.change(dom.getByLabelText("Dark until"), { target: { value: "05:00" } });
+    await waitFor(() => expect(puts("/api/screen/dark").at(-1)).toEqual({ enabled: true, from: "20:00", to: "05:00" }));
+    // Refused: the same two times.
+    fireEvent.change(dom.getByLabelText("Dark until"), { target: { value: "20:00" } });
+    await waitFor(() => expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ title: "The dark hours weren't saved" })));
+    expect(dom.getByLabelText("Dark until")).toHaveValue("05:00");
+  });
+
+  it("keeps the brightness and the dark hours off a desktop", () => {
+    mocks.desktop = true;
+    renderWithProviders(<ScreenBoard />);
+    expect(dom.getByRole("checkbox", { name: "Screen on" })).toBeInTheDocument();
+    expect(dom.getByRole("checkbox", { name: "On a schedule" })).toBeInTheDocument();
+    expect(dom.queryByRole("slider", { name: "Brightness" })).toBeNull();
+    expect(dom.queryByRole("checkbox", { name: "Dark hours" })).toBeNull();
+    expect(dom.queryByLabelText("Dark from")).toBeNull();
   });
 });

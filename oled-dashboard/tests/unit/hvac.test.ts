@@ -4,6 +4,7 @@ import {
   climateColumnsCss,
   climateGridCss,
   climateStatus,
+  climateTempRange,
   fmtClimateTemp,
   getClimateAction,
   hvacPalette,
@@ -63,6 +64,23 @@ describe("fmtClimateTemp", () => {
     expect(fmtClimateTemp(69.4)).toBe(69);
     expect(fmtClimateTemp(null)).toBeNull();
     expect(fmtClimateTemp(undefined)).toBeNull();
+  });
+});
+
+describe("climateTempRange (0.131)", () => {
+  it("is the rooms' coolest to warmest, rounded, with the degree sign", () => {
+    expect(
+      climateTempRange([unit({ currentTemp: 64 }), unit({ currentTemp: 75.4 }), unit({ currentTemp: 68 })]),
+    ).toBe("64–75°");
+  });
+
+  it("is one figure when the rooms agree, and skips a unit with no reading", () => {
+    expect(climateTempRange([unit({ currentTemp: 67.6 }), unit({ currentTemp: 68.2 }), unit({ currentTemp: null })])).toBe("68°");
+  });
+
+  it("is nothing without a reading", () => {
+    expect(climateTempRange([])).toBeNull();
+    expect(climateTempRange([unit({ currentTemp: null })])).toBeNull();
   });
 });
 

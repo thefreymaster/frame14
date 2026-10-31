@@ -73,4 +73,45 @@ test.describe("the Settings page", () => {
     await request.put("/api/screen/schedule", { data: { enabled: false, on: "06:30", off: "23:00" } });
     await request.get("/api/screen/on");
   });
+
+  // 0.131: the brightness slider and the dark hours are a phone's and the
+  // frame's; a desktop's card has neither.
+  test("the Screen card's brightness and dark hours are kept by the add-on, and are not a desktop's", async ({ page, request, isMobile }) => {
+    const screen = async () => (await request.get("/api/screen")).json();
+    await request.put("/api/screen/dark", { data: { enabled: false, from: "21:00", to: "06:30" } });
+
+    await page.goto("/control");
+    if (isMobile) await page.getByRole("tab", { name: "Display" }).click();
+    await expect(page.getByRole("heading", { name: "Screen", exact: true })).toBeVisible();
+    const slider = page.getByRole("slider", { name: "Brightness" });
+    if (!isMobile) {
+      await expect(page.getByRole("checkbox", { name: "Screen on" })).toBeVisible();
+      await expect(slider).toHaveCount(0);
+      await expect(page.getByRole("checkbox", { name: "Dark hours" })).toHaveCount(0);
+      return;
+    }
+
+    // The slider sets the frames' level — Home is the slider's lowest.
+    await slider.focus();
+    await page.keyboard.press("Home");
+    await expect.poll(async () => (await screen()).brightness).toBe(0);
+    await expect(page.getByText("0%")).toBeVisible();
+
+    // The dark hours, saved as they are set.
+    await page.getByText("Dark hours", { exact: true }).click();
+    await page.getByLabel("Dark from").fill("20:00");
+    await page.getByLabel("Dark until").fill("05:00");
+    await expect.poll(async () => (await screen()).dark).toEqual({ enabled: true, from: "20:00", to: "05:00" });
+    // Kept by the add-on: a fresh page has them.
+    await page.reload();
+    await page.getByRole("tab", { name: "Display" }).click();
+    await expect(page.getByRole("checkbox", { name: "Dark hours" })).toBeChecked();
+    await expect(page.getByLabel("Dark from")).toHaveValue("20:00");
+    await expect(page.getByLabel("Dark until")).toHaveValue("05:00");
+    await expect(page.getByRole("slider", { name: "Brightness" })).toHaveAttribute("aria-valuenow", "0");
+
+    // Back as it was, for the specs after this one.
+    await request.put("/api/screen/dark", { data: { enabled: false, from: "21:00", to: "06:30" } });
+    await request.get("/api/screen/brightness/255");
+  });
 });

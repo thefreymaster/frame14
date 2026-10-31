@@ -17,6 +17,10 @@ test("the home page comes up with live cards and no errors", async ({ page }) =>
   await expect(page.getByText("Heating to 70°")).toBeVisible();
   await expect(page.getByText("Cooling to 72°")).toBeVisible();
   await expect(page.getByText("Solar covered today")).toBeVisible();
+  // Beside the titles, in grey like Calendar's count (0.131): who's playing,
+  // and the rooms' temperatures, coolest to warmest.
+  await expect(page.getByText("FSU vs MIA", { exact: true })).toBeVisible();
+  await expect(page.getByText("64–75°", { exact: true })).toBeVisible();
 
   expect(errors).toEqual([]);
 });
@@ -91,8 +95,9 @@ test("collapsing a card keeps every card in its column and moves only the cards 
   const climate = before.find((b) => b.id === "climate");
   if (!climate) throw new Error("no climate card on the page");
 
-  // The card's title is its collapse trigger.
-  await page.getByRole("button", { name: "Climate", exact: true }).click();
+  // The card's title is its collapse trigger; its name carries the rooms'
+  // temperature range after the title (0.131).
+  await page.getByRole("button", { name: /^Climate\b/ }).first().click();
   await expect(page.getByText("Heating to 70°")).toBeHidden();
   const after = await settledCardBoxes(page);
 

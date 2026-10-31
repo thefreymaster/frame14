@@ -75,6 +75,21 @@ export function fmtClimateTemp(temp: number | null | undefined) {
   return temp == null ? null : Math.round(temp);
 }
 
+/**
+ * The rooms' temperatures as a range, coolest to warmest — "64–75°", or
+ * "68°" when they agree — as the Home card's header says it beside the
+ * title (0.131), so it reads collapsed. Null when no unit reports one.
+ */
+export function climateTempRange(climate: HomeClimate[]): string | null {
+  const temps = climate
+    .map((unit) => fmtClimateTemp(unit.currentTemp))
+    .filter((t): t is number => t !== null);
+  if (temps.length === 0) return null;
+  const low = Math.min(...temps);
+  const high = Math.max(...temps);
+  return low === high ? `${low}°` : `${low}–${high}°`;
+}
+
 /** Home Assistant's hvac_action values that mean the unit is running now. */
 const RUNNING_ACTION: Record<string, { mode: ClimateVisualMode; label: string }> =
   {

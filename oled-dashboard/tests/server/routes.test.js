@@ -135,11 +135,15 @@ describe("GET /api/change/:view", () => {
 
 describe("the screen routes", () => {
   const HOURS = { enabled: false, on: "06:30", off: "23:00" };
+  const DARK = { enabled: false, from: "21:00", to: "06:30" };
+  const STATE = { state: "on", schedule: HOURS, brightness: null, dark: DARK };
   // screen.js as the routes see it (app.locals.screen).
   const screen = () => ({
-    state: vi.fn(() => ({ state: "on", schedule: HOURS })),
+    state: vi.fn(() => STATE),
     set: vi.fn(),
-    setSchedule: vi.fn((schedule) => ({ state: "off", schedule })),
+    setSchedule: vi.fn((schedule) => ({ ...STATE, state: "off", schedule })),
+    setBrightness: vi.fn((brightness) => ({ ...STATE, brightness })),
+    setDark: vi.fn((dark) => ({ ...STATE, dark })),
   });
   function screenApp(s) {
     const a = express();
@@ -149,10 +153,41 @@ describe("the screen routes", () => {
     return a;
   }
 
-  it("GET /api/screen answers the state and the schedule", async () => {
+  it("GET /api/screen answers the state, the brightness and both pairs of hours", async () => {
     const res = await request(screenApp(screen())).get("/api/screen");
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ state: "on", schedule: HOURS });
+    expect(res.body).toEqual(STATE);
+  });
+
+  it("GET /api/screen/brightness/:level sets a level from 0 to 255, and refuses anything else", async () => {
+    const s = screen();
+    const a = screenApp(s);
+    const ok = await request(a).get("/api/screen/brightness/120");
+    expect(ok.status).toBe(200);
+    expect(ok.body).toEqual({ ...STATE, brightness: 120 });
+    expect((await request(a).get("/api/screen/brightness/0")).status).toBe(200);
+    expect(s.setBrightness.mock.calls).toEqual([[120], [0]]);
+    for (const bad of ["256", "-1", "1.5", "abc"]) {
+      const res = await request(a).get(`/api/screen/brightness/${bad}`);
+      expect(res.status, bad).toBe(400);
+    }
+    expect(s.setBrightness).toHaveBeenCalledTimes(2);
+    expect(s.set).not.toHaveBeenCalled();
+  });
+
+  it("PUT /api/screen/dark saves the dark hours, and refuses what isn't a pair", async () => {
+    const s = screen();
+    const a = screenApp(s);
+    const dark = { enabled: true, from: "20:00", to: "05:00" };
+    const ok = await request(a).put("/api/screen/dark").send(dark);
+    expect(ok.status).toBe(200);
+    expect(s.setDark).toHaveBeenCalledWith(dark);
+    expect(ok.body).toEqual({ ...STATE, dark });
+    for (const bad of [{ enabled: true, from: "20:00", to: "20:00" }, { enabled: true, on: "20:00", off: "05:00" }, {}]) {
+      const res = await request(a).put("/api/screen/dark").send(bad);
+      expect(res.status, JSON.stringify(bad)).toBe(400);
+    }
+    expect(s.setDark).toHaveBeenCalledTimes(1);
   });
 
   it("GET /api/screen/:state turns the frames' screen off, and on", async () => {
@@ -177,7 +212,7 @@ describe("the screen routes", () => {
     const ok = await request(a).put("/api/screen/schedule").send({ enabled: true, on: "07:00", off: "22:00" });
     expect(ok.status).toBe(200);
     expect(s.setSchedule).toHaveBeenCalledWith({ enabled: true, on: "07:00", off: "22:00" });
-    expect(ok.body).toEqual({ state: "off", schedule: { enabled: true, on: "07:00", off: "22:00" } });
+    expect(ok.body).toEqual({ ...STATE, state: "off", schedule: { enabled: true, on: "07:00", off: "22:00" } });
     for (const bad of [{ enabled: true, on: "07:00", off: "07:00" }, { enabled: true, on: "7am", off: "22:00" }, {}]) {
       const res = await request(a).put("/api/screen/schedule").send(bad);
       expect(res.status, JSON.stringify(bad)).toBe(400);

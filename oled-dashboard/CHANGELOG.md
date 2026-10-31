@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.131.0
+
+- Added: the frames' screen brightness, on the Settings page's Screen card — a slider, live as it is dragged, through Fully Kiosk Browser's JavaScript interface on each frame, from a phone or from the frame itself (not from a desktop). The level is kept by the add-on and comes back after the dark hours. `GET /api/screen/brightness/:level` (0 to 255) sets it for a Home Assistant `rest_command`; a frame reports its own brightness as it arrives, so the slider starts where the screen is. For a level to hold, the tablet's adaptive brightness has to be off.
+- Added: dark hours, on the same card (a phone's and the frame's, not a desktop's): a range during which the frames' screen is at its darkest — the lowest backlight, not off — and the brightness set comes back at its end. The add-on runs it like the schedule, so it happens whether or not a remote is open; a screen woken during the dark hours comes up dark. `PUT /api/screen/dark` sets it.
+- Changed: on Home, the Teams and Climate cards say something beside their titles in grey, as the Calendar card does with its count, so a collapsed card still tells you something: Teams says who's playing, away first ("FSU vs MIA"), and Climate the rooms' temperatures, coolest to warmest ("64–75°").
+
 ## 0.130.0
 
 - Added: on a frame, a power button at the header's right, after the mic, turns the frames' screen off — the same call as the Screen card's switch, so the card on every device shows it off — and kitchen motion or the schedule's on-time brings it back. A remote (a phone) has no button: its screen is its own.

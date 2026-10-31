@@ -246,6 +246,15 @@ export function sides(game: Game): [Side, Side] {
 }
 
 /**
+ * The matchup, away first, by abbreviation — "FSU vs MIA" — as the Home
+ * card's header says it beside the title (0.131), so it reads collapsed.
+ */
+export function matchupLabel(game: Game): string {
+  const [away, home] = sides(game);
+  return `${away.abbr.toUpperCase()} vs ${home.abbr.toUpperCase()}`;
+}
+
+/**
  * Game state as a score bug says it — FINAL after, period and clock during,
  * kickoff time before.
  */

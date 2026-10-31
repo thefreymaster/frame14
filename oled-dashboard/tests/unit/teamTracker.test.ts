@@ -5,6 +5,7 @@ import {
   inWindow,
   isLive,
   kickoff,
+  matchupLabel,
   NEUTRAL,
   periodLabel,
   POST_WINDOW_MS,
@@ -155,6 +156,15 @@ describe("sides", () => {
     expect(t2.lost).toBe(false);
     expect(o2.lost).toBe(true);
     expect(sides(game("IN", attrs))[0].lost).toBe(false);
+  });
+});
+
+describe("matchupLabel (0.131)", () => {
+  it("says who's playing, away first, by abbreviation", () => {
+    const attrs: TeamTrackerAttributes = { team_abbr: "FSU", opponent_abbr: "mia", team_homeaway: "away" };
+    expect(matchupLabel(game("PRE", attrs))).toBe("FSU vs MIA");
+    expect(matchupLabel(game("PRE", { ...attrs, team_homeaway: "home" }))).toBe("MIA vs FSU");
+    expect(matchupLabel(game("PRE", { team_abbr: "FSU" }))).toBe("— vs FSU");
   });
 });
 

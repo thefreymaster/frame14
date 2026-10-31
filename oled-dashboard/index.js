@@ -91,6 +91,10 @@ io.on("connection", (socket) => {
   socket.emit("photos_shown", photosShown());
   socket.emit("screen_state", screen.state());
 
+  // A frame says what its screen's brightness is as it arrives
+  // (ScreenListener): the level while none has been set here (0.131).
+  socket.on("brightness_report", (level) => screen.report(level));
+
   socket.on("change", (view) => {
     console.log({ io: "change", view });
     io.currentView = view;

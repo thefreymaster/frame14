@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Badge, Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, Flex, HStack, Text, VStack } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { IoTrophyOutline } from "react-icons/io5";
 import { useGames } from "../hooks/useLiveGame";
@@ -10,6 +10,7 @@ import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
 import {
   inWindow,
+  matchupLabel,
   sides,
   stateLabel,
   type Game,
@@ -394,15 +395,22 @@ export function TeamTracker() {
       collapsible
       storageKey="teamtracker"
       title={
-        <HStack width="100%" align="center" gap="3">
+        // Beside the title, in grey like the Calendar card's count, who's
+        // playing (0.131), so the card says something collapsed; it wraps
+        // under the title, with the Live badge, when the card is too narrow.
+        <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
           <SectionTitle icon={<IoTrophyOutline />}>Teams</SectionTitle>
-          <Box flex="1" minW="0" />
-          {anyLive && (
-            <Badge colorPalette="red" variant="solid">
-              Live
-            </Badge>
-          )}
-        </HStack>
+          <HStack gap="3" ms="auto" minW="0">
+            <Text textStyle="sm" color="fg.muted">
+              {games.map(matchupLabel).join(" · ")}
+            </Text>
+            {anyLive && (
+              <Badge colorPalette="red" variant="solid">
+                Live
+              </Badge>
+            )}
+          </HStack>
+        </Flex>
       }
     >
       {/* The score bugs measure this, not the viewport — see NARROW. */}

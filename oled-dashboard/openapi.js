@@ -1058,6 +1058,67 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/screen/dark": {
+      put: {
+        tags: ["Screen"],
+        operationId: "setScreenDarkHours",
+        summary: "Save the dark hours, when the screen is at its darkest",
+        description:
+          "Saves the dark hours and applies them at once: with them on, the frames go to the lowest backlight now if it is inside them, else to the brightness set; then at `from` each day the frames go dark and at `to` the brightness set comes back (local time). A screen turned on inside them comes up dark. The add-on keeps them across restarts.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/DarkHours" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "The dark hours were saved; the screen as it is now.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ScreenState" },
+              },
+            },
+          },
+          400: {
+            description: "Not dark hours: `enabled` must be a boolean, `from` and `to` HH:MM and different.",
+          },
+        },
+      },
+    },
+    "/api/screen/brightness/{level}": {
+      get: {
+        tags: ["Screen"],
+        operationId: "setScreenBrightness",
+        summary: "Set the frames' screen brightness",
+        description:
+          "Emits a `brightness` Socket.IO event to all connected clients, and a frame running in Fully Kiosk Browser sets its screen's brightness through Fully's JavaScript interface. The add-on keeps the level: it comes back when the dark hours end and goes with the screen whenever it is turned on outside them. For a Home Assistant `rest_command`, and the Settings page's slider.",
+        parameters: [
+          {
+            name: "level",
+            in: "path",
+            required: true,
+            description: "0 (the lowest backlight) to 255 (the brightest).",
+            schema: { type: "integer", minimum: 0, maximum: 255 },
+          },
+        ],
+        responses: {
+          200: {
+            description: "The level was set and kept; the screen as it is now.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ScreenState" },
+              },
+            },
+          },
+          400: {
+            description: "The level was not a whole number from 0 to 255.",
+          },
+        },
+      },
+    },
     "/api/screen/{state}": {
       get: {
         tags: ["Screen"],
@@ -1161,9 +1222,28 @@ export const openApiDocument = {
           },
         },
       },
+      DarkHours: {
+        type: "object",
+        required: ["enabled", "from", "to"],
+        properties: {
+          enabled: { type: "boolean", example: true },
+          from: {
+            type: "string",
+            pattern: "^([01]\\d|2[0-3]):[0-5]\\d$",
+            example: "21:00",
+            description: "When the screen goes to its darkest, HH:MM local time.",
+          },
+          to: {
+            type: "string",
+            pattern: "^([01]\\d|2[0-3]):[0-5]\\d$",
+            example: "06:30",
+            description: "When the brightness set comes back, HH:MM local time; earlier than `from` for hours across midnight.",
+          },
+        },
+      },
       ScreenState: {
         type: "object",
-        required: ["state", "schedule"],
+        required: ["state", "schedule", "brightness", "dark"],
         properties: {
           state: {
             type: "string",
@@ -1171,6 +1251,14 @@ export const openApiDocument = {
             description: "The state the add-on last asked the frames for.",
           },
           schedule: { $ref: "#/components/schemas/ScreenSchedule" },
+          brightness: {
+            type: "integer",
+            nullable: true,
+            minimum: 0,
+            maximum: 255,
+            description: "The level set, 0–255; null until one is set or a frame reports its own.",
+          },
+          dark: { $ref: "#/components/schemas/DarkHours" },
         },
       },
       ApiStatus: {

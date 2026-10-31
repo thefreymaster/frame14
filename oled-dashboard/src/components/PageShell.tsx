@@ -22,6 +22,8 @@ export function PageShell({
       // PageTransition keys off this to give a fill page a definite height
       // when the layout scrolls (every route on a remote-mode device).
       data-page-fill={fill ? "" : undefined}
+      // …and, in a layout that scrolls, lets it size to its content (0.131.1).
+      data-page-shell=""
       width="100%"
       minHeight="100%"
       height={fill ? "100%" : undefined}

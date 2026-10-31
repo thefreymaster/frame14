@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.131.1
+
+- Fixed: on an iPhone — in Safari and the home-screen app — the Energy page's month card was squeezed to its header: its figures ran out of the card and the chart was cut off under the navigation. The page now grows and scrolls to it, as it always did in other browsers. The Weather page's hourly chart was cut off the same way, and shows now too.
+
 ## 0.131.0
 
 - Added: the frames' screen brightness, on the Settings page's Screen card — a slider, live as it is dragged, through Fully Kiosk Browser's JavaScript interface on each frame, from a phone or from the frame itself (not from a desktop). The level is kept by the add-on and comes back after the dark hours. `GET /api/screen/brightness/:level` (0 to 255) sets it for a Home Assistant `rest_command`; a frame reports its own brightness as it arrives, so the slider starts where the screen is. For a level to hold, the tablet's adaptive brightness has to be off.

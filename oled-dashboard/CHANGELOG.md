@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.133.0
+
+- Changed: on a phone, the thermostat's dialog — from the Home card's tiles and the Climate page — fills the screen instead of floating over the page, with the dial and its controls in the middle. On the frame and a desktop it's the dialog it was. Its close button is now a small square button beside the thermostat's name, the same as the header's mic, everywhere.
+
 ## 0.132.0
 
 - Added: − and + buttons on the thermostat's dial, under the reading, wherever the thermostat opens — the Home card's tiles and the Climate page. Each tap moves the target a degree at once, and the new target goes to the thermostat a moment after the last tap, so tapping 68 up to 72 sends one change, not four. They aren't there while a thermostat is off or only running its fan, as the dial's arc isn't.

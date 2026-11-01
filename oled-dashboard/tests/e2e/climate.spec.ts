@@ -28,6 +28,36 @@ test.describe("the Climate page", () => {
     await expect(page.getByRole("button", { name: /^2nd Floor AC: 68°, Heat, set to 68°/ })).toBeVisible();
   });
 
+  test("the dialog fills a phone's screen, and its close button closes it", async ({ page, isMobile }) => {
+    await page.goto("/climate");
+    await page.getByRole("button", { name: /^2nd Floor AC:/ }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("System off")).toBeVisible();
+    // Full screen on a phone (0.133): the whole viewport. A wider screen
+    // keeps the md dialog, floating in the middle.
+    const viewport = page.viewportSize()!;
+    if (isMobile) {
+      await expect
+        .poll(async () => {
+          const box = await dialog.boundingBox();
+          return box && [box.x, box.y, Math.round(box.width), Math.round(box.height)];
+        })
+        .toEqual([0, 0, viewport.width, viewport.height]);
+    } else {
+      await expect.poll(async () => (await dialog.boundingBox())?.width).toBeLessThan(viewport.width / 2);
+    }
+    // The header mic's square-cornered button, beside the title. The mic is
+    // aria-hidden under the modal, so it's found by its label, not its role.
+    const close = dialog.getByRole("button", { name: "Close" });
+    const [closeRadius, micRadius] = await Promise.all([
+      close.evaluate((el) => getComputedStyle(el).borderTopLeftRadius),
+      page.locator('button[aria-label="Ask the house"]').evaluate((el) => getComputedStyle(el).borderTopLeftRadius),
+    ]);
+    expect(closeRadius).toBe(micRadius);
+    await close.click();
+    await expect(dialog).toBeHidden();
+  });
+
   test("the dial's − and + step the target, sent once the taps stop", async ({ page }) => {
     await page.goto("/climate");
     await page.getByRole("button", { name: /^1st Floor AC:/ }).click();

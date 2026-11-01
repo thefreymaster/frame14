@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, Dialog, HStack, Portal, Text } from "@chakra-ui/react";
+import { Badge, Button, HStack, Portal, Text } from "@chakra-ui/react";
 import {
   IoCloudDownloadOutline,
   IoCubeOutline,
@@ -8,6 +8,7 @@ import {
 import { installSoftware, useSoftware } from "../hooks/useSoftware";
 import { useAppVersion } from "../lib/appVersion";
 import { Board } from "./Board";
+import * as Modal from "./Modal";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { DataListItem, DataListRoot } from "./ui/data-list";
 import { toaster } from "./ui/toaster";
@@ -149,7 +150,7 @@ export function SoftwareBoard() {
         </>
       )}
 
-      <Dialog.Root
+      <Modal.Root
         role="alertdialog"
         open={confirming}
         onOpenChange={(e) => setConfirming(e.open)}
@@ -157,29 +158,29 @@ export function SoftwareBoard() {
         size="sm"
       >
         <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header>
-                <Dialog.Title>Install Frame14 {update?.latest}?</Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>
+          <Modal.Backdrop />
+          <Modal.Positioner>
+            <Modal.Content>
+              <Modal.Header>
+                <Modal.Title>Install Frame14 {update?.latest}?</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
                 <Text color="fg.muted">
                   Home Assistant downloads it and restarts the add-on. Every
                   screen loses Frame14 for a minute or so and comes back on
                   the new version.
                 </Text>
-              </Dialog.Body>
-              <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
+              </Modal.Body>
+              <Modal.Footer>
+                <Modal.ActionTrigger asChild>
                   <Button variant="outline">Not now</Button>
-                </Dialog.ActionTrigger>
+                </Modal.ActionTrigger>
                 <Button onClick={() => void install()}>Install</Button>
-              </Dialog.Footer>
-            </Dialog.Content>
-          </Dialog.Positioner>
+              </Modal.Footer>
+            </Modal.Content>
+          </Modal.Positioner>
         </Portal>
-      </Dialog.Root>
+      </Modal.Root>
     </Board>
   );
 }

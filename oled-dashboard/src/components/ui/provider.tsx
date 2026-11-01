@@ -9,6 +9,7 @@ import {
 import {
   cardAnatomy,
   dialogAnatomy,
+  drawerAnatomy,
   segmentGroupAnatomy,
   toastAnatomy,
 } from "@chakra-ui/react/anatomy";
@@ -29,7 +30,8 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * smaller `sm` themselves, so none is rounder than its card (the thermostat
  * tiles excepted).
  *
- * Dialog backdrops blur the page behind them as well as dimming it.
+ * Dialog backdrops blur the page behind them as well as dimming it, and so do
+ * drawers' (a phone's modals since 0.134, see components/Modal).
  *
  * Toasts are outlined, not solid (0.125, the user's ask): every type keeps the
  * panel face and `fg` text, with a 1px border in its colour — green, red,
@@ -91,6 +93,10 @@ const system = createSystem(
         // Every modal blurs the page behind its dimmed backdrop.
         dialog: {
           slots: dialogAnatomy.keys(),
+          base: { backdrop: { backdropFilter: "blur(4px)" } },
+        },
+        drawer: {
+          slots: drawerAnatomy.keys(),
           base: { backdrop: { backdropFilter: "blur(4px)" } },
         },
         segmentGroup: {

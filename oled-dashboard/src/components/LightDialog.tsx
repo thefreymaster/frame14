@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Circle,
-  Dialog,
   HStack,
   Icon,
   Portal,
@@ -28,6 +27,7 @@ import {
   type RGB,
 } from "../lib/lightModel";
 import { CloseButton } from "./ui/close-button";
+import * as Modal from "./Modal";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 
@@ -197,7 +197,8 @@ function LightControls({
 }
 
 /**
- * A dimmable light's controls in a stock Chakra Dialog, opened by press and
+ * A dimmable light's controls in a Modal (a stock Chakra Dialog; a drawer from
+ * the bottom on a phone, 0.134), opened by press and
  * hold on its tile. Reads the light live, so it follows changes made anywhere.
  */
 export function LightDialog({
@@ -211,7 +212,7 @@ export function LightDialog({
   const attrs = data?.attributes;
 
   return (
-    <Dialog.Root
+    <Modal.Root
       open={entityId != null}
       onOpenChange={(e) => {
         if (!e.open) onClose();
@@ -221,13 +222,13 @@ export function LightDialog({
       unmountOnExit
     >
       <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>{attrs?.friendly_name ?? "Light"}</Dialog.Title>
-            </Dialog.Header>
-            <Dialog.Body pb="8">
+        <Modal.Backdrop />
+        <Modal.Positioner>
+          <Modal.Content>
+            <Modal.Header>
+              <Modal.Title>{attrs?.friendly_name ?? "Light"}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body pb="8">
               {entityId && (
                 <LightControls
                   key={entityId}
@@ -236,13 +237,13 @@ export function LightDialog({
                   on={data?.state === "on"}
                 />
               )}
-            </Dialog.Body>
-            <Dialog.CloseTrigger asChild>
+            </Modal.Body>
+            <Modal.CloseTrigger asChild>
               <CloseButton size="sm" />
-            </Dialog.CloseTrigger>
-          </Dialog.Content>
-        </Dialog.Positioner>
+            </Modal.CloseTrigger>
+          </Modal.Content>
+        </Modal.Positioner>
       </Portal>
-    </Dialog.Root>
+    </Modal.Root>
   );
 }

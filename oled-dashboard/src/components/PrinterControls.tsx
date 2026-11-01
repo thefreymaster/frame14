@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Button, Dialog, HStack, Portal, Text } from "@chakra-ui/react";
+import { Button, HStack, Portal, Text } from "@chakra-ui/react";
 import { IoPause, IoPlay, IoStop } from "react-icons/io5";
 import { pressButton } from "../lib/callService";
+import * as Modal from "./Modal";
 
 // Stop spinning if the printer still hasn't changed state after this long.
 const PENDING_MS = 10_000;
@@ -75,7 +76,7 @@ export function PrinterControls({
       </HStack>
 
       {stop && (
-        <Dialog.Root
+        <Modal.Root
           role="alertdialog"
           open={confirming}
           onOpenChange={(e) => setConfirming(e.open)}
@@ -83,21 +84,21 @@ export function PrinterControls({
           size="sm"
         >
           <Portal>
-            <Dialog.Backdrop />
-            <Dialog.Positioner>
-              <Dialog.Content>
-                <Dialog.Header>
-                  <Dialog.Title>Stop the print?</Dialog.Title>
-                </Dialog.Header>
-                <Dialog.Body>
+            <Modal.Backdrop />
+            <Modal.Positioner>
+              <Modal.Content>
+                <Modal.Header>
+                  <Modal.Title>Stop the print?</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
                   <Text color="fg.muted">
                     The job ends and can't be resumed.
                   </Text>
-                </Dialog.Body>
-                <Dialog.Footer>
-                  <Dialog.ActionTrigger asChild>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Modal.ActionTrigger asChild>
                     <Button variant="outline">Keep printing</Button>
-                  </Dialog.ActionTrigger>
+                  </Modal.ActionTrigger>
                   <Button
                     colorPalette="red"
                     onClick={() => {
@@ -107,11 +108,11 @@ export function PrinterControls({
                   >
                     Stop print
                   </Button>
-                </Dialog.Footer>
-              </Dialog.Content>
-            </Dialog.Positioner>
+                </Modal.Footer>
+              </Modal.Content>
+            </Modal.Positioner>
           </Portal>
-        </Dialog.Root>
+        </Modal.Root>
       )}
     </>
   );

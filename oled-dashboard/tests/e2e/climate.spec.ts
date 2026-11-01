@@ -33,8 +33,10 @@ test.describe("the Climate page", () => {
     await page.getByRole("button", { name: /^2nd Floor AC:/ }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("System off")).toBeVisible();
-    // Full screen on a phone (0.133): the whole viewport. A wider screen
-    // keeps the md dialog, floating in the middle.
+    // Full screen on a phone (0.133), a drawer from the bottom (0.134): the
+    // whole viewport. A wider screen keeps the md dialog, floating in the
+    // middle.
+    await expect(dialog).toHaveClass(isMobile ? /chakra-drawer__content/ : /chakra-dialog__content/);
     const viewport = page.viewportSize()!;
     if (isMobile) {
       await expect

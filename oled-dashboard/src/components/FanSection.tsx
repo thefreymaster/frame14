@@ -4,7 +4,6 @@ import {
   Box,
   Card,
   Circle,
-  Dialog,
   Grid,
   HStack,
   Portal,
@@ -18,6 +17,7 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 import { FanAllOffButton } from "./FanAllOffButton";
 import { FanSkeleton } from "./skeletons/FanSkeleton";
+import * as Modal from "./Modal";
 import { CloseButton } from "./ui/close-button";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
@@ -182,7 +182,7 @@ function FanDialog({
   onClose: () => void;
 }) {
   return (
-    <Dialog.Root
+    <Modal.Root
       open={open && fan != null}
       onOpenChange={(e) => {
         if (!e.open) onClose();
@@ -192,22 +192,22 @@ function FanDialog({
       unmountOnExit
     >
       <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>{fan?.name ?? "Fan"}</Dialog.Title>
-            </Dialog.Header>
-            <Dialog.Body pb="8">
+        <Modal.Backdrop />
+        <Modal.Positioner>
+          <Modal.Content>
+            <Modal.Header>
+              <Modal.Title>{fan?.name ?? "Fan"}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body pb="8">
               {fan && <FanControls key={fan.entity_id} fan={fan} />}
-            </Dialog.Body>
-            <Dialog.CloseTrigger asChild>
+            </Modal.Body>
+            <Modal.CloseTrigger asChild>
               <CloseButton size="sm" />
-            </Dialog.CloseTrigger>
-          </Dialog.Content>
-        </Dialog.Positioner>
+            </Modal.CloseTrigger>
+          </Modal.Content>
+        </Modal.Positioner>
       </Portal>
-    </Dialog.Root>
+    </Modal.Root>
   );
 }
 

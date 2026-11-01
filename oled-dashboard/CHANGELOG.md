@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.134.0
+
+- Changed: on a phone, every pop-up is now a drawer that comes in from the bottom of the screen instead of a box in the middle: a thermostat (still the whole screen), a light, a fan, the energy detail, the voice assistant and the "Stop the print?" and "Install?" questions. A drawer is as tall as what it holds and stops short of the status bar; a taller one scrolls. The frame and a desktop keep their pop-ups as they were.
+
 ## 0.133.0
 
 - Changed: on a phone, the thermostat's dialog — from the Home card's tiles and the Climate page — fills the screen instead of floating over the page, with the dial and its controls in the middle. On the frame and a desktop it's the dialog it was. Its close button is now a small square button beside the thermostat's name, the same as the header's mic, everywhere.

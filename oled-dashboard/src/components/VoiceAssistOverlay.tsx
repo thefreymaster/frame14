@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Box,
-  Dialog,
   Icon,
   Portal,
   Spinner,
@@ -9,6 +8,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { IoCheckmark, IoMic } from "react-icons/io5";
+import * as Modal from "./Modal";
 import { VoiceLevelRing } from "./VoiceLevelRing";
 import type { VoiceSnapshot } from "../lib/voiceAssist";
 
@@ -51,8 +51,9 @@ function sameView(a: View, b: View) {
 }
 
 /**
- * Session UI — a stock Chakra Dialog, so tap-outside, Escape and the exit
- * animation come from the library.
+ * Session UI — a Modal (a stock Chakra Dialog; a drawer from the bottom on a
+ * phone, 0.134), so tap-outside, Escape and the exit animation come from the
+ * library.
  *
  * Always mounted: it opens whenever a session is running. The last live
  * snapshot is kept so the exit animation shows what was on screen, not the
@@ -77,7 +78,7 @@ export function VoiceAssistOverlay({
   const replyShown = Boolean(reply) && audioBlocked;
 
   return (
-    <Dialog.Root
+    <Modal.Root
       open={open}
       onOpenChange={(e) => {
         if (!e.open) onDismiss();
@@ -85,10 +86,10 @@ export function VoiceAssistOverlay({
       placement="center"
     >
       <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <Dialog.Body py="10">
+        <Modal.Backdrop />
+        <Modal.Positioner>
+          <Modal.Content>
+            <Modal.Body py="10">
               <VStack gap="4" textAlign="center">
                 <Box
                   position="relative"
@@ -118,13 +119,13 @@ export function VoiceAssistOverlay({
                 {status && <Text color="fg.muted">{status}</Text>}
 
                 {transcript && (
-                  <Dialog.Title
+                  <Modal.Title
                     textStyle={replyShown ? "md" : "2xl"}
                     fontWeight="normal"
                     color={replyShown ? "fg.muted" : "fg"}
                   >
                     {transcript}
-                  </Dialog.Title>
+                  </Modal.Title>
                 )}
 
                 {/* The reply is spoken (or a tone plays), not written out —
@@ -152,10 +153,10 @@ export function VoiceAssistOverlay({
                   </Text>
                 )}
               </VStack>
-            </Dialog.Body>
-          </Dialog.Content>
-        </Dialog.Positioner>
+            </Modal.Body>
+          </Modal.Content>
+        </Modal.Positioner>
       </Portal>
-    </Dialog.Root>
+    </Modal.Root>
   );
 }

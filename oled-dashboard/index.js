@@ -94,6 +94,9 @@ io.on("connection", (socket) => {
   // A frame says what its screen's brightness is as it arrives
   // (ScreenListener): the level while none has been set here (0.131).
   socket.on("brightness_report", (level) => screen.report(level));
+  // A frame's reading of the room's light (ScreenListener, every ten
+  // seconds): with "Adjust to the room" on, the brightness follows it (0.137).
+  socket.on("lux_report", (lux) => screen.reportLux(lux));
 
   socket.on("change", (view) => {
     console.log({ io: "change", view });

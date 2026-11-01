@@ -1088,6 +1088,26 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/screen/auto": {
+      put: {
+        tags: ["Screen"],
+        operationId: "setScreenAuto",
+        summary: "Set the brightness from the room's light",
+        description:
+          "Whether the frames set their brightness from the tablet's light sensor (a frame reads it every ten seconds and reports the lux), and the range — `min` in the dark, `max` in a bright room (1000 lx and up), a log curve between — saved by the add-on and applied at once. The dark hours still win inside them, and a level set by hand (the slider, GET /api/screen/brightness/{level}) turns it off.",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { $ref: "#/components/schemas/AutoBrightness" } } },
+        },
+        responses: {
+          200: {
+            description: "The screen's state with the setting saved.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ScreenState" } } },
+          },
+          400: { description: "Not a setting: a level outside 0–255, or min not below max.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
     "/api/screen/brightness/{level}": {
       get: {
         tags: ["Screen"],
@@ -1241,9 +1261,18 @@ export const openApiDocument = {
           },
         },
       },
+      AutoBrightness: {
+        type: "object",
+        required: ["enabled", "min", "max"],
+        properties: {
+          enabled: { type: "boolean", example: true },
+          min: { type: "integer", minimum: 0, maximum: 255, example: 25, description: "The level in the dark." },
+          max: { type: "integer", minimum: 0, maximum: 255, example: 255, description: "The level in a bright room (1000 lx and up)." },
+        },
+      },
       ScreenState: {
         type: "object",
-        required: ["state", "schedule", "brightness", "dark"],
+        required: ["state", "schedule", "brightness", "dark", "auto", "lux"],
         properties: {
           state: {
             type: "string",
@@ -1259,6 +1288,13 @@ export const openApiDocument = {
             description: "The level set, 0–255; null until one is set or a frame reports its own.",
           },
           dark: { $ref: "#/components/schemas/DarkHours" },
+          auto: { $ref: "#/components/schemas/AutoBrightness" },
+          lux: {
+            type: "integer",
+            nullable: true,
+            example: 120,
+            description: "The room's light as a frame last reported it (lux); null until one has.",
+          },
         },
       },
       ApiStatus: {

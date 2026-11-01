@@ -29,7 +29,8 @@ import { ScreenBoard } from "../../src/components/ScreenBoard";
 
 const HOURS = { enabled: false, on: "06:30", off: "23:00" };
 const DARK = { enabled: false, from: "21:00", to: "06:30" };
-const SERVER = { state: "on", schedule: HOURS, brightness: 128, dark: DARK };
+const AUTO = { enabled: false, min: 25, max: 255 };
+const SERVER = { state: "on", schedule: HOURS, brightness: 128, dark: DARK, auto: AUTO, lux: null };
 const fromServer = (v: unknown) => act(() => mocks.handlers.get("screen_state")?.(v));
 
 describe("the Screen card", () => {
@@ -46,7 +47,11 @@ describe("the Screen card", () => {
     // comes back applied, unless its two times are the same.
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (init?.method === "PUT") {
-        const body = JSON.parse(String(init.body)) as Record<string, string | boolean>;
+        const body = JSON.parse(String(init.body)) as Record<string, string | boolean | number>;
+        if (url.endsWith("/auto")) {
+          if (Number(body.min) >= Number(body.max)) return { ok: false, status: 400, json: async () => ({}) };
+          return { ok: true, status: 200, json: async () => ({ ...SERVER, auto: body }) };
+        }
         const dark = url.endsWith("/dark");
         const [start, end] = dark ? [body.from, body.to] : [body.on, body.off];
         if (start === end) return { ok: false, status: 400, json: async () => ({}) };
@@ -96,7 +101,7 @@ describe("the Screen card", () => {
 
   it("follows the frames' screen as the server reports it", () => {
     renderWithProviders(<ScreenBoard />);
-    fromServer({ state: "off", schedule: { enabled: true, on: "08:00", off: "21:00" }, brightness: 51, dark: { enabled: true, from: "22:00", to: "05:00" } });
+    fromServer({ state: "off", schedule: { enabled: true, on: "08:00", off: "21:00" }, brightness: 51, dark: { enabled: true, from: "22:00", to: "05:00" }, auto: AUTO, lux: null });
     expect(dom.getByRole("checkbox", { name: "Screen on" })).not.toBeChecked();
     expect(dom.getByRole("checkbox", { name: "On a schedule" })).toBeChecked();
     expect(dom.getByLabelText("On at")).toHaveValue("08:00");
@@ -141,12 +146,33 @@ describe("the Screen card", () => {
     expect(dom.getByLabelText("Dark until")).toHaveValue("05:00");
   });
 
-  it("keeps the brightness and the dark hours off a desktop", () => {
+  it("turns the brightness from the room's light on, with its range, and shows the room's light (0.137)", async () => {
+    renderWithProviders(<ScreenBoard />);
+    expect(dom.getByText(/No reading from the light sensor yet/)).toBeInTheDocument();
+    fromServer({ ...SERVER, lux: 120 });
+    expect(dom.getByText(/Room light now: 120 lx/)).toBeInTheDocument();
+    expect(dom.getByText("10%–100%")).toBeInTheDocument();
+    fireEvent.click(dom.getByRole("checkbox", { name: "Adjust to the room" }));
+    await waitFor(() => expect(dom.getByRole("checkbox", { name: "Adjust to the room" })).toBeChecked());
+    expect(puts("/api/screen/auto").at(-1)).toEqual({ ...AUTO, enabled: true });
+    // The range's thumbs take keys once focused, as in a browser.
+    const dimmest = dom.getByRole("slider", { name: "Dimmest" });
+    expect(dimmest).toHaveAttribute("aria-valuenow", "25");
+    expect(dom.getByRole("slider", { name: "Brightest" })).toHaveAttribute("aria-valuenow", "255");
+    fireEvent.focus(dimmest);
+    fireEvent.keyDown(dimmest, { key: "Home" });
+    await waitFor(() => expect(puts("/api/screen/auto").at(-1)).toEqual({ enabled: true, min: 0, max: 255 }));
+    expect(dom.getByText("0%–100%")).toBeInTheDocument();
+  });
+
+  it("keeps the brightness, the room's light and the dark hours off a desktop", () => {
     mocks.desktop = true;
     renderWithProviders(<ScreenBoard />);
     expect(dom.getByRole("checkbox", { name: "Screen on" })).toBeInTheDocument();
     expect(dom.getByRole("checkbox", { name: "On a schedule" })).toBeInTheDocument();
     expect(dom.queryByRole("slider", { name: "Brightness" })).toBeNull();
+    expect(dom.queryByRole("checkbox", { name: "Adjust to the room" })).toBeNull();
+    expect(dom.queryByRole("slider", { name: "Dimmest" })).toBeNull();
     expect(dom.queryByRole("checkbox", { name: "Dark hours" })).toBeNull();
     expect(dom.queryByLabelText("Dark from")).toBeNull();
   });

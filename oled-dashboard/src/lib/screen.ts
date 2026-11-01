@@ -1,13 +1,14 @@
 import { useSyncExternalStore } from "react";
 import { socket } from "./socket";
 
-// The frames' screen (0.129; brightness and dark hours 0.131): the state and
-// the brightness the add-on last asked for, the hours the screen is on and
-// the dark hours, as the server has them (screen.js) — sent as
-// `screen_state` on connect and after every change, so every device's
-// Settings page shows the same. A frame acts on the `screen` and
-// `brightness` commands itself (components/ScreenListener); this is the
-// setting's side.
+// The frames' screen (0.129; brightness and dark hours 0.131; the room's
+// light 0.137): the state and the brightness the add-on last asked for, the
+// hours the screen is on, the dark hours and the brightness-from-the-room
+// setting with the room's light as a frame last read it, as the server has
+// them (screen.js) — sent as `screen_state` on connect and after every
+// change, so every device's Settings page shows the same. A frame acts on
+// the `screen` and `brightness` commands itself, and reads the light sensor
+// (components/ScreenListener); this is the setting's side.
 
 export type ScreenPower = "on" | "off";
 
@@ -27,12 +28,24 @@ export interface DarkHours {
   to: string;
 }
 
+/** Brightness from the room's light (0.137): on or off, and the range it moves in. */
+export interface AutoBrightness {
+  enabled: boolean;
+  /** The level in the dark, 0–255. */
+  min: number;
+  /** The level in a bright room, 0–255, above `min`. */
+  max: number;
+}
+
 export interface ScreenState {
   state: ScreenPower;
   schedule: ScreenSchedule;
   /** The level set, 0–255 — null until the slider is used or a frame reports its own. */
   brightness: number | null;
   dark: DarkHours;
+  auto: AutoBrightness;
+  /** The room's light as a frame last reported it, lux — null until one has. */
+  lux: number | null;
 }
 
 /** Fully's brightness scale. */
@@ -43,6 +56,8 @@ export const DEFAULT_SCREEN: ScreenState = {
   schedule: { enabled: false, on: "06:30", off: "23:00" },
   brightness: null,
   dark: { enabled: false, from: "21:00", to: "06:30" },
+  auto: { enabled: false, min: 25, max: 255 },
+  lux: null,
 };
 
 let current: ScreenState = DEFAULT_SCREEN;
@@ -100,25 +115,29 @@ export async function setScreenBrightness(level: number): Promise<boolean> {
 }
 
 /**
- * Save a pair of hours (PUT). Shown at once, so a change made while the last
- * one is still on its way builds on it rather than on what the server had;
- * then the server's answer is applied. Resolves with that answer, or null
- * when the server refused it (the two times the same, or not HH:MM) or
- * couldn't be reached — the hours from before are back.
+ * Save a setting (PUT): a pair of hours, or the room-light setting. Shown at
+ * once, so a change made while the last one is still on its way builds on
+ * it rather than on what the server had; then the server's answer is
+ * applied. Resolves with that answer, or null when the server refused it
+ * (the two times the same, or not HH:MM; a range with min not below max) or
+ * couldn't be reached — the setting from before is back.
  */
-async function saveHours<K extends "schedule" | "dark">(
+async function saveSetting<K extends "schedule" | "dark" | "auto">(
   url: string,
   key: K,
-  hours: ScreenState[K],
+  setting: ScreenState[K],
 ): Promise<ScreenState | null> {
   const before = current[key];
-  const patch = (value: ScreenState[K]) => ({ ...current, ...({ [key]: value } as Pick<ScreenState, K>) });
-  apply(patch(hours));
+  const patch = (value: ScreenState[K]) => ({
+    ...current,
+    ...({ [key]: value } as Pick<ScreenState, K>),
+  });
+  apply(patch(setting));
   try {
     const res = await fetch(url, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(hours),
+      body: JSON.stringify(setting),
     });
     const next = res.ok ? ((await res.json()) as unknown) : null;
     if (!isScreenState(next)) {
@@ -134,13 +153,22 @@ async function saveHours<K extends "schedule" | "dark">(
 }
 
 /** Save the schedule, the hours the screen is on (PUT /api/screen/schedule). */
-export function saveScreenSchedule(schedule: ScreenSchedule): Promise<ScreenState | null> {
-  return saveHours("/api/screen/schedule", "schedule", schedule);
+export function saveScreenSchedule(
+  schedule: ScreenSchedule,
+): Promise<ScreenState | null> {
+  return saveSetting("/api/screen/schedule", "schedule", schedule);
 }
 
 /** Save the dark hours, when the screen is at its darkest (PUT /api/screen/dark). */
 export function saveDarkHours(dark: DarkHours): Promise<ScreenState | null> {
-  return saveHours("/api/screen/dark", "dark", dark);
+  return saveSetting("/api/screen/dark", "dark", dark);
+}
+
+/** Save the brightness-from-the-room setting and its range (PUT /api/screen/auto, 0.137). */
+export function saveAutoBrightness(
+  auto: AutoBrightness,
+): Promise<ScreenState | null> {
+  return saveSetting("/api/screen/auto", "auto", auto);
 }
 
 function isHours(v: unknown, start: string, end: string): boolean {
@@ -153,14 +181,27 @@ function isHours(v: unknown, start: string, end: string): boolean {
   );
 }
 
+function isAuto(v: unknown): v is AutoBrightness {
+  if (!v || typeof v !== "object") return false;
+  const { enabled, min, max } = v as Partial<AutoBrightness>;
+  return (
+    typeof enabled === "boolean" &&
+    typeof min === "number" &&
+    typeof max === "number"
+  );
+}
+
 function isScreenState(v: unknown): v is ScreenState {
   if (!v || typeof v !== "object") return false;
-  const { state, schedule, brightness, dark } = v as Partial<ScreenState>;
+  const { state, schedule, brightness, dark, auto, lux } =
+    v as Partial<ScreenState>;
   return (
     (state === "on" || state === "off") &&
     isHours(schedule, "on", "off") &&
     (brightness === null || typeof brightness === "number") &&
-    isHours(dark, "from", "to")
+    isHours(dark, "from", "to") &&
+    isAuto(auto) &&
+    (lux === null || typeof lux === "number")
   );
 }
 

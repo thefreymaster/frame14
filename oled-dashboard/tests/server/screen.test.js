@@ -12,11 +12,14 @@ const screen = await import("../../screen.js");
 const HOURS = { enabled: true, on: "06:30", off: "23:00" };
 const DARK = { enabled: true, from: "21:00", to: "06:30" };
 const file = path.join(dir, "screen.json");
+const AUTO = { enabled: true, min: 25, max: 255 };
 const fresh = () => ({
   state: "on",
   schedule: { ...screen.DEFAULT_SCHEDULE },
   brightness: null,
   dark: { ...screen.DEFAULT_DARK },
+  auto: { ...screen.DEFAULT_AUTO },
+  lux: null,
 });
 
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -89,6 +92,34 @@ describe("a brightness", () => {
   });
 });
 
+describe("brightness from the room's light (0.137)", () => {
+  it("is on or off and a range of levels, min below max", () => {
+    expect(screen.normaliseAuto(AUTO)).toEqual(AUTO);
+    expect(screen.normaliseAuto({ enabled: false, min: "0", max: "255" })).toEqual({ enabled: false, min: 0, max: 255 });
+    for (const bad of [null, {}, { ...AUTO, enabled: "yes" }, { ...AUTO, min: 300 }, { ...AUTO, min: 200, max: 100 }, { ...AUTO, min: 100, max: 100 }, { ...AUTO, max: -1 }]) {
+      expect(screen.normaliseAuto(bad)).toBeNull();
+    }
+  });
+
+  it("reads a lux value, rounded, and nothing else", () => {
+    expect(screen.normaliseLux(120.6)).toBe(121);
+    expect(screen.normaliseLux("35")).toBe(35);
+    expect(screen.normaliseLux(0)).toBe(0);
+    for (const bad of [-1, NaN, Infinity, "", "bright", null, undefined, {}]) expect(screen.normaliseLux(bad)).toBeNull();
+  });
+
+  it("puts the level on a log curve from min in the dark to max at LUX_FULL", () => {
+    expect(screen.levelForLux(0, AUTO)).toBe(25);
+    expect(screen.levelForLux(screen.LUX_FULL, AUTO)).toBe(255);
+    expect(screen.levelForLux(5000, AUTO)).toBe(255);
+    // A tenth of LUX_FULL is two thirds of the way, not a tenth.
+    const tenth = screen.levelForLux(screen.LUX_FULL / 10, AUTO);
+    expect(tenth).toBeGreaterThan(25 + 230 * 0.6);
+    expect(tenth).toBeLessThan(25 + 230 * 0.7);
+    expect(screen.levelForLux(300, { enabled: true, min: 0, max: 100 })).toBe(83);
+  });
+});
+
 describe("the screen", () => {
   let io;
   let run;
@@ -126,7 +157,7 @@ describe("the screen", () => {
     expect(run.setSchedule(HOURS)).toEqual({ ...fresh(), state: "off", schedule: HOURS });
     // 23:30 is outside the hours: off now.
     expect(sent()).toEqual(["off"]);
-    expect(saved()).toEqual({ schedule: HOURS, brightness: null, dark: screen.DEFAULT_DARK });
+    expect(saved()).toEqual({ schedule: HOURS, brightness: null, dark: screen.DEFAULT_DARK, auto: screen.DEFAULT_AUTO });
     run.stop();
     run = screen.startScreen(io);
     expect(run.state().schedule).toEqual(HOURS);
@@ -261,5 +292,58 @@ describe("the screen", () => {
     io.emit.mockClear();
     run.setDark({ ...DARK, enabled: false });
     expect(sent("brightness")).toEqual([]);
+  });
+
+  it("sets the brightness from the room's light while auto is on, a step at a time, and keeps the setting (0.137)", () => {
+    vi.setSystemTime(new Date(2026, 9, 31, 12, 0));
+    run = screen.startScreen(io);
+    // Off by default: a reading is kept for the card and changes nothing.
+    run.reportLux(300);
+    expect(run.state()).toEqual({ ...fresh(), lux: 300 });
+    expect(sent("brightness")).toEqual([]);
+    // Turned on, the room's level goes out at once and is the level kept.
+    const level = screen.levelForLux(300, AUTO);
+    expect(run.setAuto(AUTO)).toEqual({ ...fresh(), auto: AUTO, lux: 300, brightness: level });
+    expect(sent("brightness")).toEqual([level]);
+    expect(saved()).toEqual({ schedule: screen.DEFAULT_SCHEDULE, brightness: level, dark: screen.DEFAULT_DARK, auto: AUTO });
+    // A reading a few lux off asks for a level within AUTO_STEP: nothing sent.
+    run.reportLux(320);
+    expect(sent("brightness")).toEqual([level]);
+    // A darker room: a new level.
+    run.reportLux(20);
+    const dim = screen.levelForLux(20, AUTO);
+    expect(sent("brightness")).toEqual([level, dim]);
+    expect(run.state().brightness).toBe(dim);
+    // Nothing but lux is a reading.
+    run.reportLux("dark");
+    expect(run.state().lux).toBe(20);
+    // The slider is the end of the room's say.
+    run.setBrightness(200);
+    expect(run.state().auto).toEqual({ ...AUTO, enabled: false });
+    expect(saved().auto.enabled).toBe(false);
+    run.reportLux(1000);
+    expect(run.state().brightness).toBe(200);
+    // The setting is back after a restart; the reading is not.
+    run.setAuto(AUTO);
+    run.stop();
+    run = screen.startScreen(io);
+    expect(run.state().auto).toEqual(AUTO);
+    expect(run.state().lux).toBeNull();
+  });
+
+  it("lets the dark hours win over the room's light, and gives the room's level back at their end", () => {
+    vi.setSystemTime(new Date(2026, 9, 31, 22, 0));
+    run = screen.startScreen(io);
+    run.setDark(DARK);
+    run.setAuto(AUTO);
+    io.emit.mockClear();
+    run.reportLux(500);
+    // Inside the dark hours: the reading is kept, the screen stays dark.
+    expect(run.state().lux).toBe(500);
+    expect(sent("brightness")).toEqual([]);
+    // Their end gives the room's level, not the slider's.
+    vi.setSystemTime(new Date(2026, 10, 1, 6, 30));
+    run.tick();
+    expect(sent("brightness")).toEqual([screen.levelForLux(500, AUTO)]);
   });
 });

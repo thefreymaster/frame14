@@ -120,6 +120,7 @@ test.describe("the Settings page", () => {
   test("the Screen card's brightness and dark hours are kept by the add-on, and are not a desktop's", async ({ page, request, isMobile }) => {
     const screen = async () => (await request.get("/api/screen")).json();
     await request.put("/api/screen/dark", { data: { enabled: false, from: "21:00", to: "06:30" } });
+    await request.put("/api/screen/auto", { data: { enabled: false, min: 25, max: 255 } });
 
     await page.goto("/control");
     if (isMobile) await page.getByRole("tab", { name: "Display" }).click();
@@ -128,15 +129,27 @@ test.describe("the Settings page", () => {
     if (!isMobile) {
       await expect(page.getByRole("checkbox", { name: "Screen on" })).toBeVisible();
       await expect(slider).toHaveCount(0);
+      await expect(page.getByRole("checkbox", { name: "Adjust to the room" })).toHaveCount(0);
       await expect(page.getByRole("checkbox", { name: "Dark hours" })).toHaveCount(0);
       return;
     }
+
+    // Brightness from the room's light (0.137): the switch is the add-on's
+    // setting, and the range's thumbs are its levels. No frame reports here.
+    await expect(page.getByText(/Room light now: \d+ lx|No reading from the light sensor yet/)).toBeVisible();
+    await page.getByText("Adjust to the room", { exact: true }).click();
+    await expect.poll(async () => (await screen()).auto).toEqual({ enabled: true, min: 25, max: 255 });
+    const dimmest = page.getByRole("slider", { name: "Dimmest" });
+    await dimmest.focus();
+    await page.keyboard.press("Home");
+    await expect.poll(async () => (await screen()).auto.min).toBe(0);
+    await expect(page.getByText("0%–100%")).toBeVisible();
 
     // The slider sets the frames' level — Home is the slider's lowest.
     await slider.focus();
     await page.keyboard.press("Home");
     await expect.poll(async () => (await screen()).brightness).toBe(0);
-    await expect(page.getByText("0%")).toBeVisible();
+    await expect(page.getByText("0%", { exact: true })).toBeVisible();
 
     // The dark hours, saved as they are set.
     await page.getByText("Dark hours", { exact: true }).click();
@@ -151,8 +164,15 @@ test.describe("the Settings page", () => {
     await expect(page.getByLabel("Dark until")).toHaveValue("05:00");
     await expect(page.getByRole("slider", { name: "Brightness" })).toHaveAttribute("aria-valuenow", "0");
 
+    // The slider by hand is the end of the room's say.
+    await page.getByRole("slider", { name: "Brightness" }).focus();
+    await page.keyboard.press("End");
+    await expect.poll(async () => (await screen()).auto.enabled).toBe(false);
+    await expect(page.getByRole("checkbox", { name: "Adjust to the room" })).not.toBeChecked();
+
     // Back as it was, for the specs after this one.
     await request.put("/api/screen/dark", { data: { enabled: false, from: "21:00", to: "06:30" } });
+    await request.put("/api/screen/auto", { data: { enabled: false, min: 25, max: 255 } });
     await request.get("/api/screen/brightness/255");
   });
 });

@@ -15,5 +15,9 @@ interface Window {
     setScreenBrightness?(level: number): void;
     /** 0 to 255, as the screen is now. */
     getScreenBrightness?(): number;
+    /** An Android sensor's last value by its type — 5 is the ambient light, in lux (0.137). */
+    getSensorValue?(type: number): number;
+    /** The device's sensors, as JSON. */
+    getSensorInfo?(): string;
   };
 }

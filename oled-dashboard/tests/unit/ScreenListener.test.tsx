@@ -18,7 +18,7 @@ vi.mock("../../src/lib/socket", () => ({
   },
 }));
 
-import { ScreenListener } from "../../src/components/ScreenListener";
+import { LUX_POLL_MS, ScreenListener } from "../../src/components/ScreenListener";
 import { setDeviceMode } from "../../src/lib/deviceMode";
 
 const screen = (state: string) => act(() => mocks.handlers.get("screen")?.(state));
@@ -30,6 +30,7 @@ describe("the screen listener", () => {
     turnScreenOff: vi.fn(),
     setScreenBrightness: vi.fn(),
     getScreenBrightness: vi.fn(() => 15),
+    getSensorValue: vi.fn((type: number) => (type === 5 ? 120.4 : NaN)),
   };
 
   beforeEach(() => {
@@ -38,12 +39,38 @@ describe("the screen listener", () => {
     fully.turnScreenOff.mockReset();
     fully.setScreenBrightness.mockReset();
     fully.getScreenBrightness.mockReset().mockReturnValue(15);
+    fully.getSensorValue.mockReset().mockImplementation((type: number) => (type === 5 ? 120.4 : NaN));
     mocks.emit.mockReset();
     setDeviceMode("frame");
   });
   afterEach(() => {
     delete window.fully;
     mocks.handlers.clear();
+    vi.useRealTimers();
+  });
+
+  it("reads the room's light off the light sensor on arrival and every ten seconds (0.137)", () => {
+    vi.useFakeTimers();
+    const { unmount } = render(<ScreenListener />);
+    expect(fully.getSensorValue).toHaveBeenCalledWith(5);
+    expect(mocks.emit).toHaveBeenCalledWith("lux_report", 120);
+    fully.getSensorValue.mockImplementation(() => 40);
+    act(() => vi.advanceTimersByTime(LUX_POLL_MS));
+    expect(mocks.emit).toHaveBeenLastCalledWith("lux_report", 40);
+    // No sensor, or no reading: nothing to report.
+    fully.getSensorValue.mockImplementation(() => NaN);
+    mocks.emit.mockReset();
+    act(() => vi.advanceTimersByTime(LUX_POLL_MS));
+    expect(mocks.emit).not.toHaveBeenCalled();
+    // Unmounted, the reading stops.
+    fully.getSensorValue.mockImplementation(() => 80);
+    unmount();
+    act(() => vi.advanceTimersByTime(LUX_POLL_MS * 2));
+    expect(mocks.emit).not.toHaveBeenCalled();
+    // An older Fully without the call: nothing, and no error.
+    window.fully = { turnScreenOn: fully.turnScreenOn, turnScreenOff: fully.turnScreenOff };
+    render(<ScreenListener />);
+    expect(mocks.emit).not.toHaveBeenCalled();
   });
 
   it("turns a frame's screen off and on through Fully's interface", () => {

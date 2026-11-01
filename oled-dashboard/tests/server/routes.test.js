@@ -136,7 +136,8 @@ describe("GET /api/change/:view", () => {
 describe("the screen routes", () => {
   const HOURS = { enabled: false, on: "06:30", off: "23:00" };
   const DARK = { enabled: false, from: "21:00", to: "06:30" };
-  const STATE = { state: "on", schedule: HOURS, brightness: null, dark: DARK };
+  const AUTO = { enabled: false, min: 25, max: 255 };
+  const STATE = { state: "on", schedule: HOURS, brightness: null, dark: DARK, auto: AUTO, lux: null };
   // screen.js as the routes see it (app.locals.screen).
   const screen = () => ({
     state: vi.fn(() => STATE),
@@ -144,6 +145,7 @@ describe("the screen routes", () => {
     setSchedule: vi.fn((schedule) => ({ ...STATE, state: "off", schedule })),
     setBrightness: vi.fn((brightness) => ({ ...STATE, brightness })),
     setDark: vi.fn((dark) => ({ ...STATE, dark })),
+    setAuto: vi.fn((auto) => ({ ...STATE, auto })),
   });
   function screenApp(s) {
     const a = express();
@@ -188,6 +190,21 @@ describe("the screen routes", () => {
       expect(res.status, JSON.stringify(bad)).toBe(400);
     }
     expect(s.setDark).toHaveBeenCalledTimes(1);
+  });
+
+  it("PUT /api/screen/auto saves the brightness from the room's light, and refuses a range upside down (0.137)", async () => {
+    const s = screen();
+    const a = screenApp(s);
+    const auto = { enabled: true, min: 40, max: 200 };
+    const ok = await request(a).put("/api/screen/auto").send(auto);
+    expect(ok.status).toBe(200);
+    expect(s.setAuto).toHaveBeenCalledWith(auto);
+    expect(ok.body).toEqual({ ...STATE, auto });
+    for (const bad of [{ enabled: true, min: 200, max: 40 }, { enabled: true, min: 100, max: 100 }, { enabled: "on", min: 0, max: 255 }, { min: 0, max: 300, enabled: true }, {}]) {
+      const res = await request(a).put("/api/screen/auto").send(bad);
+      expect(res.status, JSON.stringify(bad)).toBe(400);
+    }
+    expect(s.setAuto).toHaveBeenCalledTimes(1);
   });
 
   it("GET /api/screen/:state turns the frames' screen off, and on", async () => {

@@ -12,7 +12,7 @@ describe("the OpenAPI document", () => {
       "/api", "/api/entities", "/api/software", "/api/connection", "/api/weather",
       "/api/home/weather", "/api/home/climate", "/api/home/calendar", "/api/energy",
       "/api/energy/today", "/api/circuits", "/api/change/{view}", "/api/screen", "/api/screen/{state}", "/api/screen/schedule",
-      "/api/screen/brightness/{level}", "/api/screen/dark",
+      "/api/screen/brightness/{level}", "/api/screen/dark", "/api/screen/auto",
     ]) {
       expect(openApiDocument.paths, path).toHaveProperty(path);
     }

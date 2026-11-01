@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.137.0
+
+- Added: the frames can set their own brightness from the tablet's light sensor. On the Settings page's Screen card (a phone's and the frame's), **Adjust to the room** turns it on, and a range slider sets the dimmest level, for a dark room, and the brightest, for a bright one — in between, the brightness follows the room's light the way the eye does, so a lamp coming on in the evening lifts it a little and daylight lifts it a lot. The card shows the room's light as the frame last read it, so you can see the sensor working before turning it on. The dark hours still win while they last, and moving the brightness slider by hand turns the adjustment off. `PUT /api/screen/auto` sets it for an automation. Fully Kiosk Browser's JavaScript interface has to be on, as for the screen commands.
+
 ## 0.136.1
 
 - Changed: nothing on screen — a version to try 0.136.0's install prompt with: its changelog list and the progress bar as Home Assistant installs it.

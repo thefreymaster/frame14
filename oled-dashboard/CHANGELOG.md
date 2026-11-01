@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.140.0
+
+- Changed: a fan's controls are the thermostat's. The drawer a fan's tile opens now holds the thermostat's dial with the speed on its arc, 0 to 100% by quarters — drag or tap along the arc, or step it with the − and + under the reading, which goes to the fan once the taps stop — with the spinning fan and what it's doing over the reading, and the On / Off switch under the dial. A speed of 0 is off. Only the speed: a fan has no temperature and no heat or cool to choose. The drawer's close button is the thermostat's, beside the title. The vertical lever is gone.
+
 ## 0.139.0
 
 - Changed: a light's tile on the Lights page is one row — the bulb at the left, drawn in the light's colour while it's on, and beside it the name over its state — in place of the round badge, which looked like a button of its own inside the tile. On the frame the tiles sit two across a room instead of three, so a name has its room.

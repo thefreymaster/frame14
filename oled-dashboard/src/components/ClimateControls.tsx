@@ -216,13 +216,12 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
         ring={ring}
         accent={accent}
         live={activeAction != null}
-        target={hidesTarget ? null : temp}
+        value={hidesTarget ? null : temp}
         control={
           hidesTarget
             ? undefined
             : {
-                min: ARC_MIN_TEMP,
-                max: ARC_MAX_TEMP,
+                label: "Target temperature",
                 onChange: setTemp,
                 onCommit: commitTemp,
                 // A drag's release sends its own target; drop the taps' one.

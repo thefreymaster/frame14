@@ -1,10 +1,22 @@
 /**
- * Geometry of the Nest-style thermostat arc: a 120° sweep across the top of a
- * 100x100 viewBox, one tick per degree from 60° to 85°. Drawn by the climate
- * dialog's dial (components/ThermostatDial.tsx).
+ * Geometry of the Nest-style arc: a 120° sweep across the top of a 100x100
+ * viewBox, one tick per step of whatever scale it is given — the thermostat's
+ * 60° to 85°, a degree a tick (THERMOSTAT_SCALE, the default), or a fan's 0 to
+ * 100% (FanControls' scale: a tick every 5%, a speed every 25%). Drawn by
+ * components/ThermostatDial.tsx.
  */
-export const ARC_MIN_TEMP = 60;
-export const ARC_MAX_TEMP = 85;
+export type ArcScale = {
+  min: number;
+  max: number;
+  /** What a drag lands on: `min` plus a multiple of this. */
+  step: number;
+  /** The tick spacing, when finer than the step; the step itself by default. */
+  tick?: number;
+};
+
+export const THERMOSTAT_SCALE: ArcScale = { min: 60, max: 85, step: 1 };
+export const ARC_MIN_TEMP = THERMOSTAT_SCALE.min;
+export const ARC_MAX_TEMP = THERMOSTAT_SCALE.max;
 const ARC_RADIUS = 44;
 const ARC_CENTER = 50;
 const ARC_ANGLE_START = (-Math.PI * 5) / 6;
@@ -19,6 +31,10 @@ function polar(t: number) {
   };
 }
 
+function clamp(value: number, scale: ArcScale) {
+  return Math.max(scale.min, Math.min(scale.max, value));
+}
+
 export function tFromPoint(px: number, py: number) {
   const dx = px - ARC_CENTER;
   const dy = py - ARC_CENTER;
@@ -28,13 +44,15 @@ export function tFromPoint(px: number, py: number) {
   return Math.max(0, Math.min(1, t));
 }
 
-export function tToTemp(t: number) {
-  return Math.round(ARC_MIN_TEMP + t * (ARC_MAX_TEMP - ARC_MIN_TEMP));
+/** The value at `t` along the arc, on the scale's steps and within its range. */
+export function tToValue(t: number, scale: ArcScale = THERMOSTAT_SCALE) {
+  const raw = scale.min + t * (scale.max - scale.min);
+  const steps = Math.round((raw - scale.min) / scale.step);
+  return clamp(scale.min + steps * scale.step, scale);
 }
 
-function tempToT(v: number) {
-  const clamped = Math.max(ARC_MIN_TEMP, Math.min(ARC_MAX_TEMP, v));
-  return (clamped - ARC_MIN_TEMP) / (ARC_MAX_TEMP - ARC_MIN_TEMP);
+export function valueToT(value: number, scale: ArcScale = THERMOSTAT_SCALE) {
+  return (clamp(value, scale) - scale.min) / (scale.max - scale.min);
 }
 
 export function arcPath(t0: number, t1: number) {
@@ -44,7 +62,7 @@ export function arcPath(t0: number, t1: number) {
 }
 
 export type TickLine = {
-  temp: number;
+  value: number;
   active: boolean;
   x1: number;
   y1: number;
@@ -52,16 +70,22 @@ export type TickLine = {
   y2: number;
 };
 
-export function buildTicks(activeTemp: number | null | undefined): TickLine[] {
+/** A tick per `scale.tick` (or step) from min to max, the one at `activeValue` marked. */
+export function buildTicks(
+  activeValue: number | null | undefined,
+  scale: ArcScale = THERMOSTAT_SCALE,
+): TickLine[] {
+  const spacing = scale.tick ?? scale.step;
+  const count = Math.round((scale.max - scale.min) / spacing);
   const lines: TickLine[] = [];
-  for (let temp = ARC_MIN_TEMP; temp <= ARC_MAX_TEMP; temp += 1) {
-    const tt = tempToT(temp);
-    const angle = ARC_ANGLE_START + tt * ARC_ANGLE_SPAN;
-    const active = temp === activeTemp;
+  for (let i = 0; i <= count; i += 1) {
+    const value = scale.min + i * spacing;
+    const angle = ARC_ANGLE_START + valueToT(value, scale) * ARC_ANGLE_SPAN;
+    const active = value === activeValue;
     const rInner = active ? 35 : 37;
     const rOuter = active ? 43 : 41;
     lines.push({
-      temp,
+      value,
       active,
       x1: ARC_CENTER + rInner * Math.cos(angle),
       y1: ARC_CENTER + rInner * Math.sin(angle),

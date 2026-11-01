@@ -1,32 +1,42 @@
 import { useEffect, useRef } from "react";
 import { Box, type BoxProps } from "@chakra-ui/react";
-import { arcPath, buildTicks, tFromPoint, tToTemp } from "../lib/thermostatArc";
+import {
+  arcPath,
+  buildTicks,
+  tFromPoint,
+  tToValue,
+  THERMOSTAT_SCALE,
+  type ArcScale,
+} from "../lib/thermostatArc";
 
 type ArcControl = {
-  min: number;
-  max: number;
-  onChange: (temp: number) => void;
-  /** Fires once, on release — a drag sends one set_temperature. */
-  onCommit: (temp: number) => void;
+  /** The slider's accessible name: "Target temperature", "Fan speed". */
+  label: string;
+  onChange: (value: number) => void;
+  /** Fires once, on release — a drag sends one service call. */
+  onCommit: (value: number) => void;
   onDragStart: () => void;
   onDragEnd: () => void;
 };
 
 /**
  * The thermostat face: a black disc with a ring in the mode's colour, a
- * 120° tick arc marking the target, and whatever readout is passed as
+ * 120° tick arc marking the value, and whatever readout is passed as
  * children. The ring breathes while the system is actively running.
  *
- * This is the one control left hand-drawn: no library slider is an arc. Pass
- * `control` and the arc becomes draggable — tap or drag anywhere along it,
- * committing on pointerup. `footer` sits along the bottom of the face, under
- * the readout, where the arc leaves the disc empty (the −/+ buttons).
+ * This is the one control left hand-drawn: no library slider is an arc. The
+ * arc is the thermostat's 60–85° unless a `scale` says otherwise (FanControls
+ * puts a fan's 0–100% on it). Pass `control` and the arc becomes draggable —
+ * tap or drag anywhere along it, committing on pointerup. `footer` sits along
+ * the bottom of the face, under the readout, where the arc leaves the disc
+ * empty (the −/+ buttons).
  */
 export function ThermostatDial({
   ring,
   accent,
   live = false,
-  target,
+  value,
+  scale = THERMOSTAT_SCALE,
   control,
   footer,
   children,
@@ -34,21 +44,23 @@ export function ThermostatDial({
 }: {
   /** CSS colour of the ring. */
   ring: string;
-  /** CSS colour of the target tick and the live pulse. */
+  /** CSS colour of the marked tick and the live pulse. */
   accent: string;
   live?: boolean;
-  /** Target temperature to mark on the arc; no arc when null. */
-  target: number | null;
+  /** The value to mark on the arc — a target temperature, a fan's speed; no arc when null. */
+  value: number | null;
+  /** The arc's range and steps; the thermostat's by default. */
+  scale?: ArcScale;
   control?: ArcControl;
   footer?: React.ReactNode;
   children: React.ReactNode;
 } & Omit<BoxProps, "children">) {
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef(false);
-  const currentValueRef = useRef(target);
+  const currentValueRef = useRef(value);
   useEffect(() => {
-    currentValueRef.current = target;
-  }, [target]);
+    currentValueRef.current = value;
+  }, [value]);
 
   function updateFromEvent(e: React.PointerEvent<SVGElement>) {
     const svg = svgRef.current;
@@ -57,10 +69,7 @@ export function ThermostatDial({
     if (rect.width === 0 || rect.height === 0) return;
     const px = ((e.clientX - rect.left) * 100) / rect.width;
     const py = ((e.clientY - rect.top) * 100) / rect.height;
-    const next = Math.max(
-      control.min,
-      Math.min(control.max, tToTemp(tFromPoint(px, py))),
-    );
+    const next = tToValue(tFromPoint(px, py), scale);
     if (next !== currentValueRef.current) {
       currentValueRef.current = next;
       control.onChange(next);
@@ -97,7 +106,7 @@ export function ThermostatDial({
       control?.onCommit(currentValueRef.current);
   }
 
-  const ticks = target != null ? buildTicks(target) : null;
+  const ticks = value != null ? buildTicks(value, scale) : null;
 
   return (
     <Box position="relative" aspectRatio="1" {...rest}>
@@ -161,7 +170,7 @@ export function ThermostatDial({
           >
             {ticks.map((tick) => (
               <line
-                key={tick.temp}
+                key={tick.value}
                 x1={tick.x1}
                 y1={tick.y1}
                 x2={tick.x2}
@@ -186,10 +195,10 @@ export function ThermostatDial({
                 strokeLinecap="round"
                 fill="none"
                 role="slider"
-                aria-label="Target temperature"
-                aria-valuemin={control.min}
-                aria-valuemax={control.max}
-                aria-valuenow={target ?? undefined}
+                aria-label={control.label}
+                aria-valuemin={scale.min}
+                aria-valuemax={scale.max}
+                aria-valuenow={value ?? undefined}
                 style={{ pointerEvents: "stroke", cursor: "pointer" }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}

@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, HStack, Portal, Text } from "@chakra-ui/react";
+import {
+  Badge,
+  Button,
+  HStack,
+  List,
+  Portal,
+  Progress,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
 import {
   IoCloudDownloadOutline,
   IoCubeOutline,
@@ -17,15 +26,43 @@ import { toaster } from "./ui/toaster";
 // failed somewhere out of sight (the add-on's log says where).
 const INSTALLING_MS = 5 * 60_000;
 
+/** A CHANGELOG bullet's kind, set off from its words. */
+const NOTE_KIND = /^(Added|Changed|Fixed|Removed|Deprecated|Security):\s*/;
+
+/**
+ * The version to come's CHANGELOG section as rows: each bullet (its "- "
+ * dropped) or paragraph, the kind it leads with on its own (0.136).
+ */
+function releaseNoteRows(
+  notes: string,
+): { kind: string | null; text: string }[] {
+  return notes
+    .split(/\r?\n/)
+    .map((l) => l.trim().replace(/^[-*]\s+/, ""))
+    .filter(Boolean)
+    .map((line) => {
+      const m = NOTE_KIND.exec(line);
+      return m
+        ? { kind: m[1], text: line.slice(m[0].length) }
+        : { kind: null, text: line };
+    });
+}
+
 /**
  * /control's Software card (since 0.113): the version this page runs, the
  * add-on installed, and the latest in Home Assistant's add-on store, from the
  * add-on's update entity (useSoftware). While the store has a newer one the
  * header carries "Update available" and the body names it with an Install
- * button (since 0.115): after a confirm, Home Assistant installs it
+ * button (since 0.115): after a confirm — whose prompt lists, since 0.136,
+ * the version's changes, its section of the CHANGELOG from Home Assistant's
+ * release notes (useSoftware's `releaseNotes`; the user: "put the change log
+ * in the confirm drawer") — Home Assistant installs it
  * (installSoftware) and the add-on restarts — every screen loses Frame14 for
  * a minute, and this device refreshes to the new version, or asks to, as
- * lib/appVersion does on the reconnect. "Up to date" when the store has
+ * lib/appVersion does on the reconnect. While it installs — asked from here,
+ * or from Home Assistant's own add-on page, since the entity's `in_progress`
+ * says so either way (0.136) — a Progress bar shows the Supervisor's
+ * percentage, indeterminate until it reports one. "Up to date" when the store has
  * nothing newer; no tag when Home Assistant has no update entity for it
  * (outside the add-on). Check for updates (since 0.116) is Home Assistant's
  * own, from here: the store reloaded and the entity refreshed (useSoftware's
@@ -41,8 +78,18 @@ export function SoftwareBoard() {
   const [installing, setInstalling] = useState<string | null>(null);
   const available = update?.available === true && update.latest != null;
   const dash = loading ? "—" : null;
+  // Installing: asked from here, or Home Assistant says so.
+  const busy = installing != null || update?.inProgress === true;
+  const progress = update?.progress ?? null;
+  const notes =
+    available && update.releaseNotes
+      ? releaseNoteRows(update.releaseNotes)
+      : [];
 
-  if (installing && (installed === installing || page.installed === installing)) {
+  if (
+    installing &&
+    (installed === installing || page.installed === installing)
+  ) {
     setInstalling(null);
   }
   useEffect(() => {
@@ -111,11 +158,23 @@ export function SoftwareBoard() {
           value={update?.latest ?? dash ?? "Not known"}
         />
       </DataListRoot>
-      {installing ? (
-        <Text textStyle="sm" color="fg.muted" mt="4">
-          Installing Frame14 {installing}. The add-on restarts, and this
-          device refreshes to it once it's back.
-        </Text>
+      {busy ? (
+        <Stack gap="3" mt="4">
+          <Text textStyle="sm" color="fg.muted">
+            Installing Frame14 {installing ?? update?.latest ?? "?"}. Home
+            Assistant downloads it, the add-on restarts, and this device
+            refreshes to it once it's back.
+          </Text>
+          <Progress.Root value={progress} size="sm" colorPalette="green">
+            <HStack gap="3">
+              {/* The track carries the progressbar role, so the name goes here. */}
+              <Progress.Track flex="1" aria-label="Install progress">
+                <Progress.Range />
+              </Progress.Track>
+              {progress != null && <Progress.ValueText textStyle="sm" />}
+            </HStack>
+          </Progress.Root>
+        </Stack>
       ) : (
         <>
           {available && (
@@ -167,9 +226,30 @@ export function SoftwareBoard() {
               <Modal.Body>
                 <Text color="fg.muted">
                   Home Assistant downloads it and restarts the add-on. Every
-                  screen loses Frame14 for a minute or so and comes back on
-                  the new version.
+                  screen loses Frame14 for a minute or so and comes back on the
+                  new version.
                 </Text>
+                {notes.length > 0 && (
+                  <List.Root
+                    aria-label={`What's new in ${update?.latest}`}
+                    gap="1"
+                    mt="4"
+                    ps="4"
+                    textStyle="sm"
+                    color="fg.muted"
+                  >
+                    {notes.map((row, i) => (
+                      <List.Item key={i}>
+                        {row.kind && (
+                          <Text as="span" fontWeight="medium" color="fg">
+                            {row.kind}:{" "}
+                          </Text>
+                        )}
+                        {row.text}
+                      </List.Item>
+                    ))}
+                  </List.Root>
+                )}
               </Modal.Body>
               <Modal.Footer>
                 <Modal.ActionTrigger asChild>

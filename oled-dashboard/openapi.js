@@ -157,7 +157,7 @@ export const openApiDocument = {
         operationId: "getSoftwareInfo",
         summary: "Describe the installed add-on and the store's latest",
         description:
-          "The installed add-on version and, in the add-on, its update entity in Home Assistant (found by title in the state cache): the installed and latest versions and whether the add-on store has a newer one to download. `update` is null outside the add-on.",
+          "The installed add-on version and, in the add-on, its update entity in Home Assistant (found by title in the state cache): the installed and latest versions, whether the add-on store has a newer one to download, an install's progress (`inProgress`, `progress` — the entity's, so an install started from Home Assistant shows too) and the newer version's section of the CHANGELOG (`releaseNotes`, from Home Assistant's release notes). `update` is null outside the add-on.",
         responses: {
           200: {
             description: "The software as the server knows it.",
@@ -1317,6 +1317,9 @@ export const openApiDocument = {
               latest: { type: "string", nullable: true, example: "0.114.0" },
               available: { type: "boolean", example: true },
               releaseUrl: { type: "string", nullable: true, example: "https://github.com/thefreymaster/ha-oled-frame" },
+              inProgress: { type: "boolean", example: false, description: "An install is under way (the entity's in_progress)." },
+              progress: { type: "integer", nullable: true, minimum: 0, maximum: 100, example: 42, description: "The install's percentage (the entity's update_percentage), null until the Supervisor reports one." },
+              releaseNotes: { type: "string", nullable: true, example: "- Added: a thing.\n- Fixed: another.", description: "The latest version's section of the add-on's CHANGELOG, while the store has a newer version." },
             },
           },
         },

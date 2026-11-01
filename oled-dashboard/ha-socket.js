@@ -361,6 +361,19 @@ export function refreshEntity(entityId) {
   return true;
 }
 
+/**
+ * The add-on's release notes as Home Assistant has them (`update/release_notes`,
+ * the update dialog's command): for a Supervisor add-on its whole CHANGELOG.md
+ * as one string, or null. For the server's own id (routes/software.js, which
+ * picks the latest version's section out).
+ */
+export function fetchReleaseNotes(entityId) {
+  if (typeof entityId !== "string" || !entityId.startsWith("update.")) {
+    return Promise.reject(new Error("not an update entity"));
+  }
+  return sendCommand("update/release_notes", { entity_id: entityId }, 10_000);
+}
+
 export function sendCommand(type, payload, timeoutMs = 15_000) {
   return new Promise((resolve, reject) => {
     if (!haWs || haWs.readyState !== 1) {

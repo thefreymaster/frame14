@@ -256,5 +256,8 @@ describe("the rest", () => {
     expect(ha.refreshEntity(STUB.addonUpdate)).toBe(true);
     expect(ha.refreshEntity("not an id")).toBe(false);
     await expect(ha.reloadAddonStore()).resolves.toEqual({});
+    // The stub's changelog, whole, as the Supervisor's release notes (0.136).
+    await expect(ha.fetchReleaseNotes(STUB.addonUpdate)).resolves.toMatch(/^# Changelog\n/);
+    await expect(ha.fetchReleaseNotes("light.x")).rejects.toThrow(/update entity/);
   });
 });

@@ -19,12 +19,20 @@ export interface SoftwareUpdate {
   latest: string | null;
   available: boolean;
   releaseUrl: string | null;
+  /** An install is under way — started here or from Home Assistant (0.136). */
+  inProgress: boolean;
+  /** Its percentage, null until the Supervisor reports one. */
+  progress: number | null;
+  /** The newer version's section of the CHANGELOG, while there is one. */
+  releaseNotes: string | null;
 }
 
 interface UpdateAttributes {
   installed_version?: string | null;
   latest_version?: string | null;
   release_url?: string | null;
+  in_progress?: boolean;
+  update_percentage?: number | null;
 }
 
 async function fetchSoftware(): Promise<SoftwareInfo> {
@@ -66,7 +74,10 @@ export async function installSoftware(): Promise<string | null> {
 /**
  * The Software card's facts: /api/software (every five minutes and on each
  * return to the page), with the update entity it names followed live over
- * the socket, so a newer version shows the moment Home Assistant sees it.
+ * the socket, so a newer version shows the moment Home Assistant sees it, and
+ * an install's progress as the Supervisor reports it (0.136). The release
+ * notes are the server's: it picks the version's section out of what Home
+ * Assistant hands over.
  */
 export function useSoftware(): {
   loading: boolean;
@@ -102,6 +113,11 @@ export function useSoftware(): {
             latest: state.attributes.latest_version ?? update.latest,
             available: state.state === "on",
             releaseUrl: state.attributes.release_url ?? update.releaseUrl,
+            inProgress: state.attributes.in_progress === true,
+            progress:
+              typeof state.attributes.update_percentage === "number"
+                ? state.attributes.update_percentage
+                : null,
           }
         : update,
   };

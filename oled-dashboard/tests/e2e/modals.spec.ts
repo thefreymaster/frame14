@@ -71,6 +71,20 @@ test.describe("modals", () => {
     await expect(modal).toBeHidden();
   });
 
+  test("the Home weather card opens the weather as a modal, and stays on Home", async ({ page }) => {
+    // 0.136: the tap went to /weather from 0.97 (the user: the page "feels
+    // out of place now with the drawers"). The phone's weather row and the
+    // desktop's Weather card both carry the label.
+    await page.goto("/home");
+    await page.getByRole("button", { name: "Show the weather" }).click();
+    const modal = page.getByRole("dialog", { name: "Weather" });
+    await expect(modal.getByText("Next hours")).toBeVisible();
+    await expect(modal.getByText(/-day forecast/)).toBeVisible();
+    await expect(page).toHaveURL(/\/home$/);
+    await page.keyboard.press("Escape");
+    await expect(modal).toBeHidden();
+  });
+
   test("a swipe down closes a phone's sheet; a short one lets it be", async ({ page, isMobile }) => {
     test.skip(!isMobile, "a desktop's dialog has no swipe");
     await page.goto("/home");

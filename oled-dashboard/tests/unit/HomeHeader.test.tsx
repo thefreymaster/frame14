@@ -57,7 +57,8 @@ describe("HomeHeader (the frame's time and weather card)", () => {
     );
     expect(screen.getByText(/64% · H 72° · L 51°$/)).toBeInTheDocument();
     expect(screen.getByText("68")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open the weather page" })).toBeInTheDocument();
+    // 0.136: the tap opens WeatherDialog (it went to /weather before).
+    expect(screen.getByRole("button", { name: "Show the weather" })).toBeInTheDocument();
   });
 
   it("leaves the high and low out without a daily forecast, or without a low", () => {

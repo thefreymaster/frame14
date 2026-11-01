@@ -1,6 +1,47 @@
 import { expect, test } from "@playwright/test";
+import { resetStub, stub } from "./helpers";
 
 test.describe("the Settings page", () => {
+  test.describe("with a newer version in the store", () => {
+    test.afterEach(async ({ request }) => {
+      await resetStub(request);
+    });
+
+    test("the Software card lists the version's changes, and an install's progress", async ({ page, request, isMobile }) => {
+      const { version } = await (await request.get("/api")).json();
+      const attributes = { title: "Frame14", installed_version: version, latest_version: "9.9.9", release_url: "https://example.test" };
+      await stub(request, "/_stub/state", { entity_id: "update.frame14_update", state: "on", attributes });
+      await page.goto("/control");
+      if (isMobile) await page.getByRole("tab", { name: "Device" }).click();
+      await expect(page.getByText("Update available")).toBeVisible();
+      await expect(page.getByText("Frame14 9.9.9 is ready to download.")).toBeVisible();
+      // The version's section of the CHANGELOG, from Home Assistant's release
+      // notes (0.136) — the stub's, for the store's version only — in the
+      // install prompt, not the card (the user's call).
+      const notes = page.getByRole("list", { name: "What's new in 9.9.9" });
+      await expect(notes).toHaveCount(0);
+      await page.getByRole("button", { name: "Install 9.9.9" }).click();
+      const prompt = page.getByRole("alertdialog");
+      await expect(prompt.getByText("Install Frame14 9.9.9?")).toBeVisible();
+      await expect(notes.getByText("a stub's new thing, for 9.9.9")).toBeVisible();
+      await expect(notes.getByText("Added:")).toBeVisible();
+      await expect(prompt.getByText("what the installed version changed")).toHaveCount(0);
+      await prompt.getByRole("button", { name: "Not now" }).click();
+      await expect(prompt).toBeHidden();
+      // An install under way — from here or from Home Assistant's add-on page
+      // — shows the Supervisor's progress live (0.136).
+      await stub(request, "/_stub/state", {
+        entity_id: "update.frame14_update",
+        state: "on",
+        attributes: { ...attributes, in_progress: true, update_percentage: 42 },
+      });
+      await expect(page.getByText(/Installing Frame14 9\.9\.9/)).toBeVisible();
+      await expect(page.getByRole("progressbar", { name: "Install progress" })).toBeVisible();
+      await expect(page.getByText("42%")).toBeVisible();
+      await expect(notes).toHaveCount(0);
+    });
+  });
+
   test("the Software card shows the installed version, up to date", async ({ page, request, isMobile }) => {
     const { version } = await (await request.get("/api")).json();
     await page.goto("/control");

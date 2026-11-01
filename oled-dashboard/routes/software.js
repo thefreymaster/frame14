@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { ADDON_NAME, VERSION } from "../config.js";
 import {
+  fetchReleaseNotes,
   getAllStates,
   installUpdate,
   isHaConnected,
@@ -26,8 +27,53 @@ function updateEntity() {
   return null;
 }
 
-/** The software as the server knows it: GET's answer. */
-function softwareInfo() {
+/**
+ * One version's section of the add-on's CHANGELOG.md — the release notes Home
+ * Assistant hands over are the whole file: the lines under `## <version>` up
+ * to the next heading, trimmed; null when the version has no section.
+ */
+export function changelogSection(markdown, version) {
+  if (typeof markdown !== "string" || !version) return null;
+  const lines = markdown.split(/\r?\n/);
+  const start = lines.findIndex((l) => l.trim() === `## ${version}`);
+  if (start < 0) return null;
+  const body = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^##\s/.test(l)) break;
+    body.push(l);
+  }
+  const text = body.join("\n").trim();
+  return text || null;
+}
+
+// The store's version's notes, fetched once per version (a changelog's
+// section doesn't change); a failed fetch isn't kept, so the next GET tries.
+let notesCache = { version: null, notes: null };
+
+/** The latest version's changelog section while the store has a newer one. */
+async function releaseNotesFor(s) {
+  if (!s || s.state !== "on") return null;
+  const version = s.attributes?.latest_version;
+  if (!version) return null;
+  if (notesCache.version === version) return notesCache.notes;
+  let notes;
+  try {
+    notes = changelogSection(await fetchReleaseNotes(s.id), version);
+  } catch (e) {
+    console.warn(`[software] release notes for ${version}: ${e.message}`);
+    return null;
+  }
+  notesCache = { version, notes };
+  return notes;
+}
+
+/**
+ * The software as the server knows it: GET's answer. `inProgress` and
+ * `progress` (0–100, null until the Supervisor says) are the update entity's
+ * `in_progress` and `update_percentage`, live for whoever started the install;
+ * `releaseNotes` the version to come's section of the CHANGELOG (0.136).
+ */
+async function softwareInfo() {
   const s = updateEntity();
   const a = s?.attributes ?? {};
   return {
@@ -39,6 +85,9 @@ function softwareInfo() {
           latest: a.latest_version ?? null,
           available: s.state === "on",
           releaseUrl: a.release_url ?? null,
+          inProgress: a.in_progress === true,
+          progress: typeof a.update_percentage === "number" ? a.update_percentage : null,
+          releaseNotes: await releaseNotesFor(s),
         }
       : null,
   };
@@ -49,8 +98,8 @@ function softwareInfo() {
 const REFRESH_WAIT_MS = 2_000;
 
 // GET /api/software — the installed version and what the store has.
-router.get("/", (_req, res) => {
-  res.json(softwareInfo());
+router.get("/", async (_req, res) => {
+  res.json(await softwareInfo());
 });
 
 // POST /api/software/check — "Check for updates" without opening Home
@@ -72,7 +121,7 @@ router.post("/check", async (_req, res) => {
   const s = updateEntity();
   if (s) refreshEntity(s.id);
   await new Promise((r) => setTimeout(r, REFRESH_WAIT_MS));
-  res.json({ ...softwareInfo(), checkedAt: new Date().toISOString() });
+  res.json({ ...(await softwareInfo()), checkedAt: new Date().toISOString() });
 });
 
 // POST /api/software/install — install the store's newer version: Home

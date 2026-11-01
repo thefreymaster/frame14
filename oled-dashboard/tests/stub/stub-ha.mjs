@@ -655,6 +655,29 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
         case "supervisor/api":
           log("[stub] supervisor/api", msg.method, msg.endpoint);
           return reply({});
+        case "update/release_notes": {
+          // The add-on's whole CHANGELOG.md, as the Supervisor hands it over:
+          // a section for the store's version and one for the installed.
+          const s = states.get(msg.entity_id);
+          const a = s?.attributes ?? {};
+          return reply(
+            s
+              ? [
+                  "# Changelog",
+                  "",
+                  `## ${a.latest_version}`,
+                  "",
+                  `- Added: a stub's new thing, for ${a.latest_version}.`,
+                  "- Fixed: a stub's old thing.",
+                  "",
+                  `## ${a.installed_version}`,
+                  "",
+                  "- Changed: what the installed version changed.",
+                  "",
+                ].join("\n")
+              : null,
+          );
+        }
         case "config/area_registry/list":
           return reply(areas);
         case "config/device_registry/list":

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.136.0
+
+- Added: tapping Install on the Software card now lists what's new in the version waiting in the add-on store — its changelog, as Home Assistant has it — before asking to go ahead.
+- Added: while Frame14 installs, the Software card shows the download's progress, whether the install was started there or from Home Assistant's own add-on page.
+- Changed: on Home, a tap on the weather card opens the weather over the page again — a drawer on a phone and the frame, a dialog on a desktop — with the conditions now, the next 24 hours and the days ahead, instead of going to the Weather page. The Weather page is still in the navigation, with the radar.
+
 ## 0.135.1
 
 - Fixed: on the frame, a drawer stuttered as it slid in, out or under a finger. The page behind a pop-up is now dimmed without the blur — a full-screen blur is what the frame's browser renders slowly, on every frame of the slide — and the drawer moves as one piece instead of being redrawn as it goes.

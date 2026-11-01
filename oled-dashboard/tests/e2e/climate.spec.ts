@@ -28,23 +28,24 @@ test.describe("the Climate page", () => {
     await expect(page.getByRole("button", { name: /^2nd Floor AC: 68°, Heat, set to 68°/ })).toBeVisible();
   });
 
-  test("the dialog fills a phone's screen, and its close button closes it", async ({ page, isMobile }) => {
+  test("the dialog is a sheet on a phone, and its close button closes it", async ({ page, isMobile }) => {
     await page.goto("/climate");
     await page.getByRole("button", { name: /^2nd Floor AC:/ }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("System off")).toBeVisible();
-    // Full screen on a phone (0.133), a drawer from the bottom (0.134): the
-    // whole viewport. A wider screen keeps the md dialog, floating in the
-    // middle.
+    // A drawer from the bottom on a phone (0.134), as tall as the controls —
+    // the whole screen in 0.133, which the user took back in 0.135. A desktop
+    // keeps the md dialog, floating in the middle.
     await expect(dialog).toHaveClass(isMobile ? /chakra-drawer__content/ : /chakra-dialog__content/);
     const viewport = page.viewportSize()!;
     if (isMobile) {
       await expect
         .poll(async () => {
           const box = await dialog.boundingBox();
-          return box && [box.x, box.y, Math.round(box.width), Math.round(box.height)];
+          return box && [box.x, Math.round(box.width), Math.round(box.y + box.height)];
         })
-        .toEqual([0, 0, viewport.width, viewport.height]);
+        .toEqual([0, viewport.width, viewport.height]);
+      expect((await dialog.boundingBox())!.y).toBeGreaterThan(0);
     } else {
       await expect.poll(async () => (await dialog.boundingBox())?.width).toBeLessThan(viewport.width / 2);
     }

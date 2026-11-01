@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.135.0
+
+- Changed: the frame's pop-ups are drawers from the bottom of the screen too, as a phone's have been since 0.134 — a thermostat, a light, a fan, the energy detail, the voice assistant and the "Stop the print?" and "Install?" questions. A desktop keeps its pop-ups in the middle.
+- Changed: the thermostat's drawer is as tall as its controls, like every other, instead of the whole screen.
+- Changed: the page behind a pop-up — a drawer or a desktop's dialog — is blurred less, a soft dimming rather than a wash.
+- Added: a drawer closes with a swipe down, as in a native app — it follows the finger, and lets go past a short way (or a flick) it slides off; short of that it springs back. A drag on a slider, the thermostat's dial or the mode selector still works those, and a drawer whose contents have been scrolled down scrolls back up first.
+- Fixed: a drawer slides down to close instead of fading out, and a light's drawer keeps its controls while it goes — it used to empty itself and send a bare title bar away.
+
 ## 0.134.0
 
 - Changed: on a phone, every pop-up is now a drawer that comes in from the bottom of the screen instead of a box in the middle: a thermostat (still the whole screen), a light, a fan, the energy detail, the voice assistant and the "Stop the print?" and "Install?" questions. A drawer is as tall as what it holds and stops short of the status bar; a taller one scrolls. The frame and a desktop keep their pop-ups as they were.

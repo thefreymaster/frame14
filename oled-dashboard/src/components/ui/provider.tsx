@@ -30,8 +30,10 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * smaller `sm` themselves, so none is rounder than its card (the thermostat
  * tiles excepted).
  *
- * Dialog backdrops blur the page behind them as well as dimming it, and so do
- * drawers' (a phone's modals since 0.134, see components/Modal).
+ * Dialog and drawer backdrops (a phone's and the frame's modals since 0.134 /
+ * 0.135, see components/Modal) blur the page behind them a little as well as
+ * dimming it: MODAL_BLUR, 2px since 0.135 (4px before — the user: "minimal
+ * and subtle").
  *
  * Toasts are outlined, not solid (0.125, the user's ask): every type keeps the
  * panel face and `fg` text, with a 1px border in its colour — green, red,
@@ -43,6 +45,9 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * between them — the same, always: md, or sm on a phone (the `phone`
  * condition, PHONE_MEDIA: the one-column screens).
  */
+/** The blur behind a dialog or a drawer. */
+const MODAL_BLUR = "blur(2px)";
+
 const system = createSystem(
   defaultConfig,
   defineConfig({
@@ -90,14 +95,15 @@ const system = createSystem(
           slots: cardAnatomy.keys(),
           base: { root: { borderRadius: "surface" } },
         },
-        // Every modal blurs the page behind its dimmed backdrop.
+        // Every modal blurs the page behind its dimmed backdrop — a little:
+        // 4px until 0.135, when the user asked for "minimal and subtle".
         dialog: {
           slots: dialogAnatomy.keys(),
-          base: { backdrop: { backdropFilter: "blur(4px)" } },
+          base: { backdrop: { backdropFilter: MODAL_BLUR } },
         },
         drawer: {
           slots: drawerAnatomy.keys(),
-          base: { backdrop: { backdropFilter: "blur(4px)" } },
+          base: { backdrop: { backdropFilter: MODAL_BLUR } },
         },
         segmentGroup: {
           slots: segmentGroupAnatomy.keys(),

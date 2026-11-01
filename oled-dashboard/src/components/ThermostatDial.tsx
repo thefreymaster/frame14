@@ -152,6 +152,8 @@ export function ThermostatDial({
         <Box position="absolute" inset="0" zIndex={2} pointerEvents="none">
           <svg
             ref={svgRef}
+            // Its drag is its own, not the sheet's (Modal's swipe to close).
+            data-swipe-ignore
             viewBox="0 0 100 100"
             width="100%"
             height="100%"

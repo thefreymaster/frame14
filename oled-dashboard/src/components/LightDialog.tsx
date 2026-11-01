@@ -198,8 +198,11 @@ function LightControls({
 
 /**
  * A dimmable light's controls in a Modal (a stock Chakra Dialog; a drawer from
- * the bottom on a phone, 0.134), opened by press and
+ * the bottom on a phone and the frame, 0.134 / 0.135), opened by press and
  * hold on its tile. Reads the light live, so it follows changes made anywhere.
+ * The last light is kept through the exit animation (0.135): the caller
+ * clears `entityId` to close, and the controls going with it left a bare
+ * header to slide away.
  */
 export function LightDialog({
   entityId,
@@ -208,7 +211,9 @@ export function LightDialog({
   entityId: string | null;
   onClose: () => void;
 }) {
-  const { data } = useEntity<LightAttrs>(entityId ?? "");
+  const [shownId, setShownId] = useState(entityId);
+  if (entityId != null && entityId !== shownId) setShownId(entityId);
+  const { data } = useEntity<LightAttrs>(shownId ?? "");
   const attrs = data?.attributes;
 
   return (
@@ -229,10 +234,10 @@ export function LightDialog({
               <Modal.Title>{attrs?.friendly_name ?? "Light"}</Modal.Title>
             </Modal.Header>
             <Modal.Body pb="8">
-              {entityId && (
+              {shownId && (
                 <LightControls
-                  key={entityId}
-                  entityId={entityId}
+                  key={shownId}
+                  entityId={shownId}
                   attrs={attrs}
                   on={data?.state === "on"}
                 />

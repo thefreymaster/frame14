@@ -5,6 +5,8 @@
 export type RGB = [number, number, number];
 
 export type LightAttrs = {
+  /** The icon set for the entity in Home Assistant ("mdi:ceiling-light"), when one is. */
+  icon?: string;
   friendly_name?: string;
   /** 0–255; null while the light is off. */
   brightness?: number | null;
@@ -119,4 +121,15 @@ export function isColor(a: LightAttrs | undefined, rgb: RGB): boolean {
   }
   const [r, g, b] = a.rgb_color;
   return Math.hypot(r - rgb[0], g - rgb[1], b - rgb[2]) < 60;
+}
+
+/**
+ * The Material Design Icons name in an entity's `icon` attribute (0.139):
+ * "mdi:ceiling-light" is "ceiling-light"; anything else — no icon set, or
+ * another set's — is null, and the tile keeps its own bulb.
+ */
+export function mdiIconName(icon: string | undefined | null): string | null {
+  if (typeof icon !== "string") return null;
+  const m = /^mdi:([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(icon.trim());
+  return m ? m[1] : null;
 }

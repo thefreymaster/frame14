@@ -10,7 +10,7 @@ import {
 import NumberFlow from "@number-flow/react";
 import type { PrinterModel } from "../hooks/usePrinter";
 import { fmtClock, fmtDuration } from "../lib/format";
-import { isPrintActive, printerStatus } from "../lib/printerStatus";
+import { isPrintActive } from "../lib/printerStatus";
 import { Board } from "./Board";
 import { PrinterControls } from "./PrinterControls";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -30,7 +30,6 @@ export function PrinterJobCard({
   printer: PrinterModel;
   action?: React.ReactNode;
 }) {
-  const { palette } = printerStatus(printer.status);
   const active = isPrintActive(printer.status);
   const progress = Math.max(0, Math.min(100, printer.progress ?? 0));
   const remaining = active ? printer.remainingMinutes : null;
@@ -46,7 +45,9 @@ export function PrinterJobCard({
 
   return (
     <Board
-      title={<SectionTitle icon={<Printer3dOutlineIcon />}>Print job</SectionTitle>}
+      title={
+        <SectionTitle icon={<Printer3dOutlineIcon />}>Print job</SectionTitle>
+      }
       action={action}
     >
       <Stack gap="6">
@@ -75,7 +76,7 @@ export function PrinterJobCard({
           </Text>
         </HStack>
 
-        <Progress.Root value={progress} colorPalette={palette} size="lg">
+        <Progress.Root value={progress} size="lg">
           <HStack justify="space-between" align="baseline" gap="4">
             <Text textStyle="5xl" fontWeight="semibold" lineHeight="1">
               <NumberFlow value={Math.round(progress)} />%

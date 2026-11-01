@@ -5,13 +5,11 @@ import {
   Box,
   Button,
   Field,
-  Flex,
   HStack,
   IconButton,
   SimpleGrid,
   Stack,
   Tabs,
-  useMediaQuery,
 } from "@chakra-ui/react";
 import { MdSkipNext, MdRefresh } from "react-icons/md";
 import {
@@ -58,7 +56,6 @@ import { connectionLabel } from "../lib/connection";
 import { reloadApp, useAppVersion } from "../lib/appVersion";
 import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
-import { HOME_ONE_COLUMN_QUERY } from "../lib/homeLayout";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useHalloween } from "../hooks/useHalloween";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
@@ -221,15 +218,14 @@ export function Control() {
   // shows there alone; this device's setting, not the frames'.
   // const desktop = useDesktop(); // lights strip
   // const lightStripShown = useLightStripShown(); // lights strip
-  // A phone (one column) gets the sections in tabs rather than one long page.
-  // Measured before the first paint, so a phone never flashes the long page.
-  const [phone] = useMediaQuery([HOME_ONE_COLUMN_QUERY], { ssr: false });
   const showViews = deviceMode !== "frame";
   const halloween = useHalloween();
   const views = halloween ? [...VIEWS, HALLOWEEN_VIEW] : VIEWS;
-  // The phone's tab is the sub-route (0.138): /control/views, /display,
-  // /device — the first it has for the page alone or a tab it hasn't got
-  // (Views is a remote's), put into the address below.
+  // The tab — every device's since 0.139 (the user: "add the tabs that the
+  // settings route has on mobile to all devices"; a phone's alone before) —
+  // is the sub-route (0.138): /control/views, /display, /device, the first
+  // the device has for the page alone or a tab it hasn't got (Views is a
+  // remote's), put into the address below.
   const navigate = useNavigate();
   const { tab: rawTab } = useParams();
   const tabs = TABS.filter((t) => showViews || t.value !== "views");
@@ -435,80 +431,45 @@ export function Control() {
         </Field.Root>
       </PageHeader>
 
-      {phone && rawTab !== tab && <Navigate to={`/control/${tab}`} replace />}
-      {phone ? (
-        <Tabs.Root
-          value={tab}
-          onValueChange={(e) => setTab(e.value)}
-          variant="line"
-          fitted
-          display="flex"
-          flexDirection="column"
-          gap="gutter"
-        >
-          <Tabs.List>
-            {tabs.map((t) => (
-              <Tabs.Trigger key={t.value} value={t.value}>
-                <t.icon />
-                {t.label}
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-          {showViews && (
-            <Tabs.Content value="views" p="0">
-              {viewsBoard}
-            </Tabs.Content>
-          )}
-          <Tabs.Content value="display" p="0">
-            <Stack gap="gutter">
-              {displayBoard}
-              <ScreenBoard />
-              {albumBoard}
-            </Stack>
+      {rawTab !== tab && <Navigate to={`/control/${tab}`} replace />}
+      <Tabs.Root
+        value={tab}
+        onValueChange={(e) => setTab(e.value)}
+        variant="line"
+        fitted
+        display="flex"
+        flexDirection="column"
+        gap="gutter"
+      >
+        <Tabs.List>
+          {tabs.map((t) => (
+            <Tabs.Trigger key={t.value} value={t.value}>
+              <t.icon />
+              {t.label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+        {showViews && (
+          <Tabs.Content value="views" p="0">
+            {viewsBoard}
           </Tabs.Content>
-          <Tabs.Content value="device" p="0">
-            <Stack gap="gutter">
-              <SoftwareBoard />
-              <UpdatesBoard />
-              <NavLayoutBoard />
-              <VoiceStatusBoard />
-            </Stack>
-          </Tabs.Content>
-        </Tabs.Root>
-      ) : (
-        /* Body: stacked portrait, side-by-side landscape */
-        <Flex
-          direction={{ base: "column", _landscape: "row" }}
-          align={{ _landscape: "flex-start" }}
-          gap="gutter"
-        >
-          {showViews && (
-            <Box flex="1" minWidth="0">
-              {viewsBoard}
-            </Box>
-          )}
-          <Flex flex="1" minWidth="0" direction="column" gap="gutter">
+        )}
+        <Tabs.Content value="display" p="0">
+          <Stack gap="gutter">
             {displayBoard}
-
-            {/* The frames' screen: off / on, and the hours it is on */}
             <ScreenBoard />
-
-            {/* The versions: this page, installed, the store's latest */}
-            <SoftwareBoard />
-
-            {/* This device's auto refresh on an update */}
-            <UpdatesBoard />
-
-            {/* This device's nav: order and what it shows */}
-            <NavLayoutBoard />
-
-            {/* Voice */}
-            <VoiceStatusBoard />
-
             {albumBoard}
-          </Flex>
-        </Flex>
-      )}
+          </Stack>
+        </Tabs.Content>
+        <Tabs.Content value="device" p="0">
+          <Stack gap="gutter">
+            <SoftwareBoard />
+            <UpdatesBoard />
+            <NavLayoutBoard />
+            <VoiceStatusBoard />
+          </Stack>
+        </Tabs.Content>
+      </Tabs.Root>
     </PageShell>
   );
 }

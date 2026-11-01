@@ -9,6 +9,7 @@ import { LightsSkeleton } from "../components/skeletons/LightsSkeleton";
 import {
   buildLightSections,
   LIGHT_TILE_COLUMNS_FLUID,
+  displayLightName,
   sortLightSections,
 } from "../lib/lightsConfig";
 import { useDesktop } from "../hooks/useDesktop";
@@ -50,7 +51,7 @@ export function Lights() {
   );
   const sections = sortLightSections(
     buildLightSections(ids, entities?.rooms),
-    (entry) => nameById.get(entry.entity_id) ?? entry.name,
+    (entry) => displayLightName(nameById.get(entry.entity_id) ?? entry.name),
   );
   const onIds = states
     .filter((q) => q.data?.state === "on")
@@ -60,8 +61,7 @@ export function Lights() {
   // doesn't know never gets one, so the server's acks end the wait too.
   const acked = useEntitiesAcked(ids);
   const loading =
-    configPending ||
-    (ids.length > 0 && !acked && !states.every((q) => q.data));
+    configPending || (ids.length > 0 && !acked && !states.every((q) => q.data));
 
   return (
     <PageShell>

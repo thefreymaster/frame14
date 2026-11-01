@@ -93,11 +93,15 @@ describe("the other calls", () => {
     ]);
   });
 
-  it("light.turn_on with a brightness and a colour", () => {
-    callLightService("light.x", { brightness_pct: 50, rgb_color: [1, 2, 3] });
-    expect(fake.emit).toHaveBeenCalledWith("entity:call", {
-      domain: "light", service: "turn_on", entity_id: "light.x", brightness_pct: 50, rgb_color: [1, 2, 3],
-    });
+  it("light.turn_on with a brightness and a colour, answered by the ack (0.139)", async () => {
+    const result = callLightService("light.x", { brightness_pct: 50, rgb_color: [1, 2, 3] });
+    expect(fake.timedEmit).toHaveBeenCalledWith(
+      "entity:call",
+      { domain: "light", service: "turn_on", entity_id: "light.x", brightness_pct: 50, rgb_color: [1, 2, 3] },
+      expect.any(Function),
+    );
+    lastAck()(null, { ok: false, error: "Too bright" });
+    await expect(result).resolves.toEqual({ ok: false, error: "Too bright" });
   });
 
   it("fan: a percentage only when given", () => {

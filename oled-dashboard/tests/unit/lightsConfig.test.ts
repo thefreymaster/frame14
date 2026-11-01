@@ -3,6 +3,7 @@ import {
   buildLightSections,
   LIGHT_TILE_COLUMNS_FLUID,
   sortLightSections,
+  displayLightName,
 } from "../../src/lib/lightsConfig";
 
 const ids = [
@@ -141,5 +142,14 @@ describe("sortLightSections", () => {
 describe("the tile columns", () => {
   it("a desktop's third-width group takes as many 8rem tiles as fit", () => {
     expect(LIGHT_TILE_COLUMNS_FLUID).toBe("repeat(auto-fill, minmax(8rem, 1fr))");
+  });
+
+  // 0.139: the tiles drop the word "Lights" — it's the page's.
+  it("shows a light's name without the word Lights", () => {
+    expect(displayLightName("Kitchen Cabinet Lights")).toBe("Kitchen Cabinet");
+    expect(displayLightName("Kid's Hatch Light")).toBe("Kid's Hatch");
+    expect(displayLightName("Living Room")).toBe("Living Room");
+    expect(displayLightName("Lights")).toBe("Lights");
+    expect(displayLightName("Lightsaber Lamp")).toBe("Lightsaber Lamp");
   });
 });

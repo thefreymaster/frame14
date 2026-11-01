@@ -57,7 +57,20 @@ export function HomeCardSlot({
       data-dragging={isDragging || undefined}
       data-hidden={hidden || undefined}
       data-span={span}
-      style={{ gridColumnEnd: `span ${span}` }}
+      style={{
+        gridColumnEnd: `span ${span}`,
+        // Arranging: the card holds the finger (no scroll, no text selection),
+        // or the browser takes a touch drag as a scroll and cancels it, and
+        // the card snaps back (0.139). The page scrolls from a card dragged to
+        // its edge (dnd-kit's autoScroll).
+        ...(editing
+          ? {
+              touchAction: "none",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+            }
+          : {}),
+      }}
       {...(editing ? { ...attributes, ...listeners } : {})}
     >
       <HomeCardFace id={id} editing={editing} hidden={hidden}>

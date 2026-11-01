@@ -11,6 +11,7 @@ import {
   lightFeatures,
   rgba,
   warmthPresets,
+  mdiIconName,
 } from "../../src/lib/lightModel";
 
 describe("lightFeatures", () => {
@@ -98,5 +99,14 @@ describe("the colour presets", () => {
     expect(isColor({ color_mode: "xy", rgb_color: [0, 0, 255] }, red)).toBe(false);
     expect(isColor({ color_mode: "color_temp", rgb_color: red }, red)).toBe(false);
     expect(isColor({ color_mode: "xy" }, red)).toBe(false);
+  });
+
+  // 0.139: Home Assistant's icon for the entity, when it is one of MDI's.
+  it("reads the MDI icon name off an entity's icon attribute", () => {
+    expect(mdiIconName("mdi:ceiling-light")).toBe("ceiling-light");
+    expect(mdiIconName(" mdi:lamp ")).toBe("lamp");
+    for (const bad of [undefined, null, "", "lightbulb", "hass:lamp", "mdi:", "mdi:Ceiling-Light", "mdi:../x"]) {
+      expect(mdiIconName(bad)).toBeNull();
+    }
   });
 });

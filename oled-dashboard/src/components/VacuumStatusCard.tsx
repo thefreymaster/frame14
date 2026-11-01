@@ -113,7 +113,7 @@ export function VacuumStatusCard({ vacuum }: { vacuum: VacuumModel }) {
         </Progress.Root>
 
         {busy && vacuum.progress != null && (
-          <Progress.Root value={vacuum.progress} colorPalette="green">
+          <Progress.Root value={vacuum.progress}>
             <HStack justify="space-between">
               <Progress.Label>This clean</Progress.Label>
               <Progress.ValueText>

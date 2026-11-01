@@ -62,7 +62,7 @@ export function CircuitBar({
   return (
     <Progress.Root
       value={pct}
-      colorPalette={dim ? "gray" : "blue"}
+      colorPalette={dim ? "gray" : undefined}
       width="100%"
     >
       <HStack justify="space-between" mb="2">

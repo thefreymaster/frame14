@@ -1,17 +1,10 @@
-import {
-  Card,
-  Grid,
-  HStack,
-  Skeleton,
-  SkeletonCircle,
-  Stack,
-} from "@chakra-ui/react";
+import { Card, Grid, HStack, Skeleton, Stack } from "@chakra-ui/react";
 import { LIGHT_TILE_COLUMNS } from "../../lib/lightsConfig";
 
 /**
  * Placeholder for a LightsSection while its lights' states are on their way:
  * `count` tiles in the tiles' grid, each the shape of a LightControl — the
- * round badge and the status across the top, the name under them.
+ * bulb at the left, the name over the status beside it (0.139).
  */
 export function LightsSkeleton({
   count,
@@ -32,13 +25,13 @@ export function LightsSkeleton({
           minW="0"
         >
           <Card.Body p="3">
-            <Stack gap="3">
-              <HStack justify="space-between" align="center" gap="2">
-                <SkeletonCircle size="10" />
+            <HStack align="center" gap="3">
+              <Skeleton boxSize="7" rounded="sm" flexShrink={0} />
+              <Stack gap="1.5" flex="1">
+                <Skeleton height="4" width="70%" />
                 <Skeleton height="4" width="8" />
-              </HStack>
-              <Skeleton height="5" width="70%" />
-            </Stack>
+              </Stack>
+            </HStack>
           </Card.Body>
         </Card.Root>
       ))}

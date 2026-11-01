@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.139.0
+
+- Changed: a light's tile on the Lights page is one row — the bulb at the left, drawn in the light's colour while it's on, and beside it the name over its state — in place of the round badge, which looked like a button of its own inside the tile. On the frame the tiles sit two across a room instead of three, so a name has its room.
+- Added: a swipe across a dimmable light's tile sets its brightness — the tile fills to where the finger is and the level goes to the light when it lifts. A tap still turns the light on or off, and a press and hold still opens its controls.
+- Changed: a light's tile drops the word "Lights" from its name — "Kitchen Cabinet Lights" reads "Kitchen Cabinet" — the page being the Lights page.
+- Added: a light with its own icon in Home Assistant shows that icon on its tile, in the light's colour, in place of the bulb.
+- Changed: progress bars are the logo's blue — a print job's, a clean's, the install's — rather than each card's own colour; a battery and a vacuum's wear parts keep theirs, where the colour is the warning.
+- Changed: the header's icons — the connection and the running appliances — are white once connected and running, grey while connecting, red only once the connection has been down a minute; they were green.
+- Changed: the Settings page's tabs — Views, Display, Device — are on every device, not just a phone's; a frame and a desktop had the sections in one long page.
+- Fixed: on Home, a card dragged to a new place while arranging sometimes snapped back to its old one. Two causes: on a touch screen the browser could take the drag as a scroll and cancel it, so a card now holds the finger while arranging (the page still scrolls when a card is dragged to its edge); and a drop could be saved a step behind the last move. The order you leave is the order kept.
+- Fixed: coming back to Frame14 after it has been in the background, the connection sometimes stayed at "connecting". The page now checks the connection as it returns — a fresh one straight away if it's down, and a quick echo to the add-on if it looks up, reconnecting when no answer comes — instead of waiting out the retry timer the phone had frozen with the page.
+
 ## 0.138.1
 
 - Changed: the highlight running along a circuit's bar moves at the pace of the circuit's draw, like the power flow's dots — slow on a few watts, quick on a few kilowatts.

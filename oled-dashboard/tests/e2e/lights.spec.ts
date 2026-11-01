@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { lightTile, resetStub, stub } from "./helpers";
+import { lightTile, resetStub, splashGone, stub } from "./helpers";
 
 /** The board titled `title`, and the tiles in it. */
 function board(page: Page, title: string) {
@@ -59,13 +59,18 @@ test.describe("the Lights page", () => {
   test("a call Home Assistant refuses shows an error toast and leaves the light as it was", async ({ page, request }) => {
     await stub(request, "/_stub/service", { fail: { "light.kitchen_main_lights": "The bulb isn't answering" } });
     await page.goto("/lights");
-    const tile = lightTile(page, "Kitchen Main Lights");
-    await expect(tile).toHaveAttribute("aria-label", "Kitchen Main Lights: Off");
+    // "Kitchen Main Lights" in Home Assistant: the tile drops the word (0.139),
+    // and draws the icon set for it there (the stub's mdi:ceiling-light).
+    const tile = lightTile(page, "Kitchen Main");
+    await expect(tile).toHaveAttribute("aria-label", "Kitchen Main: Off");
+    const glyph = tile.locator("[data-mdi-icon=ceiling-light]");
+    await expect(glyph).toHaveCSS("mask-image", /\/api\/icon\/ceiling-light/);
+    expect((await page.request.get("/api/icon/ceiling-light")).status()).toBe(200);
     await tile.click();
-    await expect(page.getByText("Couldn't turn on Kitchen Main Lights")).toBeVisible();
+    await expect(page.getByText("Couldn't turn on Kitchen Main")).toBeVisible();
     await expect(page.getByText("The bulb isn't answering")).toBeVisible();
     await expect(tile).toHaveAttribute("aria-busy", "false");
-    await expect(tile).toHaveAttribute("aria-label", "Kitchen Main Lights: Off");
+    await expect(tile).toHaveAttribute("aria-label", "Kitchen Main: Off");
   });
 
   test("All off turns off every light but the kid's hatch light", async ({ page }) => {
@@ -74,7 +79,7 @@ test.describe("the Lights page", () => {
     await expect(on).toHaveCount(5);
     await page.getByRole("button", { name: "Turn off all lights" }).click();
     await expect(on).toHaveCount(1);
-    await expect(on).toHaveAttribute("aria-label", /^Kid's Hatch Light: /);
+    await expect(on).toHaveAttribute("aria-label", /^Kid's Hatch: /);
     // With only the spared light on there is nothing left to turn off.
     await expect(page.getByRole("button", { name: "Turn off all lights" })).toHaveCount(0);
   });
@@ -85,5 +90,27 @@ test.describe("the Lights page", () => {
     await stub(request, "/_stub/registry", { entity_id: "light.lady_lamp", area_id: "kitchen" });
     await expect(board(page, "Kitchen").getByRole("button", { name: /^Reading Nook:/ })).toBeVisible();
     await expect(board(page, "Living Room").locator("[data-light-entry]")).toHaveCount(3);
+  });
+
+  // 0.139: a sideways swipe across a dimmable tile sets its brightness where
+  // the finger ends; the release is not a tap.
+  test("a swipe across a light's tile dims it to where the finger ends", async ({ page }) => {
+    await page.goto("/lights");
+    // In its room: the page regroups once the rooms arrive, and a tile
+    // remounted under a finger forgets the drag.
+    const tile = board(page, "Living Room").getByRole("button", { name: /^Living Room: / });
+    await expect(tile).toHaveAttribute("aria-label", "Living Room: 80%");
+    // The mouse, unlike a click, doesn't wait for the launch splash to leave.
+    await splashGone(page);
+    const box = (await tile.boundingBox())!;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(box.x + 8, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.3, y, { steps: 4 });
+    await page.mouse.move(box.x + box.width * 0.5, y, { steps: 4 });
+    await page.mouse.up();
+    // Half way: the stub sets the light's brightness from the call.
+    await expect(tile).toHaveAttribute("aria-label", /^Living Room: (49|50|51)%$/);
+    await expect(tile).toHaveAttribute("aria-pressed", "true");
   });
 });

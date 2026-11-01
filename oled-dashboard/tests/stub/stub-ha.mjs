@@ -97,7 +97,7 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
 
   const initialStates = () => [
     light("light.living_room", "Living Room", true, { icon: "mdi:sofa", brightness: 204 }),
-    light("light.kitchen_main_lights", "Kitchen Main Lights", false),
+    light("light.kitchen_main_lights", "Kitchen Main Lights", false, { icon: "mdi:ceiling-light" }),
     light("light.living_room_fireplace", "Kitchen Island Lights", false, { icon: "mdi:chandelier" }),
     light("light.backyard", "Backyard", false, { icon: "mdi:grill" }),
     light("light.lady_lamp", "Reading Nook", false),

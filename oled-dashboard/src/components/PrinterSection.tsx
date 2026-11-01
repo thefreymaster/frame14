@@ -122,7 +122,7 @@ export function PrinterSection() {
               <NumberFlow value={Math.round(progress)} />%
             </Text>
           </HStack>
-          <Progress.Root value={progress} colorPalette={palette} size="lg">
+          <Progress.Root value={progress} size="lg">
             <Progress.Track>
               <Progress.Range />
             </Progress.Track>

@@ -7,12 +7,12 @@ test.describe("the Settings page", () => {
       await resetStub(request);
     });
 
-    test("the Software card lists the version's changes, and an install's progress", async ({ page, request, isMobile }) => {
+    test("the Software card lists the version's changes, and an install's progress", async ({ page, request }) => {
       const { version } = await (await request.get("/api")).json();
       const attributes = { title: "Frame14", installed_version: version, latest_version: "9.9.9", release_url: "https://example.test" };
       await stub(request, "/_stub/state", { entity_id: "update.frame14_update", state: "on", attributes });
       await page.goto("/control");
-      if (isMobile) await page.getByRole("tab", { name: "Device" }).click();
+      await page.getByRole("tab", { name: "Device" }).click();
       await expect(page.getByText("Update available")).toBeVisible();
       await expect(page.getByText("Frame14 9.9.9 is ready to download.")).toBeVisible();
       // The version's section of the CHANGELOG, from Home Assistant's release
@@ -45,11 +45,11 @@ test.describe("the Settings page", () => {
     });
   });
 
-  test("the Software card shows the installed version, up to date", async ({ page, request, isMobile }) => {
+  test("the Software card shows the installed version, up to date", async ({ page, request }) => {
     const { version } = await (await request.get("/api")).json();
     await page.goto("/control");
-    // A phone keeps the sections in tabs; Software is under Device.
-    if (isMobile) await page.getByRole("tab", { name: "Device" }).click();
+    // The sections are in tabs on every device (0.139); Software is under Device.
+    await page.getByRole("tab", { name: "Device" }).click();
     await expect(page.getByRole("heading", { name: "Software" })).toBeVisible();
     await expect(page.getByText("Up to date")).toBeVisible();
     await expect(page.getByText(version, { exact: true }).first()).toBeVisible();
@@ -63,6 +63,8 @@ test.describe("the Settings page", () => {
 
     await page.getByText("Use as remote").click();
     await expect(page.getByRole("tab", { name: "Clock" })).toHaveCount(0);
+    // A remote has the Views tab (0.139: the tabs on every device).
+    await page.getByRole("tab", { name: "Views" }).click();
     await expect(page.getByRole("heading", { name: "Views" })).toBeVisible();
 
     await page.getByText("Use as frame").click();
@@ -93,7 +95,7 @@ test.describe("the Settings page", () => {
     await request.get("/api/screen/on");
 
     await page.goto("/control");
-    if (isMobile) await page.getByRole("tab", { name: "Display" }).click();
+    await page.getByRole("tab", { name: "Display" }).click();
     await expect(page.getByRole("heading", { name: "Screen", exact: true })).toBeVisible();
     const power = page.getByRole("checkbox", { name: "Screen on" });
     await expect(power).toBeChecked();

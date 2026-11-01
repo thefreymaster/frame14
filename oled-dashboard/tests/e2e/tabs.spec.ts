@@ -52,13 +52,18 @@ test.describe("tabs as sub-routes", () => {
     await expect(page.getByRole("tab", { name: /-day|Daily/ })).toHaveAttribute("aria-selected", "true");
   });
 
-  test("Settings: a phone's tab is its address; a wider screen keeps the page whatever the address says", async ({ page, isMobile }) => {
+  test("Settings: the tab is its address on every device, the first the device has for the page alone", async ({ page, isMobile }) => {
     await page.goto("/control");
     if (!isMobile) {
-      await expect(page).toHaveURL(/\/control$/);
-      await page.goto("/control/device");
+      // A frame has no Views tab (a remote's), so Display comes first (0.139:
+      // the tabs on every device, a phone's alone before).
+      await expect(page).toHaveURL(/\/control\/display$/);
+      await expect(page.getByRole("heading", { name: "Screen", exact: true })).toBeVisible();
+      await page.getByRole("tab", { name: "Device" }).click();
+      await expect(page).toHaveURL(/\/control\/device$/);
       await expect(page.getByRole("heading", { name: "Software" })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Display" })).toBeVisible();
+      await page.goto("/control/views");
+      await expect(page).toHaveURL(/\/control\/display$/);
       return;
     }
     await expect(page).toHaveURL(/\/control\/views$/);

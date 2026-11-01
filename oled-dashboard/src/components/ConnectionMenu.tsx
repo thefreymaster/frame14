@@ -14,10 +14,12 @@ import { HeaderMenu } from "./HeaderMenu";
 import { DataListItem, DataListRoot } from "./ui/data-list";
 import { Status } from "./ui/status";
 
-// Grey while connecting — on load, and after a drop while socket.io
-// retries — and red only once it has been down a minute (lib/connection).
+// The header's own colour (white in dark mode) once connected — green until
+// 0.139, the user's ask — grey while connecting (on load, and after a drop
+// while socket.io retries) and red only once it has been down a minute
+// (lib/connection).
 const CONNECTION_COLOR: Record<ConnectionStatus, string> = {
-  connected: "fg.success",
+  connected: "fg",
   connecting: "fg.muted",
   disconnected: "fg.error",
 };
@@ -127,10 +129,7 @@ export function ConnectionMenu() {
           value={latency == null ? "—" : `${Math.round(latency)} ms`}
         />
         <DataListItem label="Transport" value={transport} />
-        <DataListItem
-          label="This device"
-          value={info?.client.address ?? "—"}
-        />
+        <DataListItem label="This device" value={info?.client.address ?? "—"} />
         <DataListItem label="Server" value={server} />
         <DataListItem label="Home Assistant" value={ha} />
         <DataListItem label="Version" value={version} />

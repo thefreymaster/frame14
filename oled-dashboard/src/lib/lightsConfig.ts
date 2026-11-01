@@ -18,7 +18,10 @@ export type LightSection = {
  *  two across on a phone, three on the frame and tablets, four in landscape. */
 export const LIGHT_TILE_COLUMNS = {
   base: "repeat(2, minmax(0, 1fr))",
-  md: "repeat(3, minmax(0, 1fr))",
+  // Two across on the frame and tablets too since 0.139 (three before): a
+  // tile is a row — the bulb beside the name — and a third of a room card
+  // broke "Backyard" in two.
+  md: "repeat(2, minmax(0, 1fr))",
   _landscape: "repeat(4, minmax(0, 1fr))",
 };
 
@@ -28,6 +31,20 @@ export const LIGHT_TILE_COLUMNS = {
  *  rather than the viewport's four, which cut the names short there. */
 export const LIGHT_TILE_COLUMNS_FLUID = "repeat(auto-fill, minmax(8rem, 1fr))";
 
+/**
+ * A light's name as the tile shows it (0.139, the user: "drop the word lights
+ * from any room that has it"): "Kitchen Cabinet Lights" is "Kitchen Cabinet",
+ * "Kid's Hatch Light" "Kid's Hatch" — the word is the page's; a name that is
+ * only that word keeps it.
+ */
+export function displayLightName(name: string): string {
+  const trimmed = name
+    .replace(/\s*\blights?\b\s*/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return trimmed || name;
+}
+
 function entityName(entityId: string): string {
   const slug = entityId.split(".")[1] ?? entityId;
   return slug
@@ -36,7 +53,9 @@ function entityName(entityId: string): string {
     .join(" ");
 }
 
-function domainIcons(entityId: string): Pick<LightEntry, "Icon" | "ActiveIcon"> {
+function domainIcons(
+  entityId: string,
+): Pick<LightEntry, "Icon" | "ActiveIcon"> {
   const domain = entityId.split(".")[0];
   if (domain === "switch") return { Icon: MdOutlet, ActiveIcon: MdOutlet };
   return { Icon: MdOutlineLightbulb, ActiveIcon: MdLightbulb };
@@ -86,7 +105,8 @@ export function buildLightSections(
       entries: lights,
     });
   }
-  if (switches.length > 0) sections.push({ title: "Switches", entries: switches });
+  if (switches.length > 0)
+    sections.push({ title: "Switches", entries: switches });
   return sections;
 }
 

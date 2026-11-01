@@ -8,10 +8,20 @@ import { useEffect, useRef } from "react";
  * it through a React portal (a modal opened from a card) are ignored — React
  * bubbles them here, but they aren't on this part of the page.
  */
+/** The handlers to spread on the element — none while disabled. */
+export type LongPressHandlers = Partial<{
+  onPointerDown: (e: React.PointerEvent<HTMLElement>) => void;
+  onPointerMove: (e: React.PointerEvent<HTMLElement>) => void;
+  onPointerUp: () => void;
+  onPointerCancel: () => void;
+  onPointerLeave: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
+}>;
+
 export function useLongPress(
   onLongPress: () => void,
   { delayMs = 600, tolerancePx = 10, enabled = true } = {},
-) {
+): LongPressHandlers {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const origin = useRef<{ x: number; y: number } | null>(null);
 
@@ -40,7 +50,11 @@ export function useLongPress(
     },
     onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
       const from = origin.current;
-      if (from && Math.hypot(e.clientX - from.x, e.clientY - from.y) > tolerancePx) cancel();
+      if (
+        from &&
+        Math.hypot(e.clientX - from.x, e.clientY - from.y) > tolerancePx
+      )
+        cancel();
     },
     onPointerUp: cancel,
     onPointerCancel: cancel,

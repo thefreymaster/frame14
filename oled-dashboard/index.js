@@ -34,6 +34,7 @@ import { startScreen } from "./screen.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
+import iconsRouter from "./routes/icons.js";
 import photosRouter from "./routes/photos.js";
 import viewsRouter from "./routes/views.js";
 import screenRouter from "./routes/screen.js";
@@ -265,6 +266,7 @@ app.use(
 app.use("/api", healthRouter);
 app.use("/api/docs", docsRouter);
 app.use("/api/weather", weatherRouter);
+app.use("/api/icon", iconsRouter);
 app.use("/api/photos", photosRouter);
 app.use("/api", viewsRouter);
 app.use("/api", screenRouter);

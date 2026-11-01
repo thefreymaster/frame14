@@ -102,7 +102,8 @@ function PrinterRows({ statusId }: { statusId: string }) {
 }
 
 /**
- * The header's running appliances, in green: the washer, dryer and
+ * The header's running appliances, in the header's own colour (0.139: green
+ * before — the user wanted the header's icons white): the washer, dryer and
  * dishwasher, the 3D printer while it prints (or is paused mid-print) and
  * each vacuum while it cleans or heads back to its dock. Idle, they show
  * nothing. A tap on one opens a small menu (HeaderMenu) with its status and
@@ -129,8 +130,7 @@ export function ApplianceIndicators() {
       id,
       name:
         (vacuumQueries[i]?.data?.attributes?.friendly_name as
-          | string
-          | undefined) ?? "Vacuum",
+          string | undefined) ?? "Vacuum",
       status: VACUUM_STATUS[vacuumQueries[i]?.data?.state ?? ""],
       since: vacuumQueries[i]?.data?.last_changed,
     }))
@@ -147,7 +147,7 @@ export function ApplianceIndicators() {
           icon={<ApplianceIcon />}
           label={`${name} running`}
           title={name}
-          color="fg.success"
+          color="fg"
         >
           <RunningRows status="Running" since={since} />
         </HeaderMenu>
@@ -157,7 +157,7 @@ export function ApplianceIndicators() {
           icon={<Printer3dOutlineIcon />}
           label="3D printer running"
           title="3D printer"
-          color="fg.success"
+          color="fg"
         >
           <RunningRows
             status={printerStatus(printerState).label}
@@ -173,7 +173,7 @@ export function ApplianceIndicators() {
           icon={<TbVacuumCleaner />}
           label={`${name} ${status.toLowerCase()}`}
           title={name}
-          color="fg.success"
+          color="fg"
         >
           <RunningRows status={status} since={since} />
         </HeaderMenu>

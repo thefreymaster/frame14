@@ -22,12 +22,17 @@ export function callService(
   const domain = entityId.split(".")[0];
   if (domain !== "light" && domain !== "switch" && domain !== "fan")
     return Promise.resolve({ ok: false, error: "Not a light, switch or fan" });
+  return emitCall({ domain, service, entity_id: entityId });
+}
+
+/** An `entity:call` with the server's ack as the answer (never rejects). */
+function emitCall(payload: Record<string, unknown>): Promise<CallResult> {
   return new Promise((resolve) => {
     socket
       .timeout(CALL_TIMEOUT_MS)
       .emit(
         "entity:call",
-        { domain, service, entity_id: entityId },
+        payload,
         (err: Error | null, result?: CallResult) => {
           if (err) resolve({ ok: false, error: "No answer from the server" });
           else resolve(result ?? { ok: true });
@@ -67,7 +72,8 @@ export function callClimateService(
 /**
  * light.turn_on with a brightness and/or a colour — a white temperature or an
  * RGB colour, never both (Home Assistant rejects that). Turns the light on if
- * it is off.
+ * it is off. Resolves with the server's ack as callService does (0.139: the
+ * tile's swipe shows a refusal); a caller that doesn't care can ignore it.
  */
 export function callLightService(
   entityId: string,
@@ -76,8 +82,8 @@ export function callLightService(
     color_temp_kelvin?: number;
     rgb_color?: [number, number, number];
   },
-) {
-  socket.emit("entity:call", {
+): Promise<CallResult> {
+  return emitCall({
     domain: "light",
     service: "turn_on",
     entity_id: entityId,
@@ -160,7 +166,11 @@ export function callMediaService(
 export function callMediaService(
   entityId: string,
   service: string,
-  params?: { volume_level?: number; is_volume_muted?: boolean; source?: string },
+  params?: {
+    volume_level?: number;
+    is_volume_muted?: boolean;
+    source?: string;
+  },
 ) {
   socket.emit("entity:call", {
     domain: "media_player",

@@ -9,6 +9,7 @@ import "./index.css";
 import "./lib/themeMode";
 // Watches for the add-on updating under this page.
 import "./lib/appVersion";
+import "./lib/socketWake";
 import { Provider } from "./components/ui/provider";
 import { Toaster } from "./components/ui/toaster";
 

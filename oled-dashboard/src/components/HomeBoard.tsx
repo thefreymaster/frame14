@@ -92,6 +92,11 @@ export function HomeBoard({
 
   const gridRef = useRef<HTMLDivElement>(null);
   const beforeDrag = useRef<HomeLayout | null>(null);
+  // The order as the drag has it, kept as each move is applied: the drop
+  // fires before React has committed the last move's state, so `layout` in
+  // the handler is a render behind — a card dragged across in one move was
+  // shown in its new place and saved in its old (0.139).
+  const liveLayout = useRef<HomeLayout | null>(null);
   const lastSwapAt = useRef<{ x: number; y: number } | null>(null);
 
   const longPress = useLongPress(
@@ -152,6 +157,7 @@ export function HomeBoard({
 
   function onDragStart({ active }: DragStartEvent) {
     beforeDrag.current = layout;
+    liveLayout.current = layout;
     lastSwapAt.current = null;
     setActiveId(active.id as HomeCardId);
     setActivity((n) => n + 1);
@@ -175,13 +181,17 @@ export function HomeBoard({
     setLayout((prev) => {
       const from = prev.findIndex((card) => card.id === active.id);
       const to = prev.findIndex((card) => card.id === over.id);
-      return from < 0 || to < 0 ? prev : arrayMove(prev, from, to);
+      const next = from < 0 || to < 0 ? prev : arrayMove(prev, from, to);
+      liveLayout.current = next;
+      return next;
     });
   }
 
   function onDragEnd() {
-    if (JSON.stringify(layout) !== JSON.stringify(beforeDrag.current)) {
-      saveHomeLayout(grid, layout);
+    const final = liveLayout.current ?? layout;
+    if (JSON.stringify(final) !== JSON.stringify(beforeDrag.current)) {
+      setLayout(final);
+      saveHomeLayout(grid, final);
     }
     endDrag();
   }
@@ -193,6 +203,7 @@ export function HomeBoard({
 
   function endDrag() {
     beforeDrag.current = null;
+    liveLayout.current = null;
     lastSwapAt.current = null;
     setActiveId(null);
     setActivity((n) => n + 1);

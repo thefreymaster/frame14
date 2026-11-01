@@ -26,12 +26,7 @@ export function VacuumSection({ vacuum }: { vacuum: HomeVacuum[] }) {
         {active.map((v) => {
           const progress = Math.max(0, Math.min(100, v.progress ?? 0));
           return (
-            <Progress.Root
-              key={v.entity_id}
-              value={progress}
-              colorPalette="green"
-              size="lg"
-            >
+            <Progress.Root key={v.entity_id} value={progress} size="lg">
               <HStack justify="space-between" align="end">
                 <Stat.Root>
                   <Stat.Label>{v.name}</Stat.Label>

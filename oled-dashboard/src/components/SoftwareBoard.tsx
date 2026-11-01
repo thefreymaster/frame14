@@ -165,7 +165,7 @@ export function SoftwareBoard() {
             Assistant downloads it, the add-on restarts, and this device
             refreshes to it once it's back.
           </Text>
-          <Progress.Root value={null} size="sm" colorPalette="green">
+          <Progress.Root value={null} size="sm">
             {/* The track carries the progressbar role, so the name goes here. */}
             <Progress.Track aria-label="Install progress">
               <Progress.Range />

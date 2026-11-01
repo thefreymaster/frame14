@@ -151,6 +151,21 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/icon/{name}": {
+      get: {
+        tags: ["Health"],
+        operationId: "getIcon",
+        summary: "A Material Design Icons glyph, by name",
+        description:
+          "One icon of the Material Design Icons set as an SVG (0.139), named as Home Assistant names an entity's icon (`mdi:ceiling-light` → `ceiling-light`): the Lights page draws a light's own icon with it. Cacheable for good (the set is versioned with the add-on).",
+        parameters: [{ name: "name", in: "path", required: true, schema: { type: "string", pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", example: "ceiling-light" } }],
+        responses: {
+          200: { description: "The icon.", content: { "image/svg+xml": { schema: { type: "string" } } } },
+          400: { description: "Not an icon name.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          404: { description: "The set has no icon of that name.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
     "/api/software": {
       get: {
         tags: ["Health"],

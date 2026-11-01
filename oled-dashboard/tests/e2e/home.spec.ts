@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pageErrors, resetStub, stub } from "./helpers";
+import { pageErrors, resetStub, splashGone, stub } from "./helpers";
 
 test.beforeEach(async ({ request }) => {
   await resetStub(request);
@@ -143,4 +143,49 @@ test("a card casts the drop shadow the side navigation does", async ({ page, isM
   // Chromium reports it in color(srgb …) form; it is a shadow, and the same one.
   expect(shadows.rail).not.toBe("none");
   expect(shadows.card).toBe(shadows.rail);
+});
+
+// 0.139: the order a drag left is the order saved. The drop fired before
+// React had committed the last move, so a card dragged across in one move
+// showed in its new place and was saved in its old one — Done put it back.
+test("a card dragged while arranging stays where it was dropped, through Done and a reload", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a phone's one column has no sideways drag");
+  await page.goto("/home");
+  const slots = page.locator("[data-card]");
+  await expect(slots.first()).toBeVisible();
+  // The mouse, unlike a click, doesn't wait for the launch splash to leave.
+  await splashGone(page);
+  const order = () => slots.evaluateAll((els) => els.filter((el) => (el as HTMLElement).offsetHeight > 0).map((el) => el.getAttribute("data-card")));
+  const before = await order();
+  expect(before.length).toBeGreaterThan(2);
+  const [first, second] = before;
+  // While arranging, cards with nothing to show stand in too; the order of
+  // the cards that were on the page is what's compared.
+  const placed = async () => (await order()).filter((id) => before.includes(id));
+  const a = page.locator(`[data-card="${first}"]`);
+  const b = page.locator(`[data-card="${second}"]`);
+  // Press and hold enters arranging.
+  const ab = (await a.boundingBox())!;
+  await page.mouse.move(ab.x + ab.width / 2, ab.y + 40);
+  await page.mouse.down();
+  await page.waitForTimeout(800);
+  await page.mouse.up();
+  await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
+  // One drag: the first card onto the second, in one move.
+  const bb = (await b.boundingBox())!;
+  await page.mouse.move(ab.x + ab.width / 2, ab.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(ab.x + ab.width / 2 + 10, ab.y + 40);
+  await page.mouse.move(bb.x + bb.width / 2, bb.y + 40, { steps: 3 });
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  await expect.poll(placed).toEqual([second, first, ...before.slice(2)]);
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.getByRole("button", { name: "Done" })).toHaveCount(0);
+  expect(await placed()).toEqual([second, first, ...before.slice(2)]);
+  await page.reload();
+  await expect(slots.first()).toBeVisible();
+  await expect.poll(placed).toEqual([second, first, ...before.slice(2)]);
+  // Back as it was, for the specs after this one.
+  await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith("home-layout:")) localStorage.removeItem(k); });
 });

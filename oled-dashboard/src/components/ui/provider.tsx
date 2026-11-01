@@ -24,7 +24,11 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * segmented controls (a row of buttons) get the same pill track and indicator.
  * Progress bars are pills too (0.138.1, the user's ask): the `full` shape for
  * the track, and the range rounded with it, so the fill ends round rather
- * than cut square by the track's clip.
+ * than cut square by the track's clip — and the logo's blue (0.139, "matching
+ * the logo"): the `brand` palette below, the app icon's #18a0ff, the recipe's
+ * default colorPalette, so a task's progress is blue everywhere (the print
+ * job's, the install's, a circuit's) unless a card says otherwise (a battery,
+ * a wear part, where the colour is the warning).
  *
  * Cards have the `bg.surface` colour (#1C1C1E in dark mode), `surface`
  * corners (0.75rem) and a 1px `border.surface` edge, both floating navs' too;
@@ -63,6 +67,16 @@ const system = createSystem(
       },
       semanticTokens: {
         colors: {
+          // The logo's blue as a palette: `colorPalette="brand"`.
+          brand: {
+            solid: { value: "#18a0ff" },
+            contrast: { value: "white" },
+            fg: { value: { _light: "#0b78d4", _dark: "#5bb8ff" } },
+            subtle: { value: "rgba(24, 160, 255, 0.14)" },
+            muted: { value: "rgba(24, 160, 255, 0.28)" },
+            emphasized: { value: "rgba(24, 160, 255, 0.45)" },
+            focusRing: { value: "#18a0ff" },
+          },
           bg: {
             // The colour of every card and both floating navs: in dark mode
             // iOS's grouped-cell grey, #1C1C1E (UIKit's
@@ -101,7 +115,10 @@ const system = createSystem(
         },
         progress: {
           slots: progressAnatomy.keys(),
-          base: { range: { borderRadius: "full" } },
+          base: {
+            root: { colorPalette: "brand" },
+            range: { borderRadius: "full" },
+          },
           defaultVariants: { shape: "full" },
         },
         toast: {

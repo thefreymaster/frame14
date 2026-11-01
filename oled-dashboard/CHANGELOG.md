@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.140.2
+
+- Changed: nothing on screen — a version to try 0.140.1's install with: the blue "Installing" badge on the Software card, and the Try again button if the add-on doesn't come back.
+
 ## 0.140.1
 
 - Changed: while Frame14 installs, the Software card's header badge says "Installing", in the progress bar's blue, in place of the green "Update available".

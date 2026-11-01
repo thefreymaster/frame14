@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.132.0
+
+- Added: − and + buttons on the thermostat's dial, under the reading, wherever the thermostat opens — the Home card's tiles and the Climate page. Each tap moves the target a degree at once, and the new target goes to the thermostat a moment after the last tap, so tapping 68 up to 72 sends one change, not four. They aren't there while a thermostat is off or only running its fan, as the dial's arc isn't.
+
 ## 0.131.1
 
 - Fixed: on an iPhone — in Safari and the home-screen app — the Energy page's month card was squeezed to its header: its figures ran out of the card and the chart was cut off under the navigation. The page now grows and scrolls to it, as it always did in other browsers. The Weather page's hourly chart was cut off the same way, and shows now too.

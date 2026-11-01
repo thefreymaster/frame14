@@ -28,6 +28,22 @@ test.describe("the Climate page", () => {
     await expect(page.getByRole("button", { name: /^2nd Floor AC: 68°, Heat, set to 68°/ })).toBeVisible();
   });
 
+  test("the dial's − and + step the target, sent once the taps stop", async ({ page }) => {
+    await page.goto("/climate");
+    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    const dialog = page.getByRole("dialog");
+    const raise = dialog.getByRole("button", { name: "Raise the target temperature" });
+    await raise.click();
+    await raise.click();
+    await expect(dialog.getByText("72°", { exact: true })).toBeVisible();
+    await dialog.getByRole("button", { name: "Lower the target temperature" }).click();
+    await expect(dialog.getByText("71°", { exact: true })).toBeVisible();
+    // Closed before the taps' send: it still reaches Home Assistant.
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("button", { name: /^1st Floor AC: 64°, Heating to 71°/ })).toBeVisible();
+  });
+
   test("a desktop's tiles show the temperature a size larger", async ({ page, isMobile }) => {
     test.skip(isMobile, "a phone's tiles are the squares at the md size");
     await page.goto("/climate");

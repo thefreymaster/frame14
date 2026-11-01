@@ -19,7 +19,8 @@ type ArcControl = {
  *
  * This is the one control left hand-drawn: no library slider is an arc. Pass
  * `control` and the arc becomes draggable — tap or drag anywhere along it,
- * committing on pointerup.
+ * committing on pointerup. `footer` sits along the bottom of the face, under
+ * the readout, where the arc leaves the disc empty (the −/+ buttons).
  */
 export function ThermostatDial({
   ring,
@@ -27,6 +28,7 @@ export function ThermostatDial({
   live = false,
   target,
   control,
+  footer,
   children,
   ...rest
 }: {
@@ -38,6 +40,7 @@ export function ThermostatDial({
   /** Target temperature to mark on the arc; no arc when null. */
   target: number | null;
   control?: ArcControl;
+  footer?: React.ReactNode;
   children: React.ReactNode;
 } & Omit<BoxProps, "children">) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -131,6 +134,18 @@ export function ThermostatDial({
         >
           {children}
         </Box>
+        {footer && (
+          <Box
+            position="absolute"
+            insetX="0"
+            bottom="8%"
+            zIndex={1}
+            display="flex"
+            justifyContent="center"
+          >
+            {footer}
+          </Box>
+        )}
       </Box>
 
       {ticks && (

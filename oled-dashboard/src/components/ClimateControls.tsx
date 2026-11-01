@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { HStack, SegmentGroup, Text, VStack } from "@chakra-ui/react";
+import { HStack, IconButton, SegmentGroup, Text, VStack } from "@chakra-ui/react";
+import { IoAdd, IoRemove } from "react-icons/io5";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { callClimateService, type HvacMode } from "../lib/callService";
 import {
@@ -62,9 +63,16 @@ const modeControlCss = {
 } as const;
 
 /**
+ * How long the dial's −/+ buttons wait after the last tap before sending the
+ * target: a run of taps is one set_temperature, as a drag of the arc is.
+ */
+const STEP_COMMIT_MS = 800;
+
+/**
  * One thermostat's controls: the draggable ThermostatDial (the one hand-drawn
- * control) with its readout, the mode SegmentGroup (Heat / Cool / Fan / Off;
- * modeControlCss fits it to a narrow card) and the fan-speed Slider.
+ * control) with its readout and −/+ buttons, the mode SegmentGroup (Heat /
+ * Cool / Fan / Off; modeControlCss fits it to a narrow card) and the
+ * fan-speed Slider.
  * ClimateDialog shows them for the Home card's tile and /climate lays them
  * out in each thermostat's card. Mount one per unit (key it by entity id):
  * the local state follows Home Assistant except for whatever is under a
@@ -79,6 +87,7 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
   const [fanMode, setFanMode] = useState<string | null>(remote.fanMode);
   const [draggingTemp, setDraggingTemp] = useState(false);
   const [draggingFan, setDraggingFan] = useState(false);
+  const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Follow Home Assistant, except for whatever is under a finger right now.
   if (
@@ -163,6 +172,31 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
     refreshSoon();
   }
 
+  function cancelStep() {
+    if (stepTimerRef.current == null) return;
+    clearTimeout(stepTimerRef.current);
+    stepTimerRef.current = null;
+  }
+
+  /**
+   * A −/+ tap: the reading moves at once and the target goes out
+   * STEP_COMMIT_MS after the last tap. Held as a drag meanwhile, so Home
+   * Assistant's echo of the old target doesn't snap the reading back. The
+   * send still goes if the dialog closes first.
+   */
+  function stepTemp(delta: number) {
+    const next = Math.max(ARC_MIN_TEMP, Math.min(ARC_MAX_TEMP, temp + delta));
+    if (next === temp) return;
+    setTemp(next);
+    setDraggingTemp(true);
+    cancelStep();
+    stepTimerRef.current = setTimeout(() => {
+      stepTimerRef.current = null;
+      setDraggingTemp(false);
+      commitTemp(next);
+    }, STEP_COMMIT_MS);
+  }
+
   function commitFanMode(newFanMode: string) {
     if (newFanMode === unit.fanMode) return;
     callClimateService(unit.entity_id, "set_fan_mode", {
@@ -191,9 +225,37 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
                 max: ARC_MAX_TEMP,
                 onChange: setTemp,
                 onCommit: commitTemp,
-                onDragStart: () => setDraggingTemp(true),
+                // A drag's release sends its own target; drop the taps' one.
+                onDragStart: () => {
+                  cancelStep();
+                  setDraggingTemp(true);
+                },
                 onDragEnd: () => setDraggingTemp(false),
               }
+        }
+        footer={
+          hidesTarget ? undefined : (
+            <HStack gap="6">
+              <IconButton
+                variant="subtle"
+                size="lg"
+                aria-label="Lower the target temperature"
+                disabled={temp <= ARC_MIN_TEMP}
+                onClick={() => stepTemp(-1)}
+              >
+                <IoRemove />
+              </IconButton>
+              <IconButton
+                variant="subtle"
+                size="lg"
+                aria-label="Raise the target temperature"
+                disabled={temp >= ARC_MAX_TEMP}
+                onClick={() => stepTemp(1)}
+              >
+                <IoAdd />
+              </IconButton>
+            </HStack>
+          )
         }
       >
         <VStack gap="1" align="center">

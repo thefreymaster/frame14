@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.136.1
+
+- Changed: nothing on screen — a version to try 0.136.0's install prompt with: its changelog list and the progress bar as Home Assistant installs it.
+
 ## 0.136.0
 
 - Added: tapping Install on the Software card now lists what's new in the version waiting in the add-on store — its changelog, as Home Assistant has it — before asking to go ahead.

@@ -8,6 +8,7 @@ import {
 } from "@chakra-ui/react";
 import {
   cardAnatomy,
+  progressAnatomy,
   segmentGroupAnatomy,
   toastAnatomy,
 } from "@chakra-ui/react/anatomy";
@@ -21,6 +22,9 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * Buttons are fully rounded: the button recipe also drives IconButton and
  * CloseButton, so text buttons are pills and icon buttons are circles;
  * segmented controls (a row of buttons) get the same pill track and indicator.
+ * Progress bars are pills too (0.138.1, the user's ask): the `full` shape for
+ * the track, and the range rounded with it, so the fill ends round rather
+ * than cut square by the track's clip.
  *
  * Cards have the `bg.surface` colour (#1C1C1E in dark mode), `surface`
  * corners (0.75rem) and a 1px `border.surface` edge, both floating navs' too;
@@ -94,6 +98,11 @@ const system = createSystem(
         segmentGroup: {
           slots: segmentGroupAnatomy.keys(),
           base: { root: { "--segment-radius": "radii.full" } },
+        },
+        progress: {
+          slots: progressAnatomy.keys(),
+          base: { range: { borderRadius: "full" } },
+          defaultVariants: { shape: "full" },
         },
         toast: {
           slots: toastAnatomy.keys(),

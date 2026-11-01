@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.138.1
+
+- Changed: the highlight running along a circuit's bar moves at the pace of the circuit's draw, like the power flow's dots — slow on a few watts, quick on a few kilowatts.
+- Changed: every progress bar is a pill: the circuits', the print job's, the install's.
+
 ## 0.138.0
 
 - Changed: a page's tabs are part of its address — Energy's Solar and Circuits are `/energy/solar` and `/energy/circuits`, Weather's Hourly, Daily and Radar `/weather/hourly`, `/weather/daily` and `/weather/radar`, and a phone's Settings tabs `/control/views`, `/control/display` and `/control/device` — so a tab can be bookmarked, shared and sent to a frame, and a reload comes back to it. The page's plain address opens its first tab; the old `?tab=` addresses and `/power`, `/solar` and `/radar` still land on theirs.

@@ -30,3 +30,33 @@ test("the month card holds its chart, the page scrolling to it where it is talle
   // And the plot comes into view: nothing clips it.
   await expect(chart).toBeInViewport({ ratio: 0.9 });
 });
+
+// 0.138 / 0.138.1: a circuit drawing power has a highlight running along its
+// bar, at the draw's pace — the range's ::after animation, its playback rate
+// lib energy's flowPace (`data-pace`); the bars are pills.
+test("a drawing circuit's bar flows at the pace of its draw, and the bars are pills", async ({ page }) => {
+  await page.goto("/energy/circuits");
+  const ranges = page.locator("[data-part=range][data-flowing]");
+  await expect(ranges.first()).toBeVisible();
+  const paces = await ranges.evaluateAll((els) =>
+    els.map((el) => {
+      const animation = el.getAnimations({ subtree: true })[0];
+      return { pace: Number(el.getAttribute("data-pace")), rate: animation?.playbackRate ?? null, running: animation?.playState };
+    }),
+  );
+  expect(paces.length).toBeGreaterThan(1);
+  for (const p of paces) {
+    expect(p.running).toBe("running");
+    expect(p.rate).toBe(p.pace);
+    expect(p.pace).toBeGreaterThanOrEqual(0.25);
+    expect(p.pace).toBeLessThanOrEqual(3);
+  }
+  // The circuits are listed by their draw, so the paces never rise down the list.
+  for (let i = 1; i < paces.length; i++) expect(paces[i].pace).toBeLessThanOrEqual(paces[i - 1].pace);
+  // An idle circuit's bar is still.
+  const idle = page.locator("[data-part=range]:not([data-flowing])").first();
+  await expect(idle).toHaveCount(1);
+  expect(await idle.evaluate((el) => el.getAnimations({ subtree: true }).length)).toBe(0);
+  await expect(page.locator("[data-part=track]").first()).toHaveCSS("border-radius", "9999px");
+  await expect(ranges.first()).toHaveCSS("border-radius", "9999px");
+});

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.140.1
+
+- Changed: while Frame14 installs, the Software card's header badge says "Installing", in the progress bar's blue, in place of the green "Update available".
+- Added: when Frame14 doesn't come back after an update — the connection stays down, or the install runs past two minutes — the Software card offers a Try again button, which reloads this device.
+
 ## 0.140.0
 
 - Changed: a fan's controls are the thermostat's. The drawer a fan's tile opens now holds the thermostat's dial with the speed on its arc, 0 to 100% by quarters — drag or tap along the arc, or step it with the − and + under the reading, which goes to the fan once the taps stop — with the spinning fan and what it's doing over the reading, and the On / Off switch under the dial. A speed of 0 is off. Only the speed: a fan has no temperature and no heat or cool to choose. The drawer's close button is the thermostat's, beside the title. The vertical lever is gone.

@@ -15,7 +15,8 @@ import {
   IoRefreshOutline,
 } from "react-icons/io5";
 import { installSoftware, useSoftware } from "../hooks/useSoftware";
-import { useAppVersion } from "../lib/appVersion";
+import { reloadApp, useAppVersion } from "../lib/appVersion";
+import { useConnectionStatus } from "../lib/connection";
 import { Board } from "./Board";
 import * as Modal from "./Modal";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -25,6 +26,10 @@ import { toaster } from "./ui/toaster";
 // An install that hasn't come back as the installed version by then has
 // failed somewhere out of sight (the add-on's log says where).
 const INSTALLING_MS = 5 * 60_000;
+// An install still under way this long after it began gets the Try again
+// button (0.140.1) without waiting for the connection to be given up on: the
+// download and the restart are over in well under a minute on this LAN.
+const STUCK_MS = 2 * 60_000;
 
 /** A CHANGELOG bullet's kind, set off from its words. */
 const NOTE_KIND = /^(Added|Changed|Fixed|Removed|Deprecated|Security):\s*/;
@@ -63,7 +68,15 @@ function releaseNoteRows(
  * or from Home Assistant's own add-on page, since the entity's `in_progress`
  * says so either way (0.136) — an indeterminate Progress bar (0.138: it
  * showed the Supervisor's percentage, which never came on the user's
- * installs). "Up to date" when the store has
+ * installs), and the header's badge is a blue "Installing" (0.140.1, the
+ * user's ask) in place of the green one. When the add-on fails to come back
+ * — the connection given up on (lib/connection's "disconnected", a minute
+ * down) while it installs, or the install still under way STUCK_MS after it
+ * began — a Try again button reloads this device (0.140.1, the user: "when
+ * an update is installed and the app tries to come back up but fails, there
+ * should be a try again button that just reload the app"; the service
+ * worker serves the page while the add-on is away, so a reload always lands
+ * somewhere). "Up to date" when the store has
  * nothing newer; no tag when Home Assistant has no update entity for it
  * (outside the add-on). Check for updates (since 0.116) is Home Assistant's
  * own, from here: the store reloaded and the entity refreshed (useSoftware's
@@ -81,6 +94,18 @@ export function SoftwareBoard() {
   const dash = loading ? "—" : null;
   // Installing: asked from here, or Home Assistant says so.
   const busy = installing != null || update?.inProgress === true;
+  // The add-on hasn't come back: the connection given up on while it
+  // installs, or the install under way for too long (overdue, set STUCK_MS
+  // after it began) — the Try again button's cue.
+  const status = useConnectionStatus();
+  const [overdue, setOverdue] = useState(false);
+  useEffect(() => {
+    if (!busy) return;
+    const timer = setTimeout(() => setOverdue(true), STUCK_MS);
+    return () => clearTimeout(timer);
+  }, [busy]);
+  if (!busy && overdue) setOverdue(false);
+  const stuck = busy && (overdue || status === "disconnected");
   const notes =
     available && update.releaseNotes
       ? releaseNoteRows(update.releaseNotes)
@@ -143,7 +168,9 @@ export function SoftwareBoard() {
     <Board
       title={<SectionTitle icon={<IoCubeOutline />}>Software</SectionTitle>}
       action={
-        available ? (
+        busy ? (
+          <Badge colorPalette="brand">Installing</Badge>
+        ) : available ? (
           <Badge colorPalette="green">Update available</Badge>
         ) : update ? (
           <Badge colorPalette="gray">Up to date</Badge>
@@ -171,6 +198,20 @@ export function SoftwareBoard() {
               <Progress.Range />
             </Progress.Track>
           </Progress.Root>
+          {stuck && (
+            <HStack gap="3" wrap="wrap" align="center">
+              <Text textStyle="sm" color="fg.muted" flex="1" minW="12rem">
+                {status === "disconnected"
+                  ? "Frame14 hasn't come back yet."
+                  : "This is taking longer than it should."}{" "}
+                Try again reloads this device.
+              </Text>
+              <Button size="sm" variant="outline" onClick={reloadApp}>
+                <IoRefreshOutline />
+                Try again
+              </Button>
+            </HStack>
+          )}
         </Stack>
       ) : (
         <>

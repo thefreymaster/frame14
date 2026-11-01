@@ -37,6 +37,9 @@ test.describe("the Settings page", () => {
         attributes: { ...attributes, in_progress: true, update_percentage: 42 },
       });
       await expect(page.getByText(/Installing Frame14 9\.9\.9/)).toBeVisible();
+      // The header's badge says so too, in the bar's blue (0.140.1).
+      await expect(page.getByText("Installing", { exact: true })).toBeVisible();
+      await expect(page.getByText("Update available")).toHaveCount(0);
       const bar = page.getByRole("progressbar", { name: "Install progress" });
       await expect(bar).toBeVisible();
       await expect(bar).not.toHaveAttribute("aria-valuenow", /./);

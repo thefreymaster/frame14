@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.141.0
+
+- Changed: a light's controls are the thermostat's, as a fan's are. The drawer a press and hold on a light's tile opens now holds the thermostat's dial with the brightness on its arc, 0 to 100%, in the light's own colour — drag or tap along the arc, or step it a tenth at a time with the − and + under the reading, which goes to the light once the taps stop — with the bulb and whether it's on over the reading, and the On / Off switch under the dial. A brightness of 0 is off; the switch brings the light back at the brightness it had. The white and colour swatches follow under it as before. The drawer's close button is the thermostat's, beside the title. The vertical lever is gone.
+
 ## 0.140.2
 
 - Changed: nothing on screen — a version to try 0.140.1's install with: the blue "Installing" badge on the Software card, and the Try again button if the add-on doesn't come back.

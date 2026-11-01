@@ -9,7 +9,9 @@ import {
   kelvinToRgb,
   lightColor,
   lightFeatures,
+  LIGHT_SCALE,
   rgba,
+  stepBrightness,
   warmthPresets,
   mdiIconName,
 } from "../../src/lib/lightModel";
@@ -108,5 +110,27 @@ describe("the colour presets", () => {
     for (const bad of [undefined, null, "", "lightbulb", "hass:lamp", "mdi:", "mdi:Ceiling-Light", "mdi:../x"]) {
       expect(mdiIconName(bad)).toBeNull();
     }
+  });
+});
+
+// 0.141: the light dial's arc and the −/+ steps.
+describe("the light dial", () => {
+  it("runs 0 to 100 by whole percents, a tick every 5", () => {
+    expect(LIGHT_SCALE).toEqual({ min: 0, max: 100, step: 1, tick: 5 });
+  });
+
+  it("stepBrightness lands on the next tenth up or down", () => {
+    expect(stepBrightness(33, 1)).toBe(40);
+    expect(stepBrightness(33, -1)).toBe(30);
+    expect(stepBrightness(30, 1)).toBe(40);
+    expect(stepBrightness(30, -1)).toBe(20);
+    expect(stepBrightness(1, -1)).toBe(0);
+    expect(stepBrightness(0, 1)).toBe(10);
+  });
+
+  it("stepBrightness stays within 0–100", () => {
+    expect(stepBrightness(0, -1)).toBe(0);
+    expect(stepBrightness(95, 1)).toBe(100);
+    expect(stepBrightness(100, 1)).toBe(100);
   });
 });

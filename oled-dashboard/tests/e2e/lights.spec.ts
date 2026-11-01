@@ -113,4 +113,65 @@ test.describe("the Lights page", () => {
     await expect(tile).toHaveAttribute("aria-label", /^Living Room: (49|50|51)%$/);
     await expect(tile).toHaveAttribute("aria-pressed", "true");
   });
+
+  // 0.141: a press and hold opens the light's drawer, the thermostat's dial
+  // with the brightness on its arc; its + steps a tenth, sent once the taps
+  // stop — after the drawer has closed, even.
+  test("a hold opens the thermostat's dial for the brightness, and its + steps it", async ({ page }) => {
+    await page.goto("/lights");
+    const tile = board(page, "Living Room").getByRole("button", { name: /^Living Room: / });
+    await expect(tile).toHaveAttribute("aria-label", "Living Room: 80%");
+    await splashGone(page);
+    const box = (await tile.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(800);
+    await page.mouse.up();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Living Room" })).toBeVisible();
+    const dial = dialog.getByRole("slider", { name: "Brightness" });
+    await expect(dial).toHaveAttribute("aria-valuemin", "0");
+    await expect(dial).toHaveAttribute("aria-valuemax", "100");
+    await expect(dial).toHaveAttribute("aria-valuenow", "80");
+    await expect(dialog.getByText("Light on")).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeVisible();
+    // The presets still follow the dial.
+    await expect(dialog.getByRole("button", { name: "Warm" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Blue" })).toBeVisible();
+    // No mode and no temperature: a light has a brightness.
+    await expect(dialog.getByText("Heat", { exact: true })).toHaveCount(0);
+
+    await dialog.getByRole("button", { name: "Raise the brightness" }).click();
+    await expect(dialog.getByText("90%", { exact: true })).toBeVisible();
+    await expect(dial).toHaveAttribute("aria-valuenow", "90");
+    // Closed before the taps' send: it still reaches Home Assistant.
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(tile).toHaveAttribute("aria-label", "Living Room: 90%");
+  });
+
+  test("the drawer's switch turns the light off, and the dial reads 0%", async ({ page }) => {
+    await page.goto("/lights");
+    const tile = board(page, "Living Room").getByRole("button", { name: /^Living Room: / });
+    await splashGone(page);
+    const box = (await tile.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(800);
+    await page.mouse.up();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    // The switch's input is visually hidden; its label takes the tap.
+    await dialog.getByText("On", { exact: true }).click();
+    await expect(dialog.getByRole("checkbox")).not.toBeChecked();
+    await expect(dialog.getByText("0%", { exact: true })).toBeVisible();
+    await expect(dialog.getByText("Light off")).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Lower the brightness" })).toBeDisabled();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(tile).toHaveAttribute("aria-label", "Living Room: Off");
+  });
 });

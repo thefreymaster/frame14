@@ -2,7 +2,31 @@
 // Lights tiles and the light dialog. Colours here are data (the light's own
 // colour), like team colours: they are not Chakra tokens.
 
+import type { ArcScale } from "./thermostatArc";
+
 export type RGB = [number, number, number];
+
+/** What the light dial's −/+ step by: a tenth a tap. */
+export const LIGHT_STEP = 10;
+
+/**
+ * The light dial's arc (LightControls on ThermostatDial, 0.141): 0 to 100%, a
+ * drag landing on a whole percent, a tick every 5% as the fan's. 0 is off.
+ */
+export const LIGHT_SCALE: ArcScale = { min: 0, max: 100, step: 1, tick: 5 };
+
+/**
+ * The brightness a −/+ tap lands on: the next tenth up or down — 33 → 40 / 30,
+ * 30 → 40 / 20 — within 0–100, so a reading between tens joins the scale on
+ * the first tap rather than carrying its odd percent along.
+ */
+export function stepBrightness(pct: number, direction: 1 | -1): number {
+  const next =
+    direction > 0
+      ? Math.floor(pct / LIGHT_STEP) * LIGHT_STEP + LIGHT_STEP
+      : Math.ceil(pct / LIGHT_STEP) * LIGHT_STEP - LIGHT_STEP;
+  return Math.max(0, Math.min(100, next));
+}
 
 export type LightAttrs = {
   /** The icon set for the entity in Home Assistant ("mdi:ceiling-light"), when one is. */

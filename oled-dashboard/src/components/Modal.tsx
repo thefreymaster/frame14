@@ -29,6 +29,13 @@ const SHEET_MAX_H = `calc(100dvh - env(safe-area-inset-top, 0px) - ${PAGE_GUTTER
  * — the recipe's fade-out is dropped, as it hid the slide — and a swipe down
  * closes it (useSwipeToClose). `size`, `placement` and `scrollBehavior` are
  * the dialog's alone.
+ *
+ * Kept quick on the frame (0.135.1, the user: "pretty laggy"): the sheet has
+ * its own compositor layer (`will-change: transform`), so the slide and a
+ * finger's drag move it without repainting its 1600px of content, and the
+ * backdrop only dims — its blur (provider.tsx) went, a full-screen
+ * `backdrop-filter` being what the frame's browser recomputed on every frame
+ * of the slide.
  */
 export function Root({
   placement,
@@ -212,6 +219,8 @@ export function Content({ maxH, pb, css, ...props }: Dialog.ContentProps) {
       pb={pb ?? "env(safe-area-inset-bottom, 0px)"}
       css={[
         {
+          // Its own layer: the slide and a drag move it, not repaint it.
+          willChange: "transform",
           // Down and away, no fade: the recipe's fade-out hid the slide.
           _closed: { animationName: "slide-to-bottom-full" },
           // Swiped away already (useSwipeToClose): nothing left to play.

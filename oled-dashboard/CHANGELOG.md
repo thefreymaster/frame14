@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.135.1
+
+- Fixed: on the frame, a drawer stuttered as it slid in, out or under a finger. The page behind a pop-up is now dimmed without the blur — a full-screen blur is what the frame's browser renders slowly, on every frame of the slide — and the drawer moves as one piece instead of being redrawn as it goes.
+
 ## 0.135.0
 
 - Changed: the frame's pop-ups are drawers from the bottom of the screen too, as a phone's have been since 0.134 — a thermostat, a light, a fan, the energy detail, the voice assistant and the "Stop the print?" and "Install?" questions. A desktop keeps its pop-ups in the middle.

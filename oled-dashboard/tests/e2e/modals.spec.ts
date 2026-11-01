@@ -22,9 +22,12 @@ async function expectSheet(page: Page, modal: Locator) {
   });
   expect(corners[0]).not.toBe("0px");
   expect(corners[1]).toBe("0px");
-  // The page behind is blurred a little (0.135: "minimal and subtle"; 4px before).
-  // A drawer's parts carry the dialog scope: it is Chakra's dialog machine.
-  await expect(page.locator('[data-scope="dialog"][data-part="backdrop"]')).toHaveCSS("backdrop-filter", "blur(2px)");
+  // Its own compositor layer, so a slide or a drag doesn't repaint it (0.135.1).
+  await expect(modal).toHaveCSS("will-change", "transform");
+  // The page behind is dimmed, not blurred (0.135.1: a full-screen
+  // backdrop-filter made the frame's slide stutter). A drawer's parts carry
+  // the dialog scope: it is Chakra's dialog machine.
+  await expect(page.locator('[data-scope="dialog"][data-part="backdrop"]')).toHaveCSS("backdrop-filter", "none");
 }
 
 /** A finger dragged down `distance` from the point, in steps. */
@@ -61,7 +64,7 @@ test.describe("modals", () => {
         })
         .toBe(Math.round(viewport.width / 2));
       expect((await modal.boundingBox())!.width).toBeLessThan(viewport.width / 2);
-      await expect(page.locator('[data-scope="dialog"][data-part="backdrop"]')).toHaveCSS("backdrop-filter", "blur(2px)");
+      await expect(page.locator('[data-scope="dialog"][data-part="backdrop"]')).toHaveCSS("backdrop-filter", "none");
     }
 
     await page.keyboard.press("Escape");

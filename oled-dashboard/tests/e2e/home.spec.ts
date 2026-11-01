@@ -56,7 +56,8 @@ test("the navigation reaches every main page", async ({ page }) => {
     ["Settings", "/control"],
   ] as const) {
     await page.getByRole("tab", { name: label }).first().click();
-    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    // A page with tabs lands on its first one (0.138): /control/views on a phone.
+    await expect(page).toHaveURL(new RegExp(`${path}(/[a-z]+)?$`));
   }
 });
 

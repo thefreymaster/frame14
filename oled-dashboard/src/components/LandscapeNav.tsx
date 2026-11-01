@@ -29,6 +29,7 @@ import {
   type NavItem,
 } from "../lib/navItems";
 import { useNavItems } from "../lib/navLayout";
+import { pageOf } from "../lib/pagePath";
 import { ArrangingVeil } from "./ArrangingVeil";
 import { NavMoreMenu } from "./NavMoreMenu";
 
@@ -83,7 +84,8 @@ export function LandscapeNav({
   // wherever the frames were sent) while the page didn't move. The devices
   // that follow a broadcast are navigated by SocketViewListener, and the
   // location says so here.
-  const activeView = location.pathname;
+  // The page, not its tab (0.138): /energy/circuits selects Energy.
+  const activeView = pageOf(location.pathname);
   const mode = useDeviceMode();
   const isFrame = mode === "frame";
   const { games } = useLiveGame();

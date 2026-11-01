@@ -61,8 +61,9 @@ function releaseNoteRows(
  * a minute, and this device refreshes to the new version, or asks to, as
  * lib/appVersion does on the reconnect. While it installs — asked from here,
  * or from Home Assistant's own add-on page, since the entity's `in_progress`
- * says so either way (0.136) — a Progress bar shows the Supervisor's
- * percentage, indeterminate until it reports one. "Up to date" when the store has
+ * says so either way (0.136) — an indeterminate Progress bar (0.138: it
+ * showed the Supervisor's percentage, which never came on the user's
+ * installs). "Up to date" when the store has
  * nothing newer; no tag when Home Assistant has no update entity for it
  * (outside the add-on). Check for updates (since 0.116) is Home Assistant's
  * own, from here: the store reloaded and the entity refreshed (useSoftware's
@@ -80,7 +81,6 @@ export function SoftwareBoard() {
   const dash = loading ? "—" : null;
   // Installing: asked from here, or Home Assistant says so.
   const busy = installing != null || update?.inProgress === true;
-  const progress = update?.progress ?? null;
   const notes =
     available && update.releaseNotes
       ? releaseNoteRows(update.releaseNotes)
@@ -165,14 +165,11 @@ export function SoftwareBoard() {
             Assistant downloads it, the add-on restarts, and this device
             refreshes to it once it's back.
           </Text>
-          <Progress.Root value={progress} size="sm" colorPalette="green">
-            <HStack gap="3">
-              {/* The track carries the progressbar role, so the name goes here. */}
-              <Progress.Track flex="1" aria-label="Install progress">
-                <Progress.Range />
-              </Progress.Track>
-              {progress != null && <Progress.ValueText textStyle="sm" />}
-            </HStack>
+          <Progress.Root value={null} size="sm" colorPalette="green">
+            {/* The track carries the progressbar role, so the name goes here. */}
+            <Progress.Track aria-label="Install progress">
+              <Progress.Range />
+            </Progress.Track>
           </Progress.Root>
         </Stack>
       ) : (

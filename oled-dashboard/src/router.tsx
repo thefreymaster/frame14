@@ -30,27 +30,24 @@ export const router = createBrowserRouter([
       { path: "/blank", element: <Blank /> },
       { path: "/photos", element: <Photos /> },
       { path: "/album", element: <Album /> },
-      { path: "/control", element: <Control /> },
+      // A page's tabs are its sub-routes (0.138): /control/display on a
+      // phone, /weather/radar, /energy/circuits. The page alone lands on its
+      // first tab where it has tabs; the old `?tab=` is taken to its tab.
+      { path: "/control/:tab?", element: <Control /> },
       { path: "/home", element: <HomeOverview /> },
       { path: "/lights", element: <Lights /> },
       { path: "/climate", element: <Climate /> },
-      { path: "/weather", element: <Weather /> },
+      { path: "/weather/:tab?", element: <Weather /> },
       { path: "/calendar", element: <Calendar /> },
       // Radar became the Weather page's tab (0.80); its path still lands
       // there, for automations and bookmarks.
-      {
-        path: "/radar",
-        element: <Navigate to="/weather?tab=radar" replace />,
-      },
+      { path: "/radar", element: <Navigate to="/weather/radar" replace /> },
       { path: "/timer", element: <Timer /> },
-      { path: "/energy", element: <Energy /> },
+      { path: "/energy/:tab?", element: <Energy /> },
       // Solar and Power became the Energy page's tabs (0.75); their paths
       // still land there, for automations and bookmarks.
-      { path: "/solar", element: <Navigate to="/energy" replace /> },
-      {
-        path: "/power",
-        element: <Navigate to="/energy?tab=circuits" replace />,
-      },
+      { path: "/solar", element: <Navigate to="/energy/solar" replace /> },
+      { path: "/power", element: <Navigate to="/energy/circuits" replace /> },
       { path: "/printer", element: <Printer /> },
       { path: "/vacuum", element: <Vacuum /> },
       { path: "/cameras", element: <Cameras /> },

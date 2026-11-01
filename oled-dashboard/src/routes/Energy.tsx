@@ -1,5 +1,10 @@
 import { Box, Flex, Skeleton, Tabs } from "@chakra-ui/react";
-import { useSearchParams } from "react-router";
+import {
+  Navigate,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router";
 import type { IconType } from "react-icons";
 import { IoFlash, IoFlashOutline } from "react-icons/io5";
 import { MdElectricBolt } from "react-icons/md";
@@ -29,16 +34,31 @@ const TABS: { value: EnergyTab; label: string; icon: IconType }[] = [
  * Solar, today's card (SolarTodayCard: the coverage figure and the day's
  * curve, as on the Home card) over the month or year chart
  * (SolarHistoryCard), and Circuits, the per-circuit draw (CircuitsCard). The
- * tab is in the URL (`?tab=circuits`; none is Solar), so the old /power path
- * can land on its tab.
+ * tab is the sub-route (0.138; the `tab` search param before): /energy/solar
+ * and /energy/circuits, so the old /power path can land on its tab. The page
+ * alone, a tab it hasn't got, or the old `?tab=` lands on the right one.
  */
+const isEnergyTab = (v: string | null | undefined): v is EnergyTab =>
+  v === "solar" || v === "circuits";
+
 export function Energy() {
   const live = useLiveEnergy();
-  const [params, setParams] = useSearchParams();
-  const tab: EnergyTab = params.get("tab") === "circuits" ? "circuits" : "solar";
+  const navigate = useNavigate();
+  const { tab: raw } = useParams();
+  const [params] = useSearchParams();
+  if (!isEnergyTab(raw)) {
+    const legacy = params.get("tab");
+    return (
+      <Navigate
+        to={`/energy/${isEnergyTab(legacy) ? legacy : "solar"}`}
+        replace
+      />
+    );
+  }
+  const tab: EnergyTab = raw;
 
   function setTab(next: string) {
-    setParams(next === "circuits" ? { tab: next } : {}, { replace: true });
+    void navigate(`/energy/${next}`, { replace: true });
   }
 
   return (

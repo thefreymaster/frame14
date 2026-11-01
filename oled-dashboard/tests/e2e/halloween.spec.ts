@@ -48,7 +48,7 @@ test.describe("the Halloween page", () => {
     await expect(tile).toHaveAttribute("aria-pressed", "false");
     await tile.click();
     await page.waitForTimeout(500);
-    await expect(page).toHaveURL(/\/control$/);
+    await expect(page).toHaveURL(/\/control\/views$/);
     await expect(tile).toHaveAttribute("aria-pressed", "true");
     await expect(clock).toHaveAttribute("aria-pressed", "false");
   });

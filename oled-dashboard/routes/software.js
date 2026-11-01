@@ -68,10 +68,12 @@ async function releaseNotesFor(s) {
 }
 
 /**
- * The software as the server knows it: GET's answer. `inProgress` and
- * `progress` (0–100, null until the Supervisor says) are the update entity's
- * `in_progress` and `update_percentage`, live for whoever started the install;
- * `releaseNotes` the version to come's section of the CHANGELOG (0.136).
+ * The software as the server knows it: GET's answer. `inProgress` is the
+ * update entity's `in_progress`, live for whoever started the install (0.136;
+ * its `update_percentage` came along as `progress` until 0.138 — the
+ * Supervisor never filled it in on the user's installs, so the card's bar is
+ * indeterminate); `releaseNotes` the version to come's section of the
+ * CHANGELOG (0.136).
  */
 async function softwareInfo() {
   const s = updateEntity();
@@ -86,7 +88,6 @@ async function softwareInfo() {
           available: s.state === "on",
           releaseUrl: a.release_url ?? null,
           inProgress: a.in_progress === true,
-          progress: typeof a.update_percentage === "number" ? a.update_percentage : null,
           releaseNotes: await releaseNotesFor(s),
         }
       : null,

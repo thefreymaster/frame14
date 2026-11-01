@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Navigate, useNavigate, useParams } from "react-router";
 import {
   Badge,
   Box,
@@ -226,7 +227,17 @@ export function Control() {
   const showViews = deviceMode !== "frame";
   const halloween = useHalloween();
   const views = halloween ? [...VIEWS, HALLOWEEN_VIEW] : VIEWS;
-  const [tab, setTab] = useState<string>(showViews ? "views" : "display");
+  // The phone's tab is the sub-route (0.138): /control/views, /display,
+  // /device — the first it has for the page alone or a tab it hasn't got
+  // (Views is a remote's), put into the address below.
+  const navigate = useNavigate();
+  const { tab: rawTab } = useParams();
+  const tabs = TABS.filter((t) => showViews || t.value !== "views");
+  const tab = tabs.some((t) => t.value === rawTab)
+    ? (rawTab as string)
+    : tabs[0].value;
+  const setTab = (next: string) =>
+    void navigate(`/control/${next}`, { replace: true });
 
   useEffect(() => {
     function onCurrentView(view: string) {
@@ -252,7 +263,9 @@ export function Control() {
   }
 
   const viewsBoard = (
-    <Board title={<SectionTitle icon={<IoBrowsersOutline />}>Views</SectionTitle>}>
+    <Board
+      title={<SectionTitle icon={<IoBrowsersOutline />}>Views</SectionTitle>}
+    >
       <SimpleGrid columns={3} gap="3">
         {views.map((v) => {
           const isActive = activeView === v.path;
@@ -302,7 +315,9 @@ export function Control() {
     <Board
       title={
         <HStack justify="space-between" width="100%">
-          <SectionTitle icon={<IoTabletPortraitOutline />}>Display</SectionTitle>
+          <SectionTitle icon={<IoTabletPortraitOutline />}>
+            Display
+          </SectionTitle>
           {preference === "auto" && <Badge>auto · {effectiveMode}</Badge>}
         </HStack>
       }
@@ -360,7 +375,9 @@ export function Control() {
   );
 
   const albumBoard = (
-    <Board title={<SectionTitle icon={<IoImagesOutline />}>Album</SectionTitle>}>
+    <Board
+      title={<SectionTitle icon={<IoImagesOutline />}>Album</SectionTitle>}
+    >
       <AlbumSelect />
     </Board>
   );
@@ -418,6 +435,7 @@ export function Control() {
         </Field.Root>
       </PageHeader>
 
+      {phone && rawTab !== tab && <Navigate to={`/control/${tab}`} replace />}
       {phone ? (
         <Tabs.Root
           value={tab}
@@ -429,7 +447,7 @@ export function Control() {
           gap="gutter"
         >
           <Tabs.List>
-            {TABS.filter((t) => showViews || t.value !== "views").map((t) => (
+            {tabs.map((t) => (
               <Tabs.Trigger key={t.value} value={t.value}>
                 <t.icon />
                 {t.label}

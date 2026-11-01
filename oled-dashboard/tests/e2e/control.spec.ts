@@ -29,15 +29,18 @@ test.describe("the Settings page", () => {
       await prompt.getByRole("button", { name: "Not now" }).click();
       await expect(prompt).toBeHidden();
       // An install under way — from here or from Home Assistant's add-on page
-      // — shows the Supervisor's progress live (0.136).
+      // — shows as such, live (0.136), with an indeterminate bar (0.138: the
+      // Supervisor's percentage never came).
       await stub(request, "/_stub/state", {
         entity_id: "update.frame14_update",
         state: "on",
         attributes: { ...attributes, in_progress: true, update_percentage: 42 },
       });
       await expect(page.getByText(/Installing Frame14 9\.9\.9/)).toBeVisible();
-      await expect(page.getByRole("progressbar", { name: "Install progress" })).toBeVisible();
-      await expect(page.getByText("42%")).toBeVisible();
+      const bar = page.getByRole("progressbar", { name: "Install progress" });
+      await expect(bar).toBeVisible();
+      await expect(bar).not.toHaveAttribute("aria-valuenow", /./);
+      await expect(page.getByText("42%")).toHaveCount(0);
       await expect(notes).toHaveCount(0);
     });
   });
@@ -76,10 +79,10 @@ test.describe("the Settings page", () => {
     await expect(lights).toHaveAttribute("aria-pressed", "false");
     await lights.click();
     await page.waitForTimeout(500);
-    await expect(page).toHaveURL(/\/control$/);
+    await expect(page).toHaveURL(/\/control\/views$/);
     await expect(lights).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "Clock", exact: true }).click();
-    await expect(page).toHaveURL(/\/control$/);
+    await expect(page).toHaveURL(/\/control\/views$/);
     await expect(page.getByRole("button", { name: "Clock", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
 

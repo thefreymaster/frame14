@@ -10,9 +10,12 @@ import { HOME_FOUR_COLUMN_QUERY } from "../lib/homeLayout";
  * user's Mac runs in it.
  *
  * There, the full-bleed views (Photos, Radar) sit in the page like a card, and
- * the header shows the clock; phones and the frame get neither.
+ * the header shows the clock; phones and the frame get neither. Measured
+ * before the first render (`ssr: false`, 0.138), so a page deciding a
+ * redirect from it — /weather to its first tab, where it has tabs — decides
+ * right the first time, rather than on the false the hook used to start with.
  */
 export function useDesktop(): boolean {
-  const [desktop] = useMediaQuery([HOME_FOUR_COLUMN_QUERY]);
+  const [desktop] = useMediaQuery([HOME_FOUR_COLUMN_QUERY], { ssr: false });
   return desktop && !isMobileUserAgent();
 }

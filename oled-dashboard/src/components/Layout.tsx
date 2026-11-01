@@ -27,6 +27,7 @@ import { useHomeArranging } from "../lib/homeArranging";
 // import { useLightStripShown } from "../lib/lightStripVisibility"; // lights strip
 import { useReleaseSplash } from "../hooks/useReleaseSplash";
 import { useScrolledFromTop } from "../hooks/useScrolledFromTop";
+import { pageOf } from "../lib/pagePath";
 import {
   HEADER_CLEARANCE,
   // LIGHT_STRIP_CLEARANCE, // lights strip
@@ -58,9 +59,11 @@ export function Layout() {
   useThemeMode();
   useReady();
   const location = useLocation();
-  useReleaseSplash(!SPLASH_HOLDING_PATHS.has(location.pathname));
-  const isControl = location.pathname === "/control";
-  const isBlank = location.pathname === "/blank";
+  // The page, without its tab (lib/pagePath, 0.138): a tab is a sub-route.
+  const page = pageOf(location.pathname);
+  useReleaseSplash(!SPLASH_HOLDING_PATHS.has(page));
+  const isControl = page === "/control";
+  const isBlank = page === "/blank";
   const navVisible = useNavVisible();
   const showNav = !isBlank && navVisible;
   // While /home is being arranged the header and the navs are veiled and
@@ -69,9 +72,9 @@ export function Layout() {
   const isController = getDeviceMode() === "controller";
   const desktop = useDesktop();
   const scrollable =
-    SCROLLING_PATHS.has(location.pathname) ||
+    SCROLLING_PATHS.has(page) ||
     isController ||
-    (desktop && DESKTOP_SCROLLING_PATHS.has(location.pathname));
+    (desktop && DESKTOP_SCROLLING_PATHS.has(page));
   // A scrolling page in Safari on an iPhone (main.tsx marks html before the
   // first render; read here, not at module load, which is before that): the
   // Box grows with the page and the document scrolls (since 0.117.1), so
@@ -93,20 +96,21 @@ export function Layout() {
   // The page scrolls inside the Box below, not the document. The header
   // draws its bottom edge while the page has scrolled under it.
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scrolled = useScrolledFromTop(scrollRef, location.pathname);
-  // A new route starts at the top (since 0.111). The scroll position is the
+  const scrolled = useScrolledFromTop(scrollRef, page);
+  // A new page starts at the top (since 0.111). The scroll position is the
   // Box's (the document's, where that scrolls), which outlives the page: a
   // long page scrolled down and a nav tap left the next page scrolled too,
   // unless it was short enough to clamp. Before paint, so the new page never
-  // shows scrolled; the pathname alone, so a tab change within a page
-  // (`?tab=`) keeps its place.
+  // shows scrolled; the page alone, so a tab change within it (its sub-route
+  // since 0.138, `?tab=` before) keeps its place — and, keyed the same, its
+  // entrance doesn't play again.
   useLayoutEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
     window.scrollTo(0, 0);
-  }, [location.pathname]);
+  }, [page]);
 
   const content = (
-    <PageTransition key={location.pathname} grow={scrollable}>
+    <PageTransition key={page} grow={scrollable}>
       <Outlet />
     </PageTransition>
   );

@@ -70,16 +70,17 @@ describe("GET /api/software", () => {
         available: true,
         releaseUrl: "https://example.test/releases",
         inProgress: false,
-        progress: null,
         releaseNotes: "- Added: a thing, for 0.126.0.\n- Fixed: another.",
       },
     });
   });
 
-  it("reads an install's progress from the entity, whoever started it", async () => {
+  it("says an install is under way from the entity, whoever started it", async () => {
     mocks.states.set("update.frame14_update", updateEntity("on", "0.126.0", { in_progress: true, update_percentage: 42 }));
     const res = await request(app).get("/api/software");
-    expect(res.body.update).toMatchObject({ inProgress: true, progress: 42 });
+    expect(res.body.update.inProgress).toBe(true);
+    // No percentage (0.138): the Supervisor never filled it in, so none is passed on.
+    expect(res.body.update).not.toHaveProperty("progress");
   });
 
   it("fetches a version's notes once, and leaves them out when there are none or Home Assistant can't", async () => {

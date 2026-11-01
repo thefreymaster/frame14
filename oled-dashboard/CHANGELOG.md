@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.138.0
+
+- Changed: a page's tabs are part of its address — Energy's Solar and Circuits are `/energy/solar` and `/energy/circuits`, Weather's Hourly, Daily and Radar `/weather/hourly`, `/weather/daily` and `/weather/radar`, and a phone's Settings tabs `/control/views`, `/control/display` and `/control/device` — so a tab can be bookmarked, shared and sent to a frame, and a reload comes back to it. The page's plain address opens its first tab; the old `?tab=` addresses and `/power`, `/solar` and `/radar` still land on theirs.
+- Changed: while Frame14 installs, the Software card's bar no longer waits for a percentage from Home Assistant — none came — and shows the install under way instead.
+- Added: on the Energy page's Circuits tab, a circuit that is drawing power has a soft highlight running along its bar, left to right, the way the power flow's dots run along their wires; an idle circuit's bar is still.
+
 ## 0.137.0
 
 - Added: the frames can set their own brightness from the tablet's light sensor. On the Settings page's Screen card (a phone's and the frame's), **Adjust to the room** turns it on, and a range slider sets the dimmest level, for a dark room, and the brightest, for a bright one — in between, the brightness follows the room's light the way the eye does, so a lamp coming on in the evening lifts it a little and daylight lifts it a lot. The card shows the room's light as the frame last read it, so you can see the sensor working before turning it on. The dark hours still win while they last, and moving the brightness slider by hand turns the adjustment off. `PUT /api/screen/auto` sets it for an automation. Fully Kiosk Browser's JavaScript interface has to be on, as for the screen commands.

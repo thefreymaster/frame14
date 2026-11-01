@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import { Box, Flex, Grid, Skeleton, Stack, Tabs, Text } from "@chakra-ui/react";
-import { useSearchParams } from "react-router";
+import {
+  Navigate,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router";
 import type { IconType } from "react-icons";
 import {
   IoCalendarOutline,
@@ -53,18 +58,33 @@ const RADAR_DESKTOP_HEIGHT = "30rem";
  * over the Hourly card in a wide left column, the days ahead in a column at
  * the right (stretched to the pair, its rows spaced to fill), and the radar
  * across the bottom at RADAR_DESKTOP_HEIGHT — the page scrolls to it (Layout
- * lets /weather scroll on a desktop), and `?tab=radar` scrolls there on
+ * lets /weather scroll on a desktop), and /weather/radar scrolls there on
  * arrival.
+ *
+ * The tab is the sub-route (0.138; the `tab` search param before):
+ * /weather/hourly, /weather/daily, /weather/radar. Where there are tabs — a
+ * phone, the frame — the page alone lands on Hourly; a desktop has no tabs
+ * and keeps /weather, its radar reached at /weather/radar. The old `?tab=`
+ * is taken to its tab everywhere.
  */
+const isWeatherTab = (v: string | null | undefined): v is WeatherTab =>
+  v === "hourly" || v === "daily" || v === "radar";
+
 export function Weather() {
   const desktop = useDesktop();
   const { weather, loading } = useHomeWeather();
-  const [params, setParams] = useSearchParams();
-  const raw = params.get("tab");
-  const tab: WeatherTab = raw === "daily" || raw === "radar" ? raw : "hourly";
+  const navigate = useNavigate();
+  const { tab: raw } = useParams();
+  const [params] = useSearchParams();
+  const legacy = params.get("tab");
+  const tab: WeatherTab = isWeatherTab(raw)
+    ? raw
+    : isWeatherTab(legacy)
+      ? legacy
+      : "hourly";
 
   function setTab(next: string) {
-    setParams(next === "hourly" ? {} : { tab: next }, { replace: true });
+    void navigate(`/weather/${next}`, { replace: true });
   }
 
   const hours = weather?.forecastHours ?? [];
@@ -87,6 +107,13 @@ export function Weather() {
     );
     return () => clearTimeout(id);
   }, [desktop, tab, loading]);
+
+  // The tab into the address (see above): a page with tabs lands on it; a
+  // desktop drops a tab it hasn't got.
+  if (!isWeatherTab(raw)) {
+    if (!desktop || legacy) return <Navigate to={`/weather/${tab}`} replace />;
+    if (raw !== undefined) return <Navigate to="/weather" replace />;
+  }
 
   // A forecast card's body: a Skeleton while loading, an EmptyState when the
   // forecast didn't come, else the forecast itself.
@@ -163,16 +190,24 @@ export function Weather() {
             {nowBoard}
           </Box>
           <Box gridArea="hourly" minW="0">
-            <Board title={<SectionTitle icon={<IoTimeOutline />}>Hourly</SectionTitle>}>
+            <Board
+              title={
+                <SectionTitle icon={<IoTimeOutline />}>Hourly</SectionTitle>
+              }
+            >
               {forecastBody("hourly")}
             </Board>
           </Box>
           {/* A flex column, so the Board (`fill`) stretches to the two rows. */}
           <Flex gridArea="daily" direction="column" minW="0">
             <Board
-            fill
-            title={<SectionTitle icon={<IoCalendarOutline />}>{dailyLabel}</SectionTitle>}
-          >
+              fill
+              title={
+                <SectionTitle icon={<IoCalendarOutline />}>
+                  {dailyLabel}
+                </SectionTitle>
+              }
+            >
               {forecastBody("daily")}
             </Board>
           </Flex>
@@ -182,7 +217,9 @@ export function Weather() {
             minW="0"
             scrollMarginBottom={PAGE_GUTTER}
           >
-            <Board title={<SectionTitle icon={<MdRadar />}>Radar</SectionTitle>}>
+            <Board
+              title={<SectionTitle icon={<MdRadar />}>Radar</SectionTitle>}
+            >
               <RadarMap height={RADAR_DESKTOP_HEIGHT} rounded="sm" />
             </Board>
           </Box>

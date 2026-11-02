@@ -7,6 +7,11 @@ export interface LightRoom {
   id: string;
   name: string;
   lights: string[];
+  /**
+   * The configured cameras in it (0.144): a camera's full screen carries the
+   * room's lights. Absent from a config a page restored from before it.
+   */
+  cameras?: string[];
 }
 
 export interface EntitiesConfig {

@@ -25,13 +25,19 @@ export type CameraFeedState = "connecting" | "live" | "stills" | "unavailable";
  * page). A spinner shows until the first picture; with no picture and a
  * failed still it says the camera is unavailable and offers a retry, which
  * starts the live stream over. `onState` reports what is showing.
+ *
+ * `fill` (0.144, the camera's full screen): the picture fills the box it is
+ * in — absolute over it, no corners — with the whole frame shown,
+ * letterboxed on the black, rather than the card's 16:9 well cropped to it.
  */
 export function CameraFeed({
   entityId,
   onState,
+  fill = false,
 }: {
   entityId: string;
   onState?: (state: CameraFeedState) => void;
+  fill?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
   const [mode, setMode] = useState<"live" | "stills">("live");
@@ -84,9 +90,10 @@ export function CameraFeed({
 
   return (
     <Box
-      position="relative"
-      aspectRatio="16 / 9"
-      rounded="sm"
+      position={fill ? "absolute" : "relative"}
+      inset={fill ? "0" : undefined}
+      aspectRatio={fill ? undefined : "16 / 9"}
+      rounded={fill ? undefined : "sm"}
       overflow="hidden"
       bg="black"
     >
@@ -99,6 +106,7 @@ export function CameraFeed({
         <CameraVideo
           key={attempt}
           entityId={entityId}
+          fit={fill ? "contain" : "cover"}
           onPlaying={() => setLoaded(true)}
           onFail={() => {
             setMode("stills");
@@ -125,7 +133,7 @@ export function CameraFeed({
           inset="0"
           width="100%"
           height="100%"
-          fit="cover"
+          fit={fill ? "contain" : "cover"}
         />
       )}
       {unavailable && (

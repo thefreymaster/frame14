@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
     lights: ["light.living_room", "switch.plug", "light.front_porch"],
     lightAreas: ["Living Room", "kitchen", "Nowhere"],
     climate: ["climate.x"],
+    camera: "camera.front_porch_high",
+    cameras: ["camera.front_porch_high", "camera.front_porch_rtsp", "camera.basement"],
   },
   connected: true,
   registries: { areas: [], devices: [], entities: [] },
@@ -36,6 +38,11 @@ const REGISTRIES = {
     { entity_id: "switch.plug", area_id: "kitchen" },
     { entity_id: "light.front_porch", area_id: null, device_id: "dev_porch" },
     { entity_id: "light.basement", area_id: "basement" },
+    // The cameras (0.144): the porch's through its device, the RTSP one in
+    // no area, the basement's in an area with no configured light.
+    { entity_id: "camera.front_porch_high", area_id: null, device_id: "dev_porch" },
+    { entity_id: "camera.front_porch_rtsp", area_id: null },
+    { entity_id: "camera.basement", area_id: "basement" },
   ],
 };
 
@@ -101,11 +108,13 @@ describe("refreshLightAreas", () => {
       "light.living_room_floor_lamp",
     ]);
     // The configured areas first in their order, then the porch's area,
-    // reached through its device; only rooms with something in them.
+    // reached through its device; only rooms with something in them. The
+    // porch camera is in its room (through its device too); the RTSP one is
+    // in no area, and the basement's area has no light, so no room.
     expect(rooms).toEqual([
-      { id: "living_room", name: "Living Room", lights: ["light.living_room", "light.living_room_floor_lamp"] },
-      { id: "kitchen", name: "Kitchen", lights: ["switch.plug", "light.kitchen_main_lights"] },
-      { id: "outside", name: "Outside", lights: ["light.front_porch"] },
+      { id: "living_room", name: "Living Room", lights: ["light.living_room", "light.living_room_floor_lamp"], cameras: [] },
+      { id: "kitchen", name: "Kitchen", lights: ["switch.plug", "light.kitchen_main_lights"], cameras: [] },
+      { id: "outside", name: "Outside", lights: ["light.front_porch"], cameras: ["camera.front_porch_high"] },
     ]);
     expect(socket.emit).toHaveBeenCalledWith("entities", expect.objectContaining({ lights, rooms, climate: ["climate.x"] }));
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('no area "Nowhere"'));

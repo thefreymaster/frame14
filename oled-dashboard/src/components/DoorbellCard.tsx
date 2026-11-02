@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Box, Card, Icon, Image, Status, Text, VStack } from "@chakra-ui/react";
-import { MdVideocamOff } from "react-icons/md";
+import {
+  Box,
+  Card,
+  Icon,
+  IconButton,
+  Image,
+  Status,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import { MdFullscreen, MdVideocamOff } from "react-icons/md";
 import { CloseButton } from "./ui/close-button";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity, type HAState } from "../hooks/useEntity";
@@ -9,6 +18,8 @@ import { socket } from "../lib/socket";
 // clear at the bottom of a desktop.
 // import { useDesktop } from "../hooks/useDesktop"; // lights strip
 // import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics"; // lights strip
+import { CameraDialog } from "./CameraDialog";
+import { CameraFeed } from "./CameraFeed";
 import { CameraVideo } from "./CameraVideo";
 import { IoVideocamOutline } from "react-icons/io5";
 
@@ -30,8 +41,16 @@ import { IoVideocamOutline } from "react-icons/io5";
  * (a failing HA still takes ~5s, and overlapping requests piled up on HA). If
  * no picture has arrived and a still has failed, the box says the camera is
  * unavailable rather than staying black; a frame arriving clears it.
+ *
+ * The button at the right of its row puts the camera full screen (0.144,
+ * the user's ask: the pop-up "should also allow full screen"): the Cameras
+ * page's CameraDialog, with the lights of the camera's room in its header,
+ * in place of the card — the card sits above every dialog, so it can't stay
+ * while one is up — and the 30s doesn't run out under it. Closing the full
+ * screen dismisses the card: whoever was at the door has been seen.
  */
 const SHOW_MS = 30_000;
+const NO_LIGHTS: string[] = [];
 const SNAPSHOT_INTERVAL_MS = 1_000;
 
 interface NamedAttributes {
@@ -58,18 +77,34 @@ export function DoorbellCard() {
   // Whether any picture has shown this time, and whether a still has failed.
   const [loaded, setLoaded] = useState(false);
   const [stillFailed, setStillFailed] = useState(false);
+  // Full screen (CameraDialog) in place of the card; the ref is for the
+  // hide timer, which must not take the card down under it.
+  const [full, setFull] = useState(false);
+  const fullRef = useRef(false);
   // const desktop = useDesktop(); // lights strip
 
   const hideTimer = useRef<number | null>(null);
   const prevState = useRef<string | undefined>(undefined);
 
-  const hide = useCallback(() => {
+  const clearHideTimer = () => {
     if (hideTimer.current !== null) {
       clearTimeout(hideTimer.current);
       hideTimer.current = null;
     }
+  };
+
+  const hide = useCallback(() => {
+    clearHideTimer();
+    fullRef.current = false;
+    setFull(false);
     setVisible(false);
   }, []);
+
+  const showFull = () => {
+    clearHideTimer();
+    fullRef.current = true;
+    setFull(true);
+  };
 
   // Rising edge only. A detection while the card is already up restarts the 30s.
   useEffect(() => {
@@ -90,6 +125,8 @@ export function DoorbellCard() {
       if (hideTimer.current !== null) clearTimeout(hideTimer.current);
       hideTimer.current = window.setTimeout(() => {
         hideTimer.current = null;
+        // Not while someone is watching it full screen.
+        if (fullRef.current) return;
         setVisible(false);
       }, SHOW_MS);
     }
@@ -115,6 +152,18 @@ export function DoorbellCard() {
   if (!visible || !cameraId) return null;
 
   const label = camera?.attributes?.friendly_name || "Front Door";
+
+  if (full) {
+    // The lights of the camera's room, as the Cameras page has them.
+    const lights =
+      entities?.rooms?.find((room) => room.cameras?.includes(cameraId))
+        ?.lights ?? NO_LIGHTS;
+    return (
+      <CameraDialog open onClose={hide} title={label} lights={lights}>
+        <CameraFeed entityId={cameraId} fill />
+      </CameraDialog>
+    );
+  }
 
   return (
     <Card.Root
@@ -207,6 +256,21 @@ export function DoorbellCard() {
           <Card.Title truncate>{label}</Card.Title>
           <Card.Description>Person detected</Card.Description>
         </Box>
+        <IconButton
+          aria-label="Full screen"
+          variant="subtle"
+          size="xs"
+          rounded="l2"
+          ms="auto"
+          flexShrink={0}
+          onClick={(e) => {
+            // A tap on the card dismisses it; this one doesn't.
+            e.stopPropagation();
+            showFull();
+          }}
+        >
+          <MdFullscreen />
+        </IconButton>
       </Card.Body>
     </Card.Root>
   );

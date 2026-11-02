@@ -252,7 +252,7 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
   const states = new Map(initialStates().map((s) => [s.entity_id, s]));
 
   // The registries (the lights by room): HA's areas, one device in an area,
-  // and every light / switch with its area, as config/*_registry/list answer.
+  // and every light / switch — and camera, 0.144 — with its area, as config/*_registry/list answer.
   const initialAreas = () =>
     [
       ["living_room", "Living Room"], ["kitchen", "Kitchen"], ["dining_room", "Dining Room"], ["outside", "Outside"],
@@ -268,15 +268,17 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     "light.basement_2": "basement", "light.workshop": "basement", "light.movie_theater": "basement",
     "light.evans_office": "evans_office", "light.hue_ambiance_lamp_1": "primary_bedroom", "light.lizs_lamp": "primary_bedroom",
     "light.aidens_hatch_light": "aidens_room",
+    // The cameras (0.144): the high one on the porch, outside; the RTSP one in no area.
+    "camera.front_porch_high": "outside",
   };
   const initialEntityRegistry = () =>
-    [...states.keys()].filter((id) => /^(light|switch)\./.test(id)).map((entity_id) => ({
+    [...states.keys()].filter((id) => /^(light|switch|camera)\./.test(id)).map((entity_id) => ({
       entity_id,
       area_id: entity_id === "light.front_porch" ? null : ENTITY_AREAS[entity_id] ?? null,
       device_id: entity_id === "light.front_porch" ? "dev_porch" : null,
       disabled_by: null, hidden_by: null,
       entity_category: entity_id === "light.kitchen_plug_indicator" ? "config" : null,
-      name: null, original_name: states.get(entity_id).attributes.friendly_name, platform: "stub",
+      name: null, original_name: states.get(entity_id).attributes.friendly_name ?? null, platform: "stub",
     }));
   let areas = initialAreas();
   let entityRegistry = initialEntityRegistry();

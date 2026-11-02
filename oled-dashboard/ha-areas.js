@@ -10,7 +10,11 @@
 //   - every light and switch, explicit or found, is put in its room, for
 //     /lights to group them: `rooms` in GET /api/entities, the configured
 //     areas first in their configured order, then any other area an explicit
-//     entity is in, by name. One in no area stays in `lights` and no room.
+//     entity is in, by name. One in no area stays in `lights` and no room;
+//   - every configured camera (`camera_entities`, `camera_entity`) is put in
+//     its room too (`cameras` on the room, 0.144), for its full screen to
+//     carry the room's lights as buttons. A camera in no room, or in a room
+//     with no light, is in none — there is nothing to control from it.
 // HA pushes a registry change as an event; the socket hands it to
 // scheduleLightAreasRefresh, which re-reads a second later, and either way a
 // changed answer goes to every page over io ("entities"), which takes it as
@@ -76,14 +80,21 @@ function resolve(areas, devices, entities) {
   for (const id of found) if (!lights.includes(id)) lights.push(id);
 
   const rooms = new Map(
-    wanted.map((id) => [id, { ...areaById.get(id), lights: [] }]),
+    wanted.map((id) => [id, { ...areaById.get(id), lights: [], cameras: [] }]),
   );
   for (const id of lights) {
     const areaId = areaOf.get(id);
     if (!areaId || !areaById.has(areaId)) continue;
     if (!rooms.has(areaId))
-      rooms.set(areaId, { ...areaById.get(areaId), lights: [] });
+      rooms.set(areaId, { ...areaById.get(areaId), lights: [], cameras: [] });
     rooms.get(areaId).lights.push(id);
+  }
+  // The cameras, into the rooms the lights made: a camera's area is its own,
+  // else its device's, as a light's.
+  const cameras = [...new Set([...(ENTITIES.cameras ?? []), ENTITIES.camera])];
+  for (const id of cameras) {
+    const room = id && rooms.get(areaOf.get(id));
+    if (room) room.cameras.push(id);
   }
   const collator = new Intl.Collator(undefined, {
     sensitivity: "base",

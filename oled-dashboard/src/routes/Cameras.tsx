@@ -71,6 +71,7 @@ export function Cameras() {
               title="3D printer"
               icon={<Printer3dOutlineIcon />}
               badge
+              chamberLight={printer.chamberLight?.id}
             />
           )}
           {vacuums.map((id) => (

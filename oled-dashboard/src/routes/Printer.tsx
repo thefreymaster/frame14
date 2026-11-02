@@ -63,7 +63,12 @@ export function Printer() {
           gap="gutter"
           alignItems="start"
         >
-          {printer.hasCamera && <PrinterCameraCard action={light} />}
+          {printer.hasCamera && (
+            <PrinterCameraCard
+              action={light}
+              chamberLight={printer.chamberLight?.id}
+            />
+          )}
           <Flex direction="column" gap="gutter" minW="0">
             <PrinterJobCard
               printer={printer}

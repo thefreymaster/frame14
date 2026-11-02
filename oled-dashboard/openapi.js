@@ -118,7 +118,7 @@ export const openApiDocument = {
         operationId: "getEntities",
         summary: "The entity configuration, with the lights by room",
         description:
-          "The entity ids the add-on is configured with (options.json, or frame14.json outside the add-on). `lights` is the explicit light_entities list grown by every light in the configured light_areas, and `rooms` groups the lights and switches by Home Assistant area — the configured areas first, then any other area a light is in. Until the registries have been read, `lights` is the explicit list and `rooms` is empty. Pushed again over Socket.IO (\"entities\") when the rooms change.",
+          "The entity ids the add-on is configured with (options.json, or frame14.json outside the add-on). `lights` is the explicit light_entities list grown by every light in the configured light_areas, and `rooms` groups the lights and switches by Home Assistant area — the configured areas first, then any other area a light is in — each with the configured `cameras` in it (0.144: a camera's full screen carries its room's lights). Until the registries have been read, `lights` is the explicit list and `rooms` is empty. Pushed again over Socket.IO (\"entities\") when the rooms change.",
         responses: {
           200: {
             description: "The entity configuration.",
@@ -136,6 +136,7 @@ export const openApiDocument = {
                           id: { type: "string", example: "living_room" },
                           name: { type: "string", example: "Living Room" },
                           lights: { type: "array", items: { type: "string" } },
+                          cameras: { type: "array", items: { type: "string" } },
                         },
                       },
                     },

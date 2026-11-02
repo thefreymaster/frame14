@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { STUB_URL } from "./ports";
 
 /** A test-only call on the stub Home Assistant (see tests/stub/stub-ha.mjs). */
@@ -25,6 +25,13 @@ export function pageErrors(page: Page): string[] {
  * lands on the splash.
  */
 export const splashGone = (page: Page) => page.locator("#splash").waitFor({ state: "detached" });
+
+/** The names of the Lights group's buttons in a camera's full screen (0.144), in order. */
+export const lightButtons = (dialog: Locator) =>
+  dialog
+    .getByRole("group", { name: "Lights" })
+    .getByRole("button")
+    .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
 
 /** A light or switch tile, by the name it shows. */
 export function lightTile(page: Page, name: string) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.144.0
+
+- Added: every camera on the Cameras page goes full screen — the button at the right of its card's header — with the lights of the camera's room as icon buttons in the dialog's header: the lights and switches the add-on is configured with that sit in the same Home Assistant area as the camera (the Lights page's rooms), each in its colour while on, a tap turning it off or on as a Lights tile does. The printer's camera goes full screen too, with its chamber light. Escape or the close button brings the picture back to the card. The front-door pop-up — the card that comes up when someone is seen at the door — has the button too: its full screen takes the card's place, stays up as long as you watch, and closing it dismisses the card.
+
 ## 0.143.0
 
 - Added: a Lights card on the Home page, showing the lights and switches that are on right now as the Lights page's tiles — a tap turns one off, a swipe across a dimmable light sets its brightness, a press and hold opens its controls — alphabetical, with the count beside the title and All off in the header. The card is there only while a light is on: turn the last one off and it goes, and it comes back with the next light turned on. Rearrange, resize or hide it as any card; it starts under the Calendar card.

@@ -30,6 +30,11 @@ const SHEET_MAX_H = `calc(100dvh - env(safe-area-inset-top, 0px) - ${PAGE_GUTTER
  * closes it (useSwipeToClose). `size`, `placement` and `scrollBehavior` are
  * the dialog's alone.
  *
+ * `full` (0.144) is the one modal that isn't a sheet anywhere: a full-screen
+ * Dialog on every device — the camera's full screen, which is the whole
+ * screen by its word (the user: "full screen cameras"), where a sheet is for
+ * a panel as tall as its content. Its parts are the Dialog's.
+ *
  * Kept quick on the frame (0.135.1, the user: "pretty laggy"): the sheet has
  * its own compositor layer (`will-change: transform`), so the slide and a
  * finger's drag move it without repainting its 1600px of content, and the
@@ -42,9 +47,13 @@ export function Root({
   size,
   scrollBehavior,
   motionPreset,
+  full = false,
   ...props
-}: Dialog.RootProps) {
-  const drawer = useBottomDrawer();
+}: Dialog.RootProps & {
+  /** A full-screen dialog on every device, never a sheet. */
+  full?: boolean;
+}) {
+  const drawer = useBottomDrawer() && !full;
   const { open = false, onOpenChange } = props;
   const kind: ModalKind = {
     drawer,
@@ -58,7 +67,7 @@ export function Root({
       ) : (
         <Dialog.Root
           placement={placement}
-          size={size}
+          size={full ? "full" : size}
           scrollBehavior={scrollBehavior}
           motionPreset={motionPreset}
           {...props}

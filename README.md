@@ -29,7 +29,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 - **Lights and Climate** — lights and switches grouped by room; thermostats with a dial, mode and fan controls.
 - **Energy** — the power flow now, today's solar curve, month and year history, and the draw per circuit.
 - **Weather** — conditions and advisories, hourly and daily forecasts, the radar.
-- **Printer, Vacuum, Cameras, Calendar** — a Bambu Lab printer with its camera and job, Roborock vacuums with their maps, every camera live, and a two-week agenda.
+- **Printer, Vacuum, Cameras, Calendar** — a Bambu Lab printer with its camera and job, Roborock vacuums with their maps, every camera live — and full screen, with its room's lights at hand — and a two-week agenda.
 - **And more** — a Plex movie takes over the frames as its poster; a tracked team's game day gets a scoreboard; a doorbell card pops up when someone is at the door; the mic runs an Assist pipeline.
 - **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. Installable as a PWA.
 
@@ -179,7 +179,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/energy` | Power flow now, with Solar (today, month and year history) and Circuits (per-circuit draw) as tabs; `/solar` and `/power` redirect here |
 | `/printer` | The 3D printer: camera, job progress and controls, temperatures; off by default in a remote's nav |
 | `/vacuum` | The robot vacuums: state, controls, map, wear parts; off by default in a remote's nav |
-| `/cameras` | Every camera live (stills when the stream won't start), the printer's camera and the vacuum maps; off by default in a remote's nav |
+| `/cameras` | Every camera live (stills when the stream won't start) — each goes full screen, with the lights of its room as buttons in the header — the printer's camera (full screen with its chamber light) and the vacuum maps; off by default in a remote's nav |
 | `/photos` | Immich photo slideshow; frame-only nav item |
 | `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames |
 | `/weather` | Now (conditions + advisories from the forecast), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |

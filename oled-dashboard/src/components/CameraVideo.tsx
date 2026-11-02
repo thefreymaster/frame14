@@ -15,16 +15,20 @@ const START_TIMEOUT_MS = 15_000;
  * mode; otherwise the browser's own HLS. Muted and inline so it can autoplay.
  * Calls `onPlaying` once video is moving and `onFail` (once) if the stream
  * can't start, errors fatally, or hasn't played within START_TIMEOUT_MS.
- * Unmounting tears hls.js down, which stops the segment requests.
+ * Unmounting tears hls.js down, which stops the segment requests. `fit` is
+ * the picture in its box: `cover` (a card's well) or `contain` (the full
+ * screen, letterboxed on its black; 0.144).
  */
 export function CameraVideo({
   entityId,
   onPlaying,
   onFail,
+  fit = "cover",
 }: {
   entityId?: string;
   onPlaying: () => void;
   onFail: () => void;
+  fit?: "cover" | "contain";
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   // The callbacks change identity on every render of the card; the effect
@@ -106,7 +110,7 @@ export function CameraVideo({
       onError={() => failRef.current()}
       width="100%"
       height="100%"
-      objectFit="cover"
+      objectFit={fit}
       display="block"
     />
   );

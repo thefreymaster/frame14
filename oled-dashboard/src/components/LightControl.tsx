@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Box,
   Card,
@@ -10,8 +10,9 @@ import {
 } from "@chakra-ui/react";
 import { toaster } from "./ui/toaster";
 import { useEntity } from "../hooks/useEntity";
+import { useLightToggle } from "../hooks/useLightToggle";
 import { useLongPress } from "../hooks/useLongPress";
-import { callLightService, callService } from "../lib/callService";
+import { callLightService } from "../lib/callService";
 import {
   brightnessPct,
   lightColor,
@@ -27,11 +28,6 @@ type Props = LightEntry & {
   /** Press and hold on a dimmable light opens its controls. */
   onOpen: (entityId: string) => void;
 };
-
-// A tap's pending spinner gives up — with a toast — if Home Assistant hasn't
-// reported the light in its new state by then. Longer than the call's own
-// timeout (lib/callService), so a rejected call shows its error first.
-const STATE_TIMEOUT_MS = 15_000;
 
 // Swipe to dim (0.139, the user's ask): a sideways drag across a dimmable
 // tile sets the brightness to where the finger is — the fill follows it —
@@ -69,11 +65,11 @@ const pctAt = (clientX: number, d: Drag) =>
  * Off, it is the plain outline card with a grey bulb.
  *
  * A tap turns it off or on (0.125: the explicit service, not toggle, so the
- * state it waits for is known). From the tap until Home Assistant reports
- * the light in that state a spinner stands in for the bulb and further taps
- * are ignored; the server's ack carries Home Assistant's answer, and a refusal —
- * or no new state within STATE_TIMEOUT_MS — ends the spinner with an error
- * toast. Press and hold on a dimmable light opens LightDialog (brightness,
+ * state it waits for is known — useLightToggle, 0.144). From the tap until
+ * Home Assistant reports the light in that state a spinner stands in for the
+ * bulb and further taps are ignored; the server's ack carries Home
+ * Assistant's answer, and a refusal — or no new state within the hook's
+ * STATE_TIMEOUT_MS — ends the spinner with an error toast. Press and hold on a dimmable light opens LightDialog (brightness,
  * warmth, colour), and a sideways swipe across it sets the brightness where
  * the finger is (0.139): the fill and the figure follow the drag, the level
  * goes to Home Assistant on release and shows until the light reports a
@@ -113,46 +109,15 @@ export function LightControl({
   const shownPct = scrub ?? sent ?? pct;
   const shownOn = isOn || scrub !== null || sent !== null;
   const color = lightColor(shownOn, attrs);
-  // The state a tap is waiting for, or null. Done once the light reports
-  // that state — reset during render, as React allows for a derived reset.
-  const [pending, setPending] = useState<"on" | "off" | null>(null);
-  if (pending && state === pending) setPending(null);
+  // The state a tap is waiting for, or null, and the tap itself.
+  const { pending, toggle } = useLightToggle(entity_id, label, state);
 
-  // Give up, and say so, if it never does.
-  useEffect(() => {
-    if (!pending) return;
-    const timer = setTimeout(() => {
-      setPending(null);
-      toaster.create({
-        type: "error",
-        title: `${label} didn't turn ${pending}`,
-        description:
-          "Home Assistant took the call, but the light hasn't reported the change.",
-      });
-    }, STATE_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [pending, label]);
-
-  async function tap() {
+  function tap() {
     if (swiped.current) {
       swiped.current = false;
       return;
     }
-    if (pending) return;
-    const target = isOn ? "off" : "on";
-    setPending(target);
-    const result = await callService(
-      entity_id,
-      target === "off" ? "turn_off" : "turn_on",
-    );
-    if (!result.ok) {
-      setPending(null);
-      toaster.create({
-        type: "error",
-        title: `Couldn't turn ${target} ${label}`,
-        description: result.error,
-      });
-    }
+    void toggle();
   }
 
   async function dimTo(value: number) {
@@ -262,7 +227,7 @@ export function LightControl({
         aria-pressed={isOn}
         aria-busy={pending != null}
         aria-label={`${label}: ${status}`}
-        onClick={() => void tap()}
+        onClick={tap}
         {...swipe}
       >
         {color && shownPct != null && (

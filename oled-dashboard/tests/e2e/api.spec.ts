@@ -29,8 +29,12 @@ test("GET /api/entities resolves the lights by room", async ({ request }) => {
     id: "living_room",
     name: "Living Room",
     lights: ["light.living_room", "light.living_room_fireplace", "light.lady_lamp", "light.living_room_floor_lamp"],
+    cameras: [],
   });
   expect(body.rooms[2].lights).toEqual(["light.backyard", "light.front_yard", "light.front_porch"]);
+  // The porch camera is outside with them (0.144); the RTSP one is in no area.
+  expect(body.rooms[2].cameras).toEqual(["camera.front_porch_high"]);
+  expect(body.rooms.flatMap((r: { cameras: string[] }) => r.cameras)).toEqual(["camera.front_porch_high"]);
 });
 
 test("GET /api/home/climate names the thermostats by climate_names", async ({ request }) => {

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef } from "react";
-import { Dialog, Drawer } from "@chakra-ui/react";
+import { Dialog, Drawer, mergeRefs } from "@chakra-ui/react";
 import { useBottomDrawer } from "../hooks/useBottomDrawer";
 import { PAGE_GUTTER } from "../lib/navMetrics";
 
@@ -204,16 +204,25 @@ function useSwipeToClose(
   }, [ref, open, close]);
 }
 
-export function Content({ maxH, pb, css, ...props }: Dialog.ContentProps) {
+/** The caller's `ref` reaches the element either way (0.142: PanelDialog's initial focus). */
+export function Content({
+  ref,
+  maxH,
+  pb,
+  css,
+  ...props
+}: Dialog.ContentProps & { ref?: React.Ref<HTMLDivElement> }) {
   const { drawer, open, close } = useContext(ModalContext);
-  const ref = useRef<HTMLDivElement>(null);
-  useSwipeToClose(ref, drawer && open, close);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useSwipeToClose(sheetRef, drawer && open, close);
   if (!drawer)
-    return <Dialog.Content maxH={maxH} pb={pb} css={css} {...props} />;
+    return (
+      <Dialog.Content ref={ref} maxH={maxH} pb={pb} css={css} {...props} />
+    );
   // A caller's undefined (a dialog-only prop) keeps the sheet's own.
   return (
     <Drawer.Content
-      ref={ref}
+      ref={mergeRefs(sheetRef, ref)}
       roundedTop="surface"
       maxH={maxH ?? SHEET_MAX_H}
       pb={pb ?? "env(safe-area-inset-bottom, 0px)"}

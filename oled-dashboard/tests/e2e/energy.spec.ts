@@ -60,3 +60,39 @@ test("a drawing circuit's bar flows at the pace of its draw, and the bars are pi
   await expect(page.locator("[data-part=track]").first()).toHaveCSS("border-radius", "9999px");
   await expect(ranges.first()).toHaveCSS("border-radius", "9999px");
 });
+
+// 0.142: the Home card's dialog has the page's tabs under its Now section —
+// Solar, today's curve and totals as before, and Circuits, the per-circuit
+// draw. It opens on Solar.
+test("the Home card's dialog has a Circuits tab with the per-circuit draw, under Now", async ({ page }) => {
+  await page.goto("/home");
+  await page.getByRole("button", { name: "Show energy detail" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Energy" })).toBeVisible();
+  // The focus opens on the panel itself, which draws no ring: the card's
+  // trigger is no button, so after a tap Chromium would ring whatever the
+  // dialog focused — the Solar tab, when it was the first tabbable thing.
+  await expect(dialog).toBeFocused();
+  await expect(dialog).toHaveCSS("outline-style", "none");
+  const solar = dialog.getByRole("tab", { name: "Solar" });
+  const circuits = dialog.getByRole("tab", { name: "Circuits" });
+  await expect(solar).toHaveAttribute("aria-selected", "true");
+  await expect(dialog.getByText("Solar produced")).toBeVisible();
+
+  await circuits.click();
+  await expect(circuits).toHaveAttribute("aria-selected", "true");
+  // The house's draw in the title (the stub's main, 1220 W), the circuits
+  // by name with the unmonitored rest last, a drawing one's bar flowing.
+  await expect(dialog.getByRole("heading", { name: "Circuits · 1.2 kW" })).toBeVisible();
+  await expect(dialog.getByText("Heat Pump 1")).toBeVisible();
+  await expect(dialog.getByText("Other", { exact: true })).toBeVisible();
+  await expect(dialog.locator("[data-part=range][data-flowing]").first()).toBeVisible();
+  await expect(dialog.getByText("Solar produced")).toBeHidden();
+  // Now stays above the tabs.
+  await expect(dialog.getByRole("heading", { name: "Now" })).toBeVisible();
+
+  await solar.click();
+  await expect(dialog.getByText("Solar produced")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+});

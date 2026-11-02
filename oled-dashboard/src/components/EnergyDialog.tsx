@@ -5,23 +5,42 @@ import {
   HStack,
   Spinner,
   Stack,
+  Tabs,
   Text,
 } from "@chakra-ui/react";
+import type { IconType } from "react-icons";
+import { MdElectricBolt } from "react-icons/md";
+import { PiSolarRoof } from "react-icons/pi";
+import { useCircuits } from "../hooks/useCircuits";
 import type { HomeEnergy } from "../hooks/useHomeData";
 import type { useEnergyToday } from "../hooks/useEnergyToday";
 import { ENERGY_COLORS, coverage, fmtKwh } from "../lib/energy";
+import { CircuitBreakdown } from "./CircuitBreakdown";
 import { PanelDialog } from "./PanelDialog";
 import { PowerFlow } from "./PowerFlow";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { TodayPowerChart } from "./TodayPowerChart";
 
+/** The tabs under Now: the Energy page's (routes/Energy). */
+const TABS: { value: "solar" | "circuits"; label: string; icon: IconType }[] = [
+  { value: "solar", label: "Solar", icon: PiSolarRoof },
+  { value: "circuits", label: "Circuits", icon: MdElectricBolt },
+];
+
 /**
- * The energy card's detail: where the power is going now (PowerFlow), today's
- * power curve, and today's totals, each split by the grid: the solar into
- * what the house used and what went out, the house's use into what the
- * solar covered and what came in. The curve and the split come from
- * /api/energy/today — the card's query, handed in, since the card draws the
- * curve too; until it answers the totals stand alone.
+ * The energy card's detail: where the power is going now (PowerFlow), then
+ * the Energy page's two tabs (0.142, the user's ask). Solar is today's power
+ * curve and today's totals, each split by the grid: the solar into what the
+ * house used and what went out, the house's use into what the solar covered
+ * and what came in. Circuits is every monitored circuit's draw right now
+ * (CircuitBreakdown, from /api/circuits every 10s while the tab is up — it
+ * mounts when first opened, and the dialog unmounts on close), the house's
+ * draw in its title as on the page's card. The dialog opens on Solar each
+ * time: the tab isn't in the URL, as the dialog isn't.
+ *
+ * The curve and the split come from /api/energy/today — the card's query,
+ * handed in, since the card draws the curve too; until it answers the totals
+ * stand alone.
  */
 export function EnergyDialog({
   energy,
@@ -51,79 +70,145 @@ export function EnergyDialog({
         </Well>
       </Stack>
 
-      <Stack gap="3">
-        <HStack justify="space-between" align="baseline" gap="3">
-          <SectionTitle>Today</SectionTitle>
-          {used > 0 && (
-            <Text color="fg.muted" whiteSpace="nowrap">
-              Solar covered{" "}
-              <Text as="span" color="fg" fontWeight="semibold">
-                {Math.round(coverage(energy))}%
-              </Text>
-            </Text>
-          )}
-        </HStack>
+      {/* Solar | Circuits. A tab mounts when first opened (lazyMount), so
+          Circuits polls only once looked at. */}
+      <Tabs.Root
+        defaultValue="solar"
+        variant="line"
+        fitted
+        lazyMount
+        display="flex"
+        flexDirection="column"
+        gap="4"
+      >
+        <Tabs.List>
+          {TABS.map((t) => (
+            <Tabs.Trigger key={t.value} value={t.value}>
+              <t.icon />
+              {t.label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
 
-        <Well>
-          {today.data ? (
-            <TodayPowerChart
-              points={today.data.points}
-              start={Date.parse(today.data.start)}
-              end={Date.parse(today.data.end)}
-              live={{
-                production: energy.currentProduction,
-                consumption: energy.currentConsumption,
-              }}
-            />
-          ) : (
-            <Center minH="12rem">
-              {today.isError ? (
-                <Text color="fg.muted">Today's curve isn't available</Text>
-              ) : (
-                <Spinner aria-label="Loading today's power" />
+        <Tabs.Content value="solar" p="0">
+          <Stack gap="3">
+            <HStack justify="space-between" align="baseline" gap="3">
+              <SectionTitle>Today</SectionTitle>
+              {used > 0 && (
+                <Text color="fg.muted" whiteSpace="nowrap">
+                  Solar covered{" "}
+                  <Text as="span" color="fg" fontWeight="semibold">
+                    {Math.round(coverage(energy))}%
+                  </Text>
+                </Text>
               )}
-            </Center>
-          )}
-        </Well>
+            </HStack>
 
-        <Well>
-          <Stack gap="5">
-            <Split
-              label="Solar produced"
-              total={produced}
-              parts={
-                self == null
-                  ? null
-                  : [
-                      { label: "used at home", value: self, color: "solar" },
-                      {
-                        label: "sent to grid",
-                        value: produced - self,
-                        color: "export",
-                      },
-                    ]
-              }
-            />
-            <Split
-              label="Home used"
-              total={used}
-              parts={
-                self == null
-                  ? null
-                  : [
-                      { label: "from solar", value: self, color: "solar" },
-                      {
-                        label: "from grid",
-                        value: used - self,
-                        color: "import",
-                      },
-                    ]
-              }
-            />
+            <Well>
+              {today.data ? (
+                <TodayPowerChart
+                  points={today.data.points}
+                  start={Date.parse(today.data.start)}
+                  end={Date.parse(today.data.end)}
+                  live={{
+                    production: energy.currentProduction,
+                    consumption: energy.currentConsumption,
+                  }}
+                />
+              ) : (
+                <Center minH="12rem">
+                  {today.isError ? (
+                    <Text color="fg.muted">Today's curve isn't available</Text>
+                  ) : (
+                    <Spinner aria-label="Loading today's power" />
+                  )}
+                </Center>
+              )}
+            </Well>
+
+            <Well>
+              <Stack gap="5">
+                <Split
+                  label="Solar produced"
+                  total={produced}
+                  parts={
+                    self == null
+                      ? null
+                      : [
+                          {
+                            label: "used at home",
+                            value: self,
+                            color: "solar",
+                          },
+                          {
+                            label: "sent to grid",
+                            value: produced - self,
+                            color: "export",
+                          },
+                        ]
+                  }
+                />
+                <Split
+                  label="Home used"
+                  total={used}
+                  parts={
+                    self == null
+                      ? null
+                      : [
+                          { label: "from solar", value: self, color: "solar" },
+                          {
+                            label: "from grid",
+                            value: used - self,
+                            color: "import",
+                          },
+                        ]
+                  }
+                />
+              </Stack>
+            </Well>
           </Stack>
-        </Well>
-      </Stack>
+        </Tabs.Content>
+
+        <Tabs.Content value="circuits" p="0">
+          <CircuitsTab />
+        </Tabs.Content>
+      </Tabs.Root>
     </PanelDialog>
+  );
+}
+
+/**
+ * The Circuits tab: the page's CircuitsCard as a dialog section — the
+ * house's draw in the title, the per-circuit bars in a well; a spinner until
+ * /api/circuits answers, a line if it can't. Its own component so the poll
+ * runs only while the tab is mounted.
+ */
+function CircuitsTab() {
+  const { data, isError } = useCircuits();
+  const totalWatts = data?.totalWatts ?? null;
+  return (
+    <Stack gap="3">
+      <SectionTitle>
+        Circuits
+        {totalWatts != null ? ` · ${(totalWatts / 1000).toFixed(1)} kW` : ""}
+      </SectionTitle>
+      <Well>
+        {data ? (
+          <CircuitBreakdown
+            circuits={data.circuits}
+            balanceWatts={data.balanceWatts}
+          />
+        ) : (
+          <Center minH="12rem">
+            {isError ? (
+              <Text color="fg.muted">The circuits aren't available</Text>
+            ) : (
+              <Spinner aria-label="Loading circuits" />
+            )}
+          </Center>
+        )}
+      </Well>
+    </Stack>
   );
 }
 

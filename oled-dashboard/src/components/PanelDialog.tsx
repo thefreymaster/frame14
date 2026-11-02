@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Portal } from "@chakra-ui/react";
 import { useBottomDrawer } from "../hooks/useBottomDrawer";
 import { PAGE_GUTTER } from "../lib/navMetrics";
@@ -19,6 +20,14 @@ import { CloseButton } from "./ui/close-button";
  * iPhone, a full-height panel once put its close button under the status bar,
  * where it couldn't be tapped, and there was no outside left to tap instead.
  * A phone's drawer keeps clear of them itself (Modal).
+ *
+ * It opens with the focus on the panel itself (0.142), which draws no ring
+ * (the recipes' `outline: 0`). The library's choice is the first tabbable
+ * thing inside, and Chromium paints a focus ring on whatever a script
+ * focuses when nothing held the focus before — the energy card's trigger is
+ * no button, so a tap on it leaves none — which put a ring on the energy
+ * detail's Solar tab the moment it opened, and on its close button before
+ * the tabs.
  */
 export function PanelDialog({
   open,
@@ -32,6 +41,7 @@ export function PanelDialog({
   children: React.ReactNode;
 }) {
   const drawer = useBottomDrawer();
+  const contentRef = useRef<HTMLDivElement>(null);
   const inset = (side: string) =>
     drawer
       ? undefined
@@ -46,6 +56,7 @@ export function PanelDialog({
       placement="center"
       size="lg"
       scrollBehavior="inside"
+      initialFocusEl={() => contentRef.current}
       lazyMount
       unmountOnExit
     >
@@ -57,7 +68,7 @@ export function PanelDialog({
           pl={inset("left")}
           pr={inset("right")}
         >
-          <Modal.Content maxH={drawer ? undefined : "100%"}>
+          <Modal.Content ref={contentRef} maxH={drawer ? undefined : "100%"}>
             <Modal.Header>
               <Modal.Title>{title}</Modal.Title>
             </Modal.Header>

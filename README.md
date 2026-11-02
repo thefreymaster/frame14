@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="oled-dashboard/icon.png" alt="" width="96" height="96">
+  <img src="frame14/icon.png" alt="" width="96" height="96">
 </p>
 
 # Home Assistant Add-on: Frame14
@@ -194,7 +194,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 
 ## Home Assistant automation (motion)
 
-`oled-dashboard/ha-automation.yaml` is a reference automation: it calls `GET /api/change/:view` to switch the frames' view when motion is detected or times out. The add-on's own motion watcher also puts the frames back on the view they were last sent to when the kitchen sensor trips — unless they are on a game, a movie poster or the Halloween page, which stay up until they end on their own.
+`frame14/ha-automation.yaml` is a reference automation: it calls `GET /api/change/:view` to switch the frames' view when motion is detected or times out. The add-on's own motion watcher also puts the frames back on the view they were last sent to when the kitchen sensor trips — unless they are on a game, a movie poster or the Halloween page, which stay up until they end on their own.
 
 The frames' screen can be turned off and on the same way: `GET /api/screen/off` and `GET /api/screen/on` reach a frame running in Fully Kiosk Browser through Fully's JavaScript interface, over the frame's own connection to the add-on, so the automations don't depend on Fully's Remote Admin API or the Fully Kiosk integration. In Fully, turn on **Enable JavaScript Interface** (Settings › Advanced Web Settings) and **Prevent Device from Sleep while Screen Off** (Settings › Device Management), so the tablet keeps its connection while the screen is dark. Then, in `configuration.yaml`:
 
@@ -214,16 +214,16 @@ A remote (a phone) and any browser outside Fully ignore the command. The Setting
 
 ## Changelog & releases
 
-Every version is on the [Releases][releases] page with its notes, and in the add-on's **Changelog** tab in Home Assistant ([CHANGELOG.md](oled-dashboard/CHANGELOG.md)). The Release workflow publishes a version the moment its bump lands on `main`; the add-on store picks it up on its next check, or at once from **Check for updates** on the dashboard's Software card.
+Every version is on the [Releases][releases] page with its notes, and in the add-on's **Changelog** tab in Home Assistant ([CHANGELOG.md](frame14/CHANGELOG.md)). The Release workflow publishes a version the moment its bump lands on `main`; the add-on store picks it up on its next check, or at once from **Check for updates** on the dashboard's Software card.
 
 ## Local development
 
 ```bash
-cd oled-dashboard
+cd frame14
 npm install
 ```
 
-Copy `.env.example` to `.env` and fill in your values. `frame14.json` in `oled-dashboard/` holds the entity config outside the add-on (same fields as the options above, camel-cased):
+Copy `.env.example` to `.env` and fill in your values. `frame14.json` in `frame14/` holds the entity config outside the add-on (same fields as the options above, camel-cased):
 
 ```json
 {

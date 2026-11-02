@@ -593,6 +593,7 @@ to confirm landscape still works.
 
 ## Home Assistant Addon
 
+- The add-on's folder is `frame14/` (`oled-dashboard/` until 2026-11-02 — a rename the Supervisor doesn't notice: it finds an add-on by its `slug`, `frame14`, under the repository's hash, never by the folder. **Never change `slug`**: every install would see a different add-on and need it installed and configured again)
 - `config.yaml` — addon manifest (arch, ports, options schema including all entity ID fields)
 - Ingress (`ingress: true`, `ingress_port: 8099`) is only a doorway: HA's Open Web UI button and the sidebar entry load the add-on in an iframe under `/api/hassio_ingress/<token>/`, and the dashboard can't run under that prefix (root-relative assets, API and socket). So index.js listens on `ingress_port` (read from config.yaml by `config.js`, add-on only) with `routes/ingress.js`, which sends the tab on to the `web_ui_url` option. With `host_network: true` that port is on the HA host itself; nothing listening there is what gave the Cloudflare "Bad gateway" before 0.60.0
 - `CHANGELOG.md` — addon changelog, rendered in the Home Assistant addon UI
@@ -600,17 +601,17 @@ to confirm landscape still works.
 - `Dockerfile` — multi-stage build; the runtime stage copies the server's root files **by name** (plus `routes/`), so a new root module (e.g. `ha-proxy.js`, `printer-entities.js`) must be added to that COPY line or the add-on dies on start
 - `ha-automation.yaml` — example motion sensor automation
 - `README.md` (the repo root; the add-on folder has none) — the add-on's page on GitHub, in the shape of the official add-on READMEs (2026-10-29, the user's ask): the icon over "Home Assistant Add-on: Frame14"; shields (the latest GitHub release as `version`, the Build and Release workflows' status as `build` / `release`, maintenance, the Home Assistant add-on badge, the four arch badges); the My Home Assistant buttons — add the repository, and open the add-on, whose slug `a49505b0_frame14` is the first 8 hex of sha1 of the repository URL lower-cased (the Supervisor's rule; an instance holding the repo under its old name `ha-oled-frame` has `a93886c7_frame14` instead, and config.yaml's `url` still names that old URL, which GitHub redirects); About, Installation, every option in grouped tables with examples, the pages, the motion automation, Changelog & releases, Local development, Authors
-- `.github/workflows/build.yml` — Build: `npm ci`, `npm run lint` and `npm run build` in oled-dashboard on every push to main and every PR (Node 24, the Dockerfile's); the README's build badge
+- `.github/workflows/build.yml` — Build: `npm ci`, `npm run lint` and `npm run build` in frame14 on every push to main and every PR (Node 24, the Dockerfile's); the README's build badge
 - `.github/workflows/test.yml` — Tests: `unit` (`npm test`) and `e2e` (`npm run build`, `npx playwright install --with-deps chromium`, `npm run test:e2e`, the report kept on failure) on every push to main and every PR; the README's tests badge. See "Tests"
-- `.github/workflows/release.yml` — Release (2026-10-29, the user: "releases ... published on GitHub too"): on every push to main (and by hand, workflow_dispatch) it reads config.yaml's `version` and, when no `v<version>` release exists yet, publishes one at that commit — tag and title `v<version>`, the CHANGELOG's `## <version>` section as the notes (`gh release create` with the workflow's own token; `contents: write`). A push without a bump does nothing. The add-on store never reads releases — they are the GitHub side of a version; the Supervisor still reads config.yaml on main. `oled-dashboard/.github/workflows/bump-version.yml` is dead: not at the repo root, GitHub never ran it
+- `.github/workflows/release.yml` — Release (2026-10-29, the user: "releases ... published on GitHub too"): on every push to main (and by hand, workflow_dispatch) it reads config.yaml's `version` and, when no `v<version>` release exists yet, publishes one at that commit — tag and title `v<version>`, the CHANGELOG's `## <version>` section as the notes (`gh release create` with the workflow's own token; `contents: write`). A push without a bump does nothing. The add-on store never reads releases — they are the GitHub side of a version; the Supervisor still reads config.yaml on main. `frame14/.github/workflows/bump-version.yml` is dead: not at the repo root, GitHub never ran it
 
 ## Changelog (required for every user-visible change)
 
-Home Assistant renders `oled-dashboard/CHANGELOG.md` in the addon's Changelog tab, so **always** update it — never leave a version bump undocumented.
+Home Assistant renders `frame14/CHANGELOG.md` in the addon's Changelog tab, so **always** update it — never leave a version bump undocumented.
 
-1. Bump `version` in `oled-dashboard/config.yaml` (semver; patch for fixes, minor for features).
+1. Bump `version` in `frame14/config.yaml` (semver; patch for fixes, minor for features).
    Several unrelated requests made in one sitting may share one version and one section (the user's word, 2026-10-29: "when there are unrelated requests, you can group them into one release") — one bullet per change; still one version per published build.
-2. Add a new section at the **top** of `oled-dashboard/CHANGELOG.md`:
+2. Add a new section at the **top** of `frame14/CHANGELOG.md`:
    ```markdown
    ## 0.33.0
 

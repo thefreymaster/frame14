@@ -1,21 +1,29 @@
 import { useState, useEffect } from "react";
 
+type Luminance = "dark" | "light";
+
 /**
  * Samples the top-left region of an image and returns whether it is
  * perceptually "dark" or "light". Returns null while loading.
  *
  * regionFraction controls what fraction of the image (width × height) is
  * sampled — should match roughly where the overlay sits.
+ *
+ * The sample is kept with the url it was taken from, and a url it wasn't is
+ * null: so a new url reads null at once, with nothing to reset in the effect
+ * (which only sets state from the image's load).
  */
 export function useRegionLuminance(
   url: string | null,
-  regionFraction = { w: 0.35, h: 0.45 }
-): "dark" | "light" | null {
-  const [result, setResult] = useState<"dark" | "light" | null>(null);
+  regionFraction = { w: 0.35, h: 0.45 },
+): Luminance | null {
+  const [sample, setSample] = useState<{
+    url: string;
+    result: Luminance;
+  } | null>(null);
 
   useEffect(() => {
     if (!url) return;
-    setResult(null);
 
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -41,11 +49,15 @@ export function useRegionLuminance(
       }
 
       const avg = total / (rw * rh);
-      setResult(avg > 140 ? "light" : "dark");
+      setSample({ url, result: avg > 140 ? "light" : "dark" });
     };
 
     img.src = url;
+    // A load landing after the url has moved on is not this url's.
+    return () => {
+      img.onload = null;
+    };
   }, [url, regionFraction.w, regionFraction.h]);
 
-  return result;
+  return sample && sample.url === url ? sample.result : null;
 }

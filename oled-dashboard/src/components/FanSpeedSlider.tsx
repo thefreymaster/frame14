@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { HStack, Icon, Text } from "@chakra-ui/react";
 import { MdAir } from "react-icons/md";
 import { Slider } from "./ui/slider";
@@ -11,7 +12,15 @@ function fanModeLabel(mode: string) {
 /**
  * A Chakra Slider over a climate entity's fan_modes, one step per mode.
  * Dragging updates the label; the service call fires on release
- * (onValueChangeEnd), so a drag sends one command.
+ * (onValueChangeEnd), so a drag sends one command. The mode committed is the
+ * last one the change handler saw (0.144.1): on a keyboard step the
+ * slider's change-end carries the value from before the step — zag reads it
+ * before the step has landed — so each arrow press committed the press
+ * before's mode, one behind; a drag's release carries its own, the same
+ * either way. The thumb stays inside the track (`thumbAlignment` contain,
+ * 0.144.1), so the end marks — under the thumb's centre at its stops, see
+ * ui/slider — sit inside the track's rounded ends too, rather than
+ * straddling them.
  */
 export function FanSpeedSlider({
   modes,
@@ -33,6 +42,8 @@ export function FanSpeedSlider({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
+  // The mode the last change put up, for the change-end to commit.
+  const lastChanged = useRef<string | null>(null);
   if (modes.length === 0) return null;
   const activeIndex = Math.max(0, modes.indexOf(value ?? ""));
   const single = modes.length === 1;
@@ -48,6 +59,7 @@ export function FanSpeedSlider({
         min={0}
         max={single ? 1 : modes.length - 1}
         step={1}
+        thumbAlignment="contain"
         value={[activeIndex]}
         disabled={disabled || single}
         aria-label={["Fan speed"]}
@@ -55,11 +67,13 @@ export function FanSpeedSlider({
         onValueChange={(d) => {
           onDragStart();
           const next = modes[d.value[0]];
+          lastChanged.current = next ?? null;
           if (next && next !== value) onChange(next);
         }}
         onValueChangeEnd={(d) => {
           onDragEnd();
-          const next = modes[d.value[0]];
+          const next = lastChanged.current ?? modes[d.value[0]];
+          lastChanged.current = null;
           if (next) onCommit(next);
         }}
         marks={single ? undefined : modes.map((_, i) => i)}

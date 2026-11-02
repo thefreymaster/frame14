@@ -35,7 +35,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
             <ChakraSlider.Range />
           </ChakraSlider.Track>
           <SliderThumbs value={value} />
-          <SliderMarks marks={marks} />
+          <SliderMarks marks={marks} vertical={rest.orientation === "vertical"} />
         </ChakraSlider.Control>
       </ChakraSlider.Root>
     );
@@ -57,15 +57,27 @@ function SliderThumbs(props: { value?: number[] }) {
 
 interface SliderMarksProps {
   marks?: Array<number | { value: number; label: React.ReactNode }>;
+  vertical?: boolean;
 }
 
+// The marks sit where the thumb's centre stops (0.144.1): Chakra's recipe
+// insets the marker group a few px from each end of the track along its
+// axis (`--slider-marker-inset`, so an end dot stays inside the rounded
+// end), while the thumb's offsets run the control's whole length — so a
+// mark at either end sat 4px off the thumb over it (the user: "the fan
+// sliders dots are not centered"). With the inset gone, both share the
+// control's length, whatever the thumb alignment.
 const SliderMarks = React.forwardRef<HTMLDivElement, SliderMarksProps>(
   function SliderMarks(props, ref) {
-    const { marks } = props;
+    const { marks, vertical = false } = props;
     if (!marks?.length) return null;
 
     return (
-      <ChakraSlider.MarkerGroup ref={ref}>
+      <ChakraSlider.MarkerGroup
+        ref={ref}
+        insetInline={vertical ? undefined : "0"}
+        insetBlock={vertical ? "0" : undefined}
+      >
         {marks.map((mark, index) => {
           const value = typeof mark === "number" ? mark : mark.value;
           const label = typeof mark === "number" ? undefined : mark.label;

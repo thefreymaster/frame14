@@ -212,9 +212,12 @@ export function useEntities<A = Record<string, unknown>>(
   entityIds: readonly string[],
 ) {
   const qc = useQueryClient();
+  // Memoised on the joined ids, not the array — a fresh array with the same
+  // ids mustn't re-subscribe — and read back from the key, so the memo's one
+  // input is its one dependency.
   const entityKey = entityIds.join("\0");
   const normalizedEntityIds = useMemo(
-    () => normalizeEntityIds(entityIds),
+    () => normalizeEntityIds(entityKey ? entityKey.split("\0") : []),
     [entityKey],
   );
 

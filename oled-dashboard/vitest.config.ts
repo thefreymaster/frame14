@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 
 // Dates in the tests are reasoned about in one zone, whatever machine runs
 // them (fmtWhen's "Yesterday", the advisories' "tonight").
@@ -12,7 +13,9 @@ export default defineConfig({
   test: {
     projects: [
       {
-        plugins: [react()],
+        // Compiled as the build is (vite.config.ts): the tests run the
+        // components the React Compiler makes of them.
+        plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
         test: {
           name: "client",
           environment: "jsdom",

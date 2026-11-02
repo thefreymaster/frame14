@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.144.1
+
+- Fixed: the dots along the fan speed slider in a thermostat's controls sit under the thumb's stops. The first and last were a few pixels off the thumb; the thumb now also stays inside the track at either end, with the end dots under it.
+- Fixed: stepping a thermostat's fan speed with the keyboard's arrows sent the speed before the press, one step behind; each press now sends its own. And a quick run of changes — presses, or two drags — no longer snaps back to an earlier speed when Home Assistant reports that one late: the slider holds what it sent until it comes back.
+- Changed: the app is built with the React Compiler, which memoises every component for it, and its dependencies are brought up to date (React 19.3, React Router 8, ESLint 10 and Vite 8.3 among them).
+
 ## 0.144.0
 
 - Added: every camera on the Cameras page goes full screen — the button at the right of its card's header — with the lights of the camera's room as icon buttons in the dialog's header: the lights and switches the add-on is configured with that sit in the same Home Assistant area as the camera (the Lights page's rooms), each in its colour while on, a tap turning it off or on as a Lights tile does. The printer's camera goes full screen too, with its chamber light. Escape or the close button brings the picture back to the card. The front-door pop-up — the card that comes up when someone is seen at the door — has the button too: its full screen takes the card's place, stays up as long as you watch, and closing it dismisses the card.

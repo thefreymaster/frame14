@@ -29,17 +29,4 @@ export default defineConfig([
       '@typescript-eslint/no-empty-object-type': 'off',
     },
   },
-  {
-    // React Compiler findings in the data hooks, which predate the Chakra
-    // rebuild and are left as they are; reported, not failed.
-    files: [
-      'src/hooks/useEntity.ts',
-      'src/hooks/useHomeData.ts',
-      'src/hooks/useRegionLuminance.ts',
-    ],
-    rules: {
-      'react-hooks/preserve-manual-memoization': 'warn',
-      'react-hooks/set-state-in-effect': 'warn',
-    },
-  },
 ])

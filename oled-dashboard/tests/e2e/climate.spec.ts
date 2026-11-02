@@ -77,6 +77,40 @@ test.describe("the Climate page", () => {
     await expect(page.getByRole("button", { name: /^1st Floor AC: 64°, Heating to 71°/ })).toBeVisible();
   });
 
+  test("the fan speed slider's marks sit under the thumb's stops, inside the track (0.144.1)", async ({ page }) => {
+    await page.goto("/climate");
+    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    const dialog = page.getByRole("dialog");
+    const thumb = dialog.getByRole("slider", { name: "Fan speed" });
+    await expect(thumb).toBeVisible();
+    const marks = dialog.locator('[data-part="marker"]');
+    // The stub's five fan modes, auto to turbo.
+    await expect(marks).toHaveCount(5);
+    // Measured once the dialog's enter animation has played: the desktop's
+    // scale-in draws everything a few px towards its centre meanwhile. The
+    // dialog's own animations alone — the dial's pulse inside never ends.
+    await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+    const track = (await dialog.locator('[data-part="track"]').boundingBox())!;
+    const centreOf = async (box: Promise<{ x: number; width: number } | null>) => {
+      const b = await box;
+      return b ? b.x + b.width / 2 : NaN;
+    };
+    // Home, then a step at a time to the end: the thumb's centre on each mark
+    // (the ends included, where Chakra's own inset put them 4px apart) and
+    // the thumb never past the track's ends.
+    await thumb.press("Home");
+    for (let i = 0; i < 5; i++) {
+      if (i > 0) await thumb.press("ArrowRight");
+      await expect(thumb).toHaveAttribute("aria-valuenow", String(i));
+      await expect
+        .poll(async () => Math.abs((await centreOf(thumb.boundingBox())) - (await centreOf(marks.nth(i).boundingBox()))))
+        .toBeLessThan(0.5);
+      const box = (await thumb.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(track.x - 0.5);
+      expect(box.x + box.width).toBeLessThanOrEqual(track.x + track.width + 0.5);
+    }
+  });
+
   test("a desktop's tiles show the temperature a size larger", async ({ page, isMobile }) => {
     test.skip(isMobile, "a phone's tiles are the squares at the md size");
     await page.goto("/climate");

@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HomeClimate } from "../../src/hooks/useHomeData";
 import { renderWithProviders } from "./helpers/render";
@@ -87,5 +87,75 @@ describe("ClimateControls' −/+ buttons", () => {
       <ClimateControls unit={unit({ state: "fan_only", hvacMode: "fan_only", hvacAction: "fan" })} />,
     );
     expect(screen.queryByRole("button", { name: /target temperature/ })).toBeNull();
+  });
+});
+
+describe("ClimateControls' fan speed", () => {
+  const fanUnit = (fanMode = "auto") =>
+    unit({ fanMode, fanModes: ["auto", "low", "medium", "high"] });
+  // By its label attribute: the thumb's aria-labelledby names a label the
+  // slider hasn't got, which jsdom's name computation stops at; and it stays
+  // `visibility: hidden` here (a contained thumb shows once its size is
+  // measured, which needs a ResizeObserver that fires).
+  const thumb = () => {
+    const el = document.querySelector('[data-part="thumb"][aria-label="Fan speed"]');
+    if (!el) throw new Error("no fan speed thumb");
+    return el;
+  };
+
+  it("holds a mode it sent until Home Assistant reports it, an older echo not snapping it back", async () => {
+    const { rerender } = renderWithProviders(<ClimateControls unit={fanUnit()} />);
+    // Two steps, each sent.
+    await act(async () => {
+      // The keys count once the thumb has the focus.
+      fireEvent.focus(thumb());
+      fireEvent.keyDown(thumb(), { key: "ArrowRight" });
+    });
+    expect(calls.callClimateService).toHaveBeenLastCalledWith("climate.first_floor", "set_fan_mode", { fan_mode: "low" });
+    await act(async () => {
+      // The keys count once the thumb has the focus.
+      fireEvent.focus(thumb());
+      fireEvent.keyDown(thumb(), { key: "ArrowRight" });
+    });
+    expect(calls.callClimateService).toHaveBeenLastCalledWith("climate.first_floor", "set_fan_mode", { fan_mode: "medium" });
+    expect(thumb()).toHaveAttribute("aria-valuenow", "2");
+
+    // The first step's echo lands after the second went: the slider stays.
+    rerender(<ClimateControls unit={fanUnit("low")} />);
+    expect(thumb()).toHaveAttribute("aria-valuenow", "2");
+    // The second's: in step, and following Home Assistant again.
+    rerender(<ClimateControls unit={fanUnit("medium")} />);
+    expect(thumb()).toHaveAttribute("aria-valuenow", "2");
+    rerender(<ClimateControls unit={fanUnit("high")} />);
+    expect(thumb()).toHaveAttribute("aria-valuenow", "3");
+  });
+
+  it("a step back to the mode Home Assistant still has is sent too", async () => {
+    renderWithProviders(<ClimateControls unit={fanUnit()} />);
+    await act(async () => {
+      // The keys count once the thumb has the focus.
+      fireEvent.focus(thumb());
+      fireEvent.keyDown(thumb(), { key: "ArrowRight" });
+    });
+    await act(async () => {
+      fireEvent.focus(thumb());
+      fireEvent.keyDown(thumb(), { key: "ArrowLeft" });
+    });
+    expect(calls.callClimateService.mock.calls.map((c) => c[2])).toEqual([{ fan_mode: "low" }, { fan_mode: "auto" }]);
+  });
+
+  it("gives a mode up after 10s without Home Assistant reporting it", async () => {
+    const { rerender } = renderWithProviders(<ClimateControls unit={fanUnit()} />);
+    await act(async () => {
+      // The keys count once the thumb has the focus.
+      fireEvent.focus(thumb());
+      fireEvent.keyDown(thumb(), { key: "ArrowRight" });
+    });
+    rerender(<ClimateControls unit={fanUnit()} />);
+    expect(thumb()).toHaveAttribute("aria-valuenow", "1");
+    await act(async () => {
+      vi.advanceTimersByTime(10_000);
+    });
+    expect(thumb()).toHaveAttribute("aria-valuenow", "0");
   });
 });

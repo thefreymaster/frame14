@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Box, IconButton, Spinner, Text } from "@chakra-ui/react";
 import { SURFACE_SHADOW } from "../lib/floatingSurface";
 import {
@@ -215,11 +215,12 @@ export function Photos() {
     return () => clearTimeout(id);
   }, [album, currentAssetId]);
 
-  // On to the next photo (a tap, the next_photo event, the right arrow)
-  function advancePhoto() {
+  // On to the next photo (a tap, the next_photo event, the right arrow).
+  // Memoised on the album, so the listeners below are bound once per album.
+  const advancePhoto = useCallback(() => {
     if (!album || album.assets.length === 0) return;
     setCurrentId((prev) => nextAfter(album.assets, prev));
-  }
+  }, [album]);
 
   // Next photo on the next_photo socket event
   useEffect(() => {
@@ -227,7 +228,7 @@ export function Photos() {
     return () => {
       socket.off("next_photo", advancePhoto);
     };
-  }, [album]);
+  }, [advancePhoto]);
 
   // Right arrow key advances photo in landscape mode
   useEffect(() => {
@@ -252,7 +253,7 @@ export function Photos() {
       window.removeEventListener("keydown", onKeyDown);
       mql.removeEventListener("change", onOrientationChange);
     };
-  }, [album]);
+  }, [advancePhoto]);
 
   if (configPending) {
     return (

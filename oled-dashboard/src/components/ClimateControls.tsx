@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { HStack, IconButton, SegmentGroup, Text, VStack } from "@chakra-ui/react";
 import { IoAdd, IoRemove } from "react-icons/io5";
@@ -68,6 +68,9 @@ const modeControlCss = {
  */
 const STEP_COMMIT_MS = 800;
 
+/** How long a fan mode sent is held for Home Assistant to report it back. */
+const FAN_ECHO_MS = 10_000;
+
 /**
  * One thermostat's controls: the draggable ThermostatDial (the one hand-drawn
  * control) with its readout and −/+ buttons, the mode SegmentGroup (Heat /
@@ -85,11 +88,17 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
   const [mode, setMode] = useState<ClimateVisualMode>(remote.mode);
   const [temp, setTemp] = useState(remote.temp);
   const [fanMode, setFanMode] = useState<string | null>(remote.fanMode);
+  // A fan mode sent and not yet reported back (0.144.1): Home Assistant's
+  // echo of an older one — the step before's, landing after the next step
+  // went — mustn't snap the slider back meanwhile. Cleared when the mode
+  // comes back, or given up after FAN_ECHO_MS.
+  const [sentFan, setSentFan] = useState<string | null>(null);
   const [draggingTemp, setDraggingTemp] = useState(false);
   const [draggingFan, setDraggingFan] = useState(false);
   const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Follow Home Assistant, except for whatever is under a finger right now.
+  // Follow Home Assistant, except for whatever is under a finger right now,
+  // or sent and not yet reported.
   if (
     seen.mode !== remote.mode ||
     seen.temp !== remote.temp ||
@@ -98,8 +107,21 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
     setSeen(remote);
     setMode(remote.mode);
     if (!draggingTemp) setTemp(remote.temp);
-    if (!draggingFan) setFanMode(remote.fanMode);
+    if (!draggingFan && sentFan == null) setFanMode(remote.fanMode);
   }
+  if (sentFan != null && remote.fanMode === sentFan) setSentFan(null);
+
+  // Give the mode up if it never comes back: the slider follows Home
+  // Assistant again.
+  const remoteFanMode = remote.fanMode;
+  useEffect(() => {
+    if (sentFan == null) return;
+    const timer = setTimeout(() => {
+      setSentFan(null);
+      setFanMode(remoteFanMode);
+    }, FAN_ECHO_MS);
+    return () => clearTimeout(timer);
+  }, [sentFan, remoteFanMode]);
 
   const activeAction = getClimateAction(mode, unit, temp);
   const isOff = mode === "off";
@@ -198,7 +220,10 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
   }
 
   function commitFanMode(newFanMode: string) {
-    if (newFanMode === unit.fanMode) return;
+    // Against the mode last sent, while one is out: a step back to Home
+    // Assistant's old mode is a change it has yet to hear of.
+    if (newFanMode === (sentFan ?? unit.fanMode)) return;
+    setSentFan(newFanMode);
     callClimateService(unit.entity_id, "set_fan_mode", {
       fan_mode: newFanMode,
     });

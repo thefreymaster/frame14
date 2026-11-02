@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   buildLightSections,
+  LIGHT_TILE_COLUMNS_CARD,
   LIGHT_TILE_COLUMNS_FLUID,
+  lightEntry,
+  sortLightEntries,
   sortLightSections,
   displayLightName,
 } from "../../src/lib/lightsConfig";
@@ -151,5 +154,31 @@ describe("the tile columns", () => {
     expect(displayLightName("Living Room")).toBe("Living Room");
     expect(displayLightName("Lights")).toBe("Lights");
     expect(displayLightName("Lightsaber Lamp")).toBe("Lightsaber Lamp");
+  });
+});
+
+describe("lightEntry", () => {
+  it("names a tile from its id and picks its icons by domain", () => {
+    const lamp = lightEntry("light.lady_lamp");
+    expect(lamp.name).toBe("Lady Lamp");
+    expect(lamp.Icon).not.toBe(lamp.ActiveIcon);
+    const plug = lightEntry("switch.ihome_smartplug_05b4df_outlet");
+    expect(plug.name).toBe("Ihome Smartplug 05b4df Outlet");
+    expect(plug.Icon).toBe(plug.ActiveIcon);
+  });
+});
+
+describe("sortLightEntries", () => {
+  it("puts the entries in order of the name shown, ignoring case, numbers in order", () => {
+    const entries = ["light.lamp_10", "light.b", "light.lamp_2", "light.a"].map(lightEntry);
+    const names: Record<string, string> = { "light.b": "kitchen", "light.a": "Backyard" };
+    const sorted = sortLightEntries(entries, (e) => names[e.entity_id] ?? e.name);
+    expect(sorted.map((e) => e.entity_id)).toEqual(["light.a", "light.b", "light.lamp_2", "light.lamp_10"]);
+    // The given list is left as it was.
+    expect(entries.map((e) => e.entity_id)).toEqual(["light.lamp_10", "light.b", "light.lamp_2", "light.a"]);
+  });
+
+  it("is the card's columns rule, as many 10rem tiles as the card holds", () => {
+    expect(LIGHT_TILE_COLUMNS_CARD).toBe("repeat(auto-fill, minmax(10rem, 1fr))");
   });
 });

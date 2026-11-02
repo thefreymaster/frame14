@@ -238,6 +238,9 @@ export function LightControl({
     <Card.Root
       asChild
       data-light-entry=""
+      // A dimmable tile's hold is its own (the drawer), not the page's: /home's
+      // board leaves a hold that starts here alone (0.143).
+      data-long-press={features.brightness ? "" : undefined}
       size="sm"
       variant="outline"
       borderRadius="sm"

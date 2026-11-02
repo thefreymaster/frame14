@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.143.0
+
+- Added: a Lights card on the Home page, showing the lights and switches that are on right now as the Lights page's tiles — a tap turns one off, a swipe across a dimmable light sets its brightness, a press and hold opens its controls — alphabetical, with the count beside the title and All off in the header. The card is there only while a light is on: turn the last one off and it goes, and it comes back with the next light turned on. Rearrange, resize or hide it as any card; it starts under the Calendar card.
+
 ## 0.142.0
 
 - Added: the Energy dialog the Home card opens has tabs under its Now section, as the Energy page does: Solar — today's curve and totals, as before — and Circuits, every monitored circuit's draw right now, with the house's draw in its title. It opens on Solar.

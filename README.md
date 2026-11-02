@@ -24,7 +24,7 @@ A home dashboard for a tablet on the wall — clock, weather, photos, lights, cl
 
 Frame14 turns a wall-mounted tablet into the house's display and a phone into its remote. It runs as a Home Assistant add-on and follows Home Assistant's WebSocket API, so everything on screen is live.
 
-- **Home** — weather, thermostats, energy, the calendar, fans, the 3D printer and the robot vacuums as cards you can rearrange, resize and hide per device (press and hold).
+- **Home** — weather, thermostats, energy, the calendar, the lights that are on, fans, the 3D printer and the robot vacuums as cards you can rearrange, resize and hide per device (press and hold).
 - **Clock and Photos** — an analog or digital clock, and an Immich album as a slideshow; a remote picks the photo the frames show.
 - **Lights and Climate** — lights and switches grouped by room; thermostats with a dial, mode and fan controls.
 - **Energy** — the power flow now, today's solar curve, month and year history, and the draw per circuit.
@@ -172,7 +172,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | Path | Description |
 |---|---|
 | `/` | Redirects to `/home` |
-| `/home` | Overview: weather, climate, energy, calendar, printer, vacuum, fans; cards rearrange per device (press and hold) |
+| `/home` | Overview: weather, climate, energy, calendar, the lights that are on, printer, vacuum, fans; cards rearrange per device (press and hold) |
 | `/clock` | Analog or digital clock (tap to switch); frame-only nav item |
 | `/lights` | Light and switch controls, grouped by room |
 | `/climate` | The thermostats: dial, mode and fan controls |

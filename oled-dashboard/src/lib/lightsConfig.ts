@@ -31,6 +31,12 @@ export const LIGHT_TILE_COLUMNS = {
  *  rather than the viewport's four, which cut the names short there. */
 export const LIGHT_TILE_COLUMNS_FLUID = "repeat(auto-fill, minmax(8rem, 1fr))";
 
+/** The tiles' columns on /home's Lights card (0.143): as many 10rem-or-wider
+ *  tiles as the card's own width holds — two across a half-width card on the
+ *  frame, the page's two there, and two across a phone's card; more across a
+ *  wider card. */
+export const LIGHT_TILE_COLUMNS_CARD = "repeat(auto-fill, minmax(10rem, 1fr))";
+
 /**
  * A light's name as the tile shows it (0.139, the user: "drop the word lights
  * from any room that has it"): "Kitchen Cabinet Lights" is "Kitchen Cabinet",
@@ -61,6 +67,15 @@ function domainIcons(
   return { Icon: MdOutlineLightbulb, ActiveIcon: MdLightbulb };
 }
 
+/** A light or switch as a tile's entry: its name from its id, its icons from its domain. */
+export function lightEntry(entityId: string): LightEntry {
+  return {
+    entity_id: entityId,
+    name: entityName(entityId),
+    ...domainIcons(entityId),
+  };
+}
+
 /** A room as GET /api/entities gives it (useEntitiesConfig's LightRoom). */
 export type LightRoomLike = { id: string; name: string; lights: string[] };
 
@@ -75,11 +90,6 @@ export function buildLightSections(
   entityIds: string[],
   rooms: LightRoomLike[] = [],
 ): LightSection[] {
-  const entry = (id: string): LightEntry => ({
-    entity_id: id,
-    name: entityName(id),
-    ...domainIcons(id),
-  });
   const ids = new Set(entityIds);
   const placed = new Set<string>();
   const sections: LightSection[] = [];
@@ -87,7 +97,7 @@ export function buildLightSections(
   for (const room of rooms) {
     const entries = room.lights
       .filter((id) => ids.has(id) && !placed.has(id))
-      .map(entry);
+      .map(lightEntry);
     if (entries.length === 0) continue;
     for (const e of entries) placed.add(e.entity_id);
     sections.push({ title: room.name, entries });
@@ -97,7 +107,7 @@ export function buildLightSections(
   const switches: LightEntry[] = [];
   for (const id of entityIds) {
     if (placed.has(id)) continue;
-    (id.startsWith("switch.") ? switches : lights).push(entry(id));
+    (id.startsWith("switch.") ? switches : lights).push(lightEntry(id));
   }
   if (lights.length > 0) {
     sections.push({
@@ -111,22 +121,30 @@ export function buildLightSections(
 }
 
 /**
- * The sections with their entries in alphabetical order of `labelOf` — the
- * name each tile shows (Home Assistant's friendly name once known) — ignoring
- * case, with numbers in order ("Lamp 2" before "Lamp 10"). Since 0.101.
+ * The entries in alphabetical order of `labelOf` — the name each tile shows
+ * (Home Assistant's friendly name once known) — ignoring case, with numbers
+ * in order ("Lamp 2" before "Lamp 10"). The /home card's list (0.143).
+ */
+export function sortLightEntries(
+  entries: LightEntry[],
+  labelOf: (entry: LightEntry) => string,
+): LightEntry[] {
+  const collator = new Intl.Collator(undefined, {
+    sensitivity: "base",
+    numeric: true,
+  });
+  return [...entries].sort((a, b) => collator.compare(labelOf(a), labelOf(b)));
+}
+
+/**
+ * The sections with their entries in that order. Since 0.101.
  */
 export function sortLightSections(
   sections: LightSection[],
   labelOf: (entry: LightEntry) => string,
 ): LightSection[] {
-  const collator = new Intl.Collator(undefined, {
-    sensitivity: "base",
-    numeric: true,
-  });
   return sections.map((section) => ({
     ...section,
-    entries: [...section.entries].sort((a, b) =>
-      collator.compare(labelOf(a), labelOf(b)),
-    ),
+    entries: sortLightEntries(section.entries, labelOf),
   }));
 }

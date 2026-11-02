@@ -27,6 +27,7 @@ export const HOME_CARD_IDS = [
   "climate",
   "fan",
   "calendar",
+  "lights",
   "printer",
   "vacuum",
 ] as const;
@@ -55,6 +56,7 @@ export const HOME_CARDS: Record<
   climate: { label: "Climate" },
   fan: { label: "Fans", hiddenHint: "Shows when fans are set up" },
   calendar: { label: "Calendar" },
+  lights: { label: "Lights", hiddenHint: "Shows while a light is on" },
   printer: { label: "3D printer", hiddenHint: "Shows while printing" },
   vacuum: { label: "Vacuum", hiddenHint: "Shows while cleaning" },
 };
@@ -101,7 +103,9 @@ export const HOME_WIDTHS: Record<HomeGrid, { span: number; label: string }[]> =
 
 // The arrangement /home had before cards could change width: in portrait the
 // clock, the game and the active-only cards across the top and bottom, climate
-// beside a rail of energy and calendar; in landscape two equal columns.
+// beside a rail of energy and calendar; in landscape two equal columns. The
+// Lights card (0.143, active-only too: it shows while a light is on) goes
+// with the printer's and the vacuum's.
 const DEFAULTS: Record<HomeGrid, HomeLayout> = {
   2: [
     { id: "header", span: 2 },
@@ -110,6 +114,7 @@ const DEFAULTS: Record<HomeGrid, HomeLayout> = {
     { id: "radar", span: 1 },
     { id: "energy", span: 1 },
     { id: "calendar", span: 1 },
+    { id: "lights", span: 2 },
     { id: "printer", span: 2 },
     { id: "vacuum", span: 2 },
     { id: "fan", span: 2 },
@@ -122,6 +127,7 @@ const DEFAULTS: Record<HomeGrid, HomeLayout> = {
     { id: "radar", span: 2 },
     { id: "calendar", span: 2 },
     { id: "energy", span: 2 },
+    { id: "lights", span: 2 },
     { id: "printer", span: 2 },
     { id: "vacuum", span: 2 },
   ],

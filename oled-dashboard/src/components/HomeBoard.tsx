@@ -104,7 +104,10 @@ export function HomeBoard({
       navigator.vibrate?.(15);
       setEditing(true);
     },
-    { enabled: !editing },
+    // A hold on a part of a card with a hold of its own — a dimmable light's
+    // tile on the Lights card, whose hold opens its drawer (0.143) — is that
+    // one's; the rest of the card still starts arranging.
+    { enabled: !editing, ignore: "[data-long-press]" },
   );
 
   const sensors = useSensors(

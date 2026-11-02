@@ -1,5 +1,5 @@
 import { Card, Circle, HStack, Icon } from "@chakra-ui/react";
-import { MdDragIndicator } from "react-icons/md";
+import { MdDragIndicator, MdOutlineLightbulb } from "react-icons/md";
 import { HOME_CARDS, type HomeCardId } from "../lib/homeLayout";
 import { IoCalendarOutline, IoFlash, IoPartlySunnyOutline, IoRainyOutline, IoThermometerOutline, IoTrophyOutline } from "react-icons/io5";
 import { PiFan } from "react-icons/pi";
@@ -16,6 +16,7 @@ const CARD_ICON: Record<HomeCardId, IconType> = {
   climate: IoThermometerOutline,
   fan: PiFan,
   calendar: IoCalendarOutline,
+  lights: MdOutlineLightbulb,
   printer: Printer3dOutlineIcon,
   vacuum: TbVacuumCleaner,
 };

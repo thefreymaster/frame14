@@ -20,7 +20,22 @@ export type LongPressHandlers = Partial<{
 
 export function useLongPress(
   onLongPress: () => void,
-  { delayMs = 600, tolerancePx = 10, enabled = true } = {},
+  {
+    delayMs = 600,
+    tolerancePx = 10,
+    enabled = true,
+    ignore,
+  }: {
+    delayMs?: number;
+    tolerancePx?: number;
+    enabled?: boolean;
+    /**
+     * A selector for the parts of the element with a press and hold of their
+     * own (0.143: a light's tile on /home, whose hold opens its drawer): a
+     * press that starts in one is left to it.
+     */
+    ignore?: string;
+  } = {},
 ): LongPressHandlers {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const origin = useRef<{ x: number; y: number } | null>(null);
@@ -39,6 +54,10 @@ export function useLongPress(
     onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
       if (!e.isPrimary || e.button !== 0) return;
       if (!e.currentTarget.contains(e.target as Node)) return;
+      if (ignore) {
+        const own = (e.target as Element).closest?.(ignore);
+        if (own && e.currentTarget.contains(own)) return;
+      }
       cancel();
       origin.current = { x: e.clientX, y: e.clientY };
       timer.current = setTimeout(() => {

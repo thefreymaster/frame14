@@ -48,6 +48,75 @@ test("the 3D printer card shows the job, its status and progress, follows a paus
   await expect(page).toHaveURL(/\/printer$/);
 });
 
+// 0.143: the Lights card — the lights that are on, as the Lights page's tiles.
+test("the Lights card shows the lights that are on as the Lights page's tiles, a tap turns one off, and the last one off takes the card", async ({ page, request }) => {
+  await page.goto("/home");
+  const card = page.locator('[data-card="lights"]');
+  await expect(card.getByRole("heading", { name: "Lights" })).toBeVisible();
+  // The stub's five lights on (the kitchen's plug indicator is a config
+  // entity, not a room's light), alphabetical by the name each tile shows —
+  // the word Light dropped, as on the page — with the brightness of each.
+  await expect(card.getByText("5 on")).toBeVisible();
+  const labels = () => card.locator("[data-light-entry]").evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
+  await expect.poll(labels).toEqual([
+    "Evan’s Office: 100%",
+    "Kid's Hatch: 50%",
+    "Kitchen Cabinet: 35%",
+    "Living Room: 80%",
+    "Movie Theater: 100%",
+  ]);
+  await expect(card.getByRole("button", { name: "Turn off all lights" })).toBeVisible();
+  // The icon set in Home Assistant, drawn as on the page.
+  await expect(card.locator('[data-mdi-icon="theater"]')).toBeVisible();
+
+  // A tap turns a light off; its tile leaves the card once the stub reports it.
+  await card.getByRole("button", { name: /^Living Room: / }).click();
+  await expect(card.getByRole("button", { name: /^Living Room: / })).toHaveCount(0);
+  await expect(card.getByText("4 on")).toBeVisible();
+
+  // The rest off in Home Assistant: nothing on, no card.
+  for (const id of ["light.evans_office", "light.aidens_hatch_light", "light.kitchen_cabinet_lights", "light.movie_theater"]) {
+    await stub(request, "/_stub/state", { entity_id: id, state: "off" });
+  }
+  await expect(card).toBeHidden();
+
+  // And back with the first light on.
+  await stub(request, "/_stub/state", { entity_id: "light.backyard", state: "on" });
+  await expect(card.getByRole("button", { name: "Backyard: On" })).toBeVisible();
+  await expect(card.getByText("1 on")).toBeVisible();
+});
+
+test("a hold on a light's tile opens its drawer, not arranging, and the tile stays while the drawer turns it off", async ({ page }) => {
+  await page.goto("/home");
+  const card = page.locator('[data-card="lights"]');
+  const tile = card.getByRole("button", { name: /^Living Room: / });
+  await expect(tile).toHaveAttribute("aria-label", "Living Room: 80%");
+  await splashGone(page);
+  await tile.scrollIntoViewIfNeeded();
+  const box = (await tile.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(800);
+  await page.mouse.up();
+
+  // The light's drawer, the Lights page's; the board hasn't started arranging.
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Living Room" })).toBeVisible();
+  await expect(dialog.getByRole("slider", { name: "Brightness" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Done" })).toHaveCount(0);
+
+  // Its switch turns the light off: the tile stays while the drawer is up
+  // (the page under a drawer is aria-hidden, so by its attribute), and
+  // leaves with it.
+  await dialog.getByText("On", { exact: true }).click();
+  await expect(dialog.getByText("Light off")).toBeVisible();
+  await expect(card.locator('[data-light-entry][aria-label="Living Room: Off"]')).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(tile).toHaveCount(0);
+  await expect(card.getByText("4 on")).toBeVisible();
+});
+
 test("the navigation reaches every main page", async ({ page }) => {
   await page.goto("/home");
   for (const [label, path] of [

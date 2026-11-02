@@ -151,7 +151,7 @@ describe("shownNavItems", () => {
     expect(shownNavItems(turnedOn, everyday).map((i) => i.path)).not.toContain("/halloween");
   });
 
-  it("leaves both Photos out while Immich isn't set up (1.0.0), and keeps them when it's unknown", () => {
+  it("leaves both Photos out while Immich isn't set up (0.145.0), and keeps them when it's unknown", () => {
     const frame = defaultNavLayout("frame");
     const remote = defaultNavLayout("controller");
     expect(shownNavItems(frame, everyday).map((i) => i.path)).toContain("/photos");

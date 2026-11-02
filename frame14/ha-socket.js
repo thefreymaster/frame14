@@ -21,7 +21,7 @@ import { HA_URL, HA_TOKEN } from "./config.js";
 import { ENTITIES } from "./entities.js";
 import { printerEntities } from "./printer-entities.js";
 
-// The house's helpers, options since 1.0.0 (`motion_entity`, `route_entity`,
+// The house's helpers, options since 0.145.0 (`motion_entity`, `route_entity`,
 // `album_entity`; hard-coded to the first house's before). Each empty turns
 // its feature off: no wake on motion, no remembered route, no album refresh.
 const MOTION_ENTITY = ENTITIES.motion ?? "";
@@ -189,7 +189,7 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
   // checked below. The domain is on the allow-list for that, and its
   // turn_on / turn_off / toggle would otherwise pass for every TV in the
   // house (the Media page's controls, held to the configured players, went
-  // with the page in 1.0.0).
+  // with the page in 0.145.0).
   if (domain === "media_player" && service !== "play_media") return false;
 
   if (!ALLOWED_DOMAINS.has(domain)) return false;

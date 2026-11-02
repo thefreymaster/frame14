@@ -14,7 +14,7 @@ function fakeSocket() {
 
 const frame = { remote: false, page: "/home", halloween: false };
 
-describe("arrivalPath (1.0.0)", () => {
+describe("arrivalPath (0.145.0)", () => {
   it("takes a frame to a game or a movie the frames are on", () => {
     expect(arrivalPath("football", frame)).toBe("/football");
     expect(arrivalPath("marquee", frame)).toBe("/marquee");

@@ -1,4 +1,4 @@
-// routes/photos.js's album helper and Immich as options (1.0.0): with neither
+// routes/photos.js's album helper and Immich as options (0.145.0): with neither
 // set up the album config answers none rather than an error, and a pick has
 // nowhere to go. A fresh module per case, since both are read at import.
 import express from "express";

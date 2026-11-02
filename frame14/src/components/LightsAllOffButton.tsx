@@ -11,7 +11,7 @@ const NONE: string[] = [];
 
 /**
  * The Lights page's header action: turns off every light and switch that's on
- * — but for the ones `light_all_off_exclude` names (an option since 1.0.0;
+ * — but for the ones `light_all_off_exclude` names (an option since 0.145.0;
  * 0.125 hard-coded the first house's: the kid's hatch light, a night light).
  * The page shows it only while one is on; it goes away once Home Assistant
  * reports them all off (or only spared ones remain), and until then it

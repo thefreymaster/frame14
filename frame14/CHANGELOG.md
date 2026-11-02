@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.0.0
+## 0.145.0
 
-Frame14's first stable release: everything that was particular to one house is now an option, and what was switched off is gone.
+Everything that was particular to one house is now an option, and what was switched off is gone.
 
 - Added: five options for what was hard-wired to the first house — `motion_entity` (the motion sensor that wakes the frames onto their last view), `route_entity` (the `input_select` that view is kept in), `album_entity` (the `input_select` of Immich albums the slideshow plays), `light_all_off_exclude` (lights and switches **All off** leaves on, a night light say) and `calendar_exclude` (calendars left off the dashboard). Each starts at what it was before, so an existing install carries on unchanged; empty, the feature is off.
 - Changed: Immich is optional. Without `immich_url` and `immich_api_key` the Photos pages, their navigation entries, the remote's Photos view and the album picker are left out, and the pages say Photos aren't set up. `ha_token` and `immich_api_key` are masked in the Configuration tab.

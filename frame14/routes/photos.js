@@ -5,7 +5,7 @@ import { ENTITIES } from "../entities.js";
 const router = Router();
 
 // The input_select the slideshow's album lives in (`album_entity`, an option
-// since 1.0.0); empty, the frames play no album of their own choosing.
+// since 0.145.0); empty, the frames play no album of their own choosing.
 const ALBUM_ENTITY = ENTITIES.album ?? "";
 
 router.get("/config", async (_req, res) => {

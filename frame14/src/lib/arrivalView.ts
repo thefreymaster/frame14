@@ -2,7 +2,7 @@ import { socket as defaultSocket } from "./socket";
 
 /**
  * Where a frame goes when it opens while the frames are on a game, a movie's
- * poster or Halloween (1.0.0). The server routes the frames there with a
+ * poster or Halloween (0.145.0). The server routes the frames there with a
  * `change_view` broadcast, which a page that wasn't connected then — a
  * browser opened mid-game, the frame's morning restart, a reload after the
  * server restarted — never heard: it opened on Home and stayed there, with

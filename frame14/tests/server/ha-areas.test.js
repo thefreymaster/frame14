@@ -78,7 +78,7 @@ describe("before the registries are read", () => {
     const { lightsConfig, entitiesPayload } = await fresh();
     expect(lightsConfig()).toEqual({ lights: mocks.entities.lights, rooms: [] });
     expect(entitiesPayload()).toMatchObject({ climate: ["climate.x"], lights: mocks.entities.lights, rooms: [] });
-    // Whether Immich is set up (1.0.0), for the pages to leave Photos out.
+    // Whether Immich is set up (0.145.0), for the pages to leave Photos out.
     expect(typeof entitiesPayload().photos).toBe("boolean");
   });
 

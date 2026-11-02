@@ -5,7 +5,7 @@ import { renderWithProviders } from "./helpers/render";
 
 const calls = vi.hoisted(() => ({ callService: vi.fn(), exclude: ["light.aidens_hatch_light"] as string[] | undefined }));
 vi.mock("../../src/lib/callService", () => ({ callService: calls.callService }));
-// The add-on's light_all_off_exclude (1.0.0), as /api/entities hands it over.
+// The add-on's light_all_off_exclude (0.145.0), as /api/entities hands it over.
 vi.mock("../../src/hooks/useEntitiesConfig", () => ({
   useEntitiesConfig: () => ({ data: { lights: [], lightAllOffExclude: calls.exclude } }),
 }));

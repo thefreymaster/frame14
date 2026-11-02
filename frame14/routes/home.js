@@ -4,7 +4,7 @@ import { ENTITIES } from "../entities.js";
 
 const router = Router();
 
-// Calendars no one wants on a wall (`calendar_exclude`, an option since 1.0.0).
+// Calendars no one wants on a wall (`calendar_exclude`, an option since 0.145.0).
 const CALENDAR_EXCLUDE = new Set(ENTITIES.calendarExclude ?? []);
 
 const HA_HEADERS = () => ({

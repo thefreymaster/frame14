@@ -49,7 +49,7 @@ export type NavItem = {
   gameDay?: boolean;
   /** In the nav on Oct 30 and 31 only (useHalloween). */
   halloween?: boolean;
-  /** In the nav only while Immich is set up (usePhotosEnabled, 1.0.0). */
+  /** In the nav only while Immich is set up (usePhotosEnabled, 0.145.0). */
   photos?: boolean;
 };
 

@@ -86,7 +86,7 @@ export function NavLayoutBoard() {
     [layout, gameDay, halloween, photos, slots],
   );
   // The rows this device can have: Photos only while Immich is set up
-  // (1.0.0). The order and the moves are the whole layout's, so an entry
+  // (0.145.0). The order and the moves are the whole layout's, so an entry
   // left out keeps its place for when it comes back.
   const rows = rest.filter(
     (e) => photos || !NAV_ITEM_BY_PATH.get(e.path)?.photos,

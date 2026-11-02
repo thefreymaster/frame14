@@ -29,7 +29,7 @@ vi.mock("../../entities.js", () => ({
     person: "",
     camera: "",
     cameras: [],
-    // The house's helpers, options since 1.0.0.
+    // The house's helpers, options since 0.145.0.
     motion: "binary_sensor.kitchen_motion_sensor_motion",
     route: "input_select.oledos_route",
     album: "input_select.smart_frame_album",
@@ -148,7 +148,7 @@ describe("callService", () => {
       { domain: "vacuum", service: "explode", entity_id: "vacuum.roborock_q5_pro" },
       { domain: "button", service: "press", entity_id: "button.random" },
       // A media player takes play_media alone (the assist reply) since the
-      // Media page went (1.0.0): its turn_off would reach any TV otherwise.
+      // Media page went (0.145.0): its turn_off would reach any TV otherwise.
       { domain: "media_player", service: "turn_off", entity_id: TV },
       { domain: "media_player", service: "toggle", entity_id: PLEX },
       { domain: "media_player", service: "volume_set", entity_id: PLEX, volume_level: 0.5 },

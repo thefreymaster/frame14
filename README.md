@@ -267,7 +267,7 @@ Swagger UI: `http://localhost:4000/api/docs`
 
 ### Tests
 
-Unit tests run with [Vitest](https://vitest.dev) and the end-to-end tests with [Playwright](https://playwright.dev), against a stub Home Assistant that ships with the repository (`tests/stub/stub-ha.mjs`), so neither needs a real Home Assistant. Both run on every pull request and every push to `main`, and a pull request merges only once they and the build pass.
+Unit tests run with [Vitest](https://vitest.dev) and the end-to-end tests with [Playwright](https://playwright.dev), against a stub Home Assistant that ships with the repository (`tests/stub/stub-ha.mjs`), so neither needs a real Home Assistant. Both run on every pull request and every push to `main`.
 
 ### Contributing
 

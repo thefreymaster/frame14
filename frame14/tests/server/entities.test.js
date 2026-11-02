@@ -88,7 +88,7 @@ describe("the add-on's options", () => {
     expect(e.person).toBe("binary_sensor.person");
     expect(e.camera).toBe("camera.door");
     expect(e.cameras).toEqual(["camera.door", "camera.yard"]);
-    // The house's helpers and lists (1.0.0; hard-coded before).
+    // The house's helpers and lists (0.145.0; hard-coded before).
     expect(e.motion).toBe("binary_sensor.motion");
     expect(e.route).toBe("input_select.route");
     expect(e.album).toBe("input_select.album");

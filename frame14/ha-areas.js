@@ -34,7 +34,7 @@ export function lightsConfig() {
 
 /**
  * What GET /api/entities answers, and what io "entities" carries; `photos`
- * (1.0.0) is whether Immich is set up, for the pages to leave Photos out.
+ * (0.145.0) is whether Immich is set up, for the pages to leave Photos out.
  */
 export function entitiesPayload() {
   return {

@@ -200,7 +200,7 @@ export function Control() {
   const navVisible = useFramesNavVisible();
   const showViews = deviceMode !== "frame";
   const halloween = useHalloween();
-  // Photos only while Immich is set up (1.0.0), the album picker with it.
+  // Photos only while Immich is set up (0.145.0), the album picker with it.
   const photos = usePhotosEnabled();
   const views = [
     ...VIEWS.filter((v) => photos || v.path !== "/photos"),

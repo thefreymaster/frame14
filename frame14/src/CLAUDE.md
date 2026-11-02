@@ -52,7 +52,7 @@ yanked off what you were doing before kickoff.
 
 **`"football"` must stay in `TRANSIENT_VIEWS`.** That set is what stops
 `setLastRoute()` writing the view to the `route_entity` input_select
-(`input_select.oledos_route` here; an option since 1.0.0), which the motion
+(`input_select.oledos_route` here; an option since 0.145.0), which the motion
 watcher reads back on wake. Drop it and a motion trip next Tuesday
 strands the panel on a finished game. And since 0.129.0 the motion watcher
 leaves the frames alone while `io.currentView` is a transient view other than
@@ -120,13 +120,13 @@ record, timeouts or the down) shares the score's line instead, and must be
 If you change any `vmin` size here, redo the arithmetic for 1600x2400 before
 assuming it fits — `1vmin` is 16px on that panel, so `18vmin` is a 288px glyph.
 
-## Arriving mid-game (closed in 1.0.0)
+## Arriving mid-game (closed in 0.145.0)
 
 A display that connects _after_ the server broadcasts — a browser opened
 mid-game, the frame's morning restart, a reload after a server restart — used
 to stay on Home: `SocketViewListener` acted on `change_view` and ignored the
 `current_view` it is sent on connect (`/marquee` had the same gap since
-0.36.0). Since 1.0.0 `lib/arrivalView.ts` takes the page's **first**
+0.36.0). Since 0.145.0 `lib/arrivalView.ts` takes the page's **first**
 `current_view` (a `socket.once` registered as main.tsx imports it, so a quick
 connect can't beat the listener) and a frame goes there when it is football,
 marquee or — on its two days — halloween. Only those: they are up for their

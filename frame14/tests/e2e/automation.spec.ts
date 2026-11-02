@@ -24,7 +24,7 @@ test("GET /api/change/:view moves the frame, and a remote stays put", async ({ p
   await expect(page.getByRole("tab", { name: "Home", selected: true })).toBeVisible();
 });
 
-// 1.0.0: a frame that opens after the frames were sent to a game — a browser
+// 0.145.0: a frame that opens after the frames were sent to a game — a browser
 // opened mid-game, the morning restart — goes to it, from the view the server
 // sends on connect. Before, it opened on Home and stayed there.
 test("a page that opens while the frames are on a game goes to it, and a remote stays put", async ({ page, request, isMobile }) => {

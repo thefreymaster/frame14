@@ -17,7 +17,7 @@ describe("NAV_ITEMS", () => {
     expect(NAV_ITEMS.at(-1)?.path).toBe(SETTINGS_PATH);
   });
 
-  it("marks the two Photos entries as needing Immich (1.0.0)", () => {
+  it("marks the two Photos entries as needing Immich (0.145.0)", () => {
     expect(NAV_ITEMS.filter((i) => i.photos).map((i) => i.path)).toEqual(["/photos", "/album"]);
   });
 

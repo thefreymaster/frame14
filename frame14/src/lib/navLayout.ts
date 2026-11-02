@@ -143,7 +143,7 @@ export interface NavToday {
   gameDay: boolean;
   /** Oct 30 or 31 (useHalloween): Halloween. */
   halloween: boolean;
-  /** Immich is set up (usePhotosEnabled, 1.0.0): Photos. Absent, it is. */
+  /** Immich is set up (usePhotosEnabled, 0.145.0): Photos. Absent, it is. */
   photos?: boolean;
 }
 

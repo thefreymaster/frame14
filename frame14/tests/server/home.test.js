@@ -1,5 +1,5 @@
 // routes/home.js's calendars: the ones `calendar_exclude` names (an option
-// since 1.0.0; calendar.radarr was hard-coded before) are left out.
+// since 0.145.0; calendar.radarr was hard-coded before) are left out.
 import express from "express";
 import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";

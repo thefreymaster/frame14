@@ -62,7 +62,7 @@ async function fetchPlexPoster(ratingKey) {
 /**
  * Proxy the artwork of the marquee's media player (`media_player_entity`).
  * The Media page's other players (`?entity=`, `media_player_entities`, 0.83)
- * went with the page in 1.0.0.
+ * went with the page in 0.145.0.
  *
  * It prefers Plex directly when PLEX_URL/PLEX_TOKEN are set, because HA's
  * media_player_proxy only ever returns a 200x300 thumbnail. Falls back to

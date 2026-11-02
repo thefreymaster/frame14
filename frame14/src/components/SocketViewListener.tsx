@@ -9,7 +9,7 @@ import { socket } from "../lib/socket";
 /**
  * The frames' views from the server: `change_view` broadcasts (an
  * automation, kickoff, playback, kitchen motion, a remote's Views), and —
- * once, as the page first connects (1.0.0, lib/arrivalView) — the game,
+ * once, as the page first connects (0.145.0, lib/arrivalView) — the game,
  * movie or Halloween the frames are on, which a page that opened after the
  * broadcast would otherwise miss. A remote and /control stay put; `reload`
  * reloads a frame.

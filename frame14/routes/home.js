@@ -4,7 +4,8 @@ import { ENTITIES } from "../entities.js";
 
 const router = Router();
 
-const CALENDAR_EXCLUDE = new Set(["calendar.radarr"]);
+// Calendars no one wants on a wall (`calendar_exclude`, an option since 0.145.0).
+const CALENDAR_EXCLUDE = new Set(ENTITIES.calendarExclude ?? []);
 
 const HA_HEADERS = () => ({
   Authorization: `Bearer ${HA_TOKEN}`,

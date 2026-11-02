@@ -11,6 +11,13 @@ const MOTION = "binary_sensor.kitchen_motion_sensor_motion";
 const ROUTE = "input_select.oledos_route";
 
 test.describe("the Halloween page", () => {
+  // The server keeps the frames' view, and a page opening on Oct 31 goes to
+  // Halloween when that's it (0.145.0): back to the clock, the server's first
+  // view, whatever a test left.
+  test.afterEach(async ({ request }) => {
+    await request.get("/api/change/clock");
+  });
+
   test.beforeEach(async ({ request }) => {
     await resetStub(request);
   });

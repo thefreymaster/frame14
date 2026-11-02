@@ -21,7 +21,6 @@ import {
   callClimateService,
   callFanService,
   callLightService,
-  callMediaService,
   callService,
   callVacuumService,
   pressButton,
@@ -113,13 +112,11 @@ describe("the other calls", () => {
     ]);
   });
 
-  it("vacuum, media player and button presses", () => {
+  it("vacuum and button presses", () => {
     callVacuumService("vacuum.x", "set_fan_speed", { fan_speed: "max_plus" });
-    callMediaService("media_player.x", "volume_set", { volume_level: 0.2 });
     pressButton("button.x");
     expect(fake.emit.mock.calls.map((c) => c[1])).toEqual([
       { domain: "vacuum", service: "set_fan_speed", entity_id: "vacuum.x", fan_speed: "max_plus" },
-      { domain: "media_player", service: "volume_set", entity_id: "media_player.x", volume_level: 0.2 },
       { domain: "button", service: "press", entity_id: "button.x" },
     ]);
   });

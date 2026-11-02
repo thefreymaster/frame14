@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.145.0
+
+Everything that was particular to one house is now an option, and what was switched off is gone.
+
+- Added: five options for what was hard-wired to the first house — `motion_entity` (the motion sensor that wakes the frames onto their last view), `route_entity` (the `input_select` that view is kept in), `album_entity` (the `input_select` of Immich albums the slideshow plays), `light_all_off_exclude` (lights and switches **All off** leaves on, a night light say) and `calendar_exclude` (calendars left off the dashboard). Each starts at what it was before, so an existing install carries on unchanged; empty, the feature is off.
+- Changed: Immich is optional. Without `immich_url` and `immich_api_key` the Photos pages, their navigation entries, the remote's Photos view and the album picker are left out, and the pages say Photos aren't set up. `ha_token` and `immich_api_key` are masked in the Configuration tab.
+- Fixed: a frame that opens while the frames are on a game, a movie's poster or the Halloween page — a browser opened mid-game, the tablet's morning restart — goes there, instead of opening on Home with the game on. A reconnect never moves a frame off a page its user chose, and a phone stays put.
+- Removed: the Media page and its `media_player_entities` option, both off since 0.109; the desktop lights strip, off since 0.91; the climate history route and the video routes, which nothing used. A media player now takes only the voice assistant's spoken reply from the dashboard. If your configuration still has `media_player_entities`, Home Assistant only notes it in the log until the options are saved again.
+- Changed: the add-on's folder in the repository is `frame14` and its page links to `thefreymaster/frame14`. Installs keep working without reinstalling: Home Assistant knows the add-on by its slug, which hasn't changed.
+
 ## 0.144.1
 
 - Fixed: the dots along the fan speed slider in a thermostat's controls sit under the thumb's stops. The first and last were a few pixels off the thumb; the thumb now also stays inside the track at either end, with the end dots under it.

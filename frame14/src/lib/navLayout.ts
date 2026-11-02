@@ -143,17 +143,19 @@ export interface NavToday {
   gameDay: boolean;
   /** Oct 30 or 31 (useHalloween): Halloween. */
   halloween: boolean;
+  /** Immich is set up (usePhotosEnabled, 0.145.0): Photos. Absent, it is. */
+  photos?: boolean;
 }
 
 /**
  * This device's nav: the entries it shows, in its order. Football only while
  * a game is on, Halloween on its two days (`today`).
  */
-export function useNavItems({ gameDay, halloween }: NavToday): NavItem[] {
+export function useNavItems({ gameDay, halloween, photos }: NavToday): NavItem[] {
   const layout = useNavLayout();
   return useMemo(
-    () => shownNavItems(layout, { gameDay, halloween }),
-    [layout, gameDay, halloween],
+    () => shownNavItems(layout, { gameDay, halloween, photos }),
+    [layout, gameDay, halloween, photos],
   );
 }
 
@@ -165,6 +167,7 @@ export function shownNavItems(layout: NavEntry[], today: NavToday): NavItem[] {
       (i): i is NavItem =>
         i != null &&
         (today.gameDay || !i.gameDay) &&
-        (today.halloween || !i.halloween),
+        (today.halloween || !i.halloween) &&
+        (today.photos !== false || !i.photos),
     );
 }

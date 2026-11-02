@@ -4,7 +4,7 @@ Scoped notes for the sports feature. Everything else in `src/` follows the root
 `CLAUDE.md`; this file exists because the football code is spread across five
 directories and has invariants that are easy to break from any one of them.
 
-On this branch the rest of the UI is stock Chakra UI (native theme, no custom
+The rest of the UI is stock Chakra UI (native theme, no custom
 palette — see "UI system" in the root `CLAUDE.md`). The score bug is one of the
 few hand-drawn graphics left: its surfaces use Chakra tokens (`bg.muted`,
 `bg.subtle`, `fg`, `fg.muted`), the team colours are data from the sensor, and
@@ -51,8 +51,9 @@ is narrower still — it fires on the `IN` edge only, so the panel is never
 yanked off what you were doing before kickoff.
 
 **`"football"` must stay in `TRANSIENT_VIEWS`.** That set is what stops
-`setLastRoute()` writing the view to `input_select.oledos_route`, which the
-motion watcher reads back on wake. Drop it and a motion trip next Tuesday
+`setLastRoute()` writing the view to the `route_entity` input_select
+(`input_select.oledos_route` here; an option since 0.145.0), which the motion
+watcher reads back on wake. Drop it and a motion trip next Tuesday
 strands the panel on a finished game. And since 0.129.0 the motion watcher
 leaves the frames alone while `io.currentView` is a transient view other than
 blank — a walk past the kitchen sensor during a game used to send the panel
@@ -106,8 +107,8 @@ and an unconditional `css` value for those loses to them.
 It **fills the panel in both orientations**, and the sizes are chosen so it fills
 with content — a 22vmin score, a colour block sized to hold a logo at 60% of the
 row height. An earlier pass stretched the rows without scaling anything, which
-gave each team a ~290x980px slab of solid colour behind two lines of text: sparse,
-and the static bright element the OLED constraints rule out. If you grow the
+gave each team a ~290x980px slab of solid colour behind two lines of text:
+sparse, and a big static block of saturated colour on a wall. If you grow the
 rows, grow what is in them.
 
 The name and the score sit on **separate lines**, not side by side. Sharing a
@@ -119,15 +120,22 @@ record, timeouts or the down) shares the score's line instead, and must be
 If you change any `vmin` size here, redo the arithmetic for 1600x2400 before
 assuming it fits — `1vmin` is 16px on that panel, so `18vmin` is a 288px glyph.
 
-## Known gap
+## Arriving mid-game (closed in 0.145.0)
 
-A display that connects _after_ the server broadcasts — reconnecting from a
-server restart, or a browser opened mid-game — does not navigate.
-`SocketViewListener` acts on `change_view` but ignores the `current_view` it is
-sent on connect. `io.currentView` is correct, so everything else stays
-consistent. `/marquee` has had the same gap since 0.36.0. Closing it means
-having frame-mode devices honour `current_view` on connect, which changes
-behaviour for every view, not just this one.
+A display that connects _after_ the server broadcasts — a browser opened
+mid-game, the frame's morning restart, a reload after a server restart — used
+to stay on Home: `SocketViewListener` acted on `change_view` and ignored the
+`current_view` it is sent on connect (`/marquee` had the same gap since
+0.36.0). Since 0.145.0 `lib/arrivalView.ts` takes the page's **first**
+`current_view` (a `socket.once` registered as main.tsx imports it, so a quick
+connect can't beat the listener) and a frame goes there when it is football,
+marquee or — on its two days — halloween. Only those: they are up for their
+own reason and end on their own. An everyday view or blank is left alone, as
+are later reconnects, so a socket blip never yanks a frame off a page its user
+chose; a remote and /control never move. The automation e2e spec covers the
+football case and the everyday one, and resets the server's view after
+(`io.currentView` outlives a test, and every later page would open on the
+game).
 
 ## Testing without waiting for Saturday
 

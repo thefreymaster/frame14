@@ -10,6 +10,8 @@ import "./lib/themeMode";
 // Watches for the add-on updating under this page.
 import "./lib/appVersion";
 import "./lib/socketWake";
+// The server's view on the first connect, listened for before anything renders.
+import "./lib/arrivalView";
 import { Provider } from "./components/ui/provider";
 import { Toaster } from "./components/ui/toaster";
 

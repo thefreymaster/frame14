@@ -1,11 +1,20 @@
 import { Router } from "express";
-import { IMMICH_URL, IMMICH_API_KEY, HA_URL, HA_TOKEN } from "../config.js";
+import { IMMICH_URL, IMMICH_API_KEY, HA_URL, HA_TOKEN, PHOTOS_ENABLED } from "../config.js";
+import { ENTITIES } from "../entities.js";
 
 const router = Router();
 
-const ALBUM_ENTITY = "input_select.smart_frame_album";
+// The input_select the slideshow's album lives in (`album_entity`, an option
+// since 0.145.0); empty, the frames play no album of their own choosing.
+const ALBUM_ENTITY = ENTITIES.album ?? "";
 
 router.get("/config", async (_req, res) => {
+  // Without Immich or the album helper there is no album to read: none,
+  // rather than an error (/api/entities' `photos` says whether Immich is set up).
+  if (!PHOTOS_ENABLED || !ALBUM_ENTITY) {
+    res.json({ defaultAlbumId: null, options: [] });
+    return;
+  }
   if (!HA_TOKEN) {
     res.status(503).json({ error: "HA_TOKEN not configured" });
     return;
@@ -39,6 +48,10 @@ router.get("/config", async (_req, res) => {
 router.post("/config", async (req, res) => {
   if (!HA_TOKEN) {
     res.status(503).json({ error: "HA_TOKEN not configured" });
+    return;
+  }
+  if (!ALBUM_ENTITY) {
+    res.status(404).json({ error: "No album_entity configured" });
     return;
   }
   const option = typeof req.body?.option === "string" ? req.body.option : "";

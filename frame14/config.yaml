@@ -1,8 +1,8 @@
 name: Frame14
-version: "0.144.1"
+version: "0.145.0"
 slug: frame14
-description: Home dashboard with overview, clock, weather, and Immich photo slideshow
-url: https://github.com/thefreymaster/ha-oled-frame
+description: A wall-frame dashboard for Home Assistant — rooms, climate, energy, cameras, calendar and a photo slideshow
+url: https://github.com/thefreymaster/frame14
 arch:
   - aarch64
   - amd64
@@ -110,18 +110,24 @@ options:
     - "fan.living_room_ceiling_fan"
     - "fan.aidens_fan"
   media_player_entity: "media_player.plex_plex_for_apple_tv_apple_tv"
-  media_player_entities: []
   printer_status_entity: "sensor.a1_03919c442700723_print_status"
   team_tracker_entities:
     - "sensor.teamtracker_fsu"
   person_entity: "binary_sensor.front_porch_person_detected"
   camera_entity: "camera.front_porch_high"
   camera_entities: []
+  motion_entity: "binary_sensor.kitchen_motion_sensor_motion"
+  route_entity: "input_select.oledos_route"
+  album_entity: "input_select.smart_frame_album"
+  light_all_off_exclude:
+    - "light.aidens_hatch_light"
+  calendar_exclude:
+    - "calendar.radarr"
 schema:
   ha_url: str
-  ha_token: str
-  immich_url: str
-  immich_api_key: str
+  ha_token: password
+  immich_url: str?
+  immich_api_key: password?
   plex_url: str?
   plex_token: password?
   port: int
@@ -156,12 +162,17 @@ schema:
   fan_entities:
     - str
   media_player_entity: str?
-  media_player_entities:
-    - str
   printer_status_entity: str?
   team_tracker_entities:
     - str
   person_entity: str?
   camera_entity: str?
   camera_entities:
+    - str
+  motion_entity: str?
+  route_entity: str?
+  album_entity: str?
+  light_all_off_exclude:
+    - str
+  calendar_exclude:
     - str

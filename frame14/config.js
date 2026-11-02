@@ -35,6 +35,9 @@ export const HA_TOKEN = get("ha_token", "HA_TOKEN", "");
 // export const HA_TOKEN = process.env.HA_TOKEN ?? "";
 export const IMMICH_URL = get("immich_url", "IMMICH_URL", "");
 export const IMMICH_API_KEY = get("immich_api_key", "IMMICH_API_KEY", "");
+// Immich is optional (0.145.0): without both, the Photos pages and the album
+// picker are left out, and /api/entities says so (`photos`).
+export const PHOTOS_ENABLED = Boolean(IMMICH_URL && IMMICH_API_KEY);
 export const PLEX_URL = get("plex_url", "PLEX_URL", "").replace(/\/+$/, "");
 export const PLEX_TOKEN = get("plex_token", "PLEX_TOKEN", "");
 export const PORT = Number(get("port", "PORT", "4000"));

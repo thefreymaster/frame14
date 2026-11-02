@@ -8,8 +8,8 @@ RUN npm run build
 
 FROM node:24.7.0-alpine
 LABEL \
-    io.hass.name="OLED Dashboard" \
-    io.hass.description="OLED-optimized home dashboard with clock, weather, and Immich photo slideshow" \
+    io.hass.name="Frame14" \
+    io.hass.description="A wall-frame dashboard for Home Assistant" \
     io.hass.type="addon" \
     io.hass.arch="aarch64|amd64|armhf|armv7"
 

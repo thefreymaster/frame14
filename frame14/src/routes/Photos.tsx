@@ -10,6 +10,7 @@ import { PhotoSlide } from "../components/PhotoSlide";
 import { PixelShift } from "../components/PixelShift";
 import { useAlbumPhotos, type ImmichAsset } from "../hooks/useAlbumPhotos";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
+import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
 import { useWeather } from "../hooks/useWeather";
 import { useRegionLuminance } from "../hooks/useRegionLuminance";
 import { socket } from "../lib/socket";
@@ -136,6 +137,7 @@ function nextAfter(assets: ImmichAsset[], id: string | null): string {
 export function Photos() {
   const queryClient = useQueryClient();
   const { data: config, isPending: configPending } = usePhotosConfig();
+  const photos = usePhotosEnabled();
   const activeAlbumId = config?.defaultAlbumId ?? null;
   const navVisible = useNavVisible();
   const remote = useDeviceMode() === "controller";
@@ -254,6 +256,24 @@ export function Photos() {
       mql.removeEventListener("change", onOrientationChange);
     };
   }, [advancePhoto]);
+
+  if (!photos) {
+    return (
+      <Box
+        width="100%"
+        height="100vh"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <EmptyState
+          icon={<IoImagesOutline />}
+          title="Photos aren't set up"
+          description="Add immich_url and immich_api_key in the add-on's options."
+        />
+      </Box>
+    );
+  }
 
   if (configPending) {
     return (

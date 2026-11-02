@@ -62,12 +62,16 @@ function loadEntities() {
       vacuums: options.vacuum_entities ?? [],
       fans: options.fan_entities ?? [],
       mediaPlayer: options.media_player_entity ?? "",
-      mediaPlayers: options.media_player_entities ?? [],
       printer: options.printer_status_entity ?? "",
       teamTracker: options.team_tracker_entities ?? [],
       person: options.person_entity ?? "",
       camera: options.camera_entity ?? "",
       cameras: options.camera_entities ?? [],
+      motion: options.motion_entity ?? "",
+      route: options.route_entity ?? "",
+      album: options.album_entity ?? "",
+      lightAllOffExclude: options.light_all_off_exclude ?? [],
+      calendarExclude: options.calendar_exclude ?? [],
     };
   }
 
@@ -89,12 +93,16 @@ function loadEntities() {
       vacuums: frame14.vacuums ?? [],
       fans: frame14.fans ?? [],
       mediaPlayer: frame14.mediaPlayer ?? "",
-      mediaPlayers: frame14.mediaPlayers ?? [],
       printer: frame14.printer ?? "",
       teamTracker: frame14.teamTracker ?? [],
       person: frame14.person ?? "",
       camera: frame14.camera ?? "",
       cameras: frame14.cameras ?? [],
+      motion: frame14.motion ?? "",
+      route: frame14.route ?? "",
+      album: frame14.album ?? "",
+      lightAllOffExclude: frame14.lightAllOffExclude ?? [],
+      calendarExclude: frame14.calendarExclude ?? [],
     };
   }
 
@@ -110,12 +118,16 @@ function loadEntities() {
     vacuums: [],
     fans: [],
     mediaPlayer: "",
-    mediaPlayers: [],
     printer: "",
     teamTracker: [],
     person: "",
     camera: "",
     cameras: [],
+    motion: "",
+    route: "",
+    album: "",
+    lightAllOffExclude: [],
+    calendarExclude: [],
   };
 }
 

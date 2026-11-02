@@ -11,8 +11,6 @@ import { Climate } from "./routes/Climate";
 import { Weather } from "./routes/Weather";
 import { Calendar } from "./routes/Calendar";
 import { Cameras } from "./routes/Cameras";
-// The Media page is off for now (0.109, see lib/navItems).
-// import { Media } from "./routes/Media"; // media page
 import { Timer } from "./routes/Timer";
 import { Energy } from "./routes/Energy";
 import { Marquee } from "./routes/Marquee";
@@ -51,7 +49,6 @@ export const router = createBrowserRouter([
       { path: "/printer", element: <Printer /> },
       { path: "/vacuum", element: <Vacuum /> },
       { path: "/cameras", element: <Cameras /> },
-      // { path: "/media", element: <Media /> }, // media page
       { path: "/marquee", element: <Marquee /> },
       { path: "/football", element: <Football /> },
       // Offered on Oct 30 and 31 (lib/halloween); routed all year, for an

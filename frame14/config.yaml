@@ -1,0 +1,178 @@
+name: Frame14
+version: "1.0.0"
+slug: frame14
+description: A wall-frame dashboard for Home Assistant — rooms, climate, energy, cameras, calendar and a photo slideshow
+url: https://github.com/thefreymaster/frame14
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+startup: application
+boot: auto
+init: false
+ingress: true
+ingress_port: 8099
+host_network: true
+panel_icon: mdi:image-frame
+options:
+  ha_url: "http://supervisor/core"
+  ha_token: ""
+  immich_url: ""
+  immich_api_key: ""
+  plex_url: ""
+  plex_token: ""
+  port: 4000
+  web_ui_url: "http://192.0.2.10:4000"
+  assist_pipeline_id: ""
+  assist_speaker: ""
+  weather_entity: "weather.systems_weatherkit"
+  weather_forecast_entity: "weather.systems_weatherkit"
+  weather_temperature_entity: "sensor.weatherkit_temperature"
+  light_entities:
+    - "light.living_room"
+    - "light.kitchen_main_lights"
+    - "light.living_room_fireplace"
+    - "light.backyard"
+    - "light.lady_lamp"
+    - "light.kitchen_cabinet_lights"
+    - "switch.sonoff_1001816bdb"
+    - "light.dining_room_chandelier"
+    - "light.front_yard"
+    - "switch.ihome_smartplug_05b4df_outlet"
+    - "light.front_porch"
+    - "light.hue_ambiance_lamp_1"
+    - "light.lizs_lamp"
+    - "light.movie_theater"
+    - "light.evans_office"
+    - "light.aidens_hatch_light"
+    - "light.basement_2"
+    - "light.workshop"
+  light_areas: []
+  climate_entities:
+    - "climate.samsung_airconditioner_1"
+    - "climate.samsung_airconditioner_2"
+    - "climate.samsung_airconditioner_3rd_flr"
+    - "climate.samsung_airconditioner_3"
+  climate_names:
+    - entity: "climate.samsung_airconditioner_1"
+      name: "1st Floor AC"
+    - entity: "climate.samsung_airconditioner_2"
+      name: "2nd Floor AC"
+    - entity: "climate.samsung_airconditioner_3rd_flr"
+      name: "3rd Floor AC"
+    - entity: "climate.samsung_airconditioner_3"
+      name: "Master Room AC"
+  energy_current_production: "sensor.envoy_482518016321_current_power_production"
+  energy_current_consumption: "sensor.envoy_482518016321_current_power_consumption"
+  energy_production_today: "sensor.envoy_482518016321_energy_production_today"
+  energy_consumption_today: "sensor.envoy_482518016321_energy_consumption_today"
+  energy_lifetime_production: "sensor.envoy_482518016321_lifetime_energy_production"
+  energy_lifetime_consumption: "sensor.envoy_482518016321_lifetime_energy_consumption"
+  circuit_main_entity: "sensor.vueenergymonitor_power_minute_average"
+  circuit_balance_entity: "sensor.balance_power_minute_average"
+  circuit_entities:
+    - name: "Heat Pump 1"
+      power: "sensor.ac1_power_minute_average"
+    - name: "Heat Pump 2"
+      power: "sensor.ac2_power_minute_average"
+    - name: "Kitchen"
+      power: "sensor.ac3_power_minute_average"
+    - name: "Fridge"
+      power: "sensor.ac4_power_minute_average"
+    - name: "Electric Car"
+      power: "sensor.electric_car_power_minute_average"
+    - name: "Oven"
+      power: "sensor.oven_power_minute_average"
+    - name: "Living Room"
+      power: "sensor.living_room_power_minute_average"
+    - name: "Upstairs Bedroom"
+      power: "sensor.upstairs_bedroom_power_minute_average"
+    - name: "Drier"
+      power: "sensor.drier_power_minute_average"
+    - name: "Dishwasher"
+      power: "sensor.dishwasher_power_minute_average"
+    - name: "Hot Water Heater"
+      power: "sensor.hot_water_heater_power_minute_average_2"
+    - name: "Water Heater"
+      power: "sensor.hot_water_heater_power_minute_average"
+    - name: "Microwave"
+      power: "sensor.mocrowave_power_minute_average"
+    - name: "Cloths Washer"
+      power: "sensor.cloths_washer_power_minute_average"
+    - name: "Workshop/Basement"
+      power: "sensor.workshop_basement_power_minute_average"
+    - name: "Network Gear"
+      power: "sensor.stove_power_minute_average"
+  vacuum_entities:
+    - "vacuum.roborock_q5_pro"
+  fan_entities:
+    - "fan.living_room_ceiling_fan"
+    - "fan.aidens_fan"
+  media_player_entity: "media_player.plex_plex_for_apple_tv_apple_tv"
+  printer_status_entity: "sensor.a1_03919c442700723_print_status"
+  team_tracker_entities:
+    - "sensor.teamtracker_fsu"
+  person_entity: "binary_sensor.front_porch_person_detected"
+  camera_entity: "camera.front_porch_high"
+  camera_entities: []
+  motion_entity: "binary_sensor.kitchen_motion_sensor_motion"
+  route_entity: "input_select.oledos_route"
+  album_entity: "input_select.smart_frame_album"
+  light_all_off_exclude:
+    - "light.aidens_hatch_light"
+  calendar_exclude:
+    - "calendar.radarr"
+schema:
+  ha_url: str
+  ha_token: password
+  immich_url: str?
+  immich_api_key: password?
+  plex_url: str?
+  plex_token: password?
+  port: int
+  web_ui_url: url?
+  assist_pipeline_id: str?
+  assist_speaker: str?
+  weather_entity: str
+  weather_forecast_entity: str
+  weather_temperature_entity: str
+  light_entities:
+    - str
+  light_areas:
+    - str
+  climate_entities:
+    - str
+  climate_names:
+    - entity: str
+      name: str
+  energy_current_production: str
+  energy_current_consumption: str
+  energy_production_today: str
+  energy_consumption_today: str
+  energy_lifetime_production: str?
+  energy_lifetime_consumption: str?
+  circuit_main_entity: str
+  circuit_balance_entity: str?
+  circuit_entities:
+    - name: str
+      power: str
+  vacuum_entities:
+    - str
+  fan_entities:
+    - str
+  media_player_entity: str?
+  printer_status_entity: str?
+  team_tracker_entities:
+    - str
+  person_entity: str?
+  camera_entity: str?
+  camera_entities:
+    - str
+  motion_entity: str?
+  route_entity: str?
+  album_entity: str?
+  light_all_off_exclude:
+    - str
+  calendar_exclude:
+    - str

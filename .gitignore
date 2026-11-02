@@ -30,5 +30,5 @@ test-results
 playwright-report
 coverage
 
-# The screen schedule outside the add-on (oled-dashboard/screen.js)
+# The screen schedule outside the add-on (frame14/screen.js)
 .data/

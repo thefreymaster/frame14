@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: oled-dashboard
+        working-directory: frame14
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: oled-dashboard/package-lock.json
+          cache-dependency-path: frame14/package-lock.json
 
       - run: npm ci
 

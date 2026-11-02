@@ -26,9 +26,9 @@ jobs:
       - name: Read the version
         id: version
         run: |
-          version=$(sed -n 's/^version: *"\(.*\)"/\1/p' oled-dashboard/config.yaml)
+          version=$(sed -n 's/^version: *"\(.*\)"/\1/p' frame14/config.yaml)
           if [ -z "$version" ]; then
-            echo "::error::No version in oled-dashboard/config.yaml"
+            echo "::error::No version in frame14/config.yaml"
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -53,10 +53,10 @@ jobs:
               while (s <= e && lines[s] ~ /^[[:space:]]*$/) s++
               while (e >= s && lines[e] ~ /^[[:space:]]*$/) e--
               for (i = s; i <= e; i++) print lines[i]
-            }' oled-dashboard/CHANGELOG.md > notes.md
+            }' frame14/CHANGELOG.md > notes.md
           if [ ! -s notes.md ]; then
             echo "::warning::CHANGELOG.md has no '## $VERSION' section"
-            echo "See [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/oled-dashboard/CHANGELOG.md)." > notes.md
+            echo "See [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/frame14/CHANGELOG.md)." > notes.md
           fi
           echo "Notes for v$VERSION:"
           cat notes.md

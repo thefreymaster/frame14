@@ -1,0 +1,79 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Load dotenv for local dev fallback
+try {
+  const { config } = await import("dotenv");
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  config({ path: path.join(__dirname, ".env") });
+} catch {
+  // dotenv not critical
+}
+
+function loadAddonOptions() {
+  const optionsPath = "/data/options.json";
+  if (fs.existsSync(optionsPath)) {
+    try {
+      return JSON.parse(fs.readFileSync(optionsPath, "utf-8"));
+    } catch {
+      console.warn("Failed to parse /data/options.json, falling back to env");
+    }
+  }
+  return null;
+}
+
+const options = loadAddonOptions();
+
+function get(addonKey, envKey, fallback = "") {
+  if (options && options[addonKey] !== undefined) return options[addonKey];
+  return process.env[envKey] ?? fallback;
+}
+
+export const HA_URL = get("ha_url", "HA_URL", "http://supervisor/core");
+export const HA_TOKEN = get("ha_token", "HA_TOKEN", "");
+// export const HA_TOKEN = process.env.HA_TOKEN ?? "";
+export const IMMICH_URL = get("immich_url", "IMMICH_URL", "");
+export const IMMICH_API_KEY = get("immich_api_key", "IMMICH_API_KEY", "");
+// Immich is optional (1.0.0): without both, the Photos pages and the album
+// picker are left out, and /api/entities says so (`photos`).
+export const PHOTOS_ENABLED = Boolean(IMMICH_URL && IMMICH_API_KEY);
+export const PLEX_URL = get("plex_url", "PLEX_URL", "").replace(/\/+$/, "");
+export const PLEX_TOKEN = get("plex_token", "PLEX_TOKEN", "");
+export const PORT = Number(get("port", "PORT", "4000"));
+
+// Assist pipeline the mic button runs. Empty = use whichever pipeline Home
+// Assistant has marked preferred, so the button works before it is configured.
+export const ASSIST_PIPELINE_ID = get("assist_pipeline_id", "ASSIST_PIPELINE_ID", "");
+// Optional speaker to also play the spoken reply on. Empty = play only on the
+// panel itself, which is the normal case.
+export const ASSIST_SPEAKER = get("assist_speaker", "ASSIST_SPEAKER", "");
+
+// A top-level scalar from the add-on's config.yaml (version, ingress_port).
+function loadManifestValue(key) {
+  try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const yamlPath = path.join(__dirname, "config.yaml");
+    if (!fs.existsSync(yamlPath)) return "";
+    const text = fs.readFileSync(yamlPath, "utf-8");
+    const match = text.match(new RegExp(`^${key}:\\s*["']?([^"'\\s]+)["']?`, "m"));
+    return match ? match[1] : "";
+  } catch {
+    return "";
+  }
+}
+
+export const VERSION = loadManifestValue("version");
+// The add-on's name (config.yaml), which titles its update entity in Home
+// Assistant (routes/software.js).
+export const ADDON_NAME = loadManifestValue("name");
+
+// Where Home Assistant's "Open Web UI" button and the add-on's sidebar entry
+// send the browser (routes/ingress.js). Empty = they say how to set it.
+export const WEB_UI_URL = get("web_ui_url", "WEB_UI_URL", "");
+
+// The port Home Assistant's ingress proxies to (config.yaml's ingress_port).
+// Only the add-on listens on it; 0 in local dev.
+export const INGRESS_PORT = options
+  ? Number(loadManifestValue("ingress_port")) || 0
+  : 0;

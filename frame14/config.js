@@ -69,7 +69,7 @@ export const VERSION = loadManifestValue("version");
 export const ADDON_NAME = loadManifestValue("name");
 // The add-on's repository (config.yaml's `url`), where every version is a
 // GitHub release tagged v<version> (.github/workflows/release.yml): the
-// Software card links the installed one (routes/software.js).
+// Software card links the installed and the latest (routes/software.js).
 export const REPO_URL = loadManifestValue("url");
 
 // Where Home Assistant's "Open Web UI" button and the add-on's sidebar entry

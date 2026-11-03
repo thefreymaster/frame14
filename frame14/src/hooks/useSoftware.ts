@@ -6,8 +6,11 @@ import { useEntity } from "./useEntity";
 export interface SoftwareInfo {
   /** The installed add-on's version (the page may run an older one). */
   installed: string;
-  /** The installed version's release on GitHub (0.147.0). */
-  installedReleaseUrl: string | null;
+  /**
+   * The add-on's repository, where every version is a GitHub release tagged
+   * v<version> (0.149.1; `installedReleaseUrl` in 0.147.0).
+   */
+  repoUrl: string | null;
   /**
    * The add-on's update entity in Home Assistant, null outside the add-on:
    * the Supervisor keeps it, `available` while the store has a newer version.
@@ -81,7 +84,7 @@ export async function installSoftware(): Promise<string | null> {
 export function useSoftware(): {
   loading: boolean;
   installed: string;
-  installedReleaseUrl: string | null;
+  repoUrl: string | null;
   update: SoftwareUpdate | null;
   /** Checks the store now (checkSoftware) and takes the answer as the facts. */
   check: () => Promise<SoftwareInfo>;
@@ -105,7 +108,7 @@ export function useSoftware(): {
     check,
     loading: query.isPending,
     installed: query.data?.installed ?? "",
-    installedReleaseUrl: query.data?.installedReleaseUrl ?? null,
+    repoUrl: query.data?.repoUrl ?? null,
     update:
       update && state
         ? {

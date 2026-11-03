@@ -5,7 +5,7 @@ import { renderWithProviders } from "./helpers/render";
 
 const state = vi.hoisted(() => ({
   update: null as SoftwareUpdate | null,
-  releaseUrl: null as string | null,
+  repoUrl: null as string | null,
   status: "connected" as "connecting" | "connected" | "disconnected",
   reloadApp: vi.fn(),
 }));
@@ -13,7 +13,7 @@ vi.mock("../../src/hooks/useSoftware", () => ({
   useSoftware: () => ({
     loading: false,
     installed: "0.139.0",
-    installedReleaseUrl: state.releaseUrl,
+    repoUrl: state.repoUrl,
     update: state.update,
     check: vi.fn(),
   }),
@@ -46,7 +46,7 @@ function update(overrides: Partial<SoftwareUpdate> = {}): SoftwareUpdate {
 const tryAgain = () => screen.queryByRole("button", { name: "Try again" });
 
 beforeEach(() => {
-  state.releaseUrl = null;
+  state.repoUrl = null;
   state.reloadApp.mockReset();
   state.status = "connected";
   vi.useFakeTimers();
@@ -115,35 +115,36 @@ describe("the Software card's Try again", () => {
   });
 });
 
-describe("the Software card's GitHub link (0.147.0)", () => {
-  const RELEASE = "https://github.com/thefreymaster/frame14/releases/tag/v0.139.0";
+describe("the Software card's versions link their releases (0.149.1)", () => {
+  const REPO = "https://github.com/thefreymaster/frame14";
+  const release = (version: string) => screen.queryByRole("link", { name: `${version} release on GitHub` });
 
-  it("opens the installed version's release in a new tab", () => {
-    state.releaseUrl = RELEASE;
-    state.update = update({ available: false, latest: "0.139.0" });
+  it("links the installed and the latest version to their releases, in a new tab", () => {
+    state.repoUrl = REPO;
+    state.update = update({ available: true, latest: "0.140.0" });
     renderWithProviders(<SoftwareBoard />);
-    const link = screen.getByRole("link", { name: "v0.139.0 on GitHub" });
-    expect(link).toHaveAttribute("href", RELEASE);
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noreferrer");
+    const installed = release("0.139.0")!;
+    expect(installed).toHaveAttribute("href", `${REPO}/releases/tag/v0.139.0`);
+    expect(installed).toHaveAttribute("target", "_blank");
+    expect(installed).toHaveAttribute("rel", "noreferrer");
+    expect(installed).toHaveTextContent("0.139.0");
+    expect(release("0.140.0")).toHaveAttribute("href", `${REPO}/releases/tag/v0.140.0`);
+    // No button for it any more (0.147.0's "v… on GitHub").
+    expect(screen.queryByText(/on GitHub/)).toBeNull();
   });
 
-  it("is there outside the add-on, with no update entity", () => {
-    state.releaseUrl = RELEASE;
+  it("links the installed version outside the add-on, with no update entity and no latest", () => {
+    state.repoUrl = REPO;
     state.update = null;
     renderWithProviders(<SoftwareBoard />);
-    expect(screen.getByRole("link", { name: "v0.139.0 on GitHub" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Check for updates" })).toBeNull();
+    expect(release("0.139.0")).toHaveAttribute("href", `${REPO}/releases/tag/v0.139.0`);
+    expect(screen.getByText("Not known")).toBeInTheDocument();
   });
 
-  it("is absent without a release to link to, and while an update installs", () => {
+  it("shows plain versions without the repository", () => {
     state.update = update({ available: false, latest: "0.139.0" });
-    const { unmount } = renderWithProviders(<SoftwareBoard />);
-    expect(screen.queryByRole("link", { name: /on GitHub/ })).toBeNull();
-    unmount();
-    state.releaseUrl = RELEASE;
-    state.update = update({ inProgress: true });
     renderWithProviders(<SoftwareBoard />);
-    expect(screen.queryByRole("link", { name: /on GitHub/ })).toBeNull();
+    expect(screen.queryAllByRole("link")).toHaveLength(0);
+    expect(screen.getAllByText("0.139.0").length).toBeGreaterThanOrEqual(2);
   });
 });

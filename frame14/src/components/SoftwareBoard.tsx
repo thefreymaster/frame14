@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   HStack,
+  Link,
   List,
   Portal,
   Progress,
@@ -12,7 +13,6 @@ import {
 import {
   IoCloudDownloadOutline,
   IoCubeOutline,
-  IoLogoGithub,
   IoRefreshOutline,
 } from "react-icons/io5";
 import { installSoftware, useSoftware } from "../hooks/useSoftware";
@@ -55,6 +55,26 @@ function releaseNoteRows(
 }
 
 /**
+ * A version as a link to its release on GitHub — the repository's
+ * v<version> tag, which release.yml publishes for every version — in a new
+ * tab; the plain version without the repository.
+ */
+function releaseLink(repoUrl: string | null, version: string) {
+  if (!repoUrl) return version;
+  return (
+    <Link
+      href={`${repoUrl.replace(/\/+$/, "")}/releases/tag/v${version}`}
+      target="_blank"
+      rel="noreferrer"
+      variant="underline"
+      aria-label={`${version} release on GitHub`}
+    >
+      {version}
+    </Link>
+  );
+}
+
+/**
  * /control's Software card (since 0.113): the version this page runs, the
  * add-on installed, and the latest in Home Assistant's add-on store, from the
  * add-on's update entity (useSoftware). While the store has a newer one the
@@ -82,15 +102,15 @@ function releaseNoteRows(
  * (outside the add-on). Check for updates (since 0.116) is Home Assistant's
  * own, from here: the store reloaded and the entity refreshed (useSoftware's
  * `check`), a toast saying what it found — the Supervisor does this on its
- * own every few hours, so a version just published needs it. Beside it, the
- * installed version's release on GitHub (0.147.0, the user's ask: "Add the
- * GitHub link to the software card that links to the installed release"),
- * in a new tab, outside the add-on too.
+ * own every few hours, so a version just published needs it. The Installed
+ * and Latest versions are links to their releases on GitHub (0.149.1, the
+ * user: "Instead of the big button linking to GitHub just make the installed
+ * and latest versions be links that link to those releases"; 0.147.0 had a
+ * "v<installed> on GitHub" button), in a new tab, outside the add-on too.
  */
 export function SoftwareBoard() {
   const page = useAppVersion();
-  const { loading, installed, installedReleaseUrl, update, check } =
-    useSoftware();
+  const { loading, installed, repoUrl, update, check } = useSoftware();
   const [confirming, setConfirming] = useState(false);
   const [checking, setChecking] = useState(false);
   // The version asked for, until it is the installed one (or too long passes).
@@ -184,10 +204,17 @@ export function SoftwareBoard() {
     >
       <DataListRoot orientation="horizontal">
         <DataListItem label="This device" value={page.running} />
-        <DataListItem label="Installed" value={dash ?? installed} />
+        <DataListItem
+          label="Installed"
+          value={dash ?? releaseLink(repoUrl, installed)}
+        />
         <DataListItem
           label="Latest"
-          value={update?.latest ?? dash ?? "Not known"}
+          value={
+            update?.latest
+              ? releaseLink(repoUrl, update.latest)
+              : (dash ?? "Not known")
+          }
         />
       </DataListRoot>
       {busy ? (
@@ -225,7 +252,7 @@ export function SoftwareBoard() {
               Frame14 {update.latest} is ready to download.
             </Text>
           )}
-          {(update || installedReleaseUrl) && (
+          {update && (
             <HStack mt={available ? "3" : "4"} gap="3" wrap="wrap">
               {available && (
                 <Button
@@ -237,30 +264,16 @@ export function SoftwareBoard() {
                   Install {update.latest}
                 </Button>
               )}
-              {update && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  loading={checking}
-                  loadingText="Checking"
-                  onClick={() => void checkNow()}
-                >
-                  <IoRefreshOutline />
-                  Check for updates
-                </Button>
-              )}
-              {installedReleaseUrl && (
-                <Button asChild size="sm" variant="outline">
-                  <a
-                    href={installedReleaseUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <IoLogoGithub />
-                    v{installed} on GitHub
-                  </a>
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant="outline"
+                loading={checking}
+                loadingText="Checking"
+                onClick={() => void checkNow()}
+              >
+                <IoRefreshOutline />
+                Check for updates
+              </Button>
             </HStack>
           )}
         </>

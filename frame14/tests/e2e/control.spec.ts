@@ -58,10 +58,13 @@ test.describe("the Settings page", () => {
     await expect(page.getByText("Up to date")).toBeVisible();
     await expect(page.getByText(version, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Check for updates" })).toBeVisible();
-    // The installed version's release on GitHub (0.147.0), in a new tab.
-    const release = page.getByRole("link", { name: `v${version} on GitHub` });
+    // The installed version links its release on GitHub, in a new tab
+    // (0.149.1; a "v… on GitHub" button from 0.147.0), as the latest does.
+    const release = page.getByRole("link", { name: `${version} release on GitHub` });
+    await expect(release).toHaveText(version);
     await expect(release).toHaveAttribute("href", `https://github.com/thefreymaster/frame14/releases/tag/v${version}`);
     await expect(release).toHaveAttribute("target", "_blank");
+    await expect(page.getByText(/on GitHub$/)).toHaveCount(0);
   });
 
   test("the Display card's theme and colors are every frame's, and not a remote's (0.146.0, 0.148.0)", async ({ page, browser, isMobile }) => {

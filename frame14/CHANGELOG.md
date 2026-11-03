@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.149.1
+
+- Changed: in Settings › Device, the Software card's Installed and Latest versions are links to their releases on GitHub, in place of the "on GitHub" button.
+
 ## 0.149.0
 
 - Fixed: a thermostat or fan tile that's on has its coloured ring rounded on the inside as well as the outside, the same width all the way round. The inner corners were square. No other ring in the dashboard had this problem.

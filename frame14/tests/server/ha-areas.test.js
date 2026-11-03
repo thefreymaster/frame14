@@ -80,6 +80,8 @@ describe("before the registries are read", () => {
     expect(entitiesPayload()).toMatchObject({ climate: ["climate.x"], lights: mocks.entities.lights, rooms: [] });
     // Whether Immich is set up (0.145.0), for the pages to leave Photos out.
     expect(typeof entitiesPayload().photos).toBe("boolean");
+    // No Unraid server (0.151.0) until the registries are in.
+    expect(entitiesPayload().unraid).toEqual([]);
   });
 
   it("does nothing without the socket", async () => {
@@ -140,6 +142,25 @@ describe("refreshLightAreas", () => {
     await refreshLightAreas(socket);
     expect(socket.emit).toHaveBeenCalledTimes(2);
     expect(socket.emit.mock.calls[1][1].lights).toContain("light.kitchen_new");
+  });
+
+  it("finds the Unraid servers in the same read, and tells the pages when only they change (0.151.0)", async () => {
+    const { refreshLightAreas, entitiesPayload } = await fresh();
+    const socket = io();
+    await refreshLightAreas(socket);
+    expect(entitiesPayload().unraid).toEqual([]);
+    mocks.registries.devices.push({ id: "dev_unserver", name: "UnServer" });
+    mocks.registries.entities.push(
+      { entity_id: "sensor.unserver_cpu_usage", unique_id: "uuid_cpu_usage", platform: "unraid", config_entry_id: "e1", device_id: "dev_unserver" },
+      { entity_id: "switch.unserver_container_plex", unique_id: "uuid_container_switch_Plex", platform: "unraid", config_entry_id: "e1", device_id: "dev_unserver" },
+    );
+    await refreshLightAreas(socket);
+    expect(mocks.sendCommand).toHaveBeenCalledTimes(6);
+    const [server] = entitiesPayload().unraid;
+    expect(server).toMatchObject({ name: "UnServer", cpu: "sensor.unserver_cpu_usage" });
+    expect(server.containers.map((c) => c.switch)).toEqual(["switch.unserver_container_plex"]);
+    expect(socket.emit).toHaveBeenCalledTimes(2);
+    expect(socket.emit.mock.calls[1][1].unraid).toEqual(entitiesPayload().unraid);
   });
 
   it("keeps what it had when Home Assistant can't answer", async () => {

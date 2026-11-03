@@ -143,6 +143,20 @@ function deviceControlData({ domain, service, entity_id, fan_speed }) {
   return null;
 }
 
+/**
+ * Whether a page may turn this switch on or off (0.151.0): the configured
+ * lights and switches (`light_entities` — ha-areas.js adds only lights from
+ * the rooms) and the printer's chamber light, a switch in Bambuddy. Until
+ * then any switch in Home Assistant passed, the Unraid integration's array,
+ * VM and container switches among them, though no page offered them.
+ */
+export function callableSwitch(entityId) {
+  return (
+    (ENTITIES.lights ?? []).includes(entityId) ||
+    printerEntities()?.chamberLight === entityId
+  );
+}
+
 export function getState(entityId) {
   return stateCache.get(entityId);
 }
@@ -196,6 +210,7 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
   if (!ALLOWED_SERVICES.has(service)) return false;
   if (typeof entity_id !== "string" || !ENTITY_ID_RE.test(entity_id)) return false;
   if (!entity_id.startsWith(domain + ".")) return false;
+  if (domain === "switch" && !callableSwitch(entity_id)) return false;
 
   const service_data = { entity_id };
 

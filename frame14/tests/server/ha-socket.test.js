@@ -15,7 +15,7 @@ vi.mock("../../config.js", async (orig) => ({
 }));
 vi.mock("../../entities.js", () => ({
   ENTITIES: {
-    lights: ["light.living_room"],
+    lights: ["light.living_room", "switch.ihome_smartplug_05b4df_outlet"],
     lightAreas: [],
     climate: [],
     climateNames: {},
@@ -155,8 +155,22 @@ describe("callService", () => {
       { domain: "media_player", service: "select_source", entity_id: TV, source: "HDMI 1" },
       { domain: "media_player", service: "media_play", entity_id: PLEX },
       { domain: "media_player", service: "play_media", entity_id: TV, media_content_id: "http://evil/x.mp3", media_content_type: "music" },
+      // A switch only if a page shows it to switch (0.151.0): not one Home
+      // Assistant has that isn't configured, nor the Unraid integration's.
+      { domain: "switch", service: "turn_off", entity_id: "switch.sonoff_1001816bdb" },
+      { domain: "switch", service: "turn_off", entity_id: "switch.unserver_container_plex" },
+      { domain: "switch", service: "turn_off", entity_id: "switch.unserver_vm_home_assistant" },
+      { domain: "switch", service: "toggle", entity_id: "switch.unserver_array" },
     ];
     for (const call of refused) expect(ha.callService(call), JSON.stringify(call)).toBe(false);
+    expect(ha.getState("switch.unserver_container_plex").state).toBe("on");
+  });
+
+  it("switches a configured switch (0.151.0: the only kind it does, with the printer's chamber light)", async () => {
+    await expect(ha.callService({ domain: "switch", service: "turn_on", entity_id: "switch.ihome_smartplug_05b4df_outlet" })).resolves.toEqual({ ok: true });
+    await until(() => ha.getState("switch.ihome_smartplug_05b4df_outlet").state === "on");
+    expect(ha.callableSwitch("switch.ihome_smartplug_05b4df_outlet")).toBe(true);
+    expect(ha.callableSwitch("switch.unserver_container_plex")).toBe(false);
   });
 
   it("takes the configured vacuum's and printer's controls", async () => {

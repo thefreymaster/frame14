@@ -160,4 +160,16 @@ describe("shownNavItems", () => {
     expect(shownNavItems(remote, everyday).map((i) => i.path)).toContain("/album");
     expect(shownNavItems(remote, { ...everyday, photos: false }).map((i) => i.path)).not.toContain("/album");
   });
+
+  it("shows Unraid only while Home Assistant has a server (0.151.0), and not while it's unknown", () => {
+    const frame = defaultNavLayout("frame");
+    expect(shownNavItems(frame, everyday).map((i) => i.path)).not.toContain("/unraid");
+    expect(shownNavItems(frame, { ...everyday, unraid: false }).map((i) => i.path)).not.toContain("/unraid");
+    expect(shownNavItems(frame, { ...everyday, unraid: true }).map((i) => i.path)).toContain("/unraid");
+    // A remote starts with it off; turned on, it shows with a server.
+    const remote = defaultNavLayout("controller");
+    expect(shownNavItems(remote, { ...everyday, unraid: true }).map((i) => i.path)).not.toContain("/unraid");
+    const turnedOn = remote.map((e) => (e.path === "/unraid" ? { ...e, shown: true } : e));
+    expect(shownNavItems(turnedOn, { ...everyday, unraid: true }).map((i) => i.path)).toContain("/unraid");
+  });
 });

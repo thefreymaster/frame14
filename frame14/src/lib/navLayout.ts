@@ -145,17 +145,22 @@ export interface NavToday {
   halloween: boolean;
   /** Immich is set up (usePhotosEnabled, 0.145.0): Photos. Absent, it is. */
   photos?: boolean;
+  /**
+   * Home Assistant has an Unraid server (useUnraidEnabled, 0.151.0): Unraid.
+   * Absent, it hasn't.
+   */
+  unraid?: boolean;
 }
 
 /**
  * This device's nav: the entries it shows, in its order. Football only while
  * a game is on, Halloween on its two days (`today`).
  */
-export function useNavItems({ gameDay, halloween, photos }: NavToday): NavItem[] {
+export function useNavItems({ gameDay, halloween, photos, unraid }: NavToday): NavItem[] {
   const layout = useNavLayout();
   return useMemo(
-    () => shownNavItems(layout, { gameDay, halloween, photos }),
-    [layout, gameDay, halloween, photos],
+    () => shownNavItems(layout, { gameDay, halloween, photos, unraid }),
+    [layout, gameDay, halloween, photos, unraid],
   );
 }
 
@@ -168,6 +173,7 @@ export function shownNavItems(layout: NavEntry[], today: NavToday): NavItem[] {
         i != null &&
         (today.gameDay || !i.gameDay) &&
         (today.halloween || !i.halloween) &&
-        (today.photos !== false || !i.photos),
+        (today.photos !== false || !i.photos) &&
+        (today.unraid === true || !i.unraid),
     );
 }

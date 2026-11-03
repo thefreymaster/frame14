@@ -17,6 +17,7 @@ import { Marquee } from "./routes/Marquee";
 import { Football } from "./routes/Football";
 import { Printer } from "./routes/Printer";
 import { Vacuum } from "./routes/Vacuum";
+import { Unraid } from "./routes/Unraid";
 import { Halloween } from "./routes/Halloween";
 
 export const router = createBrowserRouter([
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { path: "/printer", element: <Printer /> },
       { path: "/vacuum", element: <Vacuum /> },
       { path: "/cameras", element: <Cameras /> },
+      { path: "/unraid", element: <Unraid /> },
       { path: "/marquee", element: <Marquee /> },
       { path: "/football", element: <Football /> },
       // Offered on Oct 30 and 31 (lib/halloween); routed all year, for an

@@ -58,7 +58,7 @@ async function expectSidePanel(page: Page, modal: Locator) {
 
 /** Where the panel's left edge is at the very start (0) or end of its slide. */
 async function slideEdge(modal: Locator, at: "start" | "end") {
-  return modal.evaluate((el, at) => {
+  return modal.evaluate(async (el, at) => {
     const animations = el.getAnimations();
     for (const a of animations) {
       a.pause();
@@ -66,6 +66,13 @@ async function slideEdge(modal: Locator, at: "start" | "end") {
       a.currentTime = at === "start" ? 0 : end - 1;
     }
     const left = el.getBoundingClientRect().left;
+    // Held paused a few frames before it's finished: zag's presence starts
+    // listening for the exit animation's end a frame after the close (its
+    // raf), and an end before that goes unheard — the closed drawer stays in
+    // the DOM for good. A slide that runs its course never ends that soon;
+    // only finishing it here could, and did, now and then in a full run.
+    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    for (let i = 0; i < 3; i++) await frame();
     for (const a of animations) a.finish();
     return left;
   }, at);

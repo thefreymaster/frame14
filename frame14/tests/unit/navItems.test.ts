@@ -21,11 +21,16 @@ describe("NAV_ITEMS", () => {
     expect(NAV_ITEMS.filter((i) => i.photos).map((i) => i.path)).toEqual(["/photos", "/album"]);
   });
 
-  it("keeps the 0.109 order, Halloween (0.128) before Settings", () => {
+  it("keeps the 0.109 order, Unraid (0.151.0) after Cameras, Halloween (0.128) before Settings", () => {
     expect(paths(NAV_ITEMS)).toEqual([
       "/home", "/clock", "/lights", "/climate", "/photos", "/album", "/energy",
-      "/weather", "/printer", "/vacuum", "/cameras", "/calendar", "/football", "/halloween", "/control",
+      "/weather", "/printer", "/vacuum", "/cameras", "/unraid", "/calendar", "/football", "/halloween", "/control",
     ]);
+  });
+
+  it("offers Unraid (0.151.0) only with a server, and off on a remote until turned on", () => {
+    expect(NAV_ITEMS.filter((i) => i.unraid).map((i) => i.path)).toEqual(["/unraid"]);
+    expect(NAV_ITEMS.find((i) => i.path === "/unraid")).toMatchObject({ remoteOff: true });
   });
 
   it("Football and Halloween come and go with the day, and start off on a remote", () => {

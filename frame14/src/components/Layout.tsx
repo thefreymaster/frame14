@@ -35,6 +35,8 @@ const SCROLLING_PATHS = new Set([
   "/home",
   "/printer",
   "/vacuum",
+  // Dozens of containers (0.151.0).
+  "/unraid",
 ]);
 // Pages that scroll on a desktop only: /weather lays its cards out in full
 // there (the frame keeps its fixed, tabbed form), and /energy's Solar tab —

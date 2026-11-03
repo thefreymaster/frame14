@@ -30,6 +30,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 - **Energy** — the power flow now, today's solar curve, month and year history, and the draw per circuit.
 - **Weather** — conditions and advisories, hourly and daily forecasts, the radar.
 - **Printer, Vacuum, Cameras, Calendar** — a Bambu Lab printer with its camera and job, Roborock vacuums with their maps, every camera live — and full screen, with its room's lights at hand — and a two-week agenda.
+- **Unraid** — with Home Assistant's Unraid integration, the server's CPU, memory and temperature, and the status of every Docker container and VM. Read only. Found in Home Assistant; nothing to configure.
 - **And more** — a Plex movie takes over the frames as its poster; a tracked team's game day gets a scoreboard; a doorbell card pops up when someone is at the door; the mic runs an Assist pipeline.
 - **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. Installable as a PWA.
 
@@ -219,6 +220,14 @@ rest_command:
 The brightness command takes a `level` from 0 to 255 (`action: rest_command.frame14_screen_brightness` with `data: { level: 120 }`).
 
 A remote (a phone) and any browser outside Fully ignore the command. The Settings page's **Screen** card does the same by hand — a switch — and on a frame the power button at the header's right turns the screen off with a tap; the card also keeps a schedule, the hours the screen is on, which the add-on runs itself: the screen goes off and on at those times whether or not a remote is open, and the switch works in between. On a phone and on the frame itself (not on a desktop) the card also has a brightness slider, **Adjust to the room** — the frames set their brightness from the tablet's light sensor, between the dimmest and brightest levels of a range slider, the room's light as the frame last read it shown under the switch; the dark hours win while they last, and moving the brightness slider turns it off — and the dark hours, a range during which the screen is at its darkest, the slider's level back at its end; the add-on runs those too, and a screen woken during the dark hours comes up dark. `GET /api/screen` answers the state, the brightness, both pairs of hours, the room-light setting and the last reading; `PUT /api/screen/schedule` and `PUT /api/screen/dark` set the hours, `PUT /api/screen/auto` the room-light setting (`{ "enabled": true, "min": 25, "max": 255 }`).
+
+## Security
+
+Frame14 has no login of its own: anything that reaches its port can use it. Keep the port to the devices that use it, and reach it from outside through something that asks who you are, such as Cloudflare Access. What it does guard:
+
+- **Your token stays on the add-on.** `ha_token` is used by the server and never sent to a browser.
+- **Another website can't use it through your browser.** A browser's request from another site, or another app on the same domain, is refused, socket and routes alike (0.151.0). Home Assistant's `rest_command` calls still work.
+- **It only switches the switches it shows:** the ones in `light_entities` and the printer's chamber light (0.151.0). The vacuum and printer controls are held to the configured devices. Lights, fans and thermostats are not yet held to the configured ones.
 
 ## Changelog & releases
 

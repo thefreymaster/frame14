@@ -21,6 +21,7 @@ process.on("unhandledRejection", (reason) => {
 });
 
 import { INGRESS_PORT, PORT } from "./config.js";
+import { allowSocket, refuseCrossSite } from "./origin-guard.js";
 import { refreshLightAreas, scheduleLightAreasRefresh } from "./ha-areas.js";
 import {
   startHaSocket,
@@ -65,9 +66,10 @@ const clientBuildDir =
     fs.existsSync(path.join(dir, "index.html")),
   ) ?? path.join(__dirname, "dist");
 
-const io = new Server(httpServer, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-});
+// Pages from this server alone (0.151.0, origin-guard.js): the socket had
+// `cors: { origin: "*" }`, and a WebSocket isn't held by CORS anyway, so any
+// page a browser on the network opened could connect and switch things.
+const io = new Server(httpServer, { allowRequest: allowSocket });
 
 // Make io available to route handlers via app.locals
 app.locals.io = io;
@@ -269,7 +271,9 @@ app.use(
   }),
 );
 
-// API routes
+// API routes. A browser's request from another site is refused first
+// (origin-guard.js, 0.151.0): some act on a plain GET, which a page can send.
+app.use("/api", refuseCrossSite);
 app.use("/api", healthRouter);
 app.use("/api/docs", docsRouter);
 app.use("/api/weather", weatherRouter);

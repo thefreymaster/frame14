@@ -4,7 +4,7 @@ export const openApiDocument = {
     title: "Frame14 API",
     version: "1.0.0",
     description:
-      "REST API for the Frame14 server. Connected Socket.IO clients can emit `change` and receive `change_view` events to synchronize view changes.",
+      "REST API for the Frame14 server. Connected Socket.IO clients can emit `change` and receive `change_view` events to synchronize view changes. A browser's request from another site — its `Sec-Fetch-Site` cross-site or same-site, or, from a browser without that header, an `Origin` that isn't this server's — is refused with a 403 on every route, and its socket isn't accepted (0.151.0); a request with neither header, such as Home Assistant's rest_command, passes.",
   },
   servers: [
     {
@@ -114,7 +114,7 @@ export const openApiDocument = {
         operationId: "getEntities",
         summary: "The entity configuration, with the lights by room",
         description:
-          "The entity ids the add-on is configured with (options.json, or frame14.json outside the add-on). `lights` is the explicit light_entities list grown by every light in the configured light_areas, and `rooms` groups the lights and switches by Home Assistant area — the configured areas first, then any other area a light is in — each with the configured `cameras` in it (0.144: a camera's full screen carries its room's lights). Until the registries have been read, `lights` is the explicit list and `rooms` is empty. Pushed again over Socket.IO (\"entities\") when the rooms change.",
+          "The entity ids the add-on is configured with (options.json, or frame14.json outside the add-on). `lights` is the explicit light_entities list grown by every light in the configured light_areas, and `rooms` groups the lights and switches by Home Assistant area — the configured areas first, then any other area a light is in — each with the configured `cameras` in it (0.144: a camera's full screen carries its room's lights). `unraid` (0.151.0) is every server Home Assistant's Unraid integration has, found in the registries by unique id: its CPU and memory sensors, its containers (each one's switch, read for its state and Docker's status — the page is read only and the server won't switch it — and its CPU and memory sensors while those are enabled) and its VMs (each one's switch, read the same way), for the Unraid page. Until the registries have been read, `lights` is the explicit list and `rooms` and `unraid` are empty. Pushed again over Socket.IO (\"entities\") when any of them change.",
         responses: {
           200: {
             description: "The entity configuration.",
@@ -139,6 +139,47 @@ export const openApiDocument = {
                     climate: { type: "array", items: { type: "string" } },
                     vacuums: { type: "array", items: { type: "string" } },
                     fans: { type: "array", items: { type: "string" } },
+                    unraid: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", description: "The integration's config entry." },
+                          name: { type: "string", example: "UnServer" },
+                          cpu: { type: "string", nullable: true, example: "sensor.unserver_cpu_usage" },
+                          cpuTemperature: { type: "string", nullable: true },
+                          cpuPower: { type: "string", nullable: true },
+                          memory: { type: "string", nullable: true, example: "sensor.unserver_ram_usage" },
+                          memoryUsed: { type: "string", nullable: true },
+                          dockerCpu: { type: "string", nullable: true },
+                          dockerMemoryUsed: { type: "string", nullable: true },
+                          upSince: { type: "string", nullable: true },
+                          version: { type: "string", nullable: true },
+                          containers: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                name: { type: "string", example: "Plex" },
+                                switch: { type: "string", example: "switch.unserver_container_plex" },
+                                cpu: { type: "string", nullable: true },
+                                memory: { type: "string", nullable: true },
+                              },
+                            },
+                          },
+                          vms: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                name: { type: "string", example: "Home Assistant" },
+                                switch: { type: "string", example: "switch.unserver_vm_home_assistant" },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                   additionalProperties: true,
                 },

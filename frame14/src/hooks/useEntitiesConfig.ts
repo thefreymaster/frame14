@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
 import { socket } from "../lib/socket";
+import type { UnraidServer } from "../lib/unraid";
 
 /** A room (a Home Assistant area) and the configured lights and switches in it. */
 export interface LightRoom {
@@ -52,6 +53,12 @@ export interface EntitiesConfig {
    * Absent from a config restored from before it: set up.
    */
   photos?: boolean;
+  /**
+   * The Unraid servers (0.151.0, unraid.js): found in Home Assistant's
+   * registries, none until they've been read. Absent from a config restored
+   * from before it: none.
+   */
+  unraid?: UnraidServer[];
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

@@ -105,6 +105,27 @@ test.describe("modals", () => {
     await expect(modal).toBeHidden();
   });
 
+  test.describe("on an iPhone", () => {
+    // Safari's engine (0.149.0): the backdrop's blur is back here, and only
+    // here — the frame's Android agent below, the phone project's and the
+    // desktop's keep the backdrop a plain dim (expectSheet, the dialog test).
+    test.use({
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+    });
+
+    test("the page behind a sheet is blurred as well as dimmed", async ({ page }) => {
+      test.skip(test.info().project.name !== "desktop", "one run is enough");
+      await page.goto("/climate");
+      await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await expect(page.locator("html")).toHaveAttribute("data-safari", "");
+      await expect(page.locator('[data-scope="dialog"][data-part="backdrop"]')).toHaveCSS("backdrop-filter", "blur(2px)");
+    });
+  });
+
   test.describe("on the frame", () => {
     // The kitchen tablet: an Android user agent (so never a desktop, whatever
     // its size), portrait at 1600x2400.
@@ -121,6 +142,8 @@ test.describe("modals", () => {
       const modal = page.getByRole("dialog");
       await expect(modal.getByText("Heating now")).toBeVisible();
       await expectSheet(page, modal);
+      // Not Safari: the lag 0.135.1 removed the blur for stays gone (0.149.0).
+      await expect(page.locator("html")).not.toHaveAttribute("data-safari");
       await modal.getByRole("button", { name: "Close" }).click();
       await expect(modal).toBeHidden();
     });

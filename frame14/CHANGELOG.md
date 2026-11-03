@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.149.0
+
+- Fixed: a thermostat or fan tile that's on has its coloured ring rounded on the inside as well as the outside, the same width all the way round. The inner corners were square. No other ring in the dashboard had this problem.
+- Changed: on the thermostat, fan and light dials, the marked tick slides along the arc to its new place when you press − or +, instead of jumping.
+- Changed: the dials' big number rolls from one value to the next as it changes.
+- Changed: on an iPhone, an iPad and Safari on a Mac, the page behind a dialog or sheet is softly blurred again as well as dimmed. Android devices, the frame among them, keep the plain dim, so its sheets stay smooth.
+
 ## 0.148.0
 
 - Added: an **Appearance** card under Settings › Device on a remote: its own Theme and Colors, kept on that device. A remote no longer changes the frames' look, nor takes theirs. A remote starts with the theme it had; a new one follows its own system setting.

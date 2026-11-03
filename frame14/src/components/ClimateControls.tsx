@@ -17,6 +17,7 @@ import {
 import { ARC_MAX_TEMP, ARC_MIN_TEMP } from "../lib/thermostatArc";
 import { FanSpeedSlider } from "./FanSpeedSlider";
 import { ThermostatDial } from "./ThermostatDial";
+import NumberFlow from "@number-flow/react";
 
 /** What Home Assistant last reported — local state re-syncs when it changes. */
 function remoteOf(unit: HomeClimate) {
@@ -288,7 +289,11 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
             <AccentIcon />
             <Text as="span">{statusLabel}</Text>
           </HStack>
-          <Text {...THERMOSTAT_READING}>{displayedTemp}°</Text>
+          {/* NumberFlow: a step rolls the digits (0.149.0, the user: "the
+              numbers should use numberflow"). */}
+          <Text {...THERMOSTAT_READING} data-dial-reading>
+            <NumberFlow value={displayedTemp} suffix="°" />
+          </Text>
           <Text textStyle="xs" color="fg.muted">
             {displayLabel}
           </Text>

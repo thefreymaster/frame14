@@ -9,6 +9,17 @@ vi.mock("../../src/lib/callService", () => ({
   callLightService: calls.callLightService,
 }));
 
+// NumberFlow animates with web APIs jsdom lacks; the figure is what matters
+// (0.149.0: the dial's reading is one).
+vi.mock("@number-flow/react", () => ({
+  default: ({ value, suffix }: { value: number; suffix?: string }) => (
+    <span>
+      {value}
+      {suffix}
+    </span>
+  ),
+}));
+
 import { LightControls } from "../../src/components/LightControls";
 
 const ID = "light.living_room";

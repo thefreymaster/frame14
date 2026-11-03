@@ -10,6 +10,7 @@ import {
   MODE_ICON,
   SQUARE_TILE_READING,
   TILE_MIN_LG_REM,
+  tileRing,
 } from "../lib/hvac";
 
 /**
@@ -36,7 +37,9 @@ export type ClimateTileSize = "md" | "lg" | "xl";
  * the button that opens the dialog. Its corners are `sm` (0.145.4), concentric
  * with the card around it as an inset outline is — the card's `surface` less
  * the gap between them, which is that much or more, floored at `sm` — like
- * every tile in a card; they were the card's own `surface` until then.
+ * every tile in a card; they were the card's own `surface` until then. A lit
+ * tile's are the ring's width rounder, so the ring's inner edge is `sm`
+ * (0.149.0, lib/hvac's tileRing).
  */
 export function ClimateTile({
   unit,
@@ -98,15 +101,11 @@ export function ClimateTile({
       size="sm"
       variant="outline"
       colorPalette={palette}
-      // The ring is the 1px outline border plus an inset shadow, 0.25rem in
-      // all, so a lit tile is exactly the size of an off one.
-      borderColor={on ? ring : undefined}
-      boxShadow={on ? `inset 0 0 0 calc(0.25rem - 1px) ${ring}` : undefined}
-      transition="box-shadow 400ms ease, border-color 400ms ease"
+      // The ring, and the corner that keeps its inner edge `sm` (lib/hvac).
+      {...tileRing(on, ring)}
       cursor="pointer"
       focusVisibleRing="outside"
       _active={{ bg: "bg.emphasized" }}
-      borderRadius="sm"
       aspectRatio={square ? "1" : undefined}
     >
       <button

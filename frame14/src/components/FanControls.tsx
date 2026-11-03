@@ -8,6 +8,7 @@ import { hvacPalette } from "../lib/hvac";
 import { FanIcon } from "./FanIcon";
 import { Switch } from "./ui/switch";
 import { ThermostatDial } from "./ThermostatDial";
+import NumberFlow from "@number-flow/react";
 
 /** What Home Assistant last reported — local state re-syncs when it changes. */
 function remoteOf(fan: HomeFan) {
@@ -156,8 +157,14 @@ export function FanControls({ fan }: { fan: HomeFan }) {
             <FanIcon on={on} percentage={pct} size="1em" color="inherit" />
             <Text as="span">{statusLabel}</Text>
           </HStack>
-          <Text textStyle="6xl" fontWeight="light" lineHeight="1">
-            {pct}%
+          {/* NumberFlow, as the thermostat's (0.149.0). */}
+          <Text
+            textStyle="6xl"
+            fontWeight="light"
+            lineHeight="1"
+            data-dial-reading
+          >
+            <NumberFlow value={pct} suffix="%" />
           </Text>
           <Text textStyle="xs" color="fg.muted">
             Fan speed

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { lightTile, resetStub, splashGone, stub } from "./helpers";
+import { dialReading, lightTile, resetStub, splashGone, stub } from "./helpers";
 
 /** The board titled `title`, and the tiles in it. */
 function board(page: Page, title: string) {
@@ -144,7 +144,7 @@ test.describe("the Lights page", () => {
     await expect(dialog.getByText("Heat", { exact: true })).toHaveCount(0);
 
     await dialog.getByRole("button", { name: "Raise the brightness" }).click();
-    await expect(dialog.getByText("90%", { exact: true })).toBeVisible();
+    await expect.poll(() => dialReading(dialog)).toBe("90%");
     await expect(dial).toHaveAttribute("aria-valuenow", "90");
     // Closed before the taps' send: it still reaches Home Assistant.
     await dialog.getByRole("button", { name: "Close" }).click();
@@ -167,7 +167,7 @@ test.describe("the Lights page", () => {
     // The switch's input is visually hidden; its label takes the tap.
     await dialog.getByText("On", { exact: true }).click();
     await expect(dialog.getByRole("checkbox")).not.toBeChecked();
-    await expect(dialog.getByText("0%", { exact: true })).toBeVisible();
+    await expect.poll(() => dialReading(dialog)).toBe("0%");
     await expect(dialog.getByText("Light off")).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Lower the brightness" })).toBeDisabled();
     await page.keyboard.press("Escape");

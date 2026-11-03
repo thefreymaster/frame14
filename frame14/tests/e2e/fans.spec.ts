@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetStub } from "./helpers";
+import { dialReading, resetStub } from "./helpers";
 
 test.describe("the Fans card", () => {
   test.beforeEach(async ({ request }) => {
@@ -29,7 +29,7 @@ test.describe("the Fans card", () => {
     await expect(dialog.getByRole("button", { name: /target temperature/ })).toHaveCount(0);
 
     await dialog.getByRole("button", { name: "Raise the fan speed" }).click();
-    await expect(dialog.getByText("75%", { exact: true })).toBeVisible();
+    await expect.poll(() => dialReading(dialog)).toBe("75%");
     await expect(dial).toHaveAttribute("aria-valuenow", "75");
     // Closed before the taps' send: it still reaches Home Assistant.
     await page.keyboard.press("Escape");
@@ -44,7 +44,7 @@ test.describe("the Fans card", () => {
     const lower = dialog.getByRole("button", { name: "Lower the fan speed" });
     await lower.click();
     await lower.click();
-    await expect(dialog.getByText("0%", { exact: true })).toBeVisible();
+    await expect.poll(() => dialReading(dialog)).toBe("0%");
     await expect(dialog.getByText("Fan off")).toBeVisible();
     await expect(lower).toBeDisabled();
     await dialog.getByRole("button", { name: "Close" }).click();

@@ -1,11 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, type BoxProps } from "@chakra-ui/react";
 import {
   arcPath,
   buildTicks,
+  MARKER,
   tFromPoint,
   tToValue,
   THERMOSTAT_SCALE,
+  valueToDegrees,
   type ArcScale,
 } from "../lib/thermostatArc";
 
@@ -30,6 +32,13 @@ type ArcControl = {
  * tap or drag anywhere along it, committing on pointerup. `footer` sits along
  * the bottom of the face, under the readout, where the arc leaves the disc
  * empty (the −/+ buttons).
+ *
+ * The marked tick is a line of its own over the plain ticks, turned to the
+ * value about the dial's centre (lib/thermostatArc's MARKER), so a step — the
+ * −/+ buttons, HA's echo — slides it along the arc instead of jumping it
+ * (0.149.0, the user: "when you click the plus minus buttons the tick above
+ * should animate when it moves"); under a finger it follows at once, and
+ * under reduced motion it never slides.
  */
 export function ThermostatDial({
   ring,
@@ -57,6 +66,8 @@ export function ThermostatDial({
 } & Omit<BoxProps, "children">) {
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef(false);
+  // The marker follows a finger without its slide.
+  const [dragging, setDragging] = useState(false);
   const currentValueRef = useRef(value);
   useEffect(() => {
     currentValueRef.current = value;
@@ -85,6 +96,7 @@ export function ThermostatDial({
       // ignore
     }
     draggingRef.current = true;
+    setDragging(true);
     control?.onDragStart();
     updateFromEvent(e);
   }
@@ -96,6 +108,7 @@ export function ThermostatDial({
   function handlePointerEnd(e: React.PointerEvent<SVGElement>) {
     if (!draggingRef.current) return;
     draggingRef.current = false;
+    setDragging(false);
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {
@@ -106,7 +119,8 @@ export function ThermostatDial({
       control?.onCommit(currentValueRef.current);
   }
 
-  const ticks = value != null ? buildTicks(value, scale) : null;
+  // The plain ticks; the marked one is MARKER, drawn over them.
+  const ticks = value != null ? buildTicks(null, scale) : null;
 
   return (
     <Box position="relative" aspectRatio="1" {...rest}>
@@ -157,8 +171,23 @@ export function ThermostatDial({
         )}
       </Box>
 
-      {ticks && (
-        <Box position="absolute" inset="0" zIndex={2} pointerEvents="none">
+      {ticks && value != null && (
+        <Box
+          position="absolute"
+          inset="0"
+          zIndex={2}
+          pointerEvents="none"
+          css={{
+            "& [data-dial-marker]": {
+              transition: dragging
+                ? "stroke 400ms ease"
+                : "transform 320ms cubic-bezier(0.2, 0, 0, 1), stroke 400ms ease",
+            },
+            "@media (prefers-reduced-motion: reduce)": {
+              "& [data-dial-marker]": { transition: "none" },
+            },
+          }}
+        >
           <svg
             ref={svgRef}
             // Its drag is its own, not the sheet's (Modal's swipe to close).
@@ -175,18 +204,29 @@ export function ThermostatDial({
                 y1={tick.y1}
                 x2={tick.x2}
                 y2={tick.y2}
-                stroke={tick.active ? accent : ring}
-                strokeWidth={tick.active ? 1.4 : 0.7}
+                stroke={ring}
+                strokeWidth={0.7}
                 strokeLinecap="round"
-                opacity={tick.active ? 1 : 0.55}
+                opacity={0.55}
                 pointerEvents="none"
-                style={
-                  tick.active
-                    ? { filter: `drop-shadow(0 0 1.5px ${accent})` }
-                    : undefined
-                }
               />
             ))}
+            <line
+              data-dial-marker
+              x1={MARKER.x1}
+              y1={MARKER.y}
+              x2={MARKER.x2}
+              y2={MARKER.y}
+              stroke={accent}
+              strokeWidth={1.4}
+              strokeLinecap="round"
+              pointerEvents="none"
+              style={{
+                transform: `rotate(${valueToDegrees(value, scale)}deg)`,
+                transformOrigin: `${MARKER.center}px ${MARKER.center}px`,
+                filter: `drop-shadow(0 0 1.5px ${accent})`,
+              }}
+            />
             {control && (
               <path
                 d={arcPath(0, 1)}

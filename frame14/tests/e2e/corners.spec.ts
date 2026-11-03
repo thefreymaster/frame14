@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { cornersRounderThanConcentric, resetStub } from "./helpers";
+import { cornersRounderThanConcentric, resetStub, squareInsideRings } from "./helpers";
 
 // No rounded box sits in a rounded box with a rounder corner than concentric
 // (0.145.4, the user: "In the same idea of a 3d print where the outer border
 // radius should not match the inner"): a tile in a card is the card's radius
 // less the gap between them, which here is always `sm`. The thermostat and
 // fan tiles had the cards' own radius, and so did the remote's Views tiles.
+// And no ring leaves its inner corner square (0.149.0): a ring as wide as its
+// box's corner or wider — the lit thermostat and fan tiles' was.
 const PAGES = [
   "/home",
   "/lights",
@@ -35,6 +37,7 @@ test.describe("nested corners", () => {
       // The cards' data in, and their entrance played.
       await page.waitForTimeout(800);
       expect(await cornersRounderThanConcentric(page), path).toEqual([]);
+      expect(await squareInsideRings(page), path).toEqual([]);
     }
   });
 
@@ -45,5 +48,6 @@ test.describe("nested corners", () => {
     await expect(dialog).toBeVisible();
     await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     expect(await cornersRounderThanConcentric(page)).toEqual([]);
+    expect(await squareInsideRings(page)).toEqual([]);
   });
 });

@@ -40,6 +40,30 @@ export function hvacPalette(key: string): HvacPalette {
   return { accent, ring, palette };
 }
 
+/** How wide the ring is that a thermostat or fan tile wears while it's on. */
+export const TILE_RING_WIDTH = "0.25rem";
+
+/**
+ * A tile's ring while it's on (ClimateTiles, FanSection): the 1px outline
+ * border plus an inset shadow, TILE_RING_WIDTH in all, so a lit tile is
+ * exactly the size of an off one — and its corner the ring's width rounder
+ * than an off tile's `sm`, so the ring's inner edge is `sm` too and the ring
+ * keeps its width round the corner (0.149.0, the user: "Is it possible to
+ * round the inner corners too?" — on a `sm` corner the inner edge of a ring
+ * as wide was square). Off, the plain `sm` outline card.
+ */
+export function tileRing(on: boolean, ring: string) {
+  return {
+    borderColor: on ? ring : undefined,
+    boxShadow: on ? `inset 0 0 0 calc(${TILE_RING_WIDTH} - 1px) ${ring}` : undefined,
+    borderRadius: on
+      ? `calc(var(--chakra-radii-sm) + ${TILE_RING_WIDTH})`
+      : "sm",
+    transition:
+      "box-shadow 400ms ease, border-color 400ms ease, border-radius 400ms ease",
+  };
+}
+
 const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
   heating: "heat",
   cooling: "cool",

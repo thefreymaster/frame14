@@ -8,7 +8,7 @@ import { FanDialog } from "./FanDialog";
 import { FanIcon } from "./FanIcon";
 import { FanSkeleton } from "./skeletons/FanSkeleton";
 import { presetLabel } from "../lib/fan";
-import { climateGridCss, hvacPalette } from "../lib/hvac";
+import { climateGridCss, hvacPalette, tileRing } from "../lib/hvac";
 
 /**
  * One fan as a Stat tile — the thermostat tiles' layout (ClimateSection's
@@ -21,7 +21,9 @@ import { climateGridCss, hvacPalette } from "../lib/hvac";
  * muted and a grey "Off" Badge. The whole tile is the button that opens the
  * dialog (FanDialog: the thermostat's dial for the speed, since 0.140). Its
  * corners are `sm`, concentric with the fans card around it (0.145.4; the
- * card's own `surface` until then), as every tile in a card.
+ * card's own `surface` until then), as every tile in a card — the ring's width
+ * rounder while it's on, so the ring's inner edge is `sm` (0.149.0, lib/hvac's
+ * tileRing).
  */
 function FanTile({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
   const on = fan.state === "on";
@@ -40,15 +42,11 @@ function FanTile({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
       size="sm"
       variant="outline"
       colorPalette={palette}
-      // The ring is the 1px outline border plus an inset shadow, 0.25rem in
-      // all, so a lit tile is exactly the size of an off one.
-      borderColor={on ? ring : undefined}
-      boxShadow={on ? `inset 0 0 0 calc(0.25rem - 1px) ${ring}` : undefined}
-      transition="box-shadow 400ms ease, border-color 400ms ease"
+      // The ring, and the corner that keeps its inner edge `sm` (lib/hvac).
+      {...tileRing(on, ring)}
       cursor="pointer"
       focusVisibleRing="outside"
       _active={{ bg: "bg.emphasized" }}
-      borderRadius="sm"
     >
       <button
         type="button"

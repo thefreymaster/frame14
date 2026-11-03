@@ -21,6 +21,7 @@ import {
 import { LightSwatch } from "./LightSwatch";
 import { Switch } from "./ui/switch";
 import { ThermostatDial } from "./ThermostatDial";
+import NumberFlow from "@number-flow/react";
 
 /**
  * How long the dial's −/+ buttons wait after the last tap before sending the
@@ -186,8 +187,14 @@ export function LightControls({
               </Icon>
               <Text as="span">{on ? "Light on" : "Light off"}</Text>
             </HStack>
-            <Text textStyle="6xl" fontWeight="light" lineHeight="1">
-              {pct}%
+            {/* NumberFlow, as the thermostat's (0.149.0). */}
+            <Text
+              textStyle="6xl"
+              fontWeight="light"
+              lineHeight="1"
+              data-dial-reading
+            >
+              <NumberFlow value={pct} suffix="%" />
             </Text>
             <Text textStyle="xs" color="fg.muted">
               Brightness

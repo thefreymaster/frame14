@@ -4,9 +4,11 @@ import {
   ARC_MAX_TEMP,
   ARC_MIN_TEMP,
   buildTicks,
+  MARKER,
   tFromPoint,
   THERMOSTAT_SCALE,
   tToValue,
+  valueToDegrees,
   valueToT,
 } from "../../src/lib/thermostatArc";
 
@@ -47,5 +49,21 @@ describe("the arc's scale", () => {
     expect(tFromPoint(10, 80)).toBe(0);
     expect(tFromPoint(90, 80)).toBe(1);
     expect(tFromPoint(50, 6)).toBeCloseTo(0.5, 5);
+  });
+});
+
+describe("the marked tick (0.149.0)", () => {
+  it("is turned to its value along the 120° arc, −150° to −30°", () => {
+    expect(valueToDegrees(60)).toBeCloseTo(-150);
+    expect(valueToDegrees(85)).toBeCloseTo(-30);
+    expect(valueToDegrees(50, FAN_SCALE)).toBeCloseTo(-90);
+  });
+
+  it("lies where a marked tick does, unturned along +x from the centre", () => {
+    const [marked] = buildTicks(70).filter((t) => t.active);
+    const length = Math.hypot(marked.x2 - marked.x1, marked.y2 - marked.y1);
+    expect(MARKER.x2 - MARKER.x1).toBeCloseTo(length);
+    expect(MARKER.y).toBe(MARKER.center);
+    expect(Math.hypot(marked.x1 - MARKER.center, marked.y1 - MARKER.center)).toBeCloseTo(MARKER.x1 - MARKER.center);
   });
 });

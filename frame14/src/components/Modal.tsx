@@ -40,7 +40,12 @@ const SHEET_MAX_H = `calc(100dvh - env(safe-area-inset-top, 0px) - ${PAGE_GUTTER
  * finger's drag move it without repainting its 1600px of content, and the
  * backdrop only dims — its blur (provider.tsx) went, a full-screen
  * `backdrop-filter` being what the frame's browser recomputed on every frame
- * of the slide.
+ * of the slide. It came back in 0.149.0 on Safari's engine alone (the user:
+ * "on a safari device add the backdrop blur back. Be sure not to introduce
+ * the bug for android again"): BACKDROP_BLUR under `<html data-safari>`
+ * (lib/deviceMode's isSafariEngine, set by main.tsx), so an iPhone, an iPad
+ * and Safari on a Mac blur the page behind a modal and the frame, an
+ * Android tablet, never does.
  */
 export function Root({
   placement,
@@ -260,11 +265,23 @@ export function Body(props: Dialog.BodyProps) {
   );
 }
 
+/**
+ * The backdrop's blur, on Safari's engine only (0.149.0; see Root): 2px, the
+ * "minimal and subtle" one it had last (0.135). The prefixed property for an
+ * older WebKit, as FROST has it.
+ */
+const BACKDROP_BLUR = {
+  "[data-safari] &": {
+    backdropFilter: "blur(2px)",
+    WebkitBackdropFilter: "blur(2px)",
+  },
+} as const;
+
 export function Backdrop(props: Dialog.BackdropProps) {
   return useDrawer() ? (
-    <Drawer.Backdrop {...props} />
+    <Drawer.Backdrop css={BACKDROP_BLUR} {...props} />
   ) : (
-    <Dialog.Backdrop {...props} />
+    <Dialog.Backdrop css={BACKDROP_BLUR} {...props} />
   );
 }
 

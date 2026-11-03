@@ -8,6 +8,17 @@ vi.mock("../../src/lib/callService", () => ({
   callFanService: calls.callFanService,
 }));
 
+// NumberFlow animates with web APIs jsdom lacks; the figure is what matters
+// (0.149.0: the dial's reading is one).
+vi.mock("@number-flow/react", () => ({
+  default: ({ value, suffix }: { value: number; suffix?: string }) => (
+    <span>
+      {value}
+      {suffix}
+    </span>
+  ),
+}));
+
 import { FanControls } from "../../src/components/FanControls";
 
 function fan(overrides: Partial<HomeFan> = {}): HomeFan {

@@ -53,7 +53,9 @@ export type CornerFinding = {
  * Rounded boxes nested in rounded boxes whose corner is rounder than
  * concentric with the container's (0.145.4): an inset outline's radius is the
  * container's less the gap between them, never less than `sm` (a quarter rem)
- * here. Pills and circles are left out, and so are corners too far from the
+ * here — plus the box's own ring, its border and an inset ring shadow, since a
+ * ring keeps its width round the corner only with its inner edge that much
+ * less round (0.149.0: a lit thermostat tile is `sm` + its 0.25rem ring). Pills and circles are left out, and so are corners too far from the
  * container's to read against it (a gap past twice the two radii). Each
  * one found is described — the element, its container, the corner and the
  * radii — for the test's message; none is the expectation.
@@ -66,6 +68,17 @@ export function cornersRounderThanConcentric(page: Page): Promise<CornerFinding[
       [cs.borderTopLeftRadius, cs.borderTopRightRadius, cs.borderBottomRightRadius, cs.borderBottomLeftRadius].map(
         (v) => parseFloat(v) || 0,
       );
+    // A box's own ring: its border and an inset shadow with no offset or
+    // blur ("rgb(…) 0px 0px 0px 3px inset", the spread last).
+    const ringOf = (cs: CSSStyleDeclaration) => {
+      let ring = parseFloat(cs.borderTopWidth) || 0;
+      for (const shadow of cs.boxShadow.split(/,(?![^(]*\))/)) {
+        if (!/\binset\b/.test(shadow)) continue;
+        const [x, y, blur, spread] = (shadow.replace(/\([^)]*\)/g, "").match(/-?[\d.]+px/g) ?? []).map(parseFloat);
+        if (!x && !y && !blur && spread > 0) ring += spread;
+      }
+      return ring;
+    };
     const transparent = (c: string) => !c || c === "transparent" || /rgba\([^)]*,\s*0\)$/.test(c) || /\/\s*0\)$/.test(c);
     // A box that draws something: a picture, a fill, an edge or a shadow.
     const drawn = (el: Element, cs: CSSStyleDeclaration) =>
@@ -110,7 +123,7 @@ export function cornersRounderThanConcentric(page: Page): Promise<CornerFinding[
         if (dx < -0.5 || dy < -0.5) return; // not inside there
         const gap = Math.max(dx, dy);
         if (gap > 2 * (ac[i] + ec[i])) return; // too far to read against it
-        const max = Math.max(ac[i] - gap, floor);
+        const max = Math.max(ac[i] - gap, floor + ringOf(cs));
         if (ec[i] > max + 0.75) {
           out.push({
             el: describe(el),
@@ -128,4 +141,68 @@ export function cornersRounderThanConcentric(page: Page): Promise<CornerFinding[
     const seen = new Set<string>();
     return out.filter((f) => !seen.has(`${f.el}|${f.container}`) && !!seen.add(`${f.el}|${f.container}`));
   });
+}
+
+/**
+ * Rounded boxes whose ring — their border, an inset ring shadow (no offset
+ * or blur) and an inset outline — is as wide as their corner or wider, so the
+ * ring's inner edge is square (0.149.0, the user: "Is it possible to round the
+ * inner corners too?", then "Do this all over where this was a problem": a lit
+ * thermostat tile's 0.25rem ring on a 0.25rem corner was). Rings under 2px
+ * (a hairline border) are left out. Each one found is described for the
+ * test's message; none is the expectation.
+ */
+export function squareInsideRings(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const transparent = (c: string) => !c || c === "transparent" || /rgba\([^)]*,\s*0\)$/.test(c) || /\/\s*0\)$/.test(c);
+    const out = new Set<string>();
+    for (const el of document.querySelectorAll("body *")) {
+      const cs = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2 || cs.visibility === "hidden") continue;
+      const sides = ["Top", "Right", "Bottom", "Left"] as const;
+      const border = Math.max(
+        ...sides.map((side) =>
+          cs.getPropertyValue(`border-${side.toLowerCase()}-style`) !== "none" &&
+          !transparent(cs.getPropertyValue(`border-${side.toLowerCase()}-color`))
+            ? parseFloat(cs.getPropertyValue(`border-${side.toLowerCase()}-width`)) || 0
+            : 0,
+        ),
+      );
+      let spread = 0;
+      for (const shadow of cs.boxShadow.split(/,(?![^(]*\))/)) {
+        if (!/\binset\b/.test(shadow)) continue;
+        const [x, y, blur, sp] = (shadow.replace(/\([^)]*\)/g, "").match(/-?[\d.]+px/g) ?? []).map(parseFloat);
+        if (!x && !y && !blur && sp > 0) spread += sp;
+      }
+      const outlineWidth = parseFloat(cs.outlineWidth) || 0;
+      const outline =
+        cs.outlineStyle !== "none" && outlineWidth > 0 && !transparent(cs.outlineColor) && parseFloat(cs.outlineOffset) <= -outlineWidth
+          ? outlineWidth
+          : 0;
+      const ring = border + spread + outline;
+      if (ring < 2) continue;
+      const rounded = [cs.borderTopLeftRadius, cs.borderTopRightRadius, cs.borderBottomRightRadius, cs.borderBottomLeftRadius]
+        .map((v) => parseFloat(v) || 0)
+        .filter((v) => v > 0.5);
+      if (!rounded.length || Math.min(...rounded) - ring >= 1) continue;
+      const label = el.getAttribute("aria-label") ?? el.getAttribute("data-part") ?? "";
+      const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 28);
+      out.add(`${el.tagName.toLowerCase()}${label ? `[${label}]` : ""} "${text}": a ${ring.toFixed(1)}px ring on a ${Math.min(...rounded).toFixed(1)}px corner`);
+    }
+    return [...out];
+  });
+}
+
+/**
+ * The number a dial shows — ClimateControls', FanControls' and LightControls'
+ * `[data-dial-reading]` (0.149.0): a NumberFlow, which draws its digits in a
+ * shadow root and names itself ("72°", role img) through ElementInternals, as
+ * a screen reader hears it. Playwright's getByText and getByRole see neither,
+ * so this reads that name. Poll it: the reading rolls to a new number.
+ */
+export function dialReading(scope: Locator): Promise<string | null> {
+  return scope
+    .locator("[data-dial-reading] number-flow-react")
+    .evaluate((el) => (el as HTMLElement & { _internals?: ElementInternals })._internals?.ariaLabel ?? null);
 }

@@ -8,6 +8,17 @@ vi.mock("../../src/lib/callService", () => ({
   callClimateService: calls.callClimateService,
 }));
 
+// NumberFlow animates with web APIs jsdom lacks; the figure is what matters
+// (0.149.0: the dial's reading is one).
+vi.mock("@number-flow/react", () => ({
+  default: ({ value, suffix }: { value: number; suffix?: string }) => (
+    <span>
+      {value}
+      {suffix}
+    </span>
+  ),
+}));
+
 import { ClimateControls } from "../../src/components/ClimateControls";
 
 function unit(overrides: Partial<HomeClimate> = {}): HomeClimate {
@@ -56,6 +67,17 @@ describe("ClimateControls' −/+ buttons", () => {
     expect(calls.callClimateService.mock.calls).toEqual([
       ["climate.first_floor", "set_temperature", { temperature: 72 }],
     ]);
+  });
+
+  it("turn the arc's marked tick to the new target, to slide there (0.149.0)", async () => {
+    const { container } = renderWithProviders(<ClimateControls unit={unit()} />);
+    const marker = () => container.querySelector<SVGLineElement>("[data-dial-marker]")!;
+    // 70° of 60–85° on the 120° arc from −150°: −102°.
+    expect(marker().style.transform).toBe("rotate(-102deg)");
+    await act(async () => {
+      raise().click();
+    });
+    expect(marker().style.transform).toBe("rotate(-97.2deg)");
   });
 
   it("step down too", async () => {

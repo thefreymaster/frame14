@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetStub } from "./helpers";
+import { dialReading, resetStub } from "./helpers";
 
 test.describe("the Climate page", () => {
   test.beforeEach(async ({ request }) => {
@@ -12,6 +12,41 @@ test.describe("the Climate page", () => {
     await expect(page.getByRole("button", { name: /^2nd Floor AC: 68°, Off/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /^3rd Floor AC: 75°, Cooling to 72°/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Master Room AC: 68°, Off/ })).toBeVisible();
+  });
+
+  test("a lit tile's ring is rounded inside as well as out, as wide all round (0.149.0)", async ({ page }) => {
+    await page.goto("/climate");
+    // The ring's inner edge: the corner less the border and the inset ring
+    // shadow's spread ("rgb(…) 0px 0px 0px 3px inset").
+    const corner = (name: RegExp) =>
+      page.getByRole("button", { name }).evaluate((el) => {
+        const cs = getComputedStyle(el);
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const spread = parseFloat(/(-?[\d.]+)px inset/.exec(cs.boxShadow)?.[1] ?? "0");
+        const outer = parseFloat(cs.borderTopLeftRadius);
+        return { outer: outer / rem, ring: (parseFloat(cs.borderTopWidth) + spread) / rem, inner: (outer - parseFloat(cs.borderTopWidth) - spread) / rem };
+      });
+    // Heating: a 0.25rem ring, its inner edge `sm` (0.25rem) — it was square.
+    await expect.poll(() => corner(/^1st Floor AC:/)).toEqual({ outer: 0.5, ring: 0.25, inner: 0.25 });
+    // Off: the plain outline card, `sm` outside.
+    expect((await corner(/^2nd Floor AC:/)).outer).toBe(0.25);
+  });
+
+  test("the dial's marked tick slides to a step, and the reading rolls (0.149.0)", async ({ page }) => {
+    await page.goto("/climate");
+    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    const dialog = page.getByRole("dialog");
+    const marker = dialog.locator("[data-dial-marker]");
+    await expect.poll(() => dialReading(dialog)).toBe("70°");
+    // 70° of 60–85° on the 120° arc from −150°.
+    await expect(marker).toHaveCSS("transform", /^matrix/);
+    expect(await marker.evaluate((el) => el.style.transform)).toBe("rotate(-102deg)");
+    await dialog.getByRole("button", { name: "Raise the target temperature" }).click();
+    // Turning, not jumped: a transform transition runs to 71°'s angle.
+    expect(await marker.evaluate((el) => el.getAnimations().map((a) => (a as CSSTransition).transitionProperty))).toContain("transform");
+    expect(await marker.evaluate((el) => el.style.transform)).toBe("rotate(-97.2deg)");
+    await expect.poll(() => marker.evaluate((el) => el.getAnimations().length)).toBe(0);
+    await expect.poll(() => dialReading(dialog)).toBe("71°");
   });
 
   test("a tile opens the dialog, and a new mode reaches Home Assistant", async ({ page }) => {
@@ -68,9 +103,9 @@ test.describe("the Climate page", () => {
     const raise = dialog.getByRole("button", { name: "Raise the target temperature" });
     await raise.click();
     await raise.click();
-    await expect(dialog.getByText("72°", { exact: true })).toBeVisible();
+    await expect.poll(() => dialReading(dialog)).toBe("72°");
     await dialog.getByRole("button", { name: "Lower the target temperature" }).click();
-    await expect(dialog.getByText("71°", { exact: true })).toBeVisible();
+    await expect.poll(() => dialReading(dialog)).toBe("71°");
     // Closed before the taps' send: it still reaches Home Assistant.
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
@@ -160,8 +195,10 @@ test.describe("the Climate page", () => {
     const tileFont = await font(tile.getByText("64°", { exact: true }));
     await tile.click();
     const dialog = page.getByRole("dialog");
-    // The dial reads the target, 70°.
-    const dialFont = await font(dialog.getByText("70°", { exact: true }));
+    // The dial reads the target, 70° (a NumberFlow since 0.149.0, in the
+    // reading's type).
+    await expect.poll(() => dialReading(dialog)).toBe("70°");
+    const dialFont = await font(dialog.locator("[data-dial-reading]"));
     expect(tileFont.family).toBe(dialFont.family);
     expect(tileFont.figures).toBe(dialFont.figures);
     expect(tileFont.weight).toBe(dialFont.weight);

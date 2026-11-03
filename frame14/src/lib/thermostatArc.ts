@@ -61,6 +61,34 @@ export function arcPath(t0: number, t1: number) {
   return `M ${p0.x} ${p0.y} A ${ARC_RADIUS} ${ARC_RADIUS} 0 0 1 ${p1.x} ${p1.y}`;
 }
 
+// The ticks' radii: a plain tick, and the marked one, longer both ways.
+const TICK_INNER = 37;
+const TICK_OUTER = 41;
+const MARK_INNER = 35;
+const MARK_OUTER = 43;
+
+/**
+ * The marked tick as ThermostatDial draws it (0.149.0): pointing along +x
+ * from the centre at the marked radii, turned to the value by
+ * `valueToDegrees` about `center` — so a new value turns it, and a turn can
+ * be animated, sliding it along the arc where a tick redrawn would jump.
+ */
+export const MARKER = {
+  x1: ARC_CENTER + MARK_INNER,
+  x2: ARC_CENTER + MARK_OUTER,
+  y: ARC_CENTER,
+  center: ARC_CENTER,
+} as const;
+
+/** The angle of `value` on the arc, in degrees clockwise from +x. */
+export function valueToDegrees(
+  value: number,
+  scale: ArcScale = THERMOSTAT_SCALE,
+) {
+  const angle = ARC_ANGLE_START + valueToT(value, scale) * ARC_ANGLE_SPAN;
+  return (angle * 180) / Math.PI;
+}
+
 export type TickLine = {
   value: number;
   active: boolean;
@@ -82,8 +110,8 @@ export function buildTicks(
     const value = scale.min + i * spacing;
     const angle = ARC_ANGLE_START + valueToT(value, scale) * ARC_ANGLE_SPAN;
     const active = value === activeValue;
-    const rInner = active ? 35 : 37;
-    const rOuter = active ? 43 : 41;
+    const rInner = active ? MARK_INNER : TICK_INNER;
+    const rOuter = active ? MARK_OUTER : TICK_OUTER;
     lines.push({
       value,
       active,

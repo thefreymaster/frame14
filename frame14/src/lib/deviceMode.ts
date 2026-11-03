@@ -14,19 +14,16 @@ export function isMobileUserAgent(): boolean {
 }
 
 /**
- * Safari's engine, WebKit (0.149.0): every browser on an iPhone or an iPad
- * (all of them WebKit underneath; a home-screen app's agent has no "Safari"
- * in it) and Safari on a Mac — never Chrome, Edge or anything on Android,
- * Chromium all, whose agents carry "AppleWebKit" too. The modals' backdrop
- * blur is WebKit's alone: the frame, an Android tablet in Fully Kiosk,
- * recomputed a full-screen backdrop-filter on every frame of a drawer's slide
- * (0.135.1).
+ * Whether the page behind a modal may be blurred here (0.150.0): anything but
+ * Android — an iPhone, an iPad, and every desktop browser, Chrome, Edge and
+ * Firefox as well as Safari (0.149.0 had Safari's engine alone; the user:
+ * "Can we have the blur behind dialogs and drawers on desktop chrome also?
+ * Exclude android"). The frame, an Android tablet in Fully Kiosk, recomputed a
+ * full-screen backdrop-filter on every frame of a drawer's slide (0.135.1),
+ * so no Android device gets it, a phone neither.
  */
-export function isSafariEngine(userAgent = navigator.userAgent): boolean {
-  return (
-    /AppleWebKit/i.test(userAgent) &&
-    !/Chrome|Chromium|Android|Edg\//i.test(userAgent)
-  );
+export function blursModalBackdrop(userAgent = navigator.userAgent): boolean {
+  return !/Android/i.test(userAgent);
 }
 
 export function getDeviceMode(): DeviceMode {

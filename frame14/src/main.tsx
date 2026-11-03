@@ -5,7 +5,7 @@ import App from "./App";
 import { queryClient } from "./lib/queryClient";
 import { persistQueries, restoreQueries } from "./lib/persistedQueries";
 import "./index.css";
-import { isSafariEngine } from "./lib/deviceMode";
+import { blursModalBackdrop } from "./lib/deviceMode";
 // Applies the saved theme mode before the first paint.
 import "./lib/themeMode";
 // Watches for the add-on updating under this page.
@@ -46,9 +46,9 @@ if (
 ) {
   document.documentElement.dataset.safariBar = "";
 }
-// Safari's engine — an iPhone, an iPad, Safari on a Mac — for the modals'
-// backdrop blur (0.149.0; components/Modal), which never reaches Android.
-if (isSafariEngine()) document.documentElement.dataset.safari = "";
+// The modals' backdrop blur (components/Modal): everywhere but Android
+// (0.150.0; Safari's engine alone in 0.149.0), never the frame.
+if (blursModalBackdrop()) document.documentElement.dataset.backdropBlur = "";
 updateAppHeight();
 requestAnimationFrame(updateAppHeight);
 window.addEventListener("resize", updateAppHeight);

@@ -6,17 +6,19 @@ import * as Modal from "./Modal";
 import { CloseButton } from "./ui/close-button";
 
 /**
- * The detail modals' shell: a Modal (a stock Chakra Dialog; on a phone a
- * drawer from the bottom, 0.134) with a title, a body and a close button.
- * Escape, tap-outside and the enter/exit animation are the library's.
+ * The detail modals' shell: a Modal with a title, a body and a close button
+ * — a sheet from the bottom on a phone and the frame (0.134 / 0.135), and on
+ * a desktop a drawer from the right edge (0.150.0, Modal's `side`: a panel
+ * read beside the page; a centred dialog before). Escape, tap-outside and
+ * the enter/exit animation are the library's.
  *
  * The caller keeps whatever the panel shows after closing, so the exit
  * animation still has content to draw.
  *
  * A panel taller than the screen scrolls its body, not the whole dialog, so
- * the title and the close button stay put. The dialog keeps clear of the
- * screen's safe areas, with the page gutter around it (in place of the
- * recipe's 3.75rem above and below, which a phone couldn't spare): on an
+ * the title and the close button stay put. A desktop's panel keeps clear of
+ * the screen's safe areas, with the page gutter around it (in place of the
+ * dialog recipe's 3.75rem above and below, which a phone couldn't spare): on an
  * iPhone, a full-height panel once put its close button under the status bar,
  * where it couldn't be tapped, and there was no outside left to tap instead.
  * A phone's drawer keeps clear of them itself (Modal).
@@ -40,10 +42,10 @@ export function PanelDialog({
   title: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const drawer = useBottomDrawer();
+  const sheet = useBottomDrawer();
   const contentRef = useRef<HTMLDivElement>(null);
   const inset = (side: string) =>
-    drawer
+    sheet
       ? undefined
       : `calc(env(safe-area-inset-${side}, 0px) + ${PAGE_GUTTER})`;
 
@@ -53,6 +55,7 @@ export function PanelDialog({
       onOpenChange={(e) => {
         if (!e.open) onClose();
       }}
+      side
       placement="center"
       size="lg"
       scrollBehavior="inside"
@@ -68,7 +71,7 @@ export function PanelDialog({
           pl={inset("left")}
           pr={inset("right")}
         >
-          <Modal.Content ref={contentRef} maxH={drawer ? undefined : "100%"}>
+          <Modal.Content ref={contentRef} maxH={sheet ? undefined : "100%"}>
             <Modal.Header>
               <Modal.Title>{title}</Modal.Title>
             </Modal.Header>

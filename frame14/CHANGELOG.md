@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.150.0
+
+- Changed: on a desktop, the energy and weather details open as a panel that slides in from the right edge, so the cards stay in view beside it. Before, they opened as a dialog in the middle of the screen. The light, fan and thermostat controls and the confirmations stay as dialogs in the middle. On a phone and the frame, every modal is still a sheet from the bottom.
+- Changed: on a desktop, Chrome, Edge and Firefox now blur the page behind a dialog or panel as well as dimming it, as Safari already did. Android devices, the frame among them, keep the plain dim so their sheets stay smooth.
+
 ## 0.149.1
 
 - Changed: in Settings › Device, the Software card's Installed and Latest versions are links to their releases on GitHub, in place of the "on GitHub" button.

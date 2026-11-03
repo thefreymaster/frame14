@@ -5,7 +5,8 @@ import { useDesktop } from "./useDesktop";
  * "replace dialogs with drawers on mobile that come in from the bottom"; 0.135:
  * "make dialogs into drawers on the frame14 also"): anything but a desktop
  * (useDesktop) — a phone and the frame, the screens that are touched. A
- * desktop keeps centred dialogs. useDesktop settles after the first render,
+ * desktop keeps centred dialogs (and, with Modal's `side`, 0.150.0, a drawer
+ * from the right edge). useDesktop settles after the first render,
  * but every modal's Root is mounted long before it opens, so an open modal is
  * always the right kind.
  */

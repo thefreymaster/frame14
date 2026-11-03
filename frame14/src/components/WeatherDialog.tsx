@@ -12,7 +12,8 @@ import { EmptyState } from "./ui/empty-state";
 /**
  * The weather, opened by a tap on /home's weather card (the frame's time and
  * weather, the phone's weather row, the desktop's Weather card) — a sheet from
- * the bottom on a phone and the frame, a dialog on a desktop (PanelDialog).
+ * the bottom on a phone and the frame, a drawer from the right edge on a
+ * desktop (PanelDialog, 0.150.0).
  * Back since 0.136 (ForecastDialog until 0.97, when the tap went to /weather;
  * the user: the page "feels out of place now with the drawers"), built from
  * the Weather page's parts: the weather now (WeatherNowCard — the hero, the

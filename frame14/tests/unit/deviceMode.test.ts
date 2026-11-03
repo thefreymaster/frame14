@@ -2,8 +2,8 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   getDeviceMode,
+  blursModalBackdrop,
   isMobileUserAgent,
-  isSafariEngine,
   setDeviceMode,
   useDeviceMode,
 } from "../../src/lib/deviceMode";
@@ -63,7 +63,7 @@ describe("useDeviceMode", () => {
   });
 });
 
-describe("Safari's engine (0.149.0: the modals' backdrop blur)", () => {
+describe("blursModalBackdrop (0.150.0: everywhere but Android)", () => {
   const AGENTS = {
     iPhoneSafari: PHONE,
     iPhoneHomeScreen: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
@@ -72,20 +72,33 @@ describe("Safari's engine (0.149.0: the modals' backdrop blur)", () => {
     macChrome: DESKTOP,
     macEdge: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36 Edg/141.0",
     macFirefox: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:144.0) Gecko/20100101 Firefox/144.0",
+    windowsChrome: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36",
+    linuxChrome: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36",
     frame: TABLET,
     fullyKiosk: "Mozilla/5.0 (Linux; Android 14; NXTPAPER 14 Build/UP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0 Safari/537.36",
     androidPhone: "Mozilla/5.0 (Linux; Android 15; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Mobile Safari/537.36",
+    androidFirefox: "Mozilla/5.0 (Android 15; Mobile; rv:144.0) Gecko/144.0 Firefox/144.0",
   };
 
-  it("is every browser on an iPhone or iPad, and Safari on a Mac", () => {
-    for (const name of ["iPhoneSafari", "iPhoneHomeScreen", "iPhoneChrome", "iPad"] as const) {
-      expect(isSafariEngine(AGENTS[name]), name).toBe(true);
+  it("is every browser on an iPhone or iPad, and every desktop browser", () => {
+    for (const name of [
+      "iPhoneSafari",
+      "iPhoneHomeScreen",
+      "iPhoneChrome",
+      "iPad",
+      "macChrome",
+      "macEdge",
+      "macFirefox",
+      "windowsChrome",
+      "linuxChrome",
+    ] as const) {
+      expect(blursModalBackdrop(AGENTS[name]), name).toBe(true);
     }
   });
 
-  it("is never Chrome, Edge or Firefox, nor anything on Android — the frame least of all", () => {
-    for (const name of ["macChrome", "macEdge", "macFirefox", "frame", "fullyKiosk", "androidPhone"] as const) {
-      expect(isSafariEngine(AGENTS[name]), name).toBe(false);
+  it("is never anything on Android — the frame least of all", () => {
+    for (const name of ["frame", "fullyKiosk", "androidPhone", "androidFirefox"] as const) {
+      expect(blursModalBackdrop(AGENTS[name]), name).toBe(false);
     }
   });
 });

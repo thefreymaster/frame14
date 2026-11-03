@@ -28,11 +28,16 @@ function stubSystem(dark: boolean) {
   })) as unknown as typeof window.matchMedia;
 }
 
-// A fresh module each time: it reads localStorage and the system as it loads.
-async function load() {
+// A fresh module each time, as a page load: it reads localStorage, the
+// device's mode and the system as it loads. lib/deviceMode comes from the same
+// fresh registry, so its switch reaches this module.
+async function load(mode: "frame" | "controller" = "frame") {
+  localStorage.setItem("device-mode", mode);
   vi.resetModules();
   sock.handlers.clear();
-  return import("../../src/lib/themeMode");
+  const theme = await import("../../src/lib/themeMode");
+  const device = await import("../../src/lib/deviceMode");
+  return { ...theme, setDeviceMode: device.setDeviceMode };
 }
 
 const html = document.documentElement;
@@ -51,13 +56,14 @@ describe("the theme mode", () => {
     expect(computeEffectiveMode("auto", new Date(2026, 10, 3, 22))).toBe("dark");
     expect(computeEffectiveMode("bright")).toBe("bright");
     expect(computeEffectiveMode("dark")).toBe("dark");
+    expect(computeEffectiveMode("device")).toBe("dark");
   });
 
   it("device follows the system's setting, and its changes live", async () => {
     stubSystem(true);
     localStorage.setItem("theme-mode-preference", "device");
-    const { getTheme, subscribeTheme } = await load();
-    expect(getTheme()).toMatchObject({ preference: "device", effectiveMode: "dark" });
+    const { getTheme, subscribeTheme } = await load("frame");
+    expect(getTheme()).toMatchObject({ frames: { preference: "device" }, effectiveMode: "dark" });
     expect(html.dataset.themeMode).toBe("dark");
     expect(html.classList.contains("dark")).toBe(true);
     const listener = vi.fn();
@@ -69,66 +75,103 @@ describe("the theme mode", () => {
     expect(html.classList.contains("dark")).toBe(false);
     expect(listener).toHaveBeenCalledTimes(1);
   });
+});
 
-  it("is saved and sent to the other panels; one from the server isn't sent back", async () => {
+describe("the frames' theme", () => {
+  it("is a frame's: saved, worn and sent to the other panels", async () => {
     stubSystem(false);
-    const { getTheme, setThemePreference } = await load();
-    expect(getTheme().preference).toBe("dark");
-    setThemePreference("device");
-    expect(localStorage.getItem("theme-mode-preference")).toBe("device");
-    expect(sock.emit).toHaveBeenCalledWith("theme_mode", "device");
-    expect(getTheme().effectiveMode).toBe("bright");
-    sock.emit.mockClear();
-    sock.handlers.get("current_theme_mode")?.("auto");
-    expect(getTheme().preference).toBe("auto");
+    const { getTheme, setThemePreference, setThemePalette } = await load("frame");
+    expect(getTheme()).toMatchObject({ own: false, frames: { preference: "dark", palette: "gray" } });
+    setThemePreference("bright");
+    setThemePalette("slate");
+    expect(localStorage.getItem("theme-mode-preference")).toBe("bright");
+    expect(localStorage.getItem("theme-palette")).toBe("slate");
+    expect(sock.emit).toHaveBeenCalledWith("theme_mode", "bright");
+    expect(sock.emit).toHaveBeenCalledWith("theme_palette", "slate");
+    expect(html.dataset.themeMode).toBe("bright");
+    expect(html.dataset.palette).toBe("slate");
+  });
+
+  it("comes from the server and the other panels without being sent back", async () => {
+    stubSystem(false);
+    const { getTheme } = await load("frame");
+    sock.handlers.get("current_theme_mode")?.("bright");
+    sock.handlers.get("current_theme_palette")?.("sand");
+    expect(getTheme()).toMatchObject({ frames: { preference: "bright", palette: "sand" }, palette: "sand" });
+    sock.handlers.get("theme_palette")?.("slate");
+    expect(html.dataset.palette).toBe("slate");
     expect(sock.emit).not.toHaveBeenCalled();
   });
 
-  it("ignores what isn't a mode, stored or sent", async () => {
+  it("ignores what isn't a mode or a palette, stored or sent", async () => {
     stubSystem(false);
     localStorage.setItem("theme-mode-preference", "sepia");
-    const { getTheme } = await load();
-    expect(getTheme().preference).toBe("dark");
+    localStorage.setItem("theme-palette", "neon");
+    const { getTheme, setThemePalette } = await load("frame");
+    expect(getTheme().frames).toEqual({ preference: "dark", palette: "gray" });
     sock.handlers.get("theme_mode")?.("sepia");
-    expect(getTheme().preference).toBe("dark");
+    setThemePalette("neon" as never);
+    expect(getTheme().frames).toEqual({ preference: "dark", palette: "gray" });
   });
 });
 
-describe("the palette", () => {
-  it("is gray until one is picked, marked on <html>, saved and sent", async () => {
+describe("a remote's own theme (0.148.0)", () => {
+  it("is the one a remote wears; the frames' changes it keeps but doesn't wear", async () => {
     stubSystem(false);
-    const { getTheme, setThemePalette } = await load();
-    expect(getTheme().palette).toBe("gray");
-    expect(html.dataset.palette).toBe("gray");
-    const effectiveMode = getTheme().effectiveMode;
+    localStorage.setItem("local-theme-mode", "dark");
+    localStorage.setItem("local-theme-palette", "gray");
+    const { getTheme, setThemePalette, setLocalThemePalette, setLocalThemePreference } = await load("controller");
+    expect(getTheme().own).toBe(true);
+    // The frames' theme, from the Display card or the server: kept, sent, not worn.
     setThemePalette("slate");
-    expect(html.dataset.palette).toBe("slate");
-    expect(localStorage.getItem("theme-palette")).toBe("slate");
+    sock.handlers.get("current_theme_mode")?.("bright");
     expect(sock.emit).toHaveBeenCalledWith("theme_palette", "slate");
-    // The palette doesn't touch the mode.
-    expect(getTheme().effectiveMode).toBe(effectiveMode);
-  });
-
-  it("takes the server's on connect and another panel's without sending it back", async () => {
-    stubSystem(false);
-    const { getTheme } = await load();
-    sock.handlers.get("current_theme_palette")?.("sand");
-    expect(getTheme().palette).toBe("sand");
+    expect(getTheme().frames).toEqual({ preference: "bright", palette: "slate" });
+    expect(html.dataset.palette).toBe("gray");
+    expect(html.dataset.themeMode).toBe("dark");
+    // Its own: worn, kept here, sent nowhere.
+    sock.emit.mockClear();
+    setLocalThemePalette("sand");
+    setLocalThemePreference("bright");
     expect(html.dataset.palette).toBe("sand");
-    sock.handlers.get("theme_palette")?.("slate");
-    expect(getTheme().palette).toBe("slate");
+    expect(html.dataset.themeMode).toBe("bright");
+    expect(localStorage.getItem("local-theme-palette")).toBe("sand");
+    expect(localStorage.getItem("local-theme-mode")).toBe("bright");
     expect(sock.emit).not.toHaveBeenCalled();
   });
 
-  it("comes back from storage, and ignores one it hasn't got", async () => {
+  it("starts as what a device from before showed, and a new one's follows its system", async () => {
+    stubSystem(true);
+    localStorage.setItem("theme-mode-preference", "auto");
+    localStorage.setItem("theme-palette", "slate");
+    const before = await load("controller");
+    expect(before.getTheme().local).toEqual({ preference: "auto", palette: "slate" });
+    expect(localStorage.getItem("local-theme-mode")).toBe("auto");
+    expect(localStorage.getItem("local-theme-palette")).toBe("slate");
+
+    localStorage.clear();
+    const fresh = await load("controller");
+    expect(fresh.getTheme().local).toEqual({ preference: "device", palette: "gray" });
+    expect(fresh.getTheme().effectiveMode).toBe("dark");
+    // Saved, so the frames' theme arriving later doesn't become it.
+    sock.handlers.get("current_theme_palette")?.("sand");
+    expect(fresh.getTheme().local.palette).toBe("gray");
+  });
+
+  it("is worn from the moment the device becomes a remote, and the frames' when it's a frame again", async () => {
     stubSystem(false);
-    localStorage.setItem("theme-palette", "sand");
-    const { getTheme, setThemePalette } = await load();
-    expect(getTheme().palette).toBe("sand");
-    setThemePalette("neon" as never);
-    expect(getTheme().palette).toBe("sand");
-    localStorage.setItem("theme-palette", "neon");
-    const again = await load();
-    expect(again.getTheme().palette).toBe("gray");
+    localStorage.setItem("local-theme-mode", "bright");
+    localStorage.setItem("local-theme-palette", "sand");
+    localStorage.setItem("theme-mode-preference", "dark");
+    localStorage.setItem("theme-palette", "slate");
+    const { getTheme, setDeviceMode } = await load("frame");
+    expect(html.dataset.palette).toBe("slate");
+    setDeviceMode("controller");
+    expect(getTheme().own).toBe(true);
+    expect(html.dataset.palette).toBe("sand");
+    expect(html.dataset.themeMode).toBe("bright");
+    setDeviceMode("frame");
+    expect(html.dataset.palette).toBe("slate");
+    expect(html.dataset.themeMode).toBe("dark");
   });
 });

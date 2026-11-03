@@ -39,13 +39,26 @@
         document.addEventListener("gesturestart", function (e) {
           e.preventDefault();
         });
-        // lib/themeMode.ts's preference (the daylight window for auto, the
-        // system's setting for device) and palette, read early; it takes over
-        // (and syncs with the server) once the bundle runs.
+        // lib/themeMode.ts's theme, read early — the frames' on a frame, this
+        // device's own on a remote (lib/deviceMode: the stored mode, else a
+        // phone or an Android user agent is a remote), the remote's falling
+        // back to the frames' it had stored, then to Device — and its mode
+        // (the daylight window for auto, the system's setting for device);
+        // it takes over (and syncs with the server) once the bundle runs.
         var mode = "dark";
         var palette = "gray";
         try {
-          var pref = localStorage.getItem("theme-mode-preference");
+          var ls = localStorage;
+          var deviceMode = ls.getItem("device-mode");
+          var remote =
+            deviceMode === "controller" ||
+            (deviceMode !== "frame" && /Mobi|Android/i.test(navigator.userAgent));
+          var pref = ls.getItem("theme-mode-preference");
+          var saved = ls.getItem("theme-palette");
+          if (remote) {
+            pref = ls.getItem("local-theme-mode") || pref || "device";
+            saved = ls.getItem("local-theme-palette") || saved;
+          }
           var hour = new Date().getHours();
           var deviceLight =
             pref === "device" &&
@@ -57,7 +70,6 @@
           ) {
             mode = "bright";
           }
-          var saved = localStorage.getItem("theme-palette");
           if (saved === "slate" || saved === "sand") palette = saved;
         } catch (e) {}
         var root = document.documentElement;

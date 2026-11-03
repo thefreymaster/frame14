@@ -56,13 +56,11 @@ import { useThemeMode } from "../hooks/useThemeMode";
 import { useHalloween } from "../hooks/useHalloween";
 import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
-import type { ThemeModePreference } from "../lib/themeMode";
-import {
-  isThemePalette,
-  PALETTES,
-  THEME_PALETTES,
-} from "../lib/themePalettes";
-import { PaletteSwatch } from "../components/PaletteSwatch";
+import { computeEffectiveMode } from "../lib/themeMode";
+import { useDesktop } from "../hooks/useDesktop";
+import { AppearanceBoard } from "../components/AppearanceBoard";
+import { ControlColumns } from "../components/ControlColumns";
+import { ThemeFields } from "../components/ThemeFields";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
@@ -170,26 +168,6 @@ const HALLOWEEN_VIEW: View = {
   activeIcon: GiPumpkinLantern,
 };
 
-// Auto follows the daylight window (07:00–19:00), Device the system's light /
-// dark setting — each panel its own (lib/themeMode).
-const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
-  { value: "auto", label: "Auto" },
-  { value: "device", label: "Device" },
-  { value: "bright", label: "Bright" },
-  { value: "dark", label: "Dark" },
-];
-
-// The palettes (lib/themePalettes), each with its swatch.
-const PALETTE_ITEMS = THEME_PALETTES.map((value) => ({
-  value,
-  label: (
-    <HStack gap="2">
-      <PaletteSwatch palette={value} />
-      {PALETTES[value].label}
-    </HStack>
-  ),
-}));
-
 const DEVICE_MODES = [
   { value: "frame", label: "Use as frame" },
   { value: "controller", label: "Use as remote" },
@@ -213,8 +191,10 @@ const TABS = [
 export function Control() {
   const { status: connection } = useSocket();
   const version = useAppVersion();
-  const { preference, palette, effectiveMode, setPreference, setPalette } =
-    useThemeMode();
+  // The frames' theme (the Display card's); a remote's own is the Device
+  // tab's Appearance card (0.148.0).
+  const { frames, setFramesPreference, setFramesPalette } = useThemeMode();
+  const desktop = useDesktop();
   const [activeView, setActiveView] = useState<string | null>(null);
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
   // The frames' nav: a remote's own never hides.
@@ -268,7 +248,17 @@ export function Control() {
     <Board
       title={<SectionTitle icon={<IoBrowsersOutline />}>Views</SectionTitle>}
     >
-      <SimpleGrid columns={3} gap="3">
+      {/* Three across on a phone; on a desktop as many 7.5rem tiles as the
+          card holds — six in its 60rem at 1920x1080 (0.148.0, the user: "on
+          desktop the view buttons are way too big … a row of at least six"). */}
+      <SimpleGrid
+        // One or the other: a templateColumns, even undefined, overrides
+        // the template SimpleGrid makes of `columns`.
+        {...(desktop
+          ? { templateColumns: "repeat(auto-fill, minmax(7.5rem, 1fr))" }
+          : { columns: 3 })}
+        gap="3"
+      >
         {views.map((v) => {
           const isActive = activeView === v.path;
           const Icon = isActive ? v.activeIcon : v.icon;
@@ -322,38 +312,24 @@ export function Control() {
           <SectionTitle icon={<IoTabletPortraitOutline />}>
             Display
           </SectionTitle>
-          {(preference === "auto" || preference === "device") && (
-            <Badge>
-              {preference} · {effectiveMode}
-            </Badge>
+          {/* The frames' clock is this one's; their system settings aren't. */}
+          {frames.preference === "auto" && (
+            <Badge>auto · {computeEffectiveMode("auto")}</Badge>
           )}
         </HStack>
       }
     >
       <Stack gap="5">
-        <Field.Root>
-          <Field.Label>Theme</Field.Label>
-          <SegmentedControl
-            items={THEME_MODES}
-            value={preference}
-            aria-label="Theme"
-            onValueChange={(e) => {
-              if (e.value) setPreference(e.value as ThemeModePreference);
-            }}
-          />
-        </Field.Root>
-
-        <Field.Root>
-          <Field.Label>Colors</Field.Label>
-          <SegmentedControl
-            items={PALETTE_ITEMS}
-            value={palette}
-            aria-label="Colors"
-            onValueChange={(e) => {
-              if (isThemePalette(e.value)) setPalette(e.value);
-            }}
-          />
-        </Field.Root>
+        <ThemeFields
+          value={frames}
+          onPreference={setFramesPreference}
+          onPalette={setFramesPalette}
+          helper={
+            showViews
+              ? "Every frame wears these. This remote's own are under Device."
+              : "Every frame wears these; a remote has its own."
+          }
+        />
 
         <Switch
           checked={navVisible}
@@ -464,19 +440,33 @@ export function Control() {
           </Tabs.Content>
         )}
         <Tabs.Content value="display" p="0">
-          <Stack gap="gutter">
-            {displayBoard}
-            <ScreenBoard />
-            {photos && albumBoard}
-          </Stack>
+          <ControlColumns
+            start={displayBoard}
+            end={
+              <>
+                <ScreenBoard />
+                {photos && albumBoard}
+              </>
+            }
+          />
         </Tabs.Content>
         <Tabs.Content value="device" p="0">
-          <Stack gap="gutter">
-            <SoftwareBoard />
-            <UpdatesBoard />
-            <NavLayoutBoard />
-            <VoiceStatusBoard />
-          </Stack>
+          <ControlColumns
+            start={
+              <>
+                {/* A remote's own theme; a frame wears the frames'. */}
+                {showViews && <AppearanceBoard />}
+                <SoftwareBoard />
+                <UpdatesBoard />
+              </>
+            }
+            end={
+              <>
+                <NavLayoutBoard />
+                <VoiceStatusBoard />
+              </>
+            }
+          />
         </Tabs.Content>
       </Tabs.Root>
     </PageShell>

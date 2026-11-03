@@ -25,7 +25,8 @@ export function getDeviceMode(): DeviceMode {
 
 const listeners = new Set<() => void>();
 
-function subscribe(cb: () => void) {
+/** Calls `cb` whenever /control switches this device's mode. */
+export function subscribeDeviceMode(cb: () => void) {
   listeners.add(cb);
   return () => {
     listeners.delete(cb);
@@ -39,5 +40,5 @@ export function setDeviceMode(mode: DeviceMode) {
 
 /** This device's mode, re-rendering when /control switches it. */
 export function useDeviceMode(): DeviceMode {
-  return useSyncExternalStore(subscribe, getDeviceMode, getDeviceMode);
+  return useSyncExternalStore(subscribeDeviceMode, getDeviceMode, getDeviceMode);
 }

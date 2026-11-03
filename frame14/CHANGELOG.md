@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.148.0
+
+- Added: an **Appearance** card under Settings › Device on a remote: its own Theme and Colors, kept on that device. A remote no longer changes the frames' look, nor takes theirs. A remote starts with the theme it had; a new one follows its own system setting.
+- Changed: Theme and Colors under Display are the frames' alone: every frame wears them, and a remote shows them there to change the frames.
+- Changed: on a desktop, the Views tiles are small, six or more to a row instead of three large ones.
+- Changed: on a desktop, Settings' cards sit in two columns.
+
 ## 0.147.0
 
 - Added: the Software card in Settings › Device links to the installed version's release on GitHub ("v0.147.0 on GitHub"), opening in a new tab.

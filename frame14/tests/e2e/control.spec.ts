@@ -64,49 +64,123 @@ test.describe("the Settings page", () => {
     await expect(release).toHaveAttribute("target", "_blank");
   });
 
-  test("the theme can follow the device, and the colors are every panel's (0.146.0)", async ({ page, browser }) => {
+  test("the Display card's theme and colors are every frame's, and not a remote's (0.146.0, 0.148.0)", async ({ page, browser, isMobile }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/control/display");
     const html = page.locator("html");
-    const theme = page.getByRole("radiogroup", { name: "Theme" });
-    const colors = page.getByRole("radiogroup", { name: "Colors" });
+    const display = page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: "Display" }) });
+    const theme = display.getByRole("radiogroup", { name: "Theme" });
+    const colors = display.getByRole("radiogroup", { name: "Colors" });
     const pageColour = () =>
       page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--chakra-colors-bg").trim());
+    // A frame (the desktop project) and another: a fresh context, nothing
+    // stored, made a frame — it has the project's device, a phone's in the
+    // phone project, which would be a remote.
+    const other = await browser.newContext({ baseURL: APP_URL });
+    await other.addInitScript(() => localStorage.setItem("device-mode", "frame"));
+    const frame = await other.newPage();
     try {
-      // Device: the system's setting, followed as it changes.
-      await theme.getByText("Device", { exact: true }).click();
-      await expect(html).toHaveAttribute("data-theme-mode", "dark");
-      await expect(page.getByText("device · dark")).toBeVisible();
-      await page.emulateMedia({ colorScheme: "light" });
-      await expect(html).toHaveAttribute("data-theme-mode", "bright");
-      await expect(html).not.toHaveClass(/\bdark\b/);
-      await expect(page.getByText("device · bright")).toBeVisible();
-
-      // Slate re-tints the neutrals: the page, and a card in dark mode.
-      await expect(colors.getByText("Gray", { exact: true })).toBeVisible();
-      await colors.getByText("Slate", { exact: true }).click();
-      await expect(html).toHaveAttribute("data-palette", "slate");
-      await expect.poll(pageColour).toBe("#f3f6fa");
+      await frame.goto("/home");
       await theme.getByText("Dark", { exact: true }).click();
-      await expect.poll(pageColour).toBe("#02081a");
-      await expect(page.locator(".chakra-card__root").first()).toHaveCSS("background-color", "rgb(18, 28, 47)");
-
-      // Another panel opening — nothing of its own stored — gets them from
-      // the add-on.
-      const other = await browser.newContext({ baseURL: APP_URL });
-      const panel = await other.newPage();
-      await panel.goto("/home");
-      await expect(panel.locator("html")).toHaveAttribute("data-palette", "slate");
-      await expect(panel.locator("html")).toHaveAttribute("data-theme-mode", "dark");
-      // And a change here reaches it.
+      await colors.getByText("Slate", { exact: true }).click();
+      await expect(frame.locator("html")).toHaveAttribute("data-palette", "slate");
+      await expect(frame.locator("html")).toHaveAttribute("data-theme-mode", "dark");
+      if (isMobile) {
+        // A remote wears its own (0.148.0): the frames' choice leaves it be.
+        await expect(display.getByText("This remote's own are under Device.")).toBeVisible();
+        await expect(html).toHaveAttribute("data-palette", "gray");
+      } else {
+        // A frame wears it: Slate's page, and a card in dark mode.
+        await expect(html).toHaveAttribute("data-palette", "slate");
+        await expect.poll(pageColour).toBe("#02081a");
+        await expect(page.locator(".chakra-card__root").first()).toHaveCSS("background-color", "rgb(18, 28, 47)");
+        // Device: its system's setting, followed as it changes.
+        await theme.getByText("Device", { exact: true }).click();
+        await expect(html).toHaveAttribute("data-theme-mode", "dark");
+        await page.emulateMedia({ colorScheme: "light" });
+        await expect(html).toHaveAttribute("data-theme-mode", "bright");
+        await expect(html).not.toHaveClass(/\bdark\b/);
+        await expect.poll(pageColour).toBe("#f3f6fa");
+      }
+      // A change reaches the frames live.
       await colors.getByText("Sand", { exact: true }).click();
-      await expect(panel.locator("html")).toHaveAttribute("data-palette", "sand");
-      await other.close();
+      await expect(frame.locator("html")).toHaveAttribute("data-palette", "sand");
     } finally {
+      await other.close();
       // The add-on keeps the theme for every later page: back to Dark, Gray.
       await theme.getByText("Dark", { exact: true }).click();
       await colors.getByText("Gray", { exact: true }).click();
-      await expect(html).toHaveAttribute("data-palette", "gray");
+      await expect(colors.getByRole("radio", { name: "Gray" })).toBeChecked();
+    }
+  });
+
+  test("a remote has its own theme and colors under Device; a frame has none (0.148.0)", async ({ page, browser, isMobile }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/control/device");
+    const appearance = page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: "Appearance" }) });
+    if (!isMobile) {
+      await expect(page.getByRole("heading", { name: "Software" })).toBeVisible();
+      await expect(appearance).toHaveCount(0);
+      return;
+    }
+    const html = page.locator("html");
+    // A new remote follows its system.
+    await expect(appearance.getByRole("radio", { name: "Device" })).toBeChecked();
+    await expect(appearance.getByText("device · dark")).toBeVisible();
+    await expect(html).toHaveAttribute("data-theme-mode", "dark");
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect(html).toHaveAttribute("data-theme-mode", "bright");
+    await expect(appearance.getByText("device · bright")).toBeVisible();
+    // Its colors: worn here, kept through a reload, and the frames' untouched.
+    await appearance.getByRole("radiogroup", { name: "Colors" }).getByText("Sand", { exact: true }).click();
+    await expect(html).toHaveAttribute("data-palette", "sand");
+    await page.reload();
+    await expect(html).toHaveAttribute("data-palette", "sand");
+    const other = await browser.newContext({ baseURL: APP_URL });
+    await other.addInitScript(() => localStorage.setItem("device-mode", "frame"));
+    const frame = await other.newPage();
+    await frame.goto("/home");
+    await expect(frame.locator("html")).toHaveAttribute("data-palette", "gray");
+    await other.close();
+  });
+
+  test("the Views tiles are three across on a phone, and six or more small ones on a desktop (0.148.0)", async ({ page, isMobile }) => {
+    await page.goto("/control");
+    // The Views tab is a remote's: the desktop switches to one.
+    if (!isMobile) await page.getByText("Use as remote").click();
+    await page.getByRole("tab", { name: "Views" }).click();
+    const tiles = page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: "Views" }) }).locator("button[aria-pressed]");
+    await expect(tiles.first()).toBeVisible();
+    const tops = await tiles.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
+    const firstRow = tops.filter((t) => t === tops[0]).length;
+    if (isMobile) expect(firstRow).toBe(3);
+    else expect(firstRow).toBeGreaterThanOrEqual(6);
+  });
+
+  test("the tabs' cards are two columns on a desktop, one on a phone (0.148.0)", async ({ page, isMobile }) => {
+    await page.goto("/control/device");
+    const box = async (name: string) =>
+      (await page.locator(".chakra-card__root", { has: page.getByRole("heading", { name }) }).boundingBox())!;
+    await expect(page.getByRole("heading", { name: "Navigation" })).toBeVisible();
+    // Polled: the page scales in as it opens (PageTransition), and a box read
+    // meanwhile is off by a pixel or two.
+    const apart = async () => {
+      const software = await box("Software");
+      const navigation = await box("Navigation");
+      return {
+        across: Math.round(navigation.x - (software.x + software.width)),
+        down: Math.round(navigation.y - (software.y + software.height)),
+        tops: Math.round(Math.abs(navigation.y - software.y)),
+        lefts: Math.round(Math.abs(navigation.x - software.x)),
+      };
+    };
+    if (isMobile) {
+      await expect.poll(async () => (await apart()).lefts).toBe(0);
+      expect((await apart()).down).toBeGreaterThan(0);
+    } else {
+      // Side by side, their tops level: Navigation heads the right column.
+      await expect.poll(async () => (await apart()).tops).toBe(0);
+      expect((await apart()).across).toBeGreaterThan(0);
     }
   });
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.145.4
+
+- Changed: the thermostat and fan tiles, and a phone's Views tiles in Settings, have tighter corners than the cards around them, so each tile's curve follows its card's instead of matching it. Every tile in a card is shaped this way now.
+
 ## 0.145.3
 
 - Changed: on a phone, the Climate page's square thermostat tiles show the temperature in the thermostat dial's typeface and weight, a size smaller than the dial's. A long thermostat name keeps to one line there, so the tiles stay square.

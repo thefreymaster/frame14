@@ -54,7 +54,9 @@ function writeOpen(key: string | undefined, open: boolean) {
  *
  * Every card has the theme's `surface` corners (set on the Card recipe, and
  * shared with the floating side rail); tiles inside a card use the smaller
- * `sm`, so none is rounder than its card.
+ * `sm`, so none is rounder than its card: concentric with it, as an inset
+ * outline is — the card's radius less the gap, which here is always `sm`
+ * (0.145.4; corners.spec checks every page).
  *
  * Its 1px edge is the theme's `border.surface` (gray.700 in dark mode), the
  * same as the floating navs'.

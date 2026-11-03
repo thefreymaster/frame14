@@ -20,8 +20,8 @@ import { climateGridCss, hvacPalette } from "../lib/hvac";
  * one ("Breeze"), else "On". Off, it is the plain outline card with the speed
  * muted and a grey "Off" Badge. The whole tile is the button that opens the
  * dialog (FanDialog: the thermostat's dial for the speed, since 0.140). Its
- * corners are the Card recipe's `surface`, the same as the fans card around
- * it.
+ * corners are `sm`, concentric with the fans card around it (0.145.4; the
+ * card's own `surface` until then), as every tile in a card.
  */
 function FanTile({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
   const on = fan.state === "on";
@@ -48,6 +48,7 @@ function FanTile({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
       cursor="pointer"
       focusVisibleRing="outside"
       _active={{ bg: "bg.emphasized" }}
+      borderRadius="sm"
     >
       <button
         type="button"

@@ -33,8 +33,10 @@ export type ClimateTileSize = "md" | "lg" | "xl";
  * status line in that colour. The status says whether it's running now
  * ("Heating to 70°", with the icon pulsing) or idle ("Heat · set 70°"). An off
  * unit is the plain outline card with a grey "Off" Badge. The whole tile is
- * the button that opens the dialog. Its corners are the Card recipe's
- * `surface`, the same as the climate card around it.
+ * the button that opens the dialog. Its corners are `sm` (0.145.4), concentric
+ * with the card around it as an inset outline is — the card's `surface` less
+ * the gap between them, which is that much or more, floored at `sm` — like
+ * every tile in a card; they were the card's own `surface` until then.
  */
 export function ClimateTile({
   unit,
@@ -104,6 +106,7 @@ export function ClimateTile({
       cursor="pointer"
       focusVisibleRing="outside"
       _active={{ bg: "bg.emphasized" }}
+      borderRadius="sm"
       aspectRatio={square ? "1" : undefined}
     >
       <button

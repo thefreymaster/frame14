@@ -261,9 +261,11 @@ export function Control() {
                 width="100%"
                 height="auto"
                 // A rounded rectangle, not the pill every other button
-                // is: a square tile at full radius is a circle.
+                // is: a square tile at full radius is a circle. Its corners
+                // are `sm`, concentric with the card's (0.145.4: the card's
+                // own 0.75rem before, the corner tiles' curves fighting it).
                 aspectRatio="4 / 3"
-                borderRadius="xl"
+                borderRadius="sm"
                 flexDirection="column"
                 gap="2"
               >

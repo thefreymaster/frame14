@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.145.1
+
+- Fixed: on an iPhone whose screen corners are tighter than the newest models' — an iPhone 13 Pro, say — the bottom navigation bar no longer leaves a sliver of the page showing beside its bottom corners. The bar is square there now, and the screen's own corners round it, whatever the model.
+
 ## 0.145.0
 
 Everything that was particular to one house is now an option, and what was switched off is gone.

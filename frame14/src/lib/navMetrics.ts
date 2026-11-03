@@ -38,12 +38,6 @@ export const HEADER_ICON_SIZE = { base: "4.5", md: "5" };
 export const NAV_BAR_HEIGHT = "4rem";
 
 /**
- * Corner radius of an iPhone's screen, which CSS can't read from the device:
- * 62pt on the 16 Pro and later (55 on the 14 and 15 Pro).
- */
-const SCREEN_RADIUS = "62px";
-
-/**
  * 0 on a screen without a home-indicator inset, and far larger than any
  * length here on one with it (an iPhone from the X on, whose screen corners
  * are rounded): a switch for min() and max() below.
@@ -73,17 +67,19 @@ export const NAV_BAR_INSET = NAV_BAR_BOTTOM;
 export const NAV_BAR_SIDE_BORDER = `max(0px, calc(1px - ${ROUNDED_SCREEN}))`;
 
 /**
- * The portrait bar's corners. On an iPhone's rounded screen the bottom two
- * follow the screen's curve (SCREEN_RADIUS less the bottom gap, which is 0,
- * so they are the screen's corners), and the top is flat with square corners.
- * Elsewhere (the frame, a browser window) all four are the cards' `surface`.
+ * The portrait bar's corners: the cards' `surface` where it floats (the
+ * frame, a browser window), and square on an iPhone, where it is flush with
+ * the screen — the top flat, and the bottom two rounded by the screen's own
+ * corners, which clip it, whatever the model's radius (0.145.1). They were a
+ * 62pt curve of their own until then, the 16 Pro's: CSS can't read a
+ * screen's radius, and on a tighter screen (an iPhone 13 Pro's is about
+ * 47pt) the page showed between the two curves.
  */
-export const NAV_BAR_TOP_RADIUS = `max(0px, calc(var(--chakra-radii-surface) - ${ROUNDED_SCREEN}))`;
-export const NAV_BAR_BOTTOM_RADIUS = `max(var(--chakra-radii-surface), min(calc(${SCREEN_RADIUS} - ${NAV_BAR_BOTTOM}), ${ROUNDED_SCREEN}))`;
+export const NAV_BAR_RADIUS = `max(0px, calc(var(--chakra-radii-surface) - ${ROUNDED_SCREEN}))`;
 
 /**
- * On an iPhone, the bottom corners take up most of the bar's height, and the
- * first and last entries' labels (Home, Settings) ran into them. The bar is
+ * On an iPhone, the screen's bottom corners take up most of the bar's height,
+ * and the first and last entries' labels (Home, Settings) ran into them. The bar is
  * this much taller there, the extra room below its entries (over the home
  * indicator, as iOS's own tab bars leave it), and its entries this much
  * further in from its sides, which puts the labels clear of the curve. Both

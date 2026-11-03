@@ -10,7 +10,6 @@ import { ENTRY_RADIUS, NAV_PAD, NAV_SURFACE } from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
   NAV_BAR_BOTTOM,
-  NAV_BAR_BOTTOM_RADIUS,
   NAV_BAR_CLEARANCE,
   NAV_BAR_END_ENTRY_RADIUS,
   NAV_BAR_HEIGHT,
@@ -18,7 +17,7 @@ import {
   NAV_BAR_LIFT,
   NAV_BAR_SIDE_BORDER,
   NAV_BAR_SIDE_ROOM,
-  NAV_BAR_TOP_RADIUS,
+  NAV_BAR_RADIUS,
   NAV_RAIL_BOTTOM,
   NAV_RAIL_WIDTH,
   PAGE_GUTTER,
@@ -138,9 +137,10 @@ export function LandscapeNav({
           scrolling on underneath it shows through a heavy blur (NAV_SURFACE;
           the classic material, not Liquid Glass). On an iPhone it is flush with
           the screen's sides and bottom, over the home indicator, with only a
-          top edge, its bottom corners the screen's own and its top flat;
-          elsewhere it floats a gap in from the edges with the cards' corners
-          (NAV_BAR_TOP_RADIUS) and a full border. It has six slots on the
+          top edge and square corners — the screen's own corners round its
+          bottom, whatever the model (0.145.1); elsewhere it floats a gap in
+          from the edges with the cards' corners (NAV_BAR_RADIUS) and a full
+          border. It has six slots on the
           frame and five on a phone (NAV_BAR_ENTRIES); a longer nav keeps all
           but the last and puts the rest under More there (NavMoreMenu), as an
           iPhone tab bar does. */}
@@ -152,7 +152,7 @@ export function LandscapeNav({
         borderLeftWidth={NAV_BAR_SIDE_BORDER}
         borderRightWidth={NAV_BAR_SIDE_BORDER}
         borderBottomWidth={NAV_BAR_SIDE_BORDER}
-        rounded={`${NAV_BAR_TOP_RADIUS} ${NAV_BAR_TOP_RADIUS} ${NAV_BAR_BOTTOM_RADIUS} ${NAV_BAR_BOTTOM_RADIUS}`}
+        rounded={NAV_BAR_RADIUS}
         display={{ base: "block", _landscape: "none" }}
         top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_CLEARANCE})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`}

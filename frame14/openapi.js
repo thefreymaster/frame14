@@ -169,7 +169,7 @@ export const openApiDocument = {
         operationId: "getSoftwareInfo",
         summary: "Describe the installed add-on and the store's latest",
         description:
-          "The installed add-on version and, in the add-on, its update entity in Home Assistant (found by title in the state cache): the installed and latest versions, whether the add-on store has a newer one to download, whether an install is under way (`inProgress` — the entity's, so an install started from Home Assistant shows too) and the newer version's section of the CHANGELOG (`releaseNotes`, from Home Assistant's release notes). `update` is null outside the add-on.",
+          "The installed add-on version and, in the add-on, its update entity in Home Assistant (found by title in the state cache): the installed and latest versions, whether the add-on store has a newer one to download, whether an install is under way (`inProgress` — the entity's, so an install started from Home Assistant shows too) and the newer version's section of the CHANGELOG (`releaseNotes`, from Home Assistant's release notes). `installedReleaseUrl` is the installed version's release on GitHub. `update` is null outside the add-on.",
         responses: {
           200: {
             description: "The software as the server knows it.",
@@ -1245,6 +1245,12 @@ export const openApiDocument = {
         required: ["installed", "update"],
         properties: {
           installed: { type: "string", example: "0.113.0" },
+          installedReleaseUrl: {
+            type: "string",
+            nullable: true,
+            description: "The installed version's release on GitHub (the repository's v<version> tag).",
+            example: "https://github.com/thefreymaster/frame14/releases/tag/v0.113.0",
+          },
           update: {
             type: "object",
             nullable: true,

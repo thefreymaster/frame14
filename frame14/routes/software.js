@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ADDON_NAME, VERSION } from "../config.js";
+import { ADDON_NAME, REPO_URL, VERSION } from "../config.js";
 import {
   fetchReleaseNotes,
   getAllStates,
@@ -68,18 +68,30 @@ async function releaseNotesFor(s) {
 }
 
 /**
+ * A version's release on GitHub: the repository's release tagged
+ * v<version>, which release.yml publishes for every version; null without
+ * either.
+ */
+export function releasePageUrl(repo, version) {
+  if (!repo || !version) return null;
+  return `${repo.replace(/\/+$/, "")}/releases/tag/v${version}`;
+}
+
+/**
  * The software as the server knows it: GET's answer. `inProgress` is the
  * update entity's `in_progress`, live for whoever started the install (0.136;
  * its `update_percentage` came along as `progress` until 0.138 — the
  * Supervisor never filled it in on the user's installs, so the card's bar is
  * indeterminate); `releaseNotes` the version to come's section of the
- * CHANGELOG (0.136).
+ * CHANGELOG (0.136); `installedReleaseUrl` the installed version's release
+ * on GitHub (0.147.0).
  */
 async function softwareInfo() {
   const s = updateEntity();
   const a = s?.attributes ?? {};
   return {
     installed: VERSION,
+    installedReleaseUrl: releasePageUrl(REPO_URL, VERSION),
     update: s
       ? {
           entityId: s.id,

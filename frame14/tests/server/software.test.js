@@ -30,7 +30,7 @@ vi.mock("../../ha-socket.js", () => ({
   fetchReleaseNotes: mocks.fetchReleaseNotes,
 }));
 
-import softwareRouter, { changelogSection } from "../../routes/software.js";
+import softwareRouter, { changelogSection, releasePageUrl } from "../../routes/software.js";
 
 const app = express();
 app.use("/api/software", softwareRouter);
@@ -63,6 +63,8 @@ describe("GET /api/software", () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       installed: "0.125.0",
+      // config.yaml's own `url`, the repository.
+      installedReleaseUrl: "https://github.com/thefreymaster/frame14/releases/tag/v0.125.0",
       update: {
         entityId: "update.frame14_update",
         installed: "0.125.0",
@@ -113,7 +115,23 @@ describe("GET /api/software", () => {
   it("has no update outside the add-on", async () => {
     mocks.states.delete("update.frame14_update");
     const res = await request(app).get("/api/software");
-    expect(res.body).toEqual({ installed: "0.125.0", update: null });
+    expect(res.body).toEqual({ installed: "0.125.0", installedReleaseUrl: "https://github.com/thefreymaster/frame14/releases/tag/v0.125.0", update: null });
+  });
+});
+
+describe("the installed version's release (0.147.0)", () => {
+  it("is the repository's v<version> tag on GitHub", () => {
+    expect(releasePageUrl("https://github.com/thefreymaster/frame14", "0.147.0")).toBe(
+      "https://github.com/thefreymaster/frame14/releases/tag/v0.147.0",
+    );
+    expect(releasePageUrl("https://github.com/thefreymaster/frame14/", "1.0.0")).toBe(
+      "https://github.com/thefreymaster/frame14/releases/tag/v1.0.0",
+    );
+  });
+
+  it("is null without a repository or a version", () => {
+    expect(releasePageUrl("", "0.147.0")).toBeNull();
+    expect(releasePageUrl("https://github.com/thefreymaster/frame14", "")).toBeNull();
   });
 });
 

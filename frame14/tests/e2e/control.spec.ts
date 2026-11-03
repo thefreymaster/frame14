@@ -58,6 +58,10 @@ test.describe("the Settings page", () => {
     await expect(page.getByText("Up to date")).toBeVisible();
     await expect(page.getByText(version, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Check for updates" })).toBeVisible();
+    // The installed version's release on GitHub (0.147.0), in a new tab.
+    const release = page.getByRole("link", { name: `v${version} on GitHub` });
+    await expect(release).toHaveAttribute("href", `https://github.com/thefreymaster/frame14/releases/tag/v${version}`);
+    await expect(release).toHaveAttribute("target", "_blank");
   });
 
   test("the theme can follow the device, and the colors are every panel's (0.146.0)", async ({ page, browser }) => {

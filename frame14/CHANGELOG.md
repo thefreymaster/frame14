@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.147.0
+
+- Added: the Software card in Settings › Device links to the installed version's release on GitHub ("v0.147.0 on GitHub"), opening in a new tab.
+
 ## 0.146.0
 
 - Added: a **Device** theme in Settings › Display, beside Auto, Bright and Dark: each screen follows its own system light / dark setting, and switches when that does.

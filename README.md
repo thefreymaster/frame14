@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="oled-dashboard/icon.png" alt="" width="96" height="96">
+  <img src="frame14/icon.png" alt="" width="96" height="96">
 </p>
 
 # Home Assistant Add-on: Frame14
@@ -45,7 +45,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 
    [![Open this add-on in your Home Assistant instance.][addon-badge]][addon]
 
-3. On the **Configuration** tab, fill in the options below — at least `ha_token`, the Immich server and `web_ui_url`.
+3. On the **Configuration** tab, fill in the options below — at least `ha_token` and `web_ui_url`, and the entities you want on screen. Everything else is optional: a feature whose option is empty is left out (no Immich, no Photos pages).
 4. Turn on **Start on boot** and **Watchdog**, then **Start** the add-on.
 5. Open the dashboard at `http://<home-assistant>:4000` on the tablet and on your phone (**Open Web UI** and the sidebar entry go there too). A phone starts as a remote and a tablet as a frame; **Settings → Use as display / Use as remote** switches it.
 
@@ -58,7 +58,7 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | Option | Description | Default |
 |---|---|---|
 | `ha_url` | Home Assistant's URL | `http://supervisor/core` |
-| `ha_token` | A long-lived access token. An administrator's: the Software card's *Check for updates* asks the Supervisor to reload the store | |
+| `ha_token` | A long-lived access token (Profile → Security). An administrator's: the Software card's *Check for updates* asks the Supervisor to reload the store | |
 | `port` | The port the dashboard listens on | `4000` |
 | `web_ui_url` | Where **Open Web UI** and the sidebar entry send the browser — the add-on's address as your devices reach it, e.g. `http://192.168.1.10:4000`. Ingress only redirects there | |
 
@@ -66,12 +66,12 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 
 | Option | Description | Example |
 |---|---|---|
-| `immich_url` | Immich server URL | `http://192.168.1.20:2283` |
-| `immich_api_key` | Immich API key | |
+| `immich_url` | Optional: the Immich server's URL, for the photo slideshow. Without it and the key, the Photos pages, the remote's Photos view and the album picker are left out | `http://192.168.1.20:2283` |
+| `immich_api_key` | Optional: an Immich API key | |
+| `album_entity` | Optional: an `input_select` whose options are Immich album IDs — the album the frames play, picked on the Settings page | `input_select.smart_frame_album` |
 | `plex_url` | Optional: the Plex server, by its `plex.direct` hostname, for full-resolution marquee posters | |
 | `plex_token` | Optional: the Plex token | |
 | `media_player_entity` | The marquee's Plex player: its poster fills the frames while a movie plays | `media_player.plex_plex_for_apple_tv_apple_tv` |
-| `media_player_entities` | The Media page's players (the page is switched off for now) | `- media_player.living_room_tv` |
 | `assist_pipeline_id` | Optional: the Assist pipeline the mic runs; empty uses Home Assistant's preferred one | |
 | `assist_speaker` | Optional: a `media_player` that also speaks the reply | |
 
@@ -92,6 +92,7 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | `climate_entities` | Thermostats | see below |
 | `climate_names` | Optional labels for thermostats, by entity ID (otherwise the entity's name) | see below |
 | `fan_entities` | Fans, on the Home page's Fans card | `- fan.living_room_ceiling_fan` |
+| `light_all_off_exclude` | Optional: lights and switches the **All off** buttons leave on — a night light, say | `- light.kids_night_light` |
 
 ### Energy
 
@@ -116,7 +117,15 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | `team_tracker_entities` | TeamTracker sensors; a tracked team's game day gets the scoreboard | `- sensor.teamtracker_fsu` |
 | `person_entity` | Optional: a binary sensor whose `on` pops up the doorbell card | `binary_sensor.front_porch_person_detected` |
 | `camera_entity` | The doorbell card's camera | `camera.front_porch_high` |
-| `camera_entities` | The Cameras page's cameras; the doorbell's when empty | `- camera.front_porch_rtsp` |
+| `camera_entities` | The Cameras page's cameras; the doorbell's when empty. A camera's full screen carries the lights of its Home Assistant area | `- camera.front_porch_rtsp` |
+| `calendar_exclude` | Optional: calendars to leave off the Home card and the Calendar page | `- calendar.radarr` |
+
+### The frames' motion wake-up
+
+| Option | Description | Example |
+|---|---|---|
+| `motion_entity` | Optional: a motion sensor that, turning on, puts the frames back on the view they were last sent to | `binary_sensor.kitchen_motion_sensor_motion` |
+| `route_entity` | Optional: an `input_select` the add-on writes that view to, whose options are the view names (`home`, `clock`, `photos`, …) | `input_select.frame14_route` |
 
 ### Examples
 
@@ -180,21 +189,20 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/printer` | The 3D printer: camera, job progress and controls, temperatures; off by default in a remote's nav |
 | `/vacuum` | The robot vacuums: state, controls, map, wear parts; off by default in a remote's nav |
 | `/cameras` | Every camera live (stills when the stream won't start) — each goes full screen, with the lights of its room as buttons in the header — the printer's camera (full screen with its chamber light) and the vacuum maps; off by default in a remote's nav |
-| `/photos` | Immich photo slideshow; frame-only nav item |
-| `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames |
+| `/photos` | Immich photo slideshow; frame-only nav item, while Immich is set up |
+| `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames; while Immich is set up |
 | `/weather` | Now (conditions + advisories from the forecast), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |
 | `/calendar` | The next two weeks across every Home Assistant calendar, a card per day |
-| `/media` | The media players: what is playing, transport, volume and source (switched off for now) |
 | `/timer` | Timer; frame-only nav item |
-| `/marquee` | Plex now-playing poster art; auto-routed while a movie plays |
-| `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day |
+| `/marquee` | Plex now-playing poster art; auto-routed while a movie plays — a frame opened mid-movie goes there too |
+| `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day — a frame opened mid-game goes there too |
 | `/halloween` | Happy Halloween in neon over a hill of jack-o'-lanterns, a witch flying through now and then; in the nav and on a remote's Views card on Oct 30 and 31 only |
 | `/blank` | Black screen (motion off) |
 | `/control` | Settings + remote control: device mode, this device's navigation, software updates, the frames' screen and the hours it is on |
 
 ## Home Assistant automation (motion)
 
-`oled-dashboard/ha-automation.yaml` is a reference automation: it calls `GET /api/change/:view` to switch the frames' view when motion is detected or times out. The add-on's own motion watcher also puts the frames back on the view they were last sent to when the kitchen sensor trips — unless they are on a game, a movie poster or the Halloween page, which stay up until they end on their own.
+`frame14/ha-automation.yaml` is a reference automation: it calls `GET /api/change/:view` to switch the frames' view when motion is detected or times out. The add-on's own motion watcher also puts the frames back on the view they were last sent to (`route_entity`) when the `motion_entity` sensor trips — unless they are on a game, a movie poster or the Halloween page, which stay up until they end on their own.
 
 The frames' screen can be turned off and on the same way: `GET /api/screen/off` and `GET /api/screen/on` reach a frame running in Fully Kiosk Browser through Fully's JavaScript interface, over the frame's own connection to the add-on, so the automations don't depend on Fully's Remote Admin API or the Fully Kiosk integration. In Fully, turn on **Enable JavaScript Interface** (Settings › Advanced Web Settings) and **Prevent Device from Sleep while Screen Off** (Settings › Device Management), so the tablet keeps its connection while the screen is dark. Then, in `configuration.yaml`:
 
@@ -214,16 +222,16 @@ A remote (a phone) and any browser outside Fully ignore the command. The Setting
 
 ## Changelog & releases
 
-Every version is on the [Releases][releases] page with its notes, and in the add-on's **Changelog** tab in Home Assistant ([CHANGELOG.md](oled-dashboard/CHANGELOG.md)). The Release workflow publishes a version the moment its bump lands on `main`; the add-on store picks it up on its next check, or at once from **Check for updates** on the dashboard's Software card.
+Every version is on the [Releases][releases] page with its notes, and in the add-on's **Changelog** tab in Home Assistant ([CHANGELOG.md](frame14/CHANGELOG.md)). The Release workflow publishes a version the moment its bump lands on `main`; the add-on store picks it up on its next check, or at once from **Check for updates** on the dashboard's Software card.
 
 ## Local development
 
 ```bash
-cd oled-dashboard
+cd frame14
 npm install
 ```
 
-Copy `.env.example` to `.env` and fill in your values. `frame14.json` in `oled-dashboard/` holds the entity config outside the add-on (same fields as the options above, camel-cased):
+Copy `.env.example` to `.env` and fill in your values. `frame14.json` in `frame14/` holds the entity config outside the add-on (the options above, camel-cased; the motion and album helpers are `motion`, `route` and `album`):
 
 ```json
 {
@@ -260,6 +268,10 @@ Swagger UI: `http://localhost:4000/api/docs`
 ### Tests
 
 Unit tests run with [Vitest](https://vitest.dev) and the end-to-end tests with [Playwright](https://playwright.dev), against a stub Home Assistant that ships with the repository (`tests/stub/stub-ha.mjs`), so neither needs a real Home Assistant. Both run on every pull request and every push to `main`.
+
+### Contributing
+
+Changes land through pull requests against `main`: branch, push, open a pull request, and merge once **Lint and build**, **Unit tests** and **End-to-end tests** are green. A user-visible change bumps `version` in `frame14/config.yaml` and adds its section to `frame14/CHANGELOG.md`; merging it publishes the release.
 
 ```bash
 npm test                              # the unit tests: the client's libs and components, the server's routes and socket

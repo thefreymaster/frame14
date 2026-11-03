@@ -20,6 +20,6 @@ if bashio::config.has_value 'assist_speaker'; then
   export ASSIST_SPEAKER=$(bashio::config 'assist_speaker')
 fi
 
-bashio::log.info "Starting OLED Dashboard on port ${PORT}"
+bashio::log.info "Starting Frame14 on port ${PORT}"
 
 node /app/index.js

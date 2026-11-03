@@ -1,8 +1,5 @@
 import { ActionBar, Button, Portal, Text } from "@chakra-ui/react";
 import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
-// The desktop lights strip is off for now (0.91, see Layout).
-// import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics"; // lights strip
-// import { useDesktop } from "../hooks/useDesktop"; // lights strip
 
 /**
  * The bar shown while arranging /home — Chakra's ActionBar, portalled to the
@@ -26,7 +23,6 @@ export function HomeLayoutToolbar({
   onDone: () => void;
   onReset: () => void;
 }) {
-  // const desktop = useDesktop(); // lights strip
 
   return (
     <ActionBar.Root
@@ -38,8 +34,6 @@ export function HomeLayoutToolbar({
         <ActionBar.Positioner
           bottom={{
             _portrait: `calc(${NAV_BAR_CLEARANCE} + 1rem)`,
-            // lights strip (above it on a desktop, while it was on):
-            // _landscape: desktop ? `calc(${LIGHT_STRIP_CLEARANCE} + 1rem)` : undefined,
           }}
         >
           <ActionBar.Content>

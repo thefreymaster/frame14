@@ -287,8 +287,8 @@ function DigitalClock({ framed }: { framed: boolean }) {
 
 export function Clock() {
   const [style, setStyle] = useState<ClockStyle>(loadStyle);
-  // A card in the page on a desktop, like Photos and Radar, so it stays clear
-  // of the lights strip; full-screen on the frame and phones.
+  // A card in the page on a desktop, like Photos and Radar; full-screen on
+  // the frame and phones.
   const framed = useDesktop();
 
   function toggle() {

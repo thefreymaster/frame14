@@ -6,7 +6,6 @@ import { resetStub } from "./helpers";
 // and Tomorrow in the calendar card, Next hours in the forecast's) is a
 // section of the card, not its title, so only the headers are looked at.
 // Inactive tabs' cards (Weather's, a phone's Settings) are in the DOM too.
-// /media isn't routed while the Media page is off (router.tsx).
 const PAGES = [
   "/home",
   "/lights",

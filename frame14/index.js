@@ -38,7 +38,6 @@ import iconsRouter from "./routes/icons.js";
 import photosRouter from "./routes/photos.js";
 import viewsRouter from "./routes/views.js";
 import screenRouter from "./routes/screen.js";
-import videosRouter from "./routes/videos.js";
 import energyRouter from "./routes/energy.js";
 import circuitsRouter from "./routes/circuits.js";
 import homeRouter from "./routes/home.js";
@@ -234,14 +233,14 @@ app.get("/assets/*file", (req, res, next) => {
 // The live responses — the forecasts and the energy curves are tens of KB of
 // JSON — compressed on the way out, as hard as is quick enough for that
 // (gzip 9; brotli 5, past which it gets slow for little). Streams (the
-// cameras' MJPEG, the assist audio, the videos) aren't compressible and pass
+// cameras' MJPEG, the assist audio) aren't compressible and pass
 // through untouched, as does anything under 1 KB.
 app.use(
   compression({
     level: zlib.Z_BEST_COMPRESSION,
     brotli: { params: { [zlib.BROTLI_PARAM_QUALITY]: 5 } },
     filter: (req, res) =>
-      !/^\/(api\/(camera|printer\/camera|assist)|videos)\//.test(req.path) &&
+      !/^\/api\/(camera|printer\/camera|assist)\//.test(req.path) &&
       compression.filter(req, res),
   }),
 );
@@ -283,8 +282,6 @@ app.use("/api/camera", cameraRouter);
 app.use("/api/printer", printerRouter);
 app.use("/api/assist", assistRouter);
 app.use("/api/home", homeRouter);
-app.use("/api/videos", videosRouter);
-app.use("/videos", videosRouter);
 
 // SPA fallback
 app.get("/{*path}", (_req, res) => {

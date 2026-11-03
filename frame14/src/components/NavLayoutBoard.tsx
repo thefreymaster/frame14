@@ -22,6 +22,7 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { SortableNavLayoutRow } from "./SortableNavLayoutRow";
 import { useLiveGame } from "../hooks/useLiveGame";
 import { useHalloween } from "../hooks/useHalloween";
+import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
 import { useDeviceMode } from "../lib/deviceMode";
 import {
   HOME_PATH,
@@ -64,6 +65,7 @@ export function NavLayoutBoard() {
   const { games } = useLiveGame();
   const gameDay = games.length > 0;
   const halloween = useHalloween();
+  const photos = usePhotosEnabled();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
@@ -76,11 +78,18 @@ export function NavLayoutBoard() {
   const inMore = useMemo(
     () =>
       new Set(
-        splitForBar(shownNavItems(layout, { gameDay, halloween }), slots).more.map(
-          (i) => i.path,
-        ),
+        splitForBar(
+          shownNavItems(layout, { gameDay, halloween, photos }),
+          slots,
+        ).more.map((i) => i.path),
       ),
-    [layout, gameDay, halloween, slots],
+    [layout, gameDay, halloween, photos, slots],
+  );
+  // The rows this device can have: Photos only while Immich is set up
+  // (0.145.0). The order and the moves are the whole layout's, so an entry
+  // left out keeps its place for when it comes back.
+  const rows = rest.filter(
+    (e) => photos || !NAV_ITEM_BY_PATH.get(e.path)?.photos,
   );
   const customized = !sameNavLayout(layout, defaultNavLayout(mode));
 
@@ -130,10 +139,10 @@ export function NavLayoutBoard() {
           onDragEnd={onDragEnd}
         >
           <SortableContext
-            items={rest.map((e) => e.path)}
+            items={rows.map((e) => e.path)}
             strategy={verticalListSortingStrategy}
           >
-            {rest.map((e) => (
+            {rows.map((e) => (
               <SortableNavLayoutRow
                 key={e.path}
                 item={NAV_ITEM_BY_PATH.get(e.path)!}

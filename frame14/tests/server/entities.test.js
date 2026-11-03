@@ -47,6 +47,11 @@ const OPTIONS = {
   person_entity: "binary_sensor.person",
   camera_entity: "camera.door",
   camera_entities: ["camera.door", "camera.yard"],
+  motion_entity: "binary_sensor.motion",
+  route_entity: "input_select.route",
+  album_entity: "input_select.album",
+  light_all_off_exclude: ["light.night"],
+  calendar_exclude: ["calendar.radarr"],
 };
 
 beforeEach(() => {
@@ -77,12 +82,24 @@ describe("the add-on's options", () => {
     expect(e.vacuums).toEqual(["vacuum.v"]);
     expect(e.fans).toEqual(["fan.f"]);
     expect(e.mediaPlayer).toBe("media_player.plex");
-    expect(e.mediaPlayers).toEqual([]);
+    expect(e).not.toHaveProperty("mediaPlayers");
     expect(e.printer).toBe("sensor.a1_print_status");
     expect(e.teamTracker).toEqual(["sensor.tt"]);
     expect(e.person).toBe("binary_sensor.person");
     expect(e.camera).toBe("camera.door");
     expect(e.cameras).toEqual(["camera.door", "camera.yard"]);
+    // The house's helpers and lists (0.145.0; hard-coded before).
+    expect(e.motion).toBe("binary_sensor.motion");
+    expect(e.route).toBe("input_select.route");
+    expect(e.album).toBe("input_select.album");
+    expect(e.lightAllOffExclude).toEqual(["light.night"]);
+    expect(e.calendarExclude).toEqual(["calendar.radarr"]);
+  });
+
+  it("turns the helpers off and leaves nothing out when they aren't set", async () => {
+    files.set("/data/options.json", JSON.stringify({ weather_entity: "weather.home" }));
+    const e = await load();
+    expect(e).toMatchObject({ motion: "", route: "", album: "", lightAllOffExclude: [], calendarExclude: [] });
   });
 
   it("turns climate_names into a map, trimmed, dropping the malformed", async () => {
@@ -140,7 +157,8 @@ describe("with nothing to read", () => {
     expect(e).toEqual({
       lights: [], lightAreas: [], weather: {}, climate: [], climateNames: {}, energy: {},
       circuits: { main: "", balance: "", items: [] }, vacuums: [], fans: [], mediaPlayer: "",
-      mediaPlayers: [], printer: "", teamTracker: [], person: "", camera: "", cameras: [],
+      printer: "", teamTracker: [], person: "", camera: "", cameras: [],
+      motion: "", route: "", album: "", lightAllOffExclude: [], calendarExclude: [],
     });
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("no entity config"));
   });

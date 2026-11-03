@@ -21,9 +21,12 @@ import { HA_URL, HA_TOKEN } from "./config.js";
 import { ENTITIES } from "./entities.js";
 import { printerEntities } from "./printer-entities.js";
 
-const MOTION_ENTITY = "binary_sensor.kitchen_motion_sensor_motion";
-const ROUTE_ENTITY = "input_select.oledos_route";
-const ALBUM_ENTITY = "input_select.smart_frame_album";
+// The house's helpers, options since 0.145.0 (`motion_entity`, `route_entity`,
+// `album_entity`; hard-coded to the first house's before). Each empty turns
+// its feature off: no wake on motion, no remembered route, no album refresh.
+const MOTION_ENTITY = ENTITIES.motion ?? "";
+const ROUTE_ENTITY = ENTITIES.route ?? "";
+const ALBUM_ENTITY = ENTITIES.album ?? "";
 const RECONNECT_DELAY_MS = 5_000;
 
 // Plex marquee: route the frame to /marquee while a movie is playing.
@@ -140,41 +143,6 @@ function deviceControlData({ domain, service, entity_id, fan_speed }) {
   return null;
 }
 
-// The Media page's controls (0.83), held to the configured media players as
-// the vacuums' are: media_player.* reaches every speaker and TV in the house.
-const MEDIA_SERVICES = new Set([
-  "media_play", "media_pause", "media_play_pause", "media_stop",
-  "media_next_track", "media_previous_track",
-  "volume_up", "volume_down", "volume_set", "volume_mute",
-  "turn_on", "turn_off", "select_source",
-]);
-// Source names are the device's own ("HDMI 1", "Netflix", "Apple TV+").
-const SOURCE_RE = /^[\w .,:/()'&+-]{1,64}$/;
-
-function configuredMediaPlayers() {
-  return [ENTITIES.mediaPlayer, ...(ENTITIES.mediaPlayers ?? [])].filter(Boolean);
-}
-
-/** Service data for a media player's controls, or null if the call isn't one. */
-function mediaControlData({ service, entity_id, volume_level, is_volume_muted, source }) {
-  if (!MEDIA_SERVICES.has(service)) return null;
-  if (!configuredMediaPlayers().includes(entity_id)) return null;
-  if (service === "volume_set") {
-    const level = Number(volume_level);
-    if (!Number.isFinite(level) || level < 0 || level > 1) return null;
-    return { entity_id, volume_level: Math.round(level * 100) / 100 };
-  }
-  if (service === "volume_mute") {
-    if (typeof is_volume_muted !== "boolean") return null;
-    return { entity_id, is_volume_muted };
-  }
-  if (service === "select_source") {
-    if (typeof source !== "string" || !SOURCE_RE.test(source)) return null;
-    return { entity_id, source };
-  }
-  return { entity_id };
-}
-
 export function getState(entityId) {
   return stateCache.get(entityId);
 }
@@ -208,7 +176,7 @@ function sendServiceCall(domain, service, service_data) {
  * (truthy — `if (!ok)` keeps working — and awaited by index.js's entity:call
  * for its ack, since 0.125).
  */
-export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type, volume_level, is_volume_muted, source }) {
+export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type }) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
 
   if (domain === "vacuum" || domain === "button") {
@@ -217,13 +185,12 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
     return sendServiceCall(domain, service, service_data);
   }
 
-  // The Media page's controls; play_media (the assist reply) stays on the
-  // allow-list path below.
-  if (domain === "media_player" && service !== "play_media") {
-    const service_data = mediaControlData({ service, entity_id, volume_level, is_volume_muted, source });
-    if (!service_data) return false;
-    return sendServiceCall(domain, service, service_data);
-  }
+  // A media player takes play_media alone — the assist reply on the speaker,
+  // checked below. The domain is on the allow-list for that, and its
+  // turn_on / turn_off / toggle would otherwise pass for every TV in the
+  // house (the Media page's controls, held to the configured players, went
+  // with the page in 0.145.0).
+  if (domain === "media_player" && service !== "play_media") return false;
 
   if (!ALLOWED_DOMAINS.has(domain)) return false;
   if (!ALLOWED_SERVICES.has(service)) return false;
@@ -496,6 +463,7 @@ export function forgetPipelineRun(runId) {
 }
 
 async function getLastRoute() {
+  if (!ROUTE_ENTITY) return "home";
   try {
     const res = await fetch(`${HA_URL}/api/states/${ROUTE_ENTITY}`, {
       headers: { Authorization: `Bearer ${HA_TOKEN}` },
@@ -513,7 +481,7 @@ async function getLastRoute() {
 }
 
 export async function setLastRoute(route) {
-  if (!HA_TOKEN) return;
+  if (!HA_TOKEN || !ROUTE_ENTITY) return;
   try {
     const res = await fetch(
       `${HA_URL}/api/services/input_select/select_option`,
@@ -673,7 +641,7 @@ export function startHaSocket(io, hooks = {}) {
     stateCache.set(entityId, newState);
     io.to(`entity:${entityId}`).emit(entityId, newState);
 
-    if (entityId === MOTION_ENTITY && newState.state === "on") {
+    if (MOTION_ENTITY && entityId === MOTION_ENTITY && newState.state === "on") {
       onMotionOn().catch((err) =>
         console.error("[ha-socket] onMotionOn error:", err.message),
       );
@@ -697,7 +665,7 @@ export function startHaSocket(io, hooks = {}) {
       return;
     }
 
-    if (entityId === ALBUM_ENTITY) {
+    if (ALBUM_ENTITY && entityId === ALBUM_ENTITY) {
       const prev = prevState?.state;
       const next = newState.state;
       if (prev !== next) {

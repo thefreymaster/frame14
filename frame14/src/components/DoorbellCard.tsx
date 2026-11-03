@@ -14,10 +14,6 @@ import { CloseButton } from "./ui/close-button";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntity, type HAState } from "../hooks/useEntity";
 import { socket } from "../lib/socket";
-// The desktop lights strip is off for now (0.91, see Layout): nothing to
-// clear at the bottom of a desktop.
-// import { useDesktop } from "../hooks/useDesktop"; // lights strip
-// import { LIGHT_STRIP_CLEARANCE } from "../lib/navMetrics"; // lights strip
 import { CameraDialog } from "./CameraDialog";
 import { CameraFeed } from "./CameraFeed";
 import { CameraVideo } from "./CameraVideo";
@@ -81,7 +77,6 @@ export function DoorbellCard() {
   // hide timer, which must not take the card down under it.
   const [full, setFull] = useState(false);
   const fullRef = useRef(false);
-  // const desktop = useDesktop(); // lights strip
 
   const hideTimer = useRef<number | null>(null);
   const prevState = useRef<string | undefined>(undefined);
@@ -168,8 +163,6 @@ export function DoorbellCard() {
   return (
     <Card.Root
       position="fixed"
-      // lights strip (above it on a desktop, while it was on):
-      // bottom={desktop ? `calc(${LIGHT_STRIP_CLEARANCE} + 1rem)` : "calc(env(safe-area-inset-bottom, 0px) + 1rem)"}
       bottom="calc(env(safe-area-inset-bottom, 0px) + 1rem)"
       right="calc(env(safe-area-inset-right, 0px) + 1rem)"
       // Above any open dialog: someone at the door outranks a modal.

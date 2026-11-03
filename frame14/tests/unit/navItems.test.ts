@@ -12,10 +12,13 @@ import {
 const paths = (items: { path: string }[]) => items.map((i) => i.path);
 
 describe("NAV_ITEMS", () => {
-  it("starts with Home and ends with Settings, the Media page left out", () => {
+  it("starts with Home and ends with Settings", () => {
     expect(NAV_ITEMS[0].path).toBe(HOME_PATH);
     expect(NAV_ITEMS.at(-1)?.path).toBe(SETTINGS_PATH);
-    expect(paths(NAV_ITEMS)).not.toContain("/media");
+  });
+
+  it("marks the two Photos entries as needing Immich (0.145.0)", () => {
+    expect(NAV_ITEMS.filter((i) => i.photos).map((i) => i.path)).toEqual(["/photos", "/album"]);
   });
 
   it("keeps the 0.109 order, Halloween (0.128) before Settings", () => {

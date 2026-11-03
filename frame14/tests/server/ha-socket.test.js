@@ -24,12 +24,15 @@ vi.mock("../../entities.js", () => ({
     vacuums: ["vacuum.roborock_q5_pro"],
     fans: [],
     mediaPlayer: PLEX,
-    mediaPlayers: [TV],
     printer: `${STUB.printer}_print_status`,
     teamTracker: ["sensor.teamtracker_fsu"],
     person: "",
     camera: "",
     cameras: [],
+    // The house's helpers, options since 0.145.0.
+    motion: "binary_sensor.kitchen_motion_sensor_motion",
+    route: "input_select.oledos_route",
+    album: "input_select.smart_frame_album",
   },
 }));
 
@@ -144,20 +147,22 @@ describe("callService", () => {
       { domain: "vacuum", service: "start", entity_id: "vacuum.other" },
       { domain: "vacuum", service: "explode", entity_id: "vacuum.roborock_q5_pro" },
       { domain: "button", service: "press", entity_id: "button.random" },
-      { domain: "media_player", service: "volume_set", entity_id: TV, volume_level: 2 },
-      { domain: "media_player", service: "select_source", entity_id: TV, source: "<script>" },
-      { domain: "media_player", service: "media_play", entity_id: "media_player.other" },
+      // A media player takes play_media alone (the assist reply) since the
+      // Media page went (0.145.0): its turn_off would reach any TV otherwise.
+      { domain: "media_player", service: "turn_off", entity_id: TV },
+      { domain: "media_player", service: "toggle", entity_id: PLEX },
+      { domain: "media_player", service: "volume_set", entity_id: PLEX, volume_level: 0.5 },
+      { domain: "media_player", service: "select_source", entity_id: TV, source: "HDMI 1" },
+      { domain: "media_player", service: "media_play", entity_id: PLEX },
       { domain: "media_player", service: "play_media", entity_id: TV, media_content_id: "http://evil/x.mp3", media_content_type: "music" },
     ];
     for (const call of refused) expect(ha.callService(call), JSON.stringify(call)).toBe(false);
   });
 
-  it("takes the configured vacuum's, printer's and media players' controls", async () => {
+  it("takes the configured vacuum's and printer's controls", async () => {
     await expect(ha.callService({ domain: "vacuum", service: "pause", entity_id: "vacuum.roborock_q5_pro" })).resolves.toEqual({ ok: true });
     await until(() => ha.getState("vacuum.roborock_q5_pro").state === "paused");
     await expect(ha.callService({ domain: "vacuum", service: "set_fan_speed", entity_id: "vacuum.roborock_q5_pro", fan_speed: "max_plus" })).resolves.toEqual({ ok: true });
-    await expect(ha.callService({ domain: "media_player", service: "volume_set", entity_id: TV, volume_level: 0.5 })).resolves.toEqual({ ok: true });
-    await expect(ha.callService({ domain: "media_player", service: "select_source", entity_id: TV, source: "HDMI 1" })).resolves.toEqual({ ok: true });
     const { printerEntities } = await import("../../printer-entities.js");
     const [pause] = printerEntities().buttons;
     await expect(ha.callService({ domain: "button", service: "press", entity_id: pause })).resolves.toEqual({ ok: true });

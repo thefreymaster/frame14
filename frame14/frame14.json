@@ -70,10 +70,14 @@
   "vacuums": ["vacuum.roborock_q5_pro"],
   "fans": ["fan.living_room_ceiling_fan", "fan.aidens_fan"],
   "mediaPlayer": "media_player.plex_plex_for_apple_tv_apple_tv",
-  "mediaPlayers": ["media_player.plex_plex_for_apple_tv_apple_tv", "media_player.living_room_tv"],
   "printer": "sensor.a1_03919c442700723_print_status",
   "teamTracker": ["sensor.teamtracker_fsu"],
   "person": "binary_sensor.front_porch_person_detected",
   "camera": "camera.front_porch_high",
-  "cameras": ["camera.front_porch_high", "camera.front_porch_rtsp"]
+  "cameras": ["camera.front_porch_high", "camera.front_porch_rtsp"],
+  "motion": "binary_sensor.kitchen_motion_sensor_motion",
+  "route": "input_select.oledos_route",
+  "album": "input_select.smart_frame_album",
+  "lightAllOffExclude": ["light.aidens_hatch_light"],
+  "calendarExclude": ["calendar.radarr"]
 }

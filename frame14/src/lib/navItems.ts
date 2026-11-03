@@ -18,8 +18,6 @@ import {
   IoCalendar,
   IoVideocamOutline,
   IoVideocam,
-  // IoPlayCircleOutline, // media page
-  // IoPlayCircle, // media page
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -51,6 +49,8 @@ export type NavItem = {
   gameDay?: boolean;
   /** In the nav on Oct 30 and 31 only (useHalloween). */
   halloween?: boolean;
+  /** In the nav only while Immich is set up (usePhotosEnabled, 0.145.0). */
+  photos?: boolean;
 };
 
 /** Always first in the nav, and always in it. */
@@ -99,6 +99,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoImagesOutline,
     activeIcon: IoImages,
     frameOnly: true,
+    photos: true,
   },
   // A remote's Photos: the album as a grid, to pick what the frames show.
   {
@@ -107,6 +108,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoImagesOutline,
     activeIcon: IoImages,
     remoteOnly: true,
+    photos: true,
   },
   {
     path: "/energy",
@@ -152,21 +154,6 @@ export const NAV_ITEMS: NavItem[] = [
     activeIcon: IoCalendar,
     remoteOff: true,
   },
-  // The Media page is off for now (0.109): its route (router.tsx) and its
-  // Views tile (Control.tsx) are commented out with this entry; the page
-  // and its parts stay (routes/Media, MediaPlayerCard, lib/mediaPlayer,
-  // callMediaService, the server's media controls). A saved layout that
-  // had it drops it (lib/navLayout). Uncomment the lines marked "media
-  // page" to bring it back.
-  // {
-  //   path: "/media",
-  //   label: "Media",
-  //   icon: IoPlayCircleOutline,
-  //   activeIcon: IoPlayCircle,
-  // },
-  // Comes and goes with the game. Deliberately not local-only: tapping it
-  // should move every panel to the game, and "football" is a TRANSIENT_VIEW
-  // server-side so it is never remembered as the route to wake up on.
   {
     path: "/football",
     label: "Football",

@@ -32,10 +32,6 @@ import {
   IoCalendar,
   IoVideocamOutline,
   IoVideocam,
-  // IoPlayCircleOutline,
-  // media page
-  // IoPlayCircle,
-  // media page
   IoGridOutline,
   IoContrastOutline,
   IoPhonePortraitOutline,
@@ -58,13 +54,8 @@ import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useHalloween } from "../hooks/useHalloween";
+import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
-// The lights strip is off for now (0.91, see Layout); its switch with it.
-// import {
-//   setLightStripShown,
-//   useLightStripShown,
-// } from "../lib/lightStripVisibility";
-// import { useDesktop } from "../hooks/useDesktop";
 import type { ThemeModePreference } from "../lib/themeMode";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
@@ -152,13 +143,6 @@ const VIEWS: View[] = [
     icon: IoCalendarOutline,
     activeIcon: IoCalendar,
   },
-  // The Media page is off for now (0.109, see lib/navItems).
-  // {
-  //   path: "/media",
-  //   label: "Media",
-  //   icon: IoPlayCircleOutline,
-  //   activeIcon: IoPlayCircle,
-  // }, // media page
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
   // Always listed here, unlike the nav bar's tab which only appears on game
   // day — the remote is where you go to put the frame on something, so the
@@ -214,13 +198,14 @@ export function Control() {
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
   // The frames' nav: a remote's own never hides.
   const navVisible = useFramesNavVisible();
-  // The lights strip along the bottom is a desktop's alone, so its switch
-  // shows there alone; this device's setting, not the frames'.
-  // const desktop = useDesktop(); // lights strip
-  // const lightStripShown = useLightStripShown(); // lights strip
   const showViews = deviceMode !== "frame";
   const halloween = useHalloween();
-  const views = halloween ? [...VIEWS, HALLOWEEN_VIEW] : VIEWS;
+  // Photos only while Immich is set up (0.145.0), the album picker with it.
+  const photos = usePhotosEnabled();
+  const views = [
+    ...VIEWS.filter((v) => photos || v.path !== "/photos"),
+    ...(halloween ? [HALLOWEEN_VIEW] : []),
+  ];
   // The tab — every device's since 0.139 (the user: "add the tabs that the
   // settings route has on mobile to all devices"; a phone's alone before) —
   // is the sub-route (0.138): /control/views, /display, /device, the first
@@ -338,21 +323,6 @@ export function Control() {
           Show navigation
         </Switch>
 
-        {/* lights strip (off for now, 0.91):
-        {desktop && (
-          <Field.Root>
-            <Switch
-              checked={lightStripShown}
-              onCheckedChange={(e) => setLightStripShown(e.checked)}
-            >
-              Show lights strip
-            </Switch>
-            <Field.HelperText>
-              The row of lights along the bottom of this screen.
-            </Field.HelperText>
-          </Field.Root>
-        )} */}
-
         <Button
           variant="outline"
           onClick={() => {
@@ -458,7 +428,7 @@ export function Control() {
           <Stack gap="gutter">
             {displayBoard}
             <ScreenBoard />
-            {albumBoard}
+            {photos && albumBoard}
           </Stack>
         </Tabs.Content>
         <Tabs.Content value="device" p="0">

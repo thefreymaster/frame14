@@ -1,6 +1,5 @@
-// The floating surface the navs and the desktop lights strip share (the
-// navs' frosted, NAV_SURFACE), its entries' corners, and the dark-mode shades
-// for anything sitting on the cards' `bg.surface`.
+// The navs' floating surface (frosted, NAV_SURFACE), its entries' corners,
+// and the dark-mode shades for anything sitting on the cards' `bg.surface`.
 
 /** Space between a floating surface's edge and its entries. */
 export const NAV_PAD = "0.375rem";

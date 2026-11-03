@@ -60,16 +60,15 @@ async function fetchPlexPoster(ratingKey) {
 }
 
 /**
- * Proxy the artwork of a configured media player: the marquee's
- * (`media_player_entity`, the default) or, with `?entity=`, one of the Media
- * page's (`media_player_entities`, since 0.83).
+ * Proxy the artwork of the marquee's media player (`media_player_entity`).
+ * The Media page's other players (`?entity=`, `media_player_entities`, 0.83)
+ * went with the page in 0.145.0.
  *
- * For the marquee's Plex player it prefers Plex directly when
- * PLEX_URL/PLEX_TOKEN are set, because HA's media_player_proxy only ever
- * returns a 200x300 thumbnail. Falls back to that proxy when Plex isn't
- * configured or the fetch fails, and uses it for every other player.
+ * It prefers Plex directly when PLEX_URL/PLEX_TOKEN are set, because HA's
+ * media_player_proxy only ever returns a 200x300 thumbnail. Falls back to
+ * that proxy when Plex isn't configured or the fetch fails.
  *
- * Neither path takes a URL from the client: the entity must be a configured
+ * Neither path takes a URL from the client: the entity is the configured
  * one, and the picture is identified from the HA state cache server-side.
  * Forwarding a client-supplied path with the HA bearer token attached would
  * let anyone reach arbitrary internal HA endpoints.
@@ -78,29 +77,18 @@ async function fetchPlexPoster(ratingKey) {
  * the media changes.
  */
 router.get("/art", async (req, res) => {
-  const players = [ENTITIES.mediaPlayer, ...(ENTITIES.mediaPlayers ?? [])].filter(Boolean);
-  if (players.length === 0) {
+  const entityId = ENTITIES.mediaPlayer;
+  if (!entityId) {
     res.status(503).json({ error: "No media player entity configured" });
     return;
-  }
-  const requested = req.query.entity;
-  let entityId = ENTITIES.mediaPlayer || players[0];
-  if (requested != null) {
-    if (typeof requested !== "string" || !players.includes(requested)) {
-      res.status(404).json({ error: "Not a configured media player" });
-      return;
-    }
-    entityId = requested;
   }
 
   const attributes = getState(entityId)?.attributes;
 
-  if (entityId === ENTITIES.mediaPlayer) {
-    const poster = await fetchPlexPoster(attributes?.media_content_id);
-    if (poster) {
-      sendImage(res, poster.contentType, poster.buffer);
-      return;
-    }
+  const poster = await fetchPlexPoster(attributes?.media_content_id);
+  if (poster) {
+    sendImage(res, poster.contentType, poster.buffer);
+    return;
   }
 
   if (!HA_TOKEN) {

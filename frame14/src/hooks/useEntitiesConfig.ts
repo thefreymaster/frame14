@@ -37,8 +37,6 @@ export interface EntitiesConfig {
   fans: string[];
   /** The marquee's media player. */
   mediaPlayer: string;
-  /** The Media page's (`media_player_entities`); the marquee's when empty. */
-  mediaPlayers: string[];
   printer: string;
   teamTracker: string[];
   person: string;
@@ -46,6 +44,14 @@ export interface EntitiesConfig {
   camera: string;
   /** The Cameras page's (`camera_entities`); the doorbell's when empty. */
   cameras: string[];
+  /** The lights and switches the All off buttons leave on (`light_all_off_exclude`, 0.145.0). */
+  lightAllOffExclude?: string[];
+  /**
+   * Whether Immich is set up (0.145.0): without it the Photos pages, their
+   * nav entries, the remote's Photos view and the album picker are left out.
+   * Absent from a config restored from before it: set up.
+   */
+  photos?: boolean;
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

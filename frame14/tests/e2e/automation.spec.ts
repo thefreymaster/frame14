@@ -24,6 +24,40 @@ test("GET /api/change/:view moves the frame, and a remote stays put", async ({ p
   await expect(page.getByRole("tab", { name: "Home", selected: true })).toBeVisible();
 });
 
+// 0.145.0: a frame that opens after the frames were sent to a game — a browser
+// opened mid-game, the morning restart — goes to it, from the view the server
+// sends on connect. Before, it opened on Home and stayed there.
+test("a page that opens while the frames are on a game goes to it, and a remote stays put", async ({ page, request, isMobile }) => {
+  await resetStub(request);
+  await request.get("/api/change/football");
+  try {
+    await page.goto("/home");
+    if (isMobile) {
+      await expect(page.getByText("1st Floor AC")).toBeVisible();
+      await page.waitForTimeout(1000);
+      await expect(page).toHaveURL(/\/home$/);
+      return;
+    }
+    await expect(page).toHaveURL(/\/football$/);
+  } finally {
+    // The server keeps the view: every later page would open on the game.
+    await request.get("/api/change/home");
+  }
+});
+
+test("a page that opens while the frames are on an everyday view stays where it opened", async ({ page, request }) => {
+  await resetStub(request);
+  await request.get("/api/change/clock");
+  try {
+    await page.goto("/lights");
+    await expect(page.getByRole("tab", { name: "Lights", selected: true })).toBeVisible();
+    await page.waitForTimeout(1000);
+    await expect(page).toHaveURL(/\/lights$/);
+  } finally {
+    await request.get("/api/change/home");
+  }
+});
+
 test("a remote's nav keeps its selected entry when the frames are sent elsewhere", async ({ page, request, isMobile }) => {
   test.skip(!isMobile, "a frame follows the broadcast, so its nav follows the page");
   await resetStub(request);

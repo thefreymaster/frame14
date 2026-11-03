@@ -8,6 +8,7 @@ import { PhotoGrid } from "../components/PhotoGrid";
 import { EmptyState } from "../components/ui/empty-state";
 import { useAlbumPhotos } from "../hooks/useAlbumPhotos";
 import { usePhotosConfig } from "../hooks/usePhotosConfig";
+import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
 
 /**
  * A remote's Photos page (the frames have the slideshow): the album picker and
@@ -15,6 +16,7 @@ import { usePhotosConfig } from "../hooks/usePhotosConfig";
  */
 export function Album() {
   const { data: config, isPending: configPending } = usePhotosConfig();
+  const photos = usePhotosEnabled();
   const albumId = config?.defaultAlbumId ?? null;
   const {
     data: album,
@@ -36,11 +38,17 @@ export function Album() {
           )
         }
       >
-        <AlbumSelect />
+        {photos && <AlbumSelect />}
       </PageHeader>
 
       <Board>
-        {loading ? (
+        {!photos ? (
+          <EmptyState
+            icon={<IoImagesOutline />}
+            title="Photos aren't set up"
+            description="Add immich_url and immich_api_key in the add-on's options."
+          />
+        ) : loading ? (
           <Grid templateColumns="repeat(auto-fill, minmax(6rem, 1fr))" gap="2">
             {Array.from({ length: 12 }, (_, i) => (
               <Skeleton key={i} aspectRatio="1" rounded="sm" />

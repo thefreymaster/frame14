@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { resetStub, stub } from "./helpers";
+import { APP_URL } from "./ports";
 
 test.describe("the Settings page", () => {
   test.describe("with a newer version in the store", () => {
@@ -57,6 +58,52 @@ test.describe("the Settings page", () => {
     await expect(page.getByText("Up to date")).toBeVisible();
     await expect(page.getByText(version, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Check for updates" })).toBeVisible();
+  });
+
+  test("the theme can follow the device, and the colors are every panel's (0.146.0)", async ({ page, browser }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/control/display");
+    const html = page.locator("html");
+    const theme = page.getByRole("radiogroup", { name: "Theme" });
+    const colors = page.getByRole("radiogroup", { name: "Colors" });
+    const pageColour = () =>
+      page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--chakra-colors-bg").trim());
+    try {
+      // Device: the system's setting, followed as it changes.
+      await theme.getByText("Device", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-theme-mode", "dark");
+      await expect(page.getByText("device · dark")).toBeVisible();
+      await page.emulateMedia({ colorScheme: "light" });
+      await expect(html).toHaveAttribute("data-theme-mode", "bright");
+      await expect(html).not.toHaveClass(/\bdark\b/);
+      await expect(page.getByText("device · bright")).toBeVisible();
+
+      // Slate re-tints the neutrals: the page, and a card in dark mode.
+      await expect(colors.getByText("Gray", { exact: true })).toBeVisible();
+      await colors.getByText("Slate", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-palette", "slate");
+      await expect.poll(pageColour).toBe("#f3f6fa");
+      await theme.getByText("Dark", { exact: true }).click();
+      await expect.poll(pageColour).toBe("#02081a");
+      await expect(page.locator(".chakra-card__root").first()).toHaveCSS("background-color", "rgb(18, 28, 47)");
+
+      // Another panel opening — nothing of its own stored — gets them from
+      // the add-on.
+      const other = await browser.newContext({ baseURL: APP_URL });
+      const panel = await other.newPage();
+      await panel.goto("/home");
+      await expect(panel.locator("html")).toHaveAttribute("data-palette", "slate");
+      await expect(panel.locator("html")).toHaveAttribute("data-theme-mode", "dark");
+      // And a change here reaches it.
+      await colors.getByText("Sand", { exact: true }).click();
+      await expect(panel.locator("html")).toHaveAttribute("data-palette", "sand");
+      await other.close();
+    } finally {
+      // The add-on keeps the theme for every later page: back to Dark, Gray.
+      await theme.getByText("Dark", { exact: true }).click();
+      await colors.getByText("Gray", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-palette", "gray");
+    }
   });
 
   test("the device mode switches the navigation between frame and remote", async ({ page, isMobile }) => {

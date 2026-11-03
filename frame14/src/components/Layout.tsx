@@ -11,7 +11,6 @@ import { StatusBanner } from "./StatusBanner";
 import { VoiceAssistButton } from "./VoiceAssistButton";
 import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
 import { ScreenOffButton } from "./ScreenOffButton";
-import { useThemeMode } from "../hooks/useThemeMode";
 import { useReady } from "../hooks/useReady";
 import { useVoiceAssist } from "../hooks/useVoiceAssist";
 import { useAssistConfig } from "../hooks/useAssistConfig";
@@ -49,7 +48,6 @@ const DESKTOP_SCROLLING_PATHS = new Set(["/weather", "/energy"]);
 const SPLASH_HOLDING_PATHS = new Set(["/", "/home"]);
 
 export function Layout() {
-  useThemeMode();
   useReady();
   const location = useLocation();
   // The page, without its tab (lib/pagePath, 0.138): a tab is a sub-route.

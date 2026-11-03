@@ -57,6 +57,12 @@ import { useHalloween } from "../hooks/useHalloween";
 import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
 import type { ThemeModePreference } from "../lib/themeMode";
+import {
+  isThemePalette,
+  PALETTES,
+  THEME_PALETTES,
+} from "../lib/themePalettes";
+import { PaletteSwatch } from "../components/PaletteSwatch";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
 import { PageHeader } from "../components/PageHeader";
@@ -164,11 +170,25 @@ const HALLOWEEN_VIEW: View = {
   activeIcon: GiPumpkinLantern,
 };
 
+// Auto follows the daylight window (07:00–19:00), Device the system's light /
+// dark setting — each panel its own (lib/themeMode).
 const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "auto", label: "Auto" },
+  { value: "device", label: "Device" },
   { value: "bright", label: "Bright" },
   { value: "dark", label: "Dark" },
 ];
+
+// The palettes (lib/themePalettes), each with its swatch.
+const PALETTE_ITEMS = THEME_PALETTES.map((value) => ({
+  value,
+  label: (
+    <HStack gap="2">
+      <PaletteSwatch palette={value} />
+      {PALETTES[value].label}
+    </HStack>
+  ),
+}));
 
 const DEVICE_MODES = [
   { value: "frame", label: "Use as frame" },
@@ -193,7 +213,8 @@ const TABS = [
 export function Control() {
   const { status: connection } = useSocket();
   const version = useAppVersion();
-  const { preference, effectiveMode, setPreference } = useThemeMode();
+  const { preference, palette, effectiveMode, setPreference, setPalette } =
+    useThemeMode();
   const [activeView, setActiveView] = useState<string | null>(null);
   const [deviceMode, setDeviceModeState] = useState(getDeviceMode);
   // The frames' nav: a remote's own never hides.
@@ -301,7 +322,11 @@ export function Control() {
           <SectionTitle icon={<IoTabletPortraitOutline />}>
             Display
           </SectionTitle>
-          {preference === "auto" && <Badge>auto · {effectiveMode}</Badge>}
+          {(preference === "auto" || preference === "device") && (
+            <Badge>
+              {preference} · {effectiveMode}
+            </Badge>
+          )}
         </HStack>
       }
     >
@@ -314,6 +339,18 @@ export function Control() {
             aria-label="Theme"
             onValueChange={(e) => {
               if (e.value) setPreference(e.value as ThemeModePreference);
+            }}
+          />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Colors</Field.Label>
+          <SegmentedControl
+            items={PALETTE_ITEMS}
+            value={palette}
+            aria-label="Colors"
+            onValueChange={(e) => {
+              if (isThemePalette(e.value)) setPalette(e.value);
             }}
           />
         </Field.Root>

@@ -31,6 +31,7 @@ import {
   TRANSIENT_VIEWS,
 } from "./ha-socket.js";
 import { startScreen } from "./screen.js";
+import { startTheme } from "./theme.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
@@ -74,7 +75,8 @@ app.locals.io = io;
 const screen = startScreen(io);
 app.locals.screen = screen;
 io.currentView = "clock";
-io.themeMode = "dark";
+// The panels' theme and palette, kept across restarts (theme.js).
+const theme = startTheme();
 io.navVisible = true;
 // The photo each frame's slideshow is on (socket id → asset id), for the
 // remotes' photo grid to highlight.
@@ -86,7 +88,8 @@ function photosShown() {
 
 io.on("connection", (socket) => {
   socket.emit("current_view", io.currentView);
-  socket.emit("current_theme_mode", io.themeMode);
+  socket.emit("current_theme_mode", theme.state().mode);
+  socket.emit("current_theme_palette", theme.state().palette);
   socket.emit("nav_visibility", io.navVisible);
   socket.emit("photos_shown", photosShown());
   socket.emit("screen_state", screen.state());
@@ -139,10 +142,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("theme_mode", (pref) => {
-    if (pref !== "auto" && pref !== "bright" && pref !== "dark") return;
+    if (!theme.setMode(pref)) return;
     console.log({ io: "theme_mode", pref });
-    io.themeMode = pref;
     socket.broadcast.emit("theme_mode", pref);
+  });
+
+  socket.on("theme_palette", (palette) => {
+    if (!theme.setPalette(palette)) return;
+    console.log({ io: "theme_palette", palette });
+    socket.broadcast.emit("theme_palette", palette);
   });
 
   socket.on("nav_visibility", (v) => {

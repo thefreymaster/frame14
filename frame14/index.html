@@ -39,18 +39,30 @@
         document.addEventListener("gesturestart", function (e) {
           e.preventDefault();
         });
-        // lib/themeMode.ts's preference and daylight window, read early; it
-        // takes over (and syncs with the server) once the bundle runs.
+        // lib/themeMode.ts's preference (the daylight window for auto, the
+        // system's setting for device) and palette, read early; it takes over
+        // (and syncs with the server) once the bundle runs.
         var mode = "dark";
+        var palette = "gray";
         try {
           var pref = localStorage.getItem("theme-mode-preference");
           var hour = new Date().getHours();
-          if (pref === "bright" || (pref === "auto" && hour >= 7 && hour < 19)) {
+          var deviceLight =
+            pref === "device" &&
+            !window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (
+            pref === "bright" ||
+            (pref === "auto" && hour >= 7 && hour < 19) ||
+            deviceLight
+          ) {
             mode = "bright";
           }
+          var saved = localStorage.getItem("theme-palette");
+          if (saved === "slate" || saved === "sand") palette = saved;
         } catch (e) {}
         var root = document.documentElement;
         root.dataset.themeMode = mode;
+        root.dataset.palette = palette;
         root.style.colorScheme = mode === "bright" ? "light" : "dark";
         // /blank stays black: a reload at night shouldn't light the kitchen.
         if (location.pathname === "/blank") return;
@@ -70,14 +82,30 @@
       })();
     </script>
     <style>
-      /* Chakra's own page colours (bg: white / black), in the first layer so
+      /* The page's colour (bg: the palette's ink / paper — Chakra's black /
+         white in gray; lib/themePalettes has them), in the first layer so
          Chakra's layers win once its styles load. */
+      html {
+        --splash-bg: #09090b;
+      }
+      html[data-theme-mode="bright"] {
+        --splash-bg: #fff;
+      }
+      html[data-palette="slate"] {
+        --splash-bg: #02081a;
+      }
+      html[data-palette="slate"][data-theme-mode="bright"] {
+        --splash-bg: #f3f6fa;
+      }
+      html[data-palette="sand"] {
+        --splash-bg: #0c0906;
+      }
+      html[data-palette="sand"][data-theme-mode="bright"] {
+        --splash-bg: #faf5eb;
+      }
       @layer splash {
         html {
-          background: #09090b;
-        }
-        html[data-theme-mode="bright"] {
-          background: #fff;
+          background: var(--splash-bg);
         }
       }
 
@@ -87,10 +115,7 @@
         inset: 0;
         z-index: 2147483000;
         place-items: center;
-        background: #09090b;
-      }
-      html[data-theme-mode="bright"] #splash {
-        background: #fff;
+        background: var(--splash-bg);
       }
       html[data-splash="up"] #splash,
       html[data-splash="out"] #splash {

@@ -1,47 +1,26 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
-  applyThemeVars,
-  computeEffectiveMode,
-  getThemePreference,
+  getTheme,
+  setThemePalette,
   setThemePreference,
-  subscribeThemePreference,
-  type EffectiveThemeMode,
-  type ThemeModePreference,
+  subscribeTheme,
 } from "../lib/themeMode";
 
+/**
+ * The theme preference (Auto / Device / Bright / Dark), the palette, and the
+ * mode they give now — lib/themeMode keeps it, re-reading the clock for Auto
+ * and the system's setting for Device.
+ */
 export function useThemeMode() {
-  const [preference, setPref] = useState<ThemeModePreference>(() =>
-    getThemePreference(),
+  const { preference, palette, effectiveMode } = useSyncExternalStore(
+    subscribeTheme,
+    getTheme,
   );
-  const [effectiveMode, setEffectiveMode] = useState<EffectiveThemeMode>(() =>
-    computeEffectiveMode(preference),
-  );
-
-  useEffect(() => {
-    return subscribeThemePreference((next) => {
-      setPref(next);
-      setEffectiveMode(computeEffectiveMode(next));
-    });
-  }, []);
-
-  // Re-evaluate once a minute while in auto mode so the UI flips at the
-  // daylight boundary without a refresh.
-  useEffect(() => {
-    if (preference !== "auto") return;
-    const tick = () => {
-      const next = computeEffectiveMode("auto");
-      setEffectiveMode((prev) => {
-        if (prev !== next) applyThemeVars(next);
-        return next;
-      });
-    };
-    const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
-  }, [preference]);
-
   return {
     preference,
+    palette,
     effectiveMode,
     setPreference: setThemePreference,
+    setPalette: setThemePalette,
   };
 }

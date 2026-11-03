@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.146.0
+
+- Added: a **Device** theme in Settings › Display, beside Auto, Bright and Dark: each screen follows its own system light / dark setting, and switches when that does.
+- Added: **Colors** in Settings › Display: Gray (as before), **Slate** (blue grays) and **Sand** (warm grays: cream by day, espresso by night). Each has a light and a dark version, so it works with every theme, Auto and Device included, and every screen wears the same one.
+- Fixed: the theme no longer goes back to Dark when the add-on restarts or updates. The add-on now remembers the theme and colors.
+
 ## 0.145.4
 
 - Changed: the thermostat and fan tiles, and a phone's Views tiles in Settings, have tighter corners than the cards around them, so each tile's curve follows its card's instead of matching it. Every tile in a card is shaped this way now.

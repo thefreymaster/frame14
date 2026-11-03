@@ -14,7 +14,30 @@ import {
 } from "@chakra-ui/react/anatomy";
 import { ColorModeProvider } from "./color-mode";
 import { PHONE_MEDIA } from "../../lib/homeLayout";
+import {
+  PALETTE_STEPS,
+  PALETTES,
+  THEME_PALETTES,
+  type PaletteColors,
+} from "../../lib/themePalettes";
 import { useThemeMode } from "../../hooks/useThemeMode";
+
+// Every palette but Chakra's own gray, each a condition on <html
+// data-palette> (lib/themeMode sets it): `_slate`, `_sand`.
+const TINTS = THEME_PALETTES.filter((p) => p !== "gray");
+
+/**
+ * One neutral as a token per palette: Chakra's value as the base, each tint's
+ * under its condition.
+ */
+function paletteToken(pick: (colors: PaletteColors) => string) {
+  return {
+    value: {
+      base: pick(PALETTES.gray),
+      ...Object.fromEntries(TINTS.map((p) => [`_${p}`, pick(PALETTES[p])])),
+    },
+  };
+}
 
 /**
  * Chakra's stock system with a few additions.
@@ -47,6 +70,16 @@ import { useThemeMode } from "../../hooks/useThemeMode";
  * orange — where Chakra fills the whole toast with it; the snippet
  * (ui/toaster.tsx) colours the indicator to match.
  *
+ * The neutrals come in palettes (lib/themePalettes, the user's ask: "a slate
+ * mode that is blue grays and another you make up"): Chakra's gray, Slate and
+ * Sand. The gray scale is redefined as semantic tokens whose base is Chakra's
+ * own value and whose `_slate` / `_sand` conditions (`<html data-palette>`)
+ * are the tint's, so everything Chakra builds on gray — bg, fg, border, the
+ * gray colorPalette — and every `gray.N` here follows; `neutral.paper` (the
+ * light page, Chakra's white), `neutral.ink` (the dark page and the light
+ * text, Chakra's black) and `neutral.card` (the dark cards, #1C1C1E in gray)
+ * carry what isn't on the scale. In the gray palette every value is Chakra's.
+ *
  * Spacing has a named `xs` (0.25rem, 4px at the base size), `sm` (0.5rem) and
  * `md` (1rem), and `gutter`, the page's padding around the cards and the gap
  * between them — the same, always: md, or sm on a phone (the `phone`
@@ -55,7 +88,10 @@ import { useThemeMode } from "../../hooks/useThemeMode";
 const system = createSystem(
   defaultConfig,
   defineConfig({
-    conditions: { phone: PHONE_MEDIA },
+    conditions: {
+      phone: PHONE_MEDIA,
+      ...Object.fromEntries(TINTS.map((p) => [p, `[data-palette=${p}] &`])),
+    },
     theme: {
       tokens: {
         spacing: {
@@ -67,6 +103,18 @@ const system = createSystem(
       },
       semanticTokens: {
         colors: {
+          // The palette's neutrals (see above).
+          gray: Object.fromEntries(
+            PALETTE_STEPS.map((step) => [
+              step,
+              paletteToken((c) => c.scale[step]),
+            ]),
+          ),
+          neutral: {
+            paper: paletteToken((c) => c.paper),
+            ink: paletteToken((c) => c.ink),
+            card: paletteToken((c) => c.card),
+          },
           // The logo's blue as a palette: `colorPalette="brand"`.
           brand: {
             solid: { value: "#18a0ff" },
@@ -78,13 +126,33 @@ const system = createSystem(
             focusRing: { value: "#18a0ff" },
           },
           bg: {
+            // The page: Chakra's white / black, the palette's paper / ink.
+            DEFAULT: {
+              value: {
+                _light: "{colors.neutral.paper}",
+                _dark: "{colors.neutral.ink}",
+              },
+            },
             // The colour of every card and both floating navs: in dark mode
             // iOS's grouped-cell grey, #1C1C1E (UIKit's
             // secondarySystemGroupedBackground, the Settings app's groups on
             // black; the user's pick in 0.71, replacing #23242b), Chakra's own
-            // panel white in light mode.
+            // panel white in light mode. Another palette's card in dark mode
+            // (`neutral.card`).
             surface: {
-              value: { _light: "{colors.bg.panel}", _dark: "#1C1C1E" },
+              value: {
+                _light: "{colors.bg.panel}",
+                _dark: "{colors.neutral.card}",
+              },
+            },
+          },
+          // The text: Chakra's black in light mode, the palette's ink.
+          fg: {
+            DEFAULT: {
+              value: {
+                _light: "{colors.neutral.ink}",
+                _dark: "{colors.gray.50}",
+              },
             },
           },
           border: {
@@ -155,9 +223,9 @@ const system = createSystem(
 );
 
 /**
- * The dashboard's Auto / Bright / Dark preference (lib/themeMode.ts —
- * daylight window and socket sync) picks Chakra's own light or dark mode;
- * there is no custom palette.
+ * The dashboard's Auto / Device / Bright / Dark preference (lib/themeMode.ts —
+ * the daylight window, the system's setting and the socket sync) picks
+ * Chakra's own light or dark mode; the palette is on <html> (see above).
  */
 export function Provider({ children }: { children: React.ReactNode }) {
   const { effectiveMode } = useThemeMode();

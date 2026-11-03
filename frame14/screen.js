@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
  */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR =
+export const DATA_DIR =
   process.env.FRAME14_DATA_DIR ||
   (fs.existsSync("/data") ? "/data" : path.join(__dirname, ".data"));
 const FILE = path.join(DATA_DIR, "screen.json");

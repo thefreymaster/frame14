@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.145.3
+
+- Changed: on a phone, the Climate page's square thermostat tiles show the temperature in the thermostat dial's typeface and weight, a size smaller than the dial's. A long thermostat name keeps to one line there, so the tiles stay square.
+
 ## 0.145.2
 
 - Changed: on a phone, the Climate page's square thermostat tiles show the temperature in the middle of the square, with what the unit is doing — "Heating to 70°", or Off — centred along the bottom.

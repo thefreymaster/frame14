@@ -43,7 +43,8 @@ export function ClimateSkeleton({
                 // the reading at the centre, the status centred below.
                 <Grid flex="1" gap="1" templateRows="1fr auto 1fr">
                   <Skeleton height="5" width="60%" />
-                  <Skeleton height="8" width="40%" justifySelf="center" />
+                  {/* The 5xl reading, line height 1 (0.145.3). */}
+                  <Skeleton height="3rem" width="45%" justifySelf="center" />
                   <Skeleton height="5" width="45%" justifySelf="center" alignSelf="end" />
                 </Grid>
               ) : (

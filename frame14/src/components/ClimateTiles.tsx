@@ -8,6 +8,7 @@ import {
   fmtClimateTemp,
   hvacPalette,
   MODE_ICON,
+  SQUARE_TILE_READING,
   TILE_MIN_LG_REM,
 } from "../lib/hvac";
 
@@ -54,13 +55,22 @@ export function ClimateTile({
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const reading = currentTemp != null ? `${currentTemp}°` : "—";
 
-  const value = (
+  // A square tile's reading is the dial's, a size smaller, at the
+  // square's centre (0.145.2; 0.145.3: SQUARE_TILE_READING); the wide tiles
+  // keep the Stat's own.
+  const value = square ? (
+    <Stat.ValueText
+      {...SQUARE_TILE_READING}
+      color={on ? undefined : "fg.muted"}
+      justifySelf="center"
+    >
+      {reading}
+    </Stat.ValueText>
+  ) : (
     <Stat.ValueText
       lineHeight="1"
       textStyle={xl ? "7xl" : lg ? "6xl" : undefined}
       color={on ? undefined : "fg.muted"}
-      // At the square's centre (0.145.2).
-      justifySelf={square ? "center" : undefined}
     >
       {reading}
     </Stat.ValueText>
@@ -114,8 +124,8 @@ export function ClimateTile({
             display={square ? "grid" : undefined}
             gridTemplateRows={square ? "1fr auto 1fr" : undefined}
           >
-            {/* A narrow tile (a phone, or four across in landscape) wraps the
-                name rather than cutting it off. */}
+            {/* A narrow wide tile (four across in landscape) wraps the name
+                rather than cutting it off; a square one keeps it to a line. */}
             <HStack
               justify="space-between"
               align="start"
@@ -124,7 +134,10 @@ export function ClimateTile({
             >
               <Stat.Label
                 minW="0"
-                lineClamp="2"
+                // One line on a square tile (0.145.3): with the 5xl reading
+                // in the middle, a second line of name pushed the tile past
+                // square. The full name is the button's label.
+                lineClamp={square ? "1" : "2"}
                 textStyle={lg ? "lg" : undefined}
               >
                 {unit.name}

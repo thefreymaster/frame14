@@ -11,6 +11,7 @@ import {
   hvacPalette,
   MODE_ICON,
   normalizeClimateMode,
+  THERMOSTAT_READING,
   type ClimateVisualMode,
 } from "../lib/hvac";
 import { ARC_MAX_TEMP, ARC_MIN_TEMP } from "../lib/thermostatArc";
@@ -287,9 +288,7 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
             <AccentIcon />
             <Text as="span">{statusLabel}</Text>
           </HStack>
-          <Text textStyle="6xl" fontWeight="light" lineHeight="1">
-            {displayedTemp}°
-          </Text>
+          <Text {...THERMOSTAT_READING}>{displayedTemp}°</Text>
           <Text textStyle="xs" color="fg.muted">
             {displayLabel}
           </Text>

@@ -118,9 +118,13 @@ test.describe("the Climate page", () => {
       const b = (await box)!;
       return { x: b.x + b.width / 2, y: b.y + b.height / 2, bottom: b.y + b.height };
     };
+    // Master Room AC's name is the long one: a line, ellipsised if it must
+    // be, so its tile stays square with the dial's 6xl reading (0.145.3).
     for (const [name, reading, status] of [
       ["1st Floor AC", "64°", "Heating to 70°"],
       ["2nd Floor AC", "68°", "Off"],
+      ["3rd Floor AC", "75°", "Cooling to 72°"],
+      ["Master Room AC", "68°", "Off"],
     ]) {
       const tile = page.getByRole("button", { name: new RegExp(`^${name}:`) });
       await expect(tile).toBeVisible();
@@ -137,6 +141,34 @@ test.describe("the Climate page", () => {
       expect(Math.abs(st.x - t.x), `${name} status x`).toBeLessThan(2);
       expect(st.y, `${name} status y`).toBeGreaterThan(box.y + box.height * 0.75);
     }
+
+    // The reading is the dial's, a size smaller (0.145.3): the same family,
+    // weight (300) and figures as the readout in the dialog it opens, at 5xl
+    // (3rem) where the dial is 6xl.
+    const font = (el: import("@playwright/test").Locator) =>
+      el.evaluate((node) => {
+        const cs = getComputedStyle(node);
+        return {
+          family: cs.fontFamily,
+          weight: cs.fontWeight,
+          size: cs.fontSize,
+          spacing: cs.letterSpacing,
+          figures: cs.fontVariantNumeric,
+        };
+      });
+    const tile = page.getByRole("button", { name: /^1st Floor AC:/ });
+    const tileFont = await font(tile.getByText("64°", { exact: true }));
+    await tile.click();
+    const dialog = page.getByRole("dialog");
+    // The dial reads the target, 70°.
+    const dialFont = await font(dialog.getByText("70°", { exact: true }));
+    expect(tileFont.family).toBe(dialFont.family);
+    expect(tileFont.figures).toBe(dialFont.figures);
+    expect(tileFont.weight).toBe(dialFont.weight);
+    expect(tileFont.weight).toBe("300");
+    const px = (v: string) => Number.parseFloat(v);
+    // 3rem against the dial's 3.75rem, whatever the root size.
+    expect(px(tileFont.size) / px(dialFont.size)).toBeCloseTo(3 / 3.75, 2);
   });
 
   test("a desktop's tiles show the temperature a size larger", async ({ page, isMobile }) => {

@@ -186,6 +186,34 @@ const TILE_GAP_REM = 0.75;
 export const TILE_MIN_LG_REM = 14;
 
 /**
+ * How a thermostat's temperature reads on the dial (ClimateControls): Chakra's
+ * 6xl, light, line height 1, in the body font. /climate's square tiles take
+ * its font, weight and figures since 0.145.3, a size smaller
+ * (SQUARE_TILE_READING). The Stat recipe's proportional figures are switched
+ * off on the tile, the dial's Text having none.
+ */
+export const THERMOSTAT_READING = {
+  textStyle: "6xl",
+  fontWeight: "light",
+  lineHeight: "1",
+  fontFeatureSettings: "normal",
+  fontVariantNumeric: "normal",
+} as const;
+
+/**
+ * The square tiles' reading (0.145.3): the dial's, a size smaller — 5xl, the
+ * dial's light (300). The user asked for the dial's font, weight and size
+ * ("Use the same font and font weight and size in the square thermostats as
+ * the circular ones"), then, seeing the 6xl in a tile, "that font size is too
+ * big reduce it. Make the font weight lighter too"; 100 and 200 were tried,
+ * and 300 kept ("Let's try 300"; "I love the circular ones").
+ */
+export const SQUARE_TILE_READING = {
+  ...THERMOSTAT_READING,
+  textStyle: "5xl",
+} as const;
+
+/**
  * Columns for `count` thermostats at least `minRem` wide with `gapRem`
  * between them, chosen by the container's own width — the caller makes the
  * wrapper a size container. One column, then two, then one row for every

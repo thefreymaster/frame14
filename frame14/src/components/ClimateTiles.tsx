@@ -22,7 +22,9 @@ export type ClimateTileSize = "md" | "lg" | "xl";
  * One thermostat as a Stat tile: the name and a mode icon, then the room
  * temperature and what it's doing. `square` (0.120, /climate on a phone: the
  * user liked 0.119's squares there) makes it a square with the name row
- * along the top and the reading along the bottom, the middle open; `size`
+ * along the top, the temperature at the square's centre and the status
+ * centred along the bottom (0.145.2, the user's ask; the reading and the
+ * status shared the bottom row before, the middle open); `size`
  * lg (/climate on a desktop) is the same tile with larger type and more
  * padding, so a row of four fills its card. A unit that's on gets the dialog's ring: a
  * 0.25rem border in its mode's colour (orange heat, blue cool, teal fan, from
@@ -52,6 +54,32 @@ export function ClimateTile({
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const reading = currentTemp != null ? `${currentTemp}°` : "—";
 
+  const value = (
+    <Stat.ValueText
+      lineHeight="1"
+      textStyle={xl ? "7xl" : lg ? "6xl" : undefined}
+      color={on ? undefined : "fg.muted"}
+      // At the square's centre (0.145.2).
+      justifySelf={square ? "center" : undefined}
+    >
+      {reading}
+    </Stat.ValueText>
+  );
+  const statusText = on ? (
+    <Stat.HelpText
+      color={accent}
+      textStyle={lg ? "md" : "xs"}
+      fontWeight="semibold"
+      textAlign={square ? "center" : undefined}
+    >
+      {status}
+    </Stat.HelpText>
+  ) : (
+    <Badge colorPalette="gray" size={lg ? "lg" : undefined}>
+      {status}
+    </Badge>
+  );
+
   return (
     <Card.Root
       asChild
@@ -74,16 +102,26 @@ export function ClimateTile({
         onClick={onTap}
       >
         <Card.Body p={lg ? "5" : "3"}>
-          {/* The body is a flex column filling the card, so a square tile
-              can push its reading to the bottom. */}
+          {/* The body is a flex column filling the card. A square tile's
+              Stat is a grid of three rows, 1fr / auto / 1fr: the top and
+              bottom rows split the room left equally, so the middle one —
+              the temperature — is the square's centre whatever the name's
+              lines, with the name at the top of the first and the status
+              centred at the bottom of the last (0.145.2). */}
           <Stat.Root
             size="lg"
             flex="1"
-            justifyContent={square ? "space-between" : undefined}
+            display={square ? "grid" : undefined}
+            gridTemplateRows={square ? "1fr auto 1fr" : undefined}
           >
             {/* A narrow tile (a phone, or four across in landscape) wraps the
                 name rather than cutting it off. */}
-            <HStack justify="space-between" align="start" gap="2">
+            <HStack
+              justify="space-between"
+              align="start"
+              gap="2"
+              alignSelf={square ? "start" : undefined}
+            >
               <Stat.Label
                 minW="0"
                 lineClamp="2"
@@ -101,28 +139,19 @@ export function ClimateTile({
                 <ModeIcon />
               </Icon>
             </HStack>
-            <HStack justify="space-between" gap="2" wrap="wrap">
-              <Stat.ValueText
-                lineHeight="1"
-                textStyle={xl ? "7xl" : lg ? "6xl" : undefined}
-                color={on ? undefined : "fg.muted"}
-              >
-                {reading}
-              </Stat.ValueText>
-              {on ? (
-                <Stat.HelpText
-                  color={accent}
-                  textStyle={lg ? "md" : "xs"}
-                  fontWeight="semibold"
-                >
-                  {status}
-                </Stat.HelpText>
-              ) : (
-                <Badge colorPalette="gray" size={lg ? "lg" : undefined}>
-                  {status}
-                </Badge>
-              )}
-            </HStack>
+            {square ? (
+              <>
+                {value}
+                <HStack justify="center" alignSelf="end" minW="0">
+                  {statusText}
+                </HStack>
+              </>
+            ) : (
+              <HStack justify="space-between" gap="2" wrap="wrap">
+                {value}
+                {statusText}
+              </HStack>
+            )}
           </Stat.Root>
         </Card.Body>
       </button>

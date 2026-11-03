@@ -111,6 +111,34 @@ test.describe("the Climate page", () => {
     }
   });
 
+  test("a phone's square tiles have the temperature at the centre and the status centred under it (0.145.2)", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "the squares are a phone's; the frame and a desktop have the wide tiles");
+    await page.goto("/climate");
+    const centre = async (box: Promise<{ x: number; y: number; width: number; height: number } | null>) => {
+      const b = (await box)!;
+      return { x: b.x + b.width / 2, y: b.y + b.height / 2, bottom: b.y + b.height };
+    };
+    for (const [name, reading, status] of [
+      ["1st Floor AC", "64°", "Heating to 70°"],
+      ["2nd Floor AC", "68°", "Off"],
+    ]) {
+      const tile = page.getByRole("button", { name: new RegExp(`^${name}:`) });
+      await expect(tile).toBeVisible();
+      const box = (await tile.boundingBox())!;
+      // Square.
+      expect(Math.abs(box.width - box.height), name).toBeLessThan(1.5);
+      const t = await centre(Promise.resolve(box));
+      const r = await centre(tile.getByText(reading, { exact: true }).boundingBox());
+      const st = await centre(tile.getByText(status, { exact: true }).boundingBox());
+      // The reading at the square's centre; the status centred across it,
+      // in the bottom quarter.
+      expect(Math.abs(r.x - t.x), `${name} reading x`).toBeLessThan(2);
+      expect(Math.abs(r.y - t.y), `${name} reading y`).toBeLessThan(2);
+      expect(Math.abs(st.x - t.x), `${name} status x`).toBeLessThan(2);
+      expect(st.y, `${name} status y`).toBeGreaterThan(box.y + box.height * 0.75);
+    }
+  });
+
   test("a desktop's tiles show the temperature a size larger", async ({ page, isMobile }) => {
     test.skip(isMobile, "a phone's tiles are the squares at the md size");
     await page.goto("/climate");

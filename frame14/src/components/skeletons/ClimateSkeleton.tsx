@@ -38,17 +38,23 @@ export function ClimateSkeleton({
             aspectRatio={square ? "1" : undefined}
           >
             <Card.Body p={lg ? "5" : "3"}>
-              <Stack
-                gap="1"
-                flex="1"
-                justify={square ? "space-between" : undefined}
-              >
-                <Skeleton height={lg ? "7" : "5"} width="60%" />
-                <HStack justify="space-between" gap="2">
-                  <Skeleton height={xl ? "4.5rem" : lg ? "16" : "8"} width="30%" />
-                  <Skeleton height={lg ? "6" : "5"} width="40%" />
-                </HStack>
-              </Stack>
+              {square ? (
+                // The square tile's shape (0.145.2): the name at the top,
+                // the reading at the centre, the status centred below.
+                <Grid flex="1" gap="1" templateRows="1fr auto 1fr">
+                  <Skeleton height="5" width="60%" />
+                  <Skeleton height="8" width="40%" justifySelf="center" />
+                  <Skeleton height="5" width="45%" justifySelf="center" alignSelf="end" />
+                </Grid>
+              ) : (
+                <Stack gap="1" flex="1">
+                  <Skeleton height={lg ? "7" : "5"} width="60%" />
+                  <HStack justify="space-between" gap="2">
+                    <Skeleton height={xl ? "4.5rem" : lg ? "16" : "8"} width="30%" />
+                    <Skeleton height={lg ? "6" : "5"} width="40%" />
+                  </HStack>
+                </Stack>
+              )}
             </Card.Body>
           </Card.Root>
         ))}

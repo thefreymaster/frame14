@@ -227,7 +227,7 @@ Frame14 has no login of its own: anything that reaches its port can use it. Keep
 
 - **Your token stays on the add-on.** `ha_token` is used by the server and never sent to a browser.
 - **Another website can't use it through your browser.** A browser's request from another site, or another app on the same domain, is refused, socket and routes alike (0.151.0). Home Assistant's `rest_command` calls still work.
-- **It only switches the switches it shows:** the ones in `light_entities` and the printer's chamber light (0.151.0). The vacuum and printer controls are held to the configured devices. Lights, fans and thermostats are not yet held to the configured ones.
+- **It only controls what it shows.** Lights: the ones in `light_entities`, the lights of the rooms in `light_areas`, and the printer's chamber light (0.156.0). Switches: the ones in `light_entities` and the chamber light (0.151.0). Fans and thermostats: the ones in `fan_entities` and `climate_entities` (0.156.0). The vacuum and printer controls are held to the configured devices, and a spoken reply plays only on `assist_speaker`. A call for anything else in Home Assistant is refused.
 
 ## Changelog & releases
 

@@ -17,12 +17,12 @@ vi.mock("../../entities.js", () => ({
   ENTITIES: {
     lights: ["light.living_room", "switch.ihome_smartplug_05b4df_outlet"],
     lightAreas: [],
-    climate: [],
+    climate: ["climate.samsung_airconditioner_2"],
     climateNames: {},
     energy: {},
     circuits: { main: "", balance: "", items: [] },
     vacuums: ["vacuum.roborock_q5_pro"],
-    fans: [],
+    fans: ["fan.living_room_ceiling_fan"],
     mediaPlayer: PLEX,
     printer: `${STUB.printer}_print_status`,
     teamTracker: ["sensor.teamtracker_fsu"],
@@ -67,7 +67,13 @@ beforeAll(async () => {
     }),
   };
   await new Promise((primed) => {
-    ha.startHaSocket(io, { onPrimed: primed, onRegistryChanged });
+    // The pages' lights, as index.js hands them over from ha-areas.js: the
+    // configured ones and a room's (the reading nook's).
+    ha.startHaSocket(io, {
+      onPrimed: primed,
+      onRegistryChanged,
+      lights: () => ["light.living_room", "switch.ihome_smartplug_05b4df_outlet", "light.lady_lamp"],
+    });
   });
 });
 
@@ -161,9 +167,23 @@ describe("callService", () => {
       { domain: "switch", service: "turn_off", entity_id: "switch.unserver_container_plex" },
       { domain: "switch", service: "turn_off", entity_id: "switch.unserver_vm_home_assistant" },
       { domain: "switch", service: "toggle", entity_id: "switch.unserver_array" },
+      // A light, fan or thermostat only if a page shows it (0.156.0), and
+      // play_media only to the assist speaker — none is set here.
+      { domain: "light", service: "turn_on", entity_id: "light.front_yard" },
+      { domain: "light", service: "turn_off", entity_id: "light.kitchen_main_lights" },
+      { domain: "fan", service: "turn_off", entity_id: "fan.aidens_fan" },
+      { domain: "climate", service: "set_hvac_mode", entity_id: "climate.samsung_airconditioner_3", hvac_mode: "off" },
+      {
+        domain: "media_player",
+        service: "play_media",
+        entity_id: TV,
+        media_content_id: `http://127.0.0.1:${PORT}/api/tts_proxy/abc.mp3`,
+        media_content_type: "music",
+      },
     ];
     for (const call of refused) expect(ha.callService(call), JSON.stringify(call)).toBe(false);
     expect(ha.getState("switch.unserver_container_plex").state).toBe("on");
+    expect(ha.getState("light.front_yard").state).toBe("off");
   });
 
   it("switches a configured switch (0.151.0: the only kind it does, with the printer's chamber light)", async () => {
@@ -171,6 +191,16 @@ describe("callService", () => {
     await until(() => ha.getState("switch.ihome_smartplug_05b4df_outlet").state === "on");
     expect(ha.callableSwitch("switch.ihome_smartplug_05b4df_outlet")).toBe(true);
     expect(ha.callableSwitch("switch.unserver_container_plex")).toBe(false);
+  });
+
+  it("calls the pages' lights, a room's through the hook, the configured fan and the printer's chamber light (0.156.0)", async () => {
+    await expect(ha.callService({ domain: "light", service: "turn_off", entity_id: "light.living_room" })).resolves.toEqual({ ok: true });
+    await expect(ha.callService({ domain: "fan", service: "set_percentage", entity_id: "fan.living_room_ceiling_fan", percentage: 75 })).resolves.toEqual({ ok: true });
+    await until(() => ha.getState("fan.living_room_ceiling_fan").attributes.percentage === 75);
+    const chamber = `light.${STUB.printer.split(".")[1].replace(/_print_status$/, "")}_chamber_light`;
+    expect(ha.callableEntity("light", chamber)).toBe(true);
+    await expect(ha.callService({ domain: "light", service: "turn_on", entity_id: chamber })).resolves.toEqual({ ok: true });
+    expect(ha.callableEntity("light", "light.lady_lamp")).toBe(true);
   });
 
   it("takes the configured vacuum's and printer's controls", async () => {

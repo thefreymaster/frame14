@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.156.0
+
+- Changed: the dashboard now only turns on, off or adjusts the lights, fans and thermostats it shows. Lights are those in `light_entities`, the lights of the rooms in `light_areas`, and the 3D printer's chamber light. Fans are those in `fan_entities`, thermostats those in `climate_entities`. Before, any light, fan or thermostat in Home Assistant could be controlled through it, like switches before 0.151.0. Nothing on the pages changes.
+- Changed: a spoken reply from the mic plays only on the `assist_speaker` media player. Before, the dashboard would play a reply on any media player in Home Assistant if asked.
+
 ## 0.155.0
 
 - Changed: Halloween is listed in Settings › Device › Navigation only on Oct 30 and 31, the days it can be in the nav. The rest of the year its row is gone, and your choice for it is kept for next October.

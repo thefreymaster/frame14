@@ -17,7 +17,7 @@
  */
 
 import WebSocket from "ws";
-import { HA_URL, HA_TOKEN } from "./config.js";
+import { HA_URL, HA_TOKEN, ASSIST_SPEAKER } from "./config.js";
 import { ENTITIES } from "./entities.js";
 import { printerEntities } from "./printer-entities.js";
 
@@ -157,6 +157,41 @@ export function callableSwitch(entityId) {
   );
 }
 
+// The lights the pages show: startHaSocket's `hooks.lights` (index.js hands
+// it ha-areas.js's lightsConfig — the configured lights and the rooms' own),
+// the configured ones without it.
+let pageLights = () => ENTITIES.lights ?? [];
+
+/**
+ * Whether a page may call this light, fan, thermostat or media player
+ * (0.156.0, held as switches have been since 0.151.0): a light the pages
+ * show — the configured ones and the rooms' (the Lights page, the Home card,
+ * a camera's full screen) — or the printer's chamber light, a light in
+ * ha-bambulab; a configured fan (`fan_entities`) or thermostat
+ * (`climate_entities`); the assist speaker (`assist_speaker`), the one media
+ * player anything plays on. Until then any light, fan or thermostat in Home
+ * Assistant passed, and play_media went to any media player.
+ */
+export function callableEntity(domain, entityId) {
+  switch (domain) {
+    case "light":
+      return (
+        pageLights().includes(entityId) ||
+        printerEntities()?.chamberLight === entityId
+      );
+    case "switch":
+      return callableSwitch(entityId);
+    case "fan":
+      return (ENTITIES.fans ?? []).includes(entityId);
+    case "climate":
+      return (ENTITIES.climate ?? []).includes(entityId);
+    case "media_player":
+      return ASSIST_SPEAKER !== "" && entityId === ASSIST_SPEAKER;
+    default:
+      return false;
+  }
+}
+
 export function getState(entityId) {
   return stateCache.get(entityId);
 }
@@ -210,7 +245,7 @@ export function callService({ domain, service, entity_id, hvac_mode, temperature
   if (!ALLOWED_SERVICES.has(service)) return false;
   if (typeof entity_id !== "string" || !ENTITY_ID_RE.test(entity_id)) return false;
   if (!entity_id.startsWith(domain + ".")) return false;
-  if (domain === "switch" && !callableSwitch(entity_id)) return false;
+  if (!callableEntity(domain, entity_id)) return false;
 
   const service_data = { entity_id };
 
@@ -526,6 +561,7 @@ export async function setLastRoute(route) {
  * — index.js wires both to ha-areas.js, the lights by room.
  */
 export function startHaSocket(io, hooks = {}) {
+  if (hooks.lights) pageLights = hooks.lights;
   if (!HA_TOKEN) {
     console.warn("[ha-socket] HA_TOKEN not set — HA socket disabled");
     return;

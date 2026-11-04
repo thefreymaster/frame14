@@ -22,7 +22,7 @@ process.on("unhandledRejection", (reason) => {
 
 import { INGRESS_PORT, PORT } from "./config.js";
 import { allowSocket, refuseCrossSite } from "./origin-guard.js";
-import { refreshLightAreas, scheduleLightAreasRefresh } from "./ha-areas.js";
+import { lightsConfig, refreshLightAreas, scheduleLightAreasRefresh } from "./ha-areas.js";
 import {
   startHaSocket,
   getState,
@@ -316,6 +316,8 @@ httpServer.listen(PORT, () => {
     // primed, and again a moment after any of them changes.
     onPrimed: () => void refreshLightAreas(io),
     onRegistryChanged: () => scheduleLightAreasRefresh(io),
+    // The lights a page may call: the ones the pages show, rooms and all.
+    lights: () => lightsConfig().lights,
   });
 });
 

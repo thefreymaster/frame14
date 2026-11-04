@@ -1,5 +1,5 @@
 import { Box, SimpleGrid, Text } from "@chakra-ui/react";
-import { MdOutlineLightbulb } from "react-icons/md";
+import { MdLightbulb, MdOutlineLightbulb } from "react-icons/md";
 import { LightsSection } from "../components/LightsSection";
 import { Board } from "../components/Board";
 import { PageShell } from "../components/PageShell";
@@ -21,7 +21,7 @@ import { useDesktop } from "../hooks/useDesktop";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, useEntitiesAcked } from "../hooks/useEntity";
 import { LightsAllOffButton } from "../components/LightsAllOffButton";
-import { IoStar, IoToggleOutline } from "react-icons/io5";
+import { IoStar, IoToggle, IoToggleOutline } from "react-icons/io5";
 
 // A stable empty list while the config loads: useEntities re-subscribes when
 // the array changes identity.
@@ -29,6 +29,16 @@ const EMPTY: string[] = [];
 
 // Skeleton tiles before the entity config says how many lights there are.
 const DEFAULT_SKELETON_TILES = 6;
+
+// A group's header icon while one of its lights is on: the page header's
+// yellow (0.154.0).
+const LIT = "yellow.500";
+
+/** A group's header icon, lit (filled) while one of its lights is on. */
+function groupIcon(title: string, lit: boolean) {
+  if (title === "Switches") return lit ? <IoToggle /> : <IoToggleOutline />;
+  return lit ? <MdLightbulb /> : <MdOutlineLightbulb />;
+}
 
 const slugify = (s: string) =>
   s
@@ -70,6 +80,13 @@ export function Lights() {
   const onIds = states
     .filter((q) => q.data?.state === "on")
     .map((q) => q.data!.entity_id);
+  // A group's lights that are on (0.154.0, the user: "If a light is on the
+  // icon should be illuminated, and a turn off room button should be shown
+  // in the header like all off button"): its header's icon lit and its own
+  // All off, which spares what the page's spares.
+  const onIn = (entries: LightEntry[]) =>
+    entries.map((e) => e.entity_id).filter((id) => onIds.includes(id));
+  const favoritesOn = onIn(favorites);
 
   // Skeleton tiles until every light's state is in. A light Home Assistant
   // doesn't know never gets one, so the server's acks end the wait too.
@@ -126,7 +143,22 @@ export function Lights() {
               <Board
                 collapsible
                 storageKey="lights-favorites"
-                title={<SectionTitle icon={<IoStar />}>Favorites</SectionTitle>}
+                title={
+                  <SectionTitle
+                    icon={<IoStar />}
+                    iconColor={favoritesOn.length > 0 ? LIT : undefined}
+                  >
+                    Favorites
+                  </SectionTitle>
+                }
+                action={
+                  favoritesOn.length > 0 && (
+                    <LightsAllOffButton
+                      entityIds={favoritesOn}
+                      label="Turn off Favorites"
+                    />
+                  )
+                }
               >
                 {loading ? (
                   <LightsSkeleton
@@ -148,6 +180,7 @@ export function Lights() {
             // the exception on this page (a room, the switches) carries a
             // title of its own.
             const named = section.title !== "Lights";
+            const on = onIn(section.entries);
             return (
               <Box key={section.title} minW="0" css={hideWhenEmpty}>
                 <Board
@@ -156,16 +189,20 @@ export function Lights() {
                   title={
                     named ? (
                       <SectionTitle
-                        icon={
-                          section.title === "Switches" ? (
-                            <IoToggleOutline />
-                          ) : (
-                            <MdOutlineLightbulb />
-                          )
-                        }
+                        icon={groupIcon(section.title, on.length > 0)}
+                        iconColor={on.length > 0 ? LIT : undefined}
                       >
                         {section.title}
                       </SectionTitle>
+                    ) : undefined
+                  }
+                  // The untitled group's All off is the page header's.
+                  action={
+                    named && on.length > 0 ? (
+                      <LightsAllOffButton
+                        entityIds={on}
+                        label={`Turn off ${section.title}`}
+                      />
                     ) : undefined
                   }
                 >

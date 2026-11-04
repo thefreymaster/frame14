@@ -56,4 +56,13 @@ describe("LightsAllOffButton", () => {
     );
     expect(container).toBeEmptyDOMElement();
   });
+  // 0.154.0: a group's own, in its header on /lights.
+  it("takes the name a group gives it, sparing the same lights", async () => {
+    renderWithProviders(
+      <LightsAllOffButton entityIds={["light.kitchen_cabinet", "light.aidens_hatch_light"]} label="Turn off Kitchen" />,
+    );
+    expect(screen.queryByRole("button", { name: "Turn off all lights" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Turn off Kitchen" }));
+    expect(calls.callService.mock.calls).toEqual([["light.kitchen_cabinet", "turn_off"]]);
+  });
 });

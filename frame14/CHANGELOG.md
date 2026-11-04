@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.154.0
+
+- Added: each room on the Lights page has its own All off in its header while one of its lights is on, so you can turn off a room at once. Like the page's All off, it leaves the lights in `light_all_off_exclude` on. The Other lights, Switches and Favorites cards have one too.
+- Changed: a room's icon on the Lights page lights up yellow while one of its lights is on. So do the Switches and Favorites icons, and the bulb on the Home page's Lights card.
+
 ## 0.153.0
 
 - Added: favorite lights. Hold a light's tile and tap the star in its drawer to make it a favorite, and tap it again to take it off. Each device keeps its own favorites, so the kitchen frame and your phone can have different ones.

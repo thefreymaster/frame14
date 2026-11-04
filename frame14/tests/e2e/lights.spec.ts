@@ -189,6 +189,34 @@ test.describe("the Lights page", () => {
     await expect(dialog).toBeHidden();
     await expect(tile).toHaveAttribute("aria-label", "Living Room: Off");
   });
+  // 0.154.0: a group with a light on lights its header's icon and has an
+  // All off of its own, which spares what the page's spares.
+  test("a room with a light on has its icon lit and its own All off, which turns the room off alone", async ({ page }) => {
+    await page.goto("/lights");
+    const kitchen = board(page, "Kitchen");
+    const icon = kitchen.locator(".chakra-card__header svg").first();
+    // Chakra's yellow.500, the page header's.
+    const LIT = "rgb(234, 179, 8)";
+    await expect(kitchen.getByRole("button", { name: "Kitchen Cabinet: 35%" })).toBeVisible();
+    await expect(icon).toHaveCSS("color", LIT);
+    // A room with nothing on: neither.
+    const outside = board(page, "Outside");
+    await expect(outside.getByRole("button", { name: "Backyard: Off" })).toBeVisible();
+    await expect(outside.locator(".chakra-card__header svg").first()).not.toHaveCSS("color", LIT);
+    await expect(page.getByRole("button", { name: "Turn off Outside" })).toHaveCount(0);
+    // The kid's hatch light alone in its room: lit, but no All off for it.
+    await expect(board(page, "Aiden's Room").locator(".chakra-card__header svg").first()).toHaveCSS("color", LIT);
+    await expect(page.getByRole("button", { name: "Turn off Aiden's Room" })).toHaveCount(0);
+
+    await kitchen.getByRole("button", { name: "Turn off Kitchen" }).click();
+    await expect(kitchen.getByRole("button", { name: "Kitchen Cabinet: Off" })).toBeVisible();
+    await expect(kitchen.getByRole("button", { name: "Turn off Kitchen" })).toHaveCount(0);
+    await expect(icon).not.toHaveCSS("color", LIT);
+    // The rest of the house as it was.
+    await expect(board(page, "Living Room").getByRole("button", { name: "Living Room: 80%" })).toBeVisible();
+    await expect(page.getByText("4 on")).toBeVisible();
+  });
+
   // 0.153.0: the star in a light's drawer makes it one of this device's
   // favourites, in a card across the top of the page.
   test("a light starred from its drawer joins the Favorites card at the top, through a reload, and leaves it unstarred", async ({ page }) => {

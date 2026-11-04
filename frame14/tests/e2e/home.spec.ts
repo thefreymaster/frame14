@@ -140,6 +140,9 @@ test("with favourites starred, the Lights card shows them, on or off, in place o
   await expect(dialog).toBeHidden();
   await expect.poll(labels).toEqual(["Living Room: 80%"]);
   await expect(card.getByText("1 on")).toBeVisible();
+  // The title's bulb lit while one of the card's lights is on (0.154.0).
+  const icon = card.locator(".chakra-card__header svg").first();
+  await expect(icon).toHaveCSS("color", "rgb(234, 179, 8)");
 
   // And one that is off, starred on /lights (this device's list, kept in
   // its storage): it shows here off, and stays when turned on and off.
@@ -156,6 +159,7 @@ test("with favourites starred, the Lights card shows them, on or off, in place o
   await card.getByRole("button", { name: "Turn off all lights" }).click();
   await expect.poll(labels).toEqual(["Backyard: Off", "Living Room: Off"]);
   await expect(card.getByText(/\d+ on/)).toHaveCount(0);
+  await expect(icon).not.toHaveCSS("color", "rgb(234, 179, 8)");
   await page.goto("/lights");
   await expect(page.locator("[data-light-entry][aria-pressed=true]")).toHaveCount(4);
 });

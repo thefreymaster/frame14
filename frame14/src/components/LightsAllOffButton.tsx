@@ -10,14 +10,22 @@ const PENDING_MS = 10_000;
 const NONE: string[] = [];
 
 /**
- * The Lights page's header action: turns off every light and switch that's on
+ * The Lights page's header action, and since 0.154.0 each of its groups' (a
+ * room's, the switches', the favourites'; `label` names it for a screen
+ * reader — "Turn off Kitchen"): turns off every light and switch that's on
  * — but for the ones `light_all_off_exclude` names (an option since 0.145.0;
  * 0.125 hard-coded the first house's: the kid's hatch light, a night light).
  * The page shows it only while one is on; it goes away once Home Assistant
  * reports them all off (or only spared ones remain), and until then it
  * spins. The climate card's All off, for lights.
  */
-export function LightsAllOffButton({ entityIds }: { entityIds: string[] }) {
+export function LightsAllOffButton({
+  entityIds,
+  label = "Turn off all lights",
+}: {
+  entityIds: string[];
+  label?: string;
+}) {
   const [pending, setPending] = useState(false);
   const { data: config } = useEntitiesConfig();
   const spared = config?.lightAllOffExclude ?? NONE;
@@ -38,7 +46,7 @@ export function LightsAllOffButton({ entityIds }: { entityIds: string[] }) {
       // Taller than the title row; don't let it grow the header.
       my="-1"
       loading={pending}
-      aria-label="Turn off all lights"
+      aria-label={label}
       onClick={() => {
         for (const id of targets) void callService(id, "turn_off");
         setPending(true);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Flex, Grid, Text } from "@chakra-ui/react";
-import { MdOutlineLightbulb } from "react-icons/md";
+import { MdLightbulb, MdOutlineLightbulb } from "react-icons/md";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities } from "../hooks/useEntity";
 import { useLightFavorites } from "../lib/lightFavorites";
@@ -90,7 +90,13 @@ export function HomeLightsSection() {
         // The count wraps under the title when the card is too narrow for
         // both, like the Climate card's range.
         <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
-          <SectionTitle icon={<MdOutlineLightbulb />}>Lights</SectionTitle>
+          {/* Lit while one of its lights is on, as /lights' groups (0.154.0). */}
+          <SectionTitle
+            icon={onIds.length > 0 ? <MdLightbulb /> : <MdOutlineLightbulb />}
+            iconColor={onIds.length > 0 ? "yellow.500" : undefined}
+          >
+            Lights
+          </SectionTitle>
           {onIds.length > 0 && (
             <Text textStyle="sm" color="fg.muted" ms="auto">
               {onIds.length} on

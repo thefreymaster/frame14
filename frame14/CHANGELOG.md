@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.153.0
+
+- Added: favorite lights. Hold a light's tile and tap the star in its drawer to make it a favorite, and tap it again to take it off. Each device keeps its own favorites, so the kitchen frame and your phone can have different ones.
+- Changed: the Lights card on the Home page shows your favorites, on or off, in place of the lights that are on. Its count and All off cover the favorites. A device with no favorites still shows the lights that are on, as before.
+- Added: a Favorites card at the top of the Lights page. Your favorites stay in their rooms below it too.
+- Changed: holding a switch, or a light that only turns on and off, now opens a drawer too, with its on/off switch and the star. Before, only dimmable lights had one, and on the Home page holding one of those tiles started rearranging the cards.
+
 ## 0.152.0
 
 - Changed: on a desktop, the Unraid page is two columns. The server's CPU, memory and figures sit at the left with the VMs under them, and stay in view as you scroll through the containers, which fill the rest of the screen. Before, every card ran the full width of the screen, and the VMs sat below all the containers.

@@ -9,6 +9,21 @@ function board(page: Page, title: string) {
     .first();
 }
 
+/** Press and hold the middle of `tile` with the mouse, past the hold's 600ms. */
+async function hold(page: Page, tile: ReturnType<Page["getByRole"]>) {
+  await splashGone(page);
+  await tile.scrollIntoViewIfNeeded();
+  const box = (await tile.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(800);
+  await page.mouse.up();
+}
+
+/** The labels of the tiles in `scope`, in order. */
+const labels = (scope: ReturnType<Page["locator"]>) =>
+  scope.locator("[data-light-entry]").evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
+
 test.describe("the Lights page", () => {
   test.beforeEach(async ({ request }) => {
     await resetStub(request);
@@ -173,5 +188,74 @@ test.describe("the Lights page", () => {
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
     await expect(tile).toHaveAttribute("aria-label", "Living Room: Off");
+  });
+  // 0.153.0: the star in a light's drawer makes it one of this device's
+  // favourites, in a card across the top of the page.
+  test("a light starred from its drawer joins the Favorites card at the top, through a reload, and leaves it unstarred", async ({ page }) => {
+    await page.goto("/lights");
+    const outside = board(page, "Outside");
+    await expect(outside.getByRole("button", { name: "Backyard: Off" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Favorites" })).toHaveCount(0);
+
+    await hold(page, outside.getByRole("button", { name: "Backyard: Off" }));
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("heading", { name: "Backyard" })).toBeVisible();
+    // The close button keeps the first focus; the star sits beside it.
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
+    const star = dialog.getByRole("button", { name: "Favorite" });
+    await expect(star).toHaveAttribute("aria-pressed", "false");
+    await star.click();
+    await expect(star).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+
+    // The card, first on the page, holding the light — which its room keeps.
+    const favorites = board(page, "Favorites");
+    await expect.poll(() => labels(favorites)).toEqual(["Backyard: Off"]);
+    await expect(outside.getByRole("button", { name: "Backyard: Off" })).toBeVisible();
+    const top = (await favorites.boundingBox())!.y;
+    expect(top).toBeLessThan((await board(page, "Living Room").boundingBox())!.y);
+    // A tap there is the light's, as anywhere.
+    await favorites.getByRole("button", { name: "Backyard: Off" }).click();
+    await expect(favorites.getByRole("button", { name: /^Backyard: / })).toHaveAttribute("aria-label", "Backyard: 100%");
+
+    await page.reload();
+    await expect.poll(() => labels(board(page, "Favorites"))).toEqual(["Backyard: 100%"]);
+
+    // Unstarred from the card's own drawer: the card goes, the drawer stays.
+    await hold(page, board(page, "Favorites").getByRole("button", { name: /^Backyard: / }));
+    await dialog.getByRole("button", { name: "Favorite" }).click();
+    await expect(dialog.getByRole("button", { name: "Favorite" })).toHaveAttribute("aria-pressed", "false");
+    await expect(dialog.getByRole("slider", { name: "Brightness" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("heading", { name: "Favorites" })).toHaveCount(0);
+    await expect(outside.getByRole("button", { name: "Backyard: 100%" })).toBeVisible();
+  });
+
+  // 0.153.0: a switch's hold opens a drawer too — its power switch and the
+  // star — so it can be a favourite like any light.
+  test("a hold on a switch opens its drawer, whose switch turns it on and whose star makes it a favourite", async ({ page }) => {
+    await page.goto("/lights");
+    const tile = board(page, "Switches").getByRole("button", { name: /^Smart Plug: / });
+    await expect(tile).toHaveAttribute("aria-label", "Smart Plug: Off");
+    await hold(page, tile);
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("heading", { name: "Smart Plug" })).toBeVisible();
+    await expect(dialog.getByRole("slider")).toHaveCount(0);
+    await expect(dialog.getByRole("checkbox")).not.toBeChecked();
+    // The hold's release wasn't a tap. (The page under a drawer is
+    // aria-hidden, so the tile by its attribute.)
+    const under = (label: string) => page.locator(`[data-light-entry][aria-label="${label}"]`);
+    await expect(under("Smart Plug: Off")).toHaveCount(1);
+    await dialog.getByText("Off", { exact: true }).click();
+    await expect(dialog.getByRole("checkbox")).toBeChecked();
+    await expect(under("Smart Plug: On")).toHaveCount(1);
+
+    await dialog.getByRole("button", { name: "Favorite" }).click();
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toBeHidden();
+    await expect.poll(() => labels(board(page, "Favorites"))).toEqual(["Smart Plug: On"]);
   });
 });

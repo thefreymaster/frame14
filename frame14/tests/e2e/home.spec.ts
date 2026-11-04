@@ -117,6 +117,49 @@ test("a hold on a light's tile opens its drawer, not arranging, and the tile sta
   await expect(card.getByText("4 on")).toBeVisible();
 });
 
+// 0.153.0: this device's favourites, starred in a light's drawer, are the
+// card's in place of the lights that are on — on or off.
+test("with favourites starred, the Lights card shows them, on or off, in place of the lights that are on", async ({ page }) => {
+  await page.goto("/home");
+  const card = page.locator('[data-card="lights"]');
+  const labels = () => card.locator("[data-light-entry]").evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
+  await expect(card.getByText("5 on")).toBeVisible();
+
+  // Starred from the card's own drawer: the card is that light alone now.
+  const tile = card.getByRole("button", { name: /^Living Room: / });
+  await splashGone(page);
+  await tile.scrollIntoViewIfNeeded();
+  const box = (await tile.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(800);
+  await page.mouse.up();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Favorite" }).click();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect.poll(labels).toEqual(["Living Room: 80%"]);
+  await expect(card.getByText("1 on")).toBeVisible();
+
+  // And one that is off, starred on /lights (this device's list, kept in
+  // its storage): it shows here off, and stays when turned on and off.
+  await page.evaluate(() =>
+    localStorage.setItem("light-favorites", JSON.stringify(["light.living_room", "light.backyard"])),
+  );
+  await page.reload();
+  await expect.poll(labels).toEqual(["Backyard: Off", "Living Room: 80%"]);
+  await card.getByRole("button", { name: "Backyard: Off" }).click();
+  await expect(card.getByRole("button", { name: /^Backyard: / })).toHaveAttribute("aria-label", "Backyard: 100%");
+  await expect(card.getByText("2 on")).toBeVisible();
+
+  // All off is the card's: its two off, the other lights on as they were.
+  await card.getByRole("button", { name: "Turn off all lights" }).click();
+  await expect.poll(labels).toEqual(["Backyard: Off", "Living Room: Off"]);
+  await expect(card.getByText(/\d+ on/)).toHaveCount(0);
+  await page.goto("/lights");
+  await expect(page.locator("[data-light-entry][aria-pressed=true]")).toHaveCount(4);
+});
+
 test("the navigation reaches every main page", async ({ page }) => {
   await page.goto("/home");
   for (const [label, path] of [

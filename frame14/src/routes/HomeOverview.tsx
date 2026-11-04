@@ -8,7 +8,7 @@ import { PrinterSection } from "../components/PrinterSection";
 import { VacuumSection } from "../components/VacuumSection";
 import { TeamTracker } from "../components/TeamTracker";
 import { FanSection } from "../components/FanSection";
-import { LightsOnSection } from "../components/LightsOnSection";
+import { HomeLightsSection } from "../components/HomeLightsSection";
 import { RadarSection } from "../components/RadarSection";
 import { HomeHeader } from "../components/HomeHeader";
 import { HomeWeatherCard } from "../components/HomeWeatherCard";
@@ -125,8 +125,9 @@ export function HomeOverview() {
     ),
     // Active-only sections: they claim a tile while running and are gone
     // when they aren't (the header's icons say they're running, too). The
-    // lights that are on (0.143): the card goes with the last of them.
-    lights: <LightsOnSection />,
+    // lights: this device's favourites, else the ones that are on (0.143),
+    // the card going with the last of them.
+    lights: <HomeLightsSection />,
     printer: <PrinterSection />,
     vacuum: <VacuumSection vacuum={data.vacuum} />,
   };

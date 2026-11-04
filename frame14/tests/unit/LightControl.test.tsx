@@ -197,4 +197,31 @@ describe("LightControl", () => {
     expect(plain.querySelector("[data-mdi-icon]")).toBeNull();
     expect(plain.querySelector("svg")).not.toBeNull();
   });
+  // 0.153.0: every tile's hold opens its drawer, for the favourite star — a
+  // switch's and an on-off light's too.
+  it("opens the drawer of a light with no brightness on a hold, and the release isn't a tap", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    live.state = light("on", { supported_color_modes: ["onoff"] });
+    const onOpen = vi.fn();
+    renderWithProviders(
+      <LightControl
+        entity_id="light.living_room"
+        name="Living Room"
+        Icon={MdOutlineLightbulb}
+        ActiveIcon={MdLightbulb}
+        onOpen={onOpen}
+      />,
+    );
+    const el = tile();
+    expect(el.closest("[data-long-press]")).not.toBeNull();
+    const at = { pointerId: 1, isPrimary: true, button: 0, clientX: 10, clientY: 10 };
+    fireEvent.pointerDown(el, at);
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    fireEvent.pointerUp(el, at);
+    fireEvent.click(el);
+    expect(onOpen).toHaveBeenCalledWith("light.living_room");
+    expect(live.callService).not.toHaveBeenCalled();
+  });
 });

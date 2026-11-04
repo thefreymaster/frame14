@@ -56,7 +56,10 @@ export const HOME_CARDS: Record<
   climate: { label: "Climate" },
   fan: { label: "Fans", hiddenHint: "Shows when fans are set up" },
   calendar: { label: "Calendar" },
-  lights: { label: "Lights", hiddenHint: "Shows while a light is on" },
+  lights: {
+    label: "Lights",
+    hiddenHint: "Shows your favorite lights, or while a light is on",
+  },
   printer: { label: "3D printer", hiddenHint: "Shows while printing" },
   vacuum: { label: "Vacuum", hiddenHint: "Shows while cleaning" },
 };

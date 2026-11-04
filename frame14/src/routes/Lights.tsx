@@ -8,15 +8,20 @@ import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { LightsSkeleton } from "../components/skeletons/LightsSkeleton";
 import {
   buildLightSections,
+  LIGHT_TILE_COLUMNS_CARD,
   LIGHT_TILE_COLUMNS_FLUID,
   displayLightName,
+  lightEntry,
+  sortLightEntries,
   sortLightSections,
+  type LightEntry,
 } from "../lib/lightsConfig";
+import { useLightFavorites } from "../lib/lightFavorites";
 import { useDesktop } from "../hooks/useDesktop";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, useEntitiesAcked } from "../hooks/useEntity";
 import { LightsAllOffButton } from "../components/LightsAllOffButton";
-import { IoToggleOutline } from "react-icons/io5";
+import { IoStar, IoToggleOutline } from "react-icons/io5";
 
 // A stable empty list while the config loads: useEntities re-subscribes when
 // the array changes identity.
@@ -41,6 +46,7 @@ export function Lights() {
   const tileColumns = desktop ? LIGHT_TILE_COLUMNS_FLUID : undefined;
   const ids = entities?.lights ?? EMPTY;
   const states = useEntities(ids);
+  const favoriteIds = useLightFavorites();
   // Alphabetical, by the name each tile shows: Home Assistant's friendly name
   // once its state is in, the id's words until then.
   const nameById = new Map(
@@ -49,9 +55,17 @@ export function Lights() {
       return [q.data?.entity_id, typeof name === "string" ? name : undefined];
     }),
   );
+  const labelOf = (entry: LightEntry) =>
+    displayLightName(nameById.get(entry.entity_id) ?? entry.name);
   const sections = sortLightSections(
     buildLightSections(ids, entities?.rooms),
-    (entry) => displayLightName(nameById.get(entry.entity_id) ?? entry.name),
+    labelOf,
+  );
+  // This device's favourites (0.153.0, the star in a light's drawer): a card
+  // of their own across the top, over the rooms they're also in.
+  const favorites = sortLightEntries(
+    favoriteIds.filter((id) => ids.includes(id)).map(lightEntry),
+    labelOf,
   );
   const onIds = states
     .filter((q) => q.data?.state === "on")
@@ -62,6 +76,12 @@ export function Lights() {
   const acked = useEntitiesAcked(ids);
   const loading =
     configPending || (ids.length > 0 && !acked && !states.every((q) => q.data));
+  // A group whose entities are all unavailable renders no entries — drop the
+  // whole tile rather than leaving an empty header on the page (not while the
+  // skeleton stands in for them).
+  const hideWhenEmpty = loading
+    ? undefined
+    : { "&:not(:has([data-light-entry]))": { display: "none" } };
 
   return (
     <PageShell>
@@ -97,6 +117,31 @@ export function Lights() {
           width="100%"
           alignItems="start"
         >
+          {(favorites.length > 0 || !loading) && (
+            // Across every column: the page's first card on any screen, its
+            // tiles as many across as the Home card's. Mounted with none, and
+            // hidden then as an empty room is, so the drawer that unstars the
+            // last favourite isn't unmounted under the finger.
+            <Box gridColumn="1 / -1" minW="0" css={hideWhenEmpty}>
+              <Board
+                collapsible
+                storageKey="lights-favorites"
+                title={<SectionTitle icon={<IoStar />}>Favorites</SectionTitle>}
+              >
+                {loading ? (
+                  <LightsSkeleton
+                    count={favorites.length}
+                    columns={LIGHT_TILE_COLUMNS_CARD}
+                  />
+                ) : (
+                  <LightsSection
+                    entries={favorites}
+                    columns={LIGHT_TILE_COLUMNS_CARD}
+                  />
+                )}
+              </Board>
+            </Box>
+          )}
           {sections.map((section) => {
             // The "Lights" group is what the page is — labelling its card
             // again would just repeat the page header. Only a group that is
@@ -104,18 +149,7 @@ export function Lights() {
             // title of its own.
             const named = section.title !== "Lights";
             return (
-              // A section whose entities are all unavailable renders no
-              // entries — drop the whole tile rather than leaving an empty
-              // header on the page (not while the skeleton stands in for them).
-              <Box
-                key={section.title}
-                minW="0"
-                css={
-                  loading
-                    ? undefined
-                    : { "&:not(:has([data-light-entry]))": { display: "none" } }
-                }
-              >
+              <Box key={section.title} minW="0" css={hideWhenEmpty}>
                 <Board
                   collapsible={named}
                   storageKey={`lights-${slugify(section.title)}`}

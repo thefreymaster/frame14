@@ -25,7 +25,7 @@ import { MdiIcon } from "./MdiIcon";
 import { displayLightName, type LightEntry } from "../lib/lightsConfig";
 
 type Props = LightEntry & {
-  /** Press and hold on a dimmable light opens its controls. */
+  /** Press and hold opens its controls (a dimmable light's alone until 0.153.0). */
   onOpen: (entityId: string) => void;
 };
 
@@ -69,8 +69,11 @@ const pctAt = (clientX: number, d: Drag) =>
  * Home Assistant reports the light in that state a spinner stands in for the
  * bulb and further taps are ignored; the server's ack carries Home
  * Assistant's answer, and a refusal — or no new state within the hook's
- * STATE_TIMEOUT_MS — ends the spinner with an error toast. Press and hold on a dimmable light opens LightDialog (brightness,
- * warmth, colour), and a sideways swipe across it sets the brightness where
+ * STATE_TIMEOUT_MS — ends the spinner with an error toast. Press and hold
+ * opens LightDialog — a dimmable light's brightness, warmth and colour, any
+ * other's power switch, and the favourite star (every tile since 0.153.0;
+ * the dimmable ones alone before, which left the rest no way to be starred)
+ * — and a sideways swipe across a dimmable one sets the brightness where
  * the finger is (0.139): the fill and the figure follow the drag, the level
  * goes to Home Assistant on release and shows until the light reports a
  * change; the release's click is not a tap, and the hold is cancelled by the
@@ -91,9 +94,7 @@ export function LightControl({
   const label = displayLightName(attrs?.friendly_name ?? name);
   const features = lightFeatures(attrs);
   const pct = isOn ? brightnessPct(attrs) : null;
-  const hold = useLongPress(() => onOpen(entity_id), {
-    enabled: features.brightness,
-  });
+  const hold = useLongPress(() => onOpen(entity_id));
   // A swipe's level: under the finger, then the one sent until the light
   // reports a change (reset during render, as React allows).
   const [scrub, setScrub] = useState<number | null>(null);
@@ -135,8 +136,9 @@ export function LightControl({
   }
 
   // The swipe's pointer handlers, around the hold's: the hold cancels itself
-  // on the movement, as it does for a scroll.
-  const swipe = features.brightness
+  // on the movement, as it does for a scroll. A tile with no brightness has
+  // the hold's alone.
+  const pointer = features.brightness
     ? {
         onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
           hold.onPointerDown?.(e);
@@ -189,7 +191,7 @@ export function LightControl({
         onPointerLeave: () => hold.onPointerLeave?.(),
         onContextMenu: (e: React.MouseEvent) => hold.onContextMenu?.(e),
       }
-    : {};
+    : hold;
 
   if (unavailable) return null;
 
@@ -203,9 +205,10 @@ export function LightControl({
     <Card.Root
       asChild
       data-light-entry=""
-      // A dimmable tile's hold is its own (the drawer), not the page's: /home's
-      // board leaves a hold that starts here alone (0.143).
-      data-long-press={features.brightness ? "" : undefined}
+      // The tile's hold is its own (the drawer), not the page's: /home's board
+      // leaves a hold that starts here alone (0.143; every tile's since
+      // 0.153.0, a dimmable one's before).
+      data-long-press=""
       size="sm"
       variant="outline"
       borderRadius="sm"
@@ -228,7 +231,7 @@ export function LightControl({
         aria-busy={pending != null}
         aria-label={`${label}: ${status}`}
         onClick={tap}
-        {...swipe}
+        {...pointer}
       >
         {color && shownPct != null && (
           <Box

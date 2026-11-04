@@ -31,10 +31,10 @@ export const LIGHT_TILE_COLUMNS = {
  *  rather than the viewport's four, which cut the names short there. */
 export const LIGHT_TILE_COLUMNS_FLUID = "repeat(auto-fill, minmax(8rem, 1fr))";
 
-/** The tiles' columns on /home's Lights card (0.143): as many 10rem-or-wider
- *  tiles as the card's own width holds — two across a half-width card on the
- *  frame, the page's two there, and two across a phone's card; more across a
- *  wider card. */
+/** The tiles' columns on /home's Lights card (0.143) and /lights' Favorites
+ *  (0.153.0): as many 10rem-or-wider tiles as the card's own width holds —
+ *  two across a half-width card on the frame, the page's two there, and two
+ *  across a phone's card; more across a wider card. */
 export const LIGHT_TILE_COLUMNS_CARD = "repeat(auto-fill, minmax(10rem, 1fr))";
 
 /**
@@ -123,7 +123,8 @@ export function buildLightSections(
 /**
  * The entries in alphabetical order of `labelOf` — the name each tile shows
  * (Home Assistant's friendly name once known) — ignoring case, with numbers
- * in order ("Lamp 2" before "Lamp 10"). The /home card's list (0.143).
+ * in order ("Lamp 2" before "Lamp 10"). The /home card's list (0.143), and
+ * /lights' Favorites (0.153.0).
  */
 export function sortLightEntries(
   entries: LightEntry[],

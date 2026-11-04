@@ -27,6 +27,7 @@ import {
 } from "react-icons/ri";
 import { TbVacuumCleaner } from "react-icons/tb";
 import { GiPumpkinLantern } from "react-icons/gi";
+import { LuServer } from "react-icons/lu";
 import type { DeviceMode } from "./deviceMode";
 import { Printer3dIcon, Printer3dOutlineIcon } from "./printerIcons";
 
@@ -51,6 +52,11 @@ export type NavItem = {
   halloween?: boolean;
   /** In the nav only while Immich is set up (usePhotosEnabled, 0.145.0). */
   photos?: boolean;
+  /**
+   * In the nav only while Home Assistant's Unraid integration has a server
+   * (useUnraidEnabled, 0.151.0).
+   */
+  unraid?: boolean;
 };
 
 /** Always first in the nav, and always in it. */
@@ -61,8 +67,8 @@ export const SETTINGS_PATH = "/control";
 
 /**
  * Every nav entry, in the default order (since 0.109: Home, Clock, Lights,
- * Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Calendar,
- * Football, Halloween (0.128: Oct 30 and 31), Settings — Lights and Climate
+ * Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Unraid (0.151.0),
+ * Calendar, Football, Halloween (0.128: Oct 30 and 31), Settings — Lights and Climate
  * before Photos, Weather with Energy before the devices; a remote starts with
  * everything from Energy to Halloween off, `remoteOff`). Each device shows the ones for its mode, in the order
  * and with the ones hidden that /control sets for it (lib/navLayout).
@@ -145,6 +151,15 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Cameras",
     icon: IoVideocamOutline,
     activeIcon: IoVideocam,
+    remoteOff: true,
+  },
+  // The Unraid servers' (0.151.0): only while Home Assistant has one.
+  {
+    path: "/unraid",
+    label: "Unraid",
+    icon: LuServer,
+    activeIcon: LuServer,
+    unraid: true,
     remoteOff: true,
   },
   {

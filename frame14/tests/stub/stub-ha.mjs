@@ -95,6 +95,47 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
   const { printer: P, envoy: E, h2s: HN, vacuum: V } = STUB;
   const H = `sensor.${HN}`;
 
+  // An Unraid server (0.151.0) as Home Assistant's Unraid integration has
+  // it: the server's sensors and six containers, every entity in the registry
+  // under platform "unraid" with its unique id `<uuid>_<key>`. Plex's CPU and
+  // memory sensors enabled, radarr's CPU sensor disabled (no state) as the
+  // integration leaves them; a hidden container switch, an autostart switch
+  // and the array switch the page leaves out; two VMs, Home Assistant's
+  // running. Some carry the area-prefixed id newer entities get
+  // (`switch.workshop_unserver_…`).
+  const unraidEntities = () => {
+    const container = (id, name, state, status, extra = {}) => ({
+      id, key: `container_switch_${name}`, state,
+      attrs: { friendly_name: `UnServer Container ${name}`, status, container_name: name, image: `stub/${name.toLowerCase()}`, auto_start: state === "on", ...extra },
+    });
+    return [
+      { id: "sensor.unserver_cpu_usage", key: "cpu_usage", state: "13.7", attrs: { friendly_name: "UnServer CPU usage", unit_of_measurement: "%", state_class: "measurement", cpu_model: "Intel Core i5-12600K", cpu_cores: 10, cpu_threads: 16 } },
+      { id: "sensor.unserver_ram_usage", key: "ram_usage", state: "82.2", attrs: { friendly_name: "UnServer RAM usage", unit_of_measurement: "%", state_class: "measurement", total: "31.1 GB", used: "30.8 GB", free: "298.3 MB", available: "5.5 GB" } },
+      { id: "sensor.unserver_ram_used", key: "ram_used", state: "25.5676803588867", attrs: { friendly_name: "UnServer RAM used", unit_of_measurement: "GiB", device_class: "data_size" } },
+      { id: "sensor.unserver_cpu_temperature", key: "cpu_temp", state: "75.2", attrs: { friendly_name: "UnServer CPU temperature", unit_of_measurement: "°F", device_class: "temperature" } },
+      { id: "sensor.unserver_cpu_power", key: "cpu_power", state: "16.6", attrs: { friendly_name: "UnServer CPU power", unit_of_measurement: "W", device_class: "power" } },
+      { id: "sensor.unserver_docker_total_cpu", key: "docker_total_cpu", state: "6.64", attrs: { friendly_name: "UnServer Docker total CPU", unit_of_measurement: "%", container_count: 6 } },
+      { id: "sensor.unserver_docker_total_memory_used", key: "docker_total_memory_bytes", state: "8.56265330687165", attrs: { friendly_name: "UnServer Docker total memory used", unit_of_measurement: "GiB", device_class: "data_size" } },
+      { id: "sensor.unserver_up_since", key: "uptime", state: iso(inMin(-(43 * 60 + 10))), attrs: { friendly_name: "UnServer Up since", device_class: "timestamp" } },
+      { id: "sensor.unserver_unraid_version", key: "unraid_version", state: "7.3.4", attrs: { friendly_name: "UnServer Unraid version" } },
+      { id: "switch.unserver_array", key: "array", state: "on", attrs: { friendly_name: "UnServer Array" } },
+      { id: "switch.unserver_vm_home_assistant", key: "vm_switch_Home Assistant", state: "on", attrs: { friendly_name: "UnServer VM Home Assistant", state: "RUNNING", vm_name: "Home Assistant" } },
+      { id: "switch.workshop_unserver_vm_windows_11", key: "vm_switch_Windows 11", state: "off", attrs: { friendly_name: "UnServer VM Windows 11", state: "SHUTOFF", vm_name: "Windows 11" } },
+      container("switch.unserver_container_plex", "Plex", "on", "RUNNING"),
+      { id: "switch.unserver_container_plex_autostart", key: "container_autostart_Plex", state: "on", attrs: { friendly_name: "UnServer Container Plex autostart" } },
+      { id: "sensor.unserver_container_plex_cpu", key: "container_Plex_cpu", state: "2.13", attrs: { friendly_name: "UnServer Container Plex CPU", unit_of_measurement: "%" } },
+      { id: "sensor.workshop_unserver_container_plex_memory_used", key: "container_Plex_memory_used", state: "512.3", attrs: { friendly_name: "UnServer Container Plex memory used", unit_of_measurement: "MB", device_class: "data_size" } },
+      container("switch.unserver_container_radarr", "radarr", "on", "RUNNING"),
+      { id: "sensor.unserver_container_radarr_cpu", key: "container_radarr_cpu", disabled: true },
+      container("switch.unserver_container_adguard_home", "AdGuard-Home", "on", "RUNNING"),
+      container("switch.workshop_unserver_container_immich_server", "Immich-Server", "on", "PAUSED"),
+      container("switch.unserver_container_valheim2026", "Valheim2026", "off", "EXITED"),
+      container("switch.unserver_container_binhex_filebrowser", "binhex-filebrowser", "off", "EXITED"),
+      { ...container("switch.unserver_container_ghost", "Ghost", "on", "RUNNING"), hidden: true },
+    ];
+  };
+  const UNRAID_UUID = "42874c87-0000-4000-8000-000000000001";
+
   const initialStates = () => [
     light("light.living_room", "Living Room", true, { icon: "mdi:sofa", brightness: 204 }),
     light("light.kitchen_main_lights", "Kitchen Main Lights", false, { icon: "mdi:ceiling-light" }),
@@ -233,6 +274,9 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     S("update.home_assistant_core_update", "off", { friendly_name: "Home Assistant Core Update", installed_version: "2026.10.3", latest_version: "2026.10.3", title: "Home Assistant Core", device_class: "firmware" }),
     S(STUB.addonUpdate, "off", { friendly_name: "Frame14 Update", installed_version: "0.0.0", latest_version: "0.0.0", title: "Frame14", release_url: "https://github.com/thefreymaster/frame14/releases" }),
 
+    // The Unraid server (0.151.0): a state for every enabled entity.
+    ...unraidEntities().filter((u) => !u.disabled).map((u) => S(u.id, u.state, u.attrs)),
+
     // Roborock's sensors for the vacuum.
     S(`sensor.${V}_status`, "segment_cleaning", { device_class: "enum" }),
     S(`sensor.${V}_battery`, "81", { unit_of_measurement: "%", device_class: "battery" }),
@@ -258,7 +302,11 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
       ["living_room", "Living Room"], ["kitchen", "Kitchen"], ["dining_room", "Dining Room"], ["outside", "Outside"],
       ["basement", "Basement"], ["evans_office", "Evan's Office"], ["primary_bedroom", "Primary Bedroom"], ["aidens_room", "Aiden's Room"],
     ].map(([area_id, name]) => ({ area_id, name, picture: null, icon: null, aliases: [] }));
-  const DEVICES = [{ id: "dev_porch", area_id: "outside", name: "Porch Fixture" }];
+  const DEVICES = [
+    { id: "dev_porch", area_id: "outside", name: "Porch Fixture" },
+    { id: "dev_unserver", area_id: null, name: "UnServer", name_by_user: null, manufacturer: "Lime Technology", model: "Unraid 7.3.4" },
+  ];
+  const UNRAID_IDS = new Set(unraidEntities().map((u) => u.id));
   const ENTITY_AREAS = {
     "light.living_room": "living_room", "light.living_room_fireplace": "living_room", "light.lady_lamp": "living_room",
     "light.living_room_floor_lamp": "living_room", "switch.sonoff_1001816bdb": "living_room",
@@ -271,15 +319,29 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     // The cameras (0.144): the high one on the porch, outside; the RTSP one in no area.
     "camera.front_porch_high": "outside",
   };
-  const initialEntityRegistry = () =>
-    [...states.keys()].filter((id) => /^(light|switch|camera)\./.test(id)).map((entity_id) => ({
+  const initialEntityRegistry = () => [
+    ...[...states.keys()].filter((id) => /^(light|switch|camera)\./.test(id) && !UNRAID_IDS.has(id)).map((entity_id) => ({
       entity_id,
       area_id: entity_id === "light.front_porch" ? null : ENTITY_AREAS[entity_id] ?? null,
       device_id: entity_id === "light.front_porch" ? "dev_porch" : null,
       disabled_by: null, hidden_by: null,
       entity_category: entity_id === "light.kitchen_plug_indicator" ? "config" : null,
       name: null, original_name: states.get(entity_id).attributes.friendly_name ?? null, platform: "stub",
-    }));
+    })),
+    ...unraidEntities().map((u) => ({
+      entity_id: u.id,
+      unique_id: `${UNRAID_UUID}_${u.key}`,
+      platform: "unraid",
+      config_entry_id: "entry_unraid",
+      device_id: "dev_unserver",
+      area_id: null,
+      disabled_by: u.disabled ? "integration" : null,
+      hidden_by: u.hidden ? "user" : null,
+      entity_category: null,
+      name: null,
+      original_name: u.attrs?.friendly_name?.replace(/^UnServer /, "") ?? null,
+    })),
+  ];
   let areas = initialAreas();
   let entityRegistry = initialEntityRegistry();
 

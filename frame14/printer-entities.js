@@ -27,5 +27,8 @@ export function printerEntities(statusId = ENTITIES.printer) {
     camera: `camera.${name}_camera`,
     cover: bambuddy ? `image.${name}_cover` : `image.${name}_cover_image`,
     buttons: [button("pause"), button("resume"), button("stop")],
+    // A light in ha-bambulab, a switch in Bambuddy (0.151.0: ha-socket.js
+    // lets a page switch only the switches it shows, this among them).
+    chamberLight: `${bambuddy ? "switch" : "light"}.${name}_chamber_light`,
   };
 }

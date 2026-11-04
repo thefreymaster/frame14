@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.151.0
+
+- Added: an **Unraid** page for the server Home Assistant's Unraid integration has, to read, not to control. It shows CPU and memory use as meters, the CPU's temperature and power, what the Docker containers use between them, and how long the server has been up. Below that, a tile for every Docker container and a card of the VMs, each with its status: Running, Paused or Stopped. Nothing on the page starts, stops or updates anything.
+- Added: a container's CPU and memory show on its tile once you enable its "CPU" and "memory used" sensors in Home Assistant. The integration leaves them off by default. Hiding a container's or VM's switch in Home Assistant leaves it off the page.
+- Added: Unraid is in the nav only when Home Assistant has an Unraid server. A frame shows it; on a remote, turn it on under Settings › Device › Navigation. There's nothing to set in the add-on's options: the server, its containers and its VMs are found in Home Assistant.
+- Changed: the dashboard now only turns on or off the switches it shows: those in `light_entities` and the printer's chamber light. Before, any switch in Home Assistant could be switched through it, Unraid's array, VMs and containers among them.
+- Changed: another website can no longer use the dashboard through your browser. Before, a page opened on any device that could reach the add-on could connect to its socket and switch lights, or call actions like turning the frames' screen off, without you noticing. That included other apps on the same domain behind Cloudflare Access. Home Assistant's `rest_command` calls to the add-on work as before. Anything on your network that reaches the add-on's port directly still needs no login, so keep that port to the devices that use it.
+
 ## 0.150.0
 
 - Changed: on a desktop, the energy and weather details open as a panel that slides in from the right edge, so the cards stay in view beside it. Before, they opened as a dialog in the middle of the screen. The light, fan and thermostat controls and the confirmations stay as dialogs in the middle. On a phone and the frame, every modal is still a sheet from the bottom.

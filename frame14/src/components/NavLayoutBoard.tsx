@@ -23,6 +23,7 @@ import { SortableNavLayoutRow } from "./SortableNavLayoutRow";
 import { useLiveGame } from "../hooks/useLiveGame";
 import { useHalloween } from "../hooks/useHalloween";
 import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
+import { useUnraidEnabled } from "../hooks/useUnraid";
 import { useDeviceMode } from "../lib/deviceMode";
 import {
   HOME_PATH,
@@ -66,6 +67,7 @@ export function NavLayoutBoard() {
   const gameDay = games.length > 0;
   const halloween = useHalloween();
   const photos = usePhotosEnabled();
+  const unraid = useUnraidEnabled();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
@@ -79,18 +81,20 @@ export function NavLayoutBoard() {
     () =>
       new Set(
         splitForBar(
-          shownNavItems(layout, { gameDay, halloween, photos }),
+          shownNavItems(layout, { gameDay, halloween, photos, unraid }),
           slots,
         ).more.map((i) => i.path),
       ),
-    [layout, gameDay, halloween, photos, slots],
+    [layout, gameDay, halloween, photos, unraid, slots],
   );
   // The rows this device can have: Photos only while Immich is set up
-  // (0.145.0). The order and the moves are the whole layout's, so an entry
-  // left out keeps its place for when it comes back.
-  const rows = rest.filter(
-    (e) => photos || !NAV_ITEM_BY_PATH.get(e.path)?.photos,
-  );
+  // (0.145.0), Unraid while Home Assistant has a server (0.151.0). The order
+  // and the moves are the whole layout's, so an entry left out keeps its
+  // place for when it comes back.
+  const rows = rest.filter((e) => {
+    const item = NAV_ITEM_BY_PATH.get(e.path);
+    return (photos || !item?.photos) && (unraid || !item?.unraid);
+  });
   const customized = !sameNavLayout(layout, defaultNavLayout(mode));
 
   function onDragEnd({ active, over }: DragEndEvent) {

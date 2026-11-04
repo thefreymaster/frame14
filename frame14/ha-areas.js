@@ -21,11 +21,16 @@
 // its /api/entities answer. Until HA answers, or when it can't (an old core,
 // a token that may not read the registries), it is the explicit list and no
 // rooms, as before 0.122.
+//
+// The same read finds the Unraid servers (0.151.0, unraid.js): `unraid` in
+// the answer, none until the registries are in.
 import { ENTITIES } from "./entities.js";
 import { PHOTOS_ENABLED } from "./config.js";
 import { isHaConnected, sendCommand } from "./ha-socket.js";
+import { resolveUnraid } from "./unraid.js";
 
 let resolved = { lights: [...ENTITIES.lights], rooms: [] };
+let unraid = [];
 
 /** The lights and rooms as last resolved (GET /api/entities' `lights` / `rooms`). */
 export function lightsConfig() {
@@ -34,7 +39,8 @@ export function lightsConfig() {
 
 /**
  * What GET /api/entities answers, and what io "entities" carries; `photos`
- * (0.145.0) is whether Immich is set up, for the pages to leave Photos out.
+ * (0.145.0) is whether Immich is set up, for the pages to leave Photos out,
+ * and `unraid` (0.151.0) the Unraid servers and their containers.
  */
 export function entitiesPayload() {
   return {
@@ -42,6 +48,7 @@ export function entitiesPayload() {
     lights: resolved.lights,
     rooms: resolved.rooms,
     photos: PHOTOS_ENABLED,
+    unraid,
   };
 }
 
@@ -138,12 +145,18 @@ export function refreshLightAreas(io) {
       ]);
       if (![areas, devices, entities].every(Array.isArray))
         throw new Error("the registries didn't come back as lists");
+      const before = JSON.stringify(entitiesPayload());
       const next = resolve(areas, devices, entities);
-      const changed = JSON.stringify(next) !== JSON.stringify(resolved);
       resolved = next;
+      unraid = resolveUnraid(devices, entities);
+      const changed = JSON.stringify(entitiesPayload()) !== before;
       console.log(
         `[ha-areas] ${next.lights.length} lights and switches in ${next.rooms.length} rooms (${ENTITIES.lightAreas.length} areas configured)`,
       );
+      if (unraid.length > 0)
+        console.log(
+          `[ha-areas] Unraid: ${unraid.map((s) => `${s.name} (${s.containers.length} containers)`).join(", ")}`,
+        );
       if (changed) io.emit("entities", entitiesPayload());
     } catch (e) {
       console.warn("[ha-areas] couldn't read the registries:", e.message);

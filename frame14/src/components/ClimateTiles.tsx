@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Badge, Box, Card, Grid, HStack, Icon, Stat } from "@chakra-ui/react";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { ClimateDialog } from "./ClimateDialog";
+import { FanIcon } from "./FanIcon";
 import {
   climateGridCss,
   climateStatus,
+  fanModePercentage,
   fmtClimateTemp,
   hvacPalette,
   MODE_ICON,
@@ -144,15 +146,26 @@ export function ClimateTile({
               >
                 {unit.name}
               </Stat.Label>
-              <Icon
-                color={on ? accent : "fg.subtle"}
-                boxSize={lg ? "7" : "5"}
-                animation={
-                  running ? "pulse 2s ease-in-out infinite" : undefined
-                }
-              >
-                <ModeIcon />
-              </Icon>
+              {shown === "fan_only" ? (
+                // In Fan mode the fan glyph spins, at the fan mode's pace,
+                // as the Fans card's do (0.157.0).
+                <FanIcon
+                  on
+                  percentage={fanModePercentage(unit.fanMode)}
+                  size={lg ? "1.75rem" : "1.25rem"}
+                  color={accent}
+                />
+              ) : (
+                <Icon
+                  color={on ? accent : "fg.subtle"}
+                  boxSize={lg ? "7" : "5"}
+                  animation={
+                    running ? "pulse 2s ease-in-out infinite" : undefined
+                  }
+                >
+                  <ModeIcon />
+                </Icon>
+              )}
             </HStack>
             {square ? (
               <>

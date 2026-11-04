@@ -5,6 +5,7 @@ import {
   climateGridCss,
   climateStatus,
   climateTempRange,
+  fanModePercentage,
   fmtClimateTemp,
   getClimateAction,
   hvacPalette,
@@ -219,5 +220,19 @@ describe("the tile columns", () => {
     expect(css.gap).toBe("0.75rem");
     expect(css["@container (min-width: 28.75rem)"]).toBeDefined();
     expect(css["@container (min-width: 58.25rem)"]).toBeDefined();
+  });
+});
+
+// 0.157.0: a thermostat's fan mode as FanIcon's pace.
+describe("fanModePercentage", () => {
+  it("reads the speed a fan mode names, and none for one that names none", () => {
+    expect(fanModePercentage("low")).toBe(25);
+    expect(fanModePercentage("Quiet")).toBe(25);
+    expect(fanModePercentage("medium")).toBe(50);
+    expect(fanModePercentage("mid")).toBe(50);
+    expect(fanModePercentage("high")).toBe(75);
+    expect(fanModePercentage("turbo")).toBe(100);
+    expect(fanModePercentage("auto")).toBeNull();
+    expect(fanModePercentage(null)).toBeNull();
   });
 });

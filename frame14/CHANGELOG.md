@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.157.0
+
+- Changed: notifications (a light that didn't answer, a new version, an update check) appear in the bottom-right corner instead of the top right. On a phone and the frame they sit just above the bottom bar.
+- Changed: on a desktop, the Unraid page has the Docker containers on the left and the server's card and VMs on the right.
+- Fixed: fan icons spin again while a fan runs, at its speed: on the Fans card's tiles, in its title, and in a fan's controls. They had stopped spinning in 0.50.0. Nothing spins when your device is set to reduce motion.
+- Changed: a thermostat in Fan mode shows the fan icon, spinning at its fan speed, on its tile and in its controls. Before, it showed wind lines that didn't move.
+- Changed: the Lights page's title bulb is filled and yellow while a light is on, and dim when none are, like the room cards' icons. Before, it was always a yellow outline.
+
 ## 0.156.0
 
 - Changed: the dashboard now only turns on, off or adjusts the lights, fans and thermostats it shows. Lights are those in `light_entities`, the lights of the rooms in `light_areas`, and the 3D printer's chamber light. Fans are those in `fan_entities`, thermostats those in `climate_entities`. Before, any light, fan or thermostat in Home Assistant could be controlled through it, like switches before 0.151.0. Nothing on the pages changes.

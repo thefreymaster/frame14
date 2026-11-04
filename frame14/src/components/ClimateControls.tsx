@@ -5,6 +5,7 @@ import { IoAdd, IoRemove } from "react-icons/io5";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { callClimateService, type HvacMode } from "../lib/callService";
 import {
+  fanModePercentage,
   fmtClimateTemp,
   getClimateAction,
   HVAC_MODES,
@@ -15,6 +16,7 @@ import {
   type ClimateVisualMode,
 } from "../lib/hvac";
 import { ARC_MAX_TEMP, ARC_MIN_TEMP } from "../lib/thermostatArc";
+import { FanIcon } from "./FanIcon";
 import { FanSpeedSlider } from "./FanSpeedSlider";
 import { ThermostatDial } from "./ThermostatDial";
 import NumberFlow from "@number-flow/react";
@@ -286,7 +288,17 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
       >
         <VStack gap="1" align="center">
           <HStack gap="1.5" color={accent} textStyle="xs" fontWeight="semibold">
-            <AccentIcon />
+            {/* Fan mode's glyph spins while the fan runs (0.157.0). */}
+            {activeAction === "fan_only" ? (
+              <FanIcon
+                on
+                percentage={fanModePercentage(fanMode)}
+                size="1em"
+                color="inherit"
+              />
+            ) : (
+              <AccentIcon />
+            )}
             <Text as="span">{statusLabel}</Text>
           </HStack>
           {/* NumberFlow: a step rolls the digits (0.149.0, the user: "the

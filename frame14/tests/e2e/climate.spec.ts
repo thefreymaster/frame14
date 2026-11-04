@@ -222,6 +222,27 @@ test.describe("the Climate page", () => {
     expect(sizes.reading / sizes.root).toBeCloseTo(4.5, 1);
   });
 
+  // 0.157.0: Fan mode draws the Fans card's glyph, spinning at the fan
+  // mode's pace, on the tile and in the dialog's readout.
+  test("a thermostat in Fan mode spins its fan", async ({ page, request }) => {
+    await page.goto("/climate");
+    const tile = page.getByRole("button", { name: /^1st Floor AC:/ });
+    await expect(tile).toHaveAccessibleName(/Heating to 70°/);
+    await expect(tile.locator("[data-fan-icon]")).toHaveCount(0);
+    await request.post("http://127.0.0.1:8310/_stub/state", {
+      data: { entity_id: "climate.samsung_airconditioner_1", state: "fan_only", attributes: { hvac_action: "fan", fan_mode: "low" } },
+    });
+    await expect(tile).toHaveAccessibleName(/^1st Floor AC: 64°, Fan/);
+    const icon = tile.locator("[data-fan-icon]");
+    await expect(icon).toHaveCSS("animation-name", "spin");
+    // Low: a quarter's pace, 7.5s a turn.
+    await expect(icon).toHaveCSS("animation-duration", "7.5s");
+    await tile.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Fan running")).toBeVisible();
+    await expect(dialog.locator("[data-fan-icon]")).toHaveCSS("animation-name", "spin");
+  });
+
   test("a live change from Home Assistant updates the tile", async ({ page, request }) => {
     await page.goto("/climate");
     await expect(page.getByRole("button", { name: /^1st Floor AC: 64°, Heating to 70°/ })).toBeVisible();

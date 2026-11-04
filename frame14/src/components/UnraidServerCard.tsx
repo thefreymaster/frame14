@@ -25,7 +25,7 @@ const METERS_SIDE_BY_SIDE = "@container (min-width: 36rem)";
 /**
  * One Unraid server's health (0.151.0): its name and Unraid version in the
  * header, the CPU and the memory as UsageMeters side by side (stacked in a
- * narrow card: a phone's, a desktop's left column) — the CPU's cores and
+ * narrow card: a phone's, a desktop's side column) — the CPU's cores and
  * threads, the memory's available of total under them — then the CPU's
  * temperature and power, what the containers use between them, and how
  * long it has been up. A figure the integration hasn't got reads "—"; one

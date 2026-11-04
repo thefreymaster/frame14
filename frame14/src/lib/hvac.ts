@@ -1,5 +1,5 @@
 import { IoFlame, IoPowerOutline, IoSnow } from "react-icons/io5";
-import { MdAir } from "react-icons/md";
+import { PiFanFill } from "react-icons/pi";
 import type { HomeClimate } from "../hooks/useHomeData";
 
 /** The thermostat model shared by the climate card and its modal. */
@@ -193,10 +193,26 @@ export function getClimateAction(
   return null;
 }
 
+/**
+ * A thermostat's fan mode as a speed for FanIcon's pace (0.157.0): low a
+ * quarter, medium half, high three quarters, turbo full; null for one that
+ * names no speed (auto), which spins at the full pace.
+ */
+export function fanModePercentage(fanMode: string | null | undefined): number | null {
+  const name = (fanMode ?? "").toLowerCase();
+  if (/quiet|silent|low/.test(name)) return 25;
+  if (/med|mid/.test(name)) return 50;
+  if (/high/.test(name)) return 75;
+  if (/turbo|max|strong|powerful/.test(name)) return 100;
+  return null;
+}
+
 export const MODE_ICON: Record<ClimateVisualMode, typeof IoFlame> = {
   heat: IoFlame,
   cool: IoSnow,
-  fan_only: MdAir,
+  // The Fans card's glyph (0.157.0; wind lines before), which spins while
+  // the unit is in Fan mode.
+  fan_only: PiFanFill,
   off: IoPowerOutline,
 };
 

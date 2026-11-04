@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.156.0"
+version: "0.157.0"
 slug: frame14
 description: A wall-frame dashboard for Home Assistant — rooms, climate, energy, cameras, calendar and a photo slideshow
 url: https://github.com/thefreymaster/frame14

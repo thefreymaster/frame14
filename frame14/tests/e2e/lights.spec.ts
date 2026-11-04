@@ -84,11 +84,23 @@ test.describe("the Lights page", () => {
     await tile.click();
     await expect(page.getByText("Couldn't turn on Kitchen Main")).toBeVisible();
     await expect(page.getByText("The bulb isn't answering")).toBeVisible();
+
+    // In the bottom-right corner (0.157.0), 1rem in from the right edge; on
+    // the phone just above its bottom bar, on the desktop (no bar) 1rem up
+    // from the bottom. Polled: the toast slides in.
+    const view = page.viewportSize()!;
+    const gaps = async () => {
+      const box = (await page.locator('[data-scope="toast"][data-part="root"]').first().boundingBox())!;
+      const bar = await page.locator('[data-nav="bar"]').boundingBox();
+      const floor = bar && bar.height > 0 && bar.y < view.height ? bar.y : view.height;
+      return { right: Math.round(view.width - box.x - box.width), bottom: Math.round(floor - box.y - box.height) };
+    };
+    await expect.poll(async () => { const g = await gaps(); return g.right >= 8 && g.right <= 24 && g.bottom >= 8 && g.bottom <= 24; }).toBe(true);
     await expect(tile).toHaveAttribute("aria-busy", "false");
     await expect(tile).toHaveAttribute("aria-label", "Kitchen Main: Off");
   });
 
-  test("All off turns off every light but the kid's hatch light", async ({ page }) => {
+  test("All off turns off every light but the kid's hatch light", async ({ page, request }) => {
     await page.goto("/lights");
     const on = page.locator("[data-light-entry][aria-pressed=true]");
     await expect(on).toHaveCount(5);
@@ -97,6 +109,13 @@ test.describe("the Lights page", () => {
     await expect(on).toHaveAttribute("aria-label", /^Kid's Hatch: /);
     // With only the spared light on there is nothing left to turn off.
     await expect(page.getByRole("button", { name: "Turn off all lights" })).toHaveCount(0);
+    // The title's bulb is lit while a light is on and dim with none, as the
+    // rooms' are (0.157.0).
+    const bulb = board(page, "Lights").locator(".chakra-card__header svg").first();
+    await expect(bulb).toHaveCSS("color", "rgb(234, 179, 8)");
+    await stub(request, "/_stub/state", { entity_id: "light.aidens_hatch_light", state: "off" });
+    await expect(on).toHaveCount(0);
+    await expect(bulb).not.toHaveCSS("color", "rgb(234, 179, 8)");
   });
 
   test("a light the registry moves to another room regroups live", async ({ page, request }) => {

@@ -94,7 +94,7 @@ test("Containers and VMs fold away from their headers, the counts still showing,
   await expect(tile(page, "Windows 11", "vm")).toBeHidden();
 });
 
-test("on a desktop, the server and its VMs are a column beside the containers, kept in view as the page scrolls", async ({ page, isMobile }) => {
+test("on a desktop, the server and its VMs are a column right of the containers, kept in view as the page scrolls", async ({ page, isMobile }) => {
   test.skip(isMobile, "a phone's cards are one column (the next test)");
   await page.goto("/unraid");
   await expect(page.getByText("4 of 6 running")).toBeVisible();
@@ -102,11 +102,14 @@ test("on a desktop, the server and its VMs are a column beside the containers, k
   const server = await box(card(page, "UnServer"));
   const vms = await box(card(page, "VMs"));
   const containers = await box(card(page, "Containers"));
-  // The server's card over its VMs', the containers to their right, level
-  // with the server's, and the whole column on a 1080p screen.
+  // The server's card over its VMs', the containers to their left (0.157.0;
+  // the right before), level with the server's, and the whole column on a
+  // 1080p screen.
   expect(Math.abs(vms.x - server.x)).toBeLessThan(1);
   expect(vms.y).toBeGreaterThan(server.y + server.height);
-  expect(containers.x).toBeGreaterThan(server.x + server.width);
+  expect(server.x).toBeGreaterThan(containers.x + containers.width);
+  // The containers are the wide column.
+  expect(containers.width).toBeGreaterThan(server.width * 1.5);
   expect(Math.abs(containers.y - server.y)).toBeLessThan(1);
   expect(vms.y + vms.height).toBeLessThanOrEqual(page.viewportSize()!.height);
   // In the column the meters stack, and the VMs are two across.

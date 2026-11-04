@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { dialReading, resetStub } from "./helpers";
+import { dialReading, resetStub, stub } from "./helpers";
 
 test.describe("the Fans card", () => {
   test.beforeEach(async ({ request }) => {
@@ -10,6 +10,28 @@ test.describe("the Fans card", () => {
     await page.goto("/home");
     await expect(page.getByRole("button", { name: "Living Room Ceiling Fan: 50%" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Guest Room Fan: off" })).toBeVisible();
+  });
+
+  // 0.157.0: the keyframes the fan icons named went in 0.50.0, and none spun.
+  test("a running fan's icon spins at its pace, the card's title with it, and none under reduced motion", async ({ page, request }) => {
+    await page.goto("/home");
+    const on = page.getByRole("button", { name: "Living Room Ceiling Fan: 50%" }).locator("[data-fan-icon]");
+    const off = page.getByRole("button", { name: "Guest Room Fan: off" }).locator("[data-fan-icon]");
+    const title = page.locator('[data-card="fan"] .chakra-card__header [data-fan-icon]');
+    await expect(on).toHaveCSS("animation-name", "spin");
+    // 50%: six seconds a turn (3s at full speed, 7.5s at a quarter).
+    await expect(on).toHaveCSS("animation-duration", "6s");
+    await expect(off).toHaveCSS("animation-name", "none");
+    await expect(title).toHaveCSS("animation-name", "spin");
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(on).toHaveCSS("animation-name", "none");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+
+    // Off in Home Assistant: the tile and the title stand still.
+    await stub(request, "/_stub/state", { entity_id: "fan.living_room_ceiling_fan", state: "off" });
+    await expect(page.getByRole("button", { name: "Living Room Ceiling Fan: off" })).toBeVisible();
+    await expect(title).toHaveCSS("animation-name", "none");
   });
 
   test("a tile opens the thermostat's dial for the speed, and its + steps it, sent once the taps stop", async ({ page }) => {

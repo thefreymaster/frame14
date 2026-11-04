@@ -103,8 +103,10 @@ export function Lights() {
   return (
     <PageShell>
       <PageHeader
-        icon={<MdOutlineLightbulb />}
-        iconColor="yellow.500"
+        // Lit while a light is on, dim with none — the rooms' rule (0.157.0;
+        // an outline in yellow always before).
+        icon={onIds.length > 0 ? <MdLightbulb /> : <MdOutlineLightbulb />}
+        iconColor={onIds.length > 0 ? LIT : undefined}
         title="Lights"
         actions={
           onIds.length > 0 && (

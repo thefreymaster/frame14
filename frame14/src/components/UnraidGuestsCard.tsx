@@ -35,7 +35,7 @@ export function UnraidGuestsCard({
   icon: React.ReactNode;
   /** Where the card keeps whether it is open (Board's `board-collapsed:`). */
   storageKey: string;
-  /** The tiles' grid columns in place of TILE_COLUMNS' (a desktop's left column). */
+  /** The tiles' grid columns in place of TILE_COLUMNS' (a desktop's side column). */
   columns?: string;
 }) {
   const states = useEntities<GuestAttrs>(guests.map((g) => g.switch));

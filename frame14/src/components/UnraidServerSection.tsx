@@ -9,14 +9,14 @@ import { UnraidGuestsCard } from "./UnraidGuestsCard";
 import { UnraidServerCard } from "./UnraidServerCard";
 
 /**
- * The VM tiles in a desktop's left column: two across where the cards' 16rem
+ * The VM tiles in a desktop's side column: two across where the cards' 16rem
  * would stack them, so the column — the server's card over them — keeps to
  * a 1080p screen.
  */
 const SIDE_TILE_COLUMNS = "repeat(auto-fill, minmax(12rem, 1fr))";
 
 /**
- * Where the desktop's left column sticks: a gutter under the header. A
+ * Where the desktop's side column sticks: a gutter under the header. A
  * sticky box's offsets count from inside its scroller's padding, and
  * Layout's scroll box is padded by HEADER_CLEARANCE, so the gutter alone.
  */
@@ -26,7 +26,7 @@ const STICKY_TOP = PAGE_GUTTER;
 const STICKY_ROOM = `calc(var(--app-height, 100dvh) - ${HEADER_CLEARANCE})`;
 
 /**
- * The left column's `top`: STICKY_TOP while the column fits the screen; a
+ * The side column's `top`: STICKY_TOP while the column fits the screen; a
  * taller one sticks by its bottom instead, a gutter above the screen's,
  * once the page has scrolled that far — stuck by its top, its end would
  * stay under the fold until the page's end.
@@ -52,11 +52,15 @@ function useStickyTop(
 /**
  * One Unraid server's cards (0.152.0): its health (UnraidServerCard), its VMs
  * and its containers (UnraidGuestsCard, each collapsible). The VMs come
- * before the containers, a few tiles before dozens. On a desktop the server
- * and its VMs are a column at the left, stuck in view while the page
- * scrolls, beside the containers (the user: "The unraid page feels a bit
- * wide on desktop"): across the whole width the meters and figures were
- * spread thin and two VM tiles had a band of their own under 47 containers.
+ * before the containers, a few tiles before dozens. On a desktop the
+ * containers are the wide column at the left and the server and its VMs a
+ * column at the right (0.157.0, the user: "Move docker containers to the
+ * left and the unserver card and VMs to the right"; the server's column was
+ * at the left in 0.152.0), stuck in view while the page scrolls (the user:
+ * "The unraid page feels a bit wide on desktop"): across the whole width the
+ * meters and figures were spread thin and two VM tiles had a band of their
+ * own under 47 containers. The containers come first in the DOM too, so the
+ * reading order is the screen's.
  */
 export function UnraidServerSection({
   server,
@@ -106,11 +110,12 @@ export function UnraidServerSection({
   }
   return (
     <Grid
-      templateColumns="minmax(0, 1fr) minmax(0, 2fr)"
+      templateColumns="minmax(0, 2fr) minmax(0, 1fr)"
       gap="gutter"
       alignItems="start"
       data-unraid-server={server.name}
     >
+      {containersCard}
       <Stack
         ref={sideRef}
         gap="gutter"
@@ -121,7 +126,6 @@ export function UnraidServerSection({
         {serverCard}
         {vmsCard}
       </Stack>
-      {containersCard}
     </Grid>
   );
 }

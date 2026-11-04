@@ -1,15 +1,23 @@
-import { expect, test, type Page } from "@playwright/test";
-import { pageErrors, resetStub, stub } from "./helpers";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import { pageErrors, resetStub, splashGone, stub } from "./helpers";
 import { STUB_URL } from "./ports";
 
 // The Unraid page (0.151.0), read only: the stub's UnServer as Home
 // Assistant's Unraid integration has it — found by the server in the
 // registries, by unique id — with its health, its six containers (a hidden
-// seventh left out) and its two VMs.
+// seventh left out) and its two VMs. Since 0.152.0 without a page header,
+// the Containers and VMs collapsible, and on a desktop two columns.
 
 type Kind = "container" | "vm";
 const tile = (page: Page, name: string, kind: Kind = "container") =>
   page.locator(`[data-kind="${kind}"][data-guest="${name}"]`);
+/** A card by its title. */
+const card = (page: Page, title: string) =>
+  page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: title, exact: true }) });
+const box = async (l: Locator) => (await l.boundingBox())!;
+/** The page's entrance played (PageTransition's scale-in draws it smaller meanwhile). */
+const entered = (page: Page) =>
+  page.locator("[data-page-shell]").evaluate((el) => Promise.all(el.parentElement!.getAnimations().map((a) => a.finished)));
 const names = (page: Page, kind: Kind) =>
   page.locator(`[data-kind="${kind}"]`).evaluateAll((els) => els.map((el) => el.getAttribute("data-guest")));
 
@@ -28,6 +36,8 @@ test("the server's CPU, memory and figures, and its containers in name order", a
   const errors = pageErrors(page);
   await page.goto("/unraid");
   await expect(page.getByRole("heading", { name: "UnServer" })).toBeVisible();
+  // No page header (0.152.0): the server's card names the page.
+  await expect(page.getByRole("heading", { name: "Unraid", exact: true })).toHaveCount(0);
   await expect(page.getByText("Unraid 7.3.4")).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "CPU usage" })).toHaveAttribute("aria-valuenow", "13.7");
   await expect(page.getByRole("progressbar", { name: "Memory usage" })).toHaveAttribute("aria-valuenow", "82.2");
@@ -55,7 +65,85 @@ test("the server's CPU, memory and figures, and its containers in name order", a
   // Plex's CPU and memory sensors are enabled; radarr's CPU sensor isn't.
   await expect(tile(page, "Plex")).toContainText("2.1% CPU · 512 MB");
   await expect(tile(page, "radarr")).not.toContainText("CPU");
+  // A name cut short on a narrow tile is whole on hover.
+  await expect(tile(page, "binhex-filebrowser").getByText("binhex-filebrowser")).toHaveAttribute("title", "binhex-filebrowser");
   expect(errors).toEqual([]);
+});
+
+test("Containers and VMs fold away from their headers, the counts still showing, and stay folded through a reload", async ({ page }) => {
+  await page.goto("/unraid");
+  const header = (title: string) => card(page, title).getByRole("button", { name: new RegExp(title) });
+  for (const [title, guest, kind, count] of [
+    ["Containers", "Plex", "container", "4 of 6 running"],
+    ["VMs", "Windows 11", "vm", "1 of 2 running"],
+  ] as const) {
+    await expect(tile(page, guest, kind)).toBeVisible();
+    await expect(header(title)).toHaveAttribute("aria-expanded", "true");
+    await header(title).click();
+    await expect(tile(page, guest, kind)).toBeHidden();
+    await expect(header(title)).toHaveAttribute("aria-expanded", "false");
+    await expect(card(page, title).getByText(count)).toBeVisible();
+  }
+
+  await page.reload();
+  await expect(header("Containers")).toHaveAttribute("aria-expanded", "false");
+  await expect(header("VMs")).toHaveAttribute("aria-expanded", "false");
+  await expect(tile(page, "Plex")).toBeHidden();
+  await header("Containers").click();
+  await expect(tile(page, "Plex")).toBeVisible();
+  await expect(tile(page, "Windows 11", "vm")).toBeHidden();
+});
+
+test("on a desktop, the server and its VMs are a column beside the containers, kept in view as the page scrolls", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a phone's cards are one column (the next test)");
+  await page.goto("/unraid");
+  await expect(page.getByText("4 of 6 running")).toBeVisible();
+  await entered(page);
+  const server = await box(card(page, "UnServer"));
+  const vms = await box(card(page, "VMs"));
+  const containers = await box(card(page, "Containers"));
+  // The server's card over its VMs', the containers to their right, level
+  // with the server's, and the whole column on a 1080p screen.
+  expect(Math.abs(vms.x - server.x)).toBeLessThan(1);
+  expect(vms.y).toBeGreaterThan(server.y + server.height);
+  expect(containers.x).toBeGreaterThan(server.x + server.width);
+  expect(Math.abs(containers.y - server.y)).toBeLessThan(1);
+  expect(vms.y + vms.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  // In the column the meters stack, and the VMs are two across.
+  const cpu = await box(page.getByRole("progressbar", { name: "CPU usage" }));
+  const memory = await box(page.getByRole("progressbar", { name: "Memory usage" }));
+  expect(memory.y).toBeGreaterThan(cpu.y + cpu.height);
+  const ha = await box(tile(page, "Home Assistant", "vm"));
+  const windows = await box(tile(page, "Windows 11", "vm"));
+  expect(Math.abs(windows.y - ha.y)).toBeLessThan(1);
+  expect(windows.x).toBeGreaterThan(ha.x + ha.width);
+
+  // Dozens of containers, as a real server has (a stand-in for them: the
+  // card made tall): scrolled past them, the column stays where it was.
+  await card(page, "Containers").evaluate((el) => void ((el as HTMLElement).style.minHeight = "3000px"));
+  await splashGone(page);
+  await page.mouse.move(containers.x + 40, containers.y + 40);
+  await page.mouse.wheel(0, 1500);
+  await expect.poll(async () => (await box(card(page, "Containers"))).y).toBeLessThan(containers.y - 1000);
+  const stuck = await box(card(page, "UnServer"));
+  expect(Math.abs(stuck.y - server.y)).toBeLessThan(1);
+  expect((await box(card(page, "VMs"))).y).toBeCloseTo(vms.y, 0);
+});
+
+test("on a phone, one column: the server, its VMs, then the containers", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "a desktop has two columns (the test before)");
+  await page.goto("/unraid");
+  await expect(page.getByText("4 of 6 running")).toBeVisible();
+  await entered(page);
+  const server = await box(card(page, "UnServer"));
+  const vms = await box(card(page, "VMs"));
+  const containers = await box(card(page, "Containers"));
+  for (const b of [vms, containers]) {
+    expect(Math.abs(b.x - server.x)).toBeLessThan(1);
+    expect(Math.abs(b.width - server.width)).toBeLessThan(1);
+  }
+  expect(vms.y).toBeGreaterThan(server.y + server.height);
+  expect(containers.y).toBeGreaterThan(vms.y + vms.height);
 });
 
 test("the VMs, read from libvirt's state", async ({ page }) => {

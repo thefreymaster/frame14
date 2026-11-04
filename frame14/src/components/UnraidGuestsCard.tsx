@@ -17,18 +17,26 @@ const TILE_COLUMNS = "repeat(auto-fill, minmax(16rem, 1fr))";
 /**
  * A server's Docker containers, or its VMs (0.151.0): a tile each, in name
  * order, with how many are running beside the title, in grey like the
- * Climate card's range. Read-only: nothing here starts or stops them.
+ * Climate card's range. Collapsible (0.152.0), kept per device under
+ * `storageKey`; the count stays in the header. Read-only: nothing here
+ * starts or stops them.
  */
 export function UnraidGuestsCard({
   kind,
   guests,
   title,
   icon,
+  storageKey,
+  columns = TILE_COLUMNS,
 }: {
   kind: GuestKind;
   guests: (UnraidContainer | UnraidVm)[];
   title: string;
   icon: React.ReactNode;
+  /** Where the card keeps whether it is open (Board's `board-collapsed:`). */
+  storageKey: string;
+  /** The tiles' grid columns in place of TILE_COLUMNS' (a desktop's left column). */
+  columns?: string;
 }) {
   const states = useEntities<GuestAttrs>(guests.map((g) => g.switch));
   const loaded = states.every((q) => q.data);
@@ -36,6 +44,8 @@ export function UnraidGuestsCard({
 
   return (
     <Board
+      collapsible
+      storageKey={storageKey}
       title={
         <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
           <SectionTitle icon={icon}>{title}</SectionTitle>
@@ -49,7 +59,7 @@ export function UnraidGuestsCard({
         </Flex>
       }
     >
-      <Grid templateColumns={TILE_COLUMNS} gap="3">
+      <Grid templateColumns={columns} gap="3">
         {guests.map((g) => (
           <UnraidGuestTile key={g.switch} kind={kind} guest={g} />
         ))}

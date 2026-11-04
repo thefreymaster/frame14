@@ -76,7 +76,8 @@ export function UnraidGuestTile({
             </Icon>
           )}
           <Stack gap="0.5" flex="1" minW="0">
-            <Text fontWeight="medium" truncate>
+            {/* The whole name on hover, where it's cut short. */}
+            <Text fontWeight="medium" truncate title={guest.name}>
               {guest.name}
             </Text>
             {state ? (

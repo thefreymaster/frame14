@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.152.0
+
+- Changed: on a desktop, the Unraid page is two columns. The server's CPU, memory and figures sit at the left with the VMs under them, and stay in view as you scroll through the containers, which fill the rest of the screen. Before, every card ran the full width of the screen, and the VMs sat below all the containers.
+- Added: the Containers and VMs cards on the Unraid page fold away from their headers, like the other collapsible cards. The running count stays in the header, and each device remembers which you folded.
+- Changed: the Unraid page has no title card at the top any more. The server's card names it. On a phone and the frame, the VMs now come before the containers.
+- Added: a container's name that's cut short on its tile shows in full when you hover over it.
+
 ## 0.151.0
 
 - Added: an **Unraid** page for the server Home Assistant's Unraid integration has, to read, not to control. It shows CPU and memory use as meters, the CPU's temperature and power, what the Docker containers use between them, and how long the server has been up. Below that, a tile for every Docker container and a card of the VMs, each with its status: Running, Paused or Stopped. Nothing on the page starts, stops or updates anything.

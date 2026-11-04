@@ -1,4 +1,4 @@
-import { Badge, Flex, SimpleGrid, Skeleton, Stack, Stat } from "@chakra-ui/react";
+import { Badge, Flex, Grid, SimpleGrid, Skeleton, Stack, Stat } from "@chakra-ui/react";
 import { LuCpu, LuMemoryStick, LuServer } from "react-icons/lu";
 import { useEntitiesAcked, useEntity } from "../hooks/useEntity";
 import { useNow } from "../hooks/useNow";
@@ -16,12 +16,20 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { UsageMeter } from "./UsageMeter";
 
 /**
+ * The meters side by side from this width of the card's body, else stacked:
+ * by the card's width, not the screen's (0.152.0), since on a desktop the
+ * card is a third of the page.
+ */
+const METERS_SIDE_BY_SIDE = "@container (min-width: 36rem)";
+
+/**
  * One Unraid server's health (0.151.0): its name and Unraid version in the
- * header, the CPU and the memory as UsageMeters side by side (stacked on a
- * phone) — the CPU's cores and threads, the memory's available of total
- * under them — then the CPU's temperature and power, what the containers
- * use between them, and how long it has been up. A figure the integration
- * hasn't got reads "—"; one whose sensor is disabled is left out.
+ * header, the CPU and the memory as UsageMeters side by side (stacked in a
+ * narrow card: a phone's, a desktop's left column) — the CPU's cores and
+ * threads, the memory's available of total under them — then the CPU's
+ * temperature and power, what the containers use between them, and how
+ * long it has been up. A figure the integration hasn't got reads "—"; one
+ * whose sensor is disabled is left out.
  */
 export function UnraidServerCard({ server }: { server: UnraidServer }) {
   const cpu = useEntity(server.cpu ?? "").data;
@@ -73,8 +81,16 @@ export function UnraidServerCard({ server }: { server: UnraidServer }) {
         </Flex>
       }
     >
-      <Stack gap="6">
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
+      <Stack gap="6" css={{ containerType: "inline-size" }}>
+        <Grid
+          gap="6"
+          css={{
+            gridTemplateColumns: "minmax(0, 1fr)",
+            [METERS_SIDE_BY_SIDE]: {
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            },
+          }}
+        >
           {server.cpu && (
             <UsageMeter
               label="CPU"
@@ -96,7 +112,7 @@ export function UnraidServerCard({ server }: { server: UnraidServer }) {
               loading={loading}
             />
           )}
-        </SimpleGrid>
+        </Grid>
         {stats.length > 0 && (
           <SimpleGrid minChildWidth="9rem" gap="4">
             {stats.map((s) => (

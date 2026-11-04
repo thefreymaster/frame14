@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { HAState } from "../../src/hooks/useEntity";
 import type { GuestAttrs, UnraidContainer, UnraidVm } from "../../src/lib/unraid";
@@ -61,8 +61,10 @@ const container = (state: string, status: string, extra: GuestAttrs = {}) =>
   st(state, { status, ...extra });
 const vm = (state: string, vmState: string) => st(state, { state: vmState });
 
-const containersCard = <UnraidGuestsCard kind="container" guests={CONTAINERS} title="Containers" icon={<svg />} />;
-const vmCard = <UnraidGuestsCard kind="vm" guests={VMS} title="VMs" icon={<svg />} />;
+const containersCard = (
+  <UnraidGuestsCard kind="container" guests={CONTAINERS} title="Containers" icon={<svg />} storageKey="unraid-test-containers" />
+);
+const vmCard = <UnraidGuestsCard kind="vm" guests={VMS} title="VMs" icon={<svg />} storageKey="unraid-test-vms" />;
 const tile = (name: string) => document.querySelector(`[data-guest="${name}"]`) as HTMLElement;
 
 beforeEach(() => {
@@ -93,13 +95,37 @@ describe("UnraidGuestsCard: containers", () => {
     expect(within(tile("Valheim2026")).getByText("Stopped")).toBeInTheDocument();
   });
 
-  it("is read only: no switch, no button, and a tap calls nothing", () => {
+  it("is read only: no switch, no button but the card's own, and a tap calls nothing", () => {
     renderWithProviders(containersCard);
     expect(screen.queryByRole("checkbox")).toBeNull();
     expect(screen.queryByRole("switch")).toBeNull();
-    expect(screen.queryByRole("button")).toBeNull();
+    // The one button folds the card (0.152.0); a tile has none.
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(within(tile("Plex")).queryByRole("button")).toBeNull();
     fireEvent.click(tile("Plex"));
     expect(live.callService).not.toHaveBeenCalled();
+  });
+
+  it("folds away from its header, the count still showing, and stays folded on this device", async () => {
+    const { unmount } = renderWithProviders(containersCard);
+    const header = screen.getByRole("button", { name: /Containers/ });
+    expect(header).toHaveAttribute("aria-expanded", "true");
+    expect(tile("Plex")).toBeVisible();
+    fireEvent.click(header);
+    await waitFor(() => expect(header).toHaveAttribute("aria-expanded", "false"));
+    await waitFor(() => expect(tile("Plex")).not.toBeVisible());
+    expect(screen.getByText("2 of 3 running")).toBeVisible();
+    expect(localStorage.getItem("board-collapsed:unraid-test-containers")).toBe("1");
+
+    // Opened again later, it comes up folded.
+    unmount();
+    renderWithProviders(containersCard);
+    const again = screen.getByRole("button", { name: /Containers/ });
+    expect(again).toHaveAttribute("aria-expanded", "false");
+    expect(tile("Plex")).not.toBeVisible();
+    fireEvent.click(again);
+    await waitFor(() => expect(tile("Plex")).toBeVisible());
+    expect(localStorage.getItem("board-collapsed:unraid-test-containers")).toBe("0");
   });
 
   it("follows a container's state live, its usage only while it runs", () => {

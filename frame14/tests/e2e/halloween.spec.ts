@@ -95,6 +95,22 @@ test.describe("the Halloween page", () => {
     await stub(request, "/_stub/state", { entity_id: MOTION, state: "off" });
   });
 
+  // 0.155.0: its row in Settings' Navigation card comes and goes with the
+  // days, as the nav entry does; Football's stays all year.
+  test("Settings' Navigation card offers it on Oct 31, and not in November", async ({ page }) => {
+    const row = page.getByRole("checkbox", { name: "Show Halloween in the nav" });
+    await page.clock.setFixedTime(HALLOWEEN);
+    await page.goto("/control/device");
+    await expect(page.getByRole("checkbox", { name: "Show Football in the nav" })).toHaveCount(1);
+    await expect(row).toHaveCount(1);
+    await expect(page.getByText("Oct 30 and 31 only")).toBeVisible();
+
+    await page.clock.setFixedTime(NOVEMBER);
+    await page.reload();
+    await expect(page.getByRole("checkbox", { name: "Show Football in the nav" })).toHaveCount(1);
+    await expect(row).toHaveCount(0);
+  });
+
   test("in November neither the nav nor the Views card has it", async ({ page, isMobile }) => {
     await page.clock.setFixedTime(NOVEMBER);
     if (isMobile) {

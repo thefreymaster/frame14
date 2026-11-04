@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.155.0
+
+- Changed: Halloween is listed in Settings › Device › Navigation only on Oct 30 and 31, the days it can be in the nav. The rest of the year its row is gone, and your choice for it is kept for next October.
+
 ## 0.154.0
 
 - Added: each room on the Lights page has its own All off in its header while one of its lights is on, so you can turn off a room at once. Like the page's All off, it leaves the lights in `light_all_off_exclude` on. The Other lights, Switches and Favorites cards have one too.

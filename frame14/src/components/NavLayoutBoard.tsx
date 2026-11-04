@@ -88,12 +88,18 @@ export function NavLayoutBoard() {
     [layout, gameDay, halloween, photos, unraid, slots],
   );
   // The rows this device can have: Photos only while Immich is set up
-  // (0.145.0), Unraid while Home Assistant has a server (0.151.0). The order
-  // and the moves are the whole layout's, so an entry left out keeps its
-  // place for when it comes back.
+  // (0.145.0), Unraid while Home Assistant has a server (0.151.0), Halloween
+  // on Oct 30 and 31 (0.155.0, the user: "should only be available on Oct
+  // 30-31"; useHalloween turns it at midnight). The order and the moves are
+  // the whole layout's, so an entry left out keeps its place — and its
+  // switch — for when it comes back.
   const rows = rest.filter((e) => {
     const item = NAV_ITEM_BY_PATH.get(e.path);
-    return (photos || !item?.photos) && (unraid || !item?.unraid);
+    return (
+      (photos || !item?.photos) &&
+      (unraid || !item?.unraid) &&
+      (halloween || !item?.halloween)
+    );
   });
   const customized = !sameNavLayout(layout, defaultNavLayout(mode));
 

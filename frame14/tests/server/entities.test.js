@@ -23,6 +23,7 @@ const OPTIONS = {
   weather_entity: "weather.home",
   weather_forecast_entity: "weather.forecast",
   weather_temperature_entity: "sensor.outside",
+  internet_entity: "binary_sensor.ping",
   light_entities: ["light.a", "switch.b"],
   light_areas: ["Kitchen"],
   climate_entities: ["climate.a"],
@@ -72,6 +73,8 @@ describe("the add-on's options", () => {
     expect(e.lights).toEqual(["light.a", "switch.b"]);
     expect(e.lightAreas).toEqual(["Kitchen"]);
     expect(e.weather).toEqual({ current: "weather.home", forecast: "weather.forecast", temperature: "sensor.outside" });
+    // 0.159.0: binary_sensor.1_1_1_1 was hard-coded in the client before.
+    expect(e.internet).toBe("binary_sensor.ping");
     expect(e.climate).toEqual(["climate.a"]);
     expect(e.energy).toEqual({
       currentProduction: "sensor.p", currentConsumption: "sensor.c",
@@ -99,7 +102,7 @@ describe("the add-on's options", () => {
   it("turns the helpers off and leaves nothing out when they aren't set", async () => {
     files.set("/data/options.json", JSON.stringify({ weather_entity: "weather.home" }));
     const e = await load();
-    expect(e).toMatchObject({ motion: "", route: "", album: "", lightAllOffExclude: [], calendarExclude: [] });
+    expect(e).toMatchObject({ internet: "", motion: "", route: "", album: "", lightAllOffExclude: [], calendarExclude: [] });
   });
 
   it("turns climate_names into a map, trimmed, dropping the malformed", async () => {
@@ -116,11 +119,19 @@ describe("the add-on's options", () => {
     expect(e.circuits).toEqual({ main: "", balance: "", items: [] });
   });
 
-  it("ignores options without a weather entity (the add-on's sign of a config)", async () => {
-    files.set("/data/options.json", JSON.stringify({ light_entities: ["light.a"] }));
+  it("falls back to the current entity for an empty forecast option too", async () => {
+    files.set("/data/options.json", JSON.stringify({ weather_entity: "weather.home", weather_forecast_entity: "" }));
     const e = await load();
-    expect(e.lights).toEqual([]);
-    expect(console.warn).toHaveBeenCalled();
+    expect(e.weather.forecast).toBe("weather.home");
+  });
+
+  it("reads options without a weather entity (0.159.0): any option may be left empty", async () => {
+    files.set("/data/options.json", JSON.stringify({ light_entities: ["light.a"], energy_current_production: "" }));
+    const e = await load();
+    expect(e.lights).toEqual(["light.a"]);
+    expect(e.weather).toEqual({ current: "", forecast: "", temperature: "" });
+    expect(e.energy.currentProduction).toBe("");
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });
 
@@ -155,7 +166,7 @@ describe("with nothing to read", () => {
   it("is empty, and says so", async () => {
     const e = await load();
     expect(e).toEqual({
-      lights: [], lightAreas: [], weather: {}, climate: [], climateNames: {}, energy: {},
+      lights: [], lightAreas: [], weather: {}, internet: "", climate: [], climateNames: {}, energy: {},
       circuits: { main: "", balance: "", items: [] }, vacuums: [], fans: [], mediaPlayer: "",
       printer: "", teamTracker: [], person: "", camera: "", cameras: [],
       motion: "", route: "", album: "", lightAllOffExclude: [], calendarExclude: [],

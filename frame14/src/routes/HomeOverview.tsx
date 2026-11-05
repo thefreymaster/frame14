@@ -14,6 +14,7 @@ import { HomeHeader } from "../components/HomeHeader";
 import { HomeWeatherCard } from "../components/HomeWeatherCard";
 import { HomeForecastCard } from "../components/HomeForecastCard";
 import { useDesktop } from "../hooks/useDesktop";
+import { useFeatures } from "../hooks/useFeatures";
 import { CalendarSection } from "../components/CalendarSection";
 import { HomeBoard } from "../components/HomeBoard";
 import {
@@ -72,6 +73,7 @@ export function HomeOverview() {
   useReleaseSplash(!Object.values(loading).some(Boolean));
   const columns = useHomeColumns();
   const desktop = useDesktop();
+  const features = useFeatures();
 
   if (isError || !data) {
     return (
@@ -85,37 +87,49 @@ export function HomeOverview() {
     );
   }
 
-  const cards: Record<HomeCardId, React.ReactNode> = {
-    // A phone (one column) gets the compact weather card: it has a clock of
-    // its own, and the full card's hero figures fill its screen. A desktop
-    // has the clock in the header, so its card is the forecast instead.
-    header:
-      columns === 1 ? (
-        <HomeWeatherCard
-          internet={data.internet}
-          weather={data.weather}
-          loading={loading.weather}
-        />
-      ) : desktop ? (
-        <HomeForecastCard
-          internet={data.internet}
-          weather={data.weather}
-          loading={loading.weather}
-        />
-      ) : (
-        <HomeHeader
-          internet={data.internet}
-          weather={data.weather}
-          loading={loading.weather}
-        />
-      ),
-    teamTracker: <TeamTracker />,
-    radar: <RadarSection condition={data.weather?.state} />,
-    energy: <EnergySection energy={data.energy} loading={loading.energy} />,
-    climate: (
+  // A phone (one column) gets the compact weather card: it has a clock of
+  // its own, and the full card's hero figures fill its screen. A desktop
+  // has the clock in the header, so its card is the forecast instead.
+  const frameHeader = columns !== 1 && !desktop;
+  const header =
+    columns === 1 ? (
+      <HomeWeatherCard
+        internet={data.internet}
+        weather={data.weather}
+        loading={loading.weather}
+      />
+    ) : desktop ? (
+      <HomeForecastCard
+        internet={data.internet}
+        weather={data.weather}
+        loading={loading.weather}
+      />
+    ) : (
+      <HomeHeader
+        internet={data.internet}
+        weather={data.weather}
+        loading={loading.weather}
+      />
+    );
+
+  // Only what the install has set up (lib/features, 0.159.0): a card left
+  // out here isn't on the board. Without weather the frame's header keeps
+  // its date and clock; a phone's and a desktop's are the weather alone.
+  const cards: Partial<Record<HomeCardId, React.ReactNode>> = {
+    header: features.weather || frameHeader ? header : undefined,
+    teamTracker: features.football ? <TeamTracker /> : undefined,
+    radar: features.weather ? (
+      <RadarSection condition={data.weather?.state} />
+    ) : undefined,
+    energy: features.solar ? (
+      <EnergySection energy={data.energy} loading={loading.energy} />
+    ) : undefined,
+    climate: features.climate ? (
       <ClimateSection climate={data.climate} loading={loading.climate} />
-    ),
-    fan: <FanSection fan={data.fan} loading={loading.fan} />,
+    ) : undefined,
+    fan: features.fans ? (
+      <FanSection fan={data.fan} loading={loading.fan} />
+    ) : undefined,
     calendar: (
       <CalendarSection
         today={data.calendar?.today ?? []}
@@ -127,9 +141,11 @@ export function HomeOverview() {
     // when they aren't (the header's icons say they're running, too). The
     // lights: this device's favourites, else the ones that are on (0.143),
     // the card going with the last of them.
-    lights: <HomeLightsSection />,
-    printer: <PrinterSection />,
-    vacuum: <VacuumSection vacuum={data.vacuum} />,
+    lights: features.lights ? <HomeLightsSection /> : undefined,
+    printer: features.printer ? <PrinterSection /> : undefined,
+    vacuum: features.vacuum ? (
+      <VacuumSection vacuum={data.vacuum} />
+    ) : undefined,
   };
 
   // Keyed so each grid loads its own saved arrangement.

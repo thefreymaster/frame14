@@ -18,7 +18,23 @@ describe("NAV_ITEMS", () => {
   });
 
   it("marks the two Photos entries as needing Immich (0.145.0)", () => {
-    expect(NAV_ITEMS.filter((i) => i.photos).map((i) => i.path)).toEqual(["/photos", "/album"]);
+    expect(NAV_ITEMS.filter((i) => i.feature === "photos").map((i) => i.path)).toEqual(["/photos", "/album"]);
+  });
+
+  it("marks every entry that needs something set up with its feature (0.159.0)", () => {
+    expect(Object.fromEntries(NAV_ITEMS.filter((i) => i.feature).map((i) => [i.path, i.feature]))).toEqual({
+      "/lights": "lights",
+      "/climate": "climate",
+      "/photos": "photos",
+      "/album": "photos",
+      "/energy": "energy",
+      "/weather": "weather",
+      "/printer": "printer",
+      "/vacuum": "vacuum",
+      "/cameras": "cameras",
+      "/unraid": "unraid",
+      "/football": "football",
+    });
   });
 
   it("keeps the 0.109 order, Unraid (0.151.0) after Cameras, Halloween (0.128) before Settings", () => {
@@ -29,7 +45,7 @@ describe("NAV_ITEMS", () => {
   });
 
   it("offers Unraid (0.151.0) only with a server, and off on a remote until turned on", () => {
-    expect(NAV_ITEMS.filter((i) => i.unraid).map((i) => i.path)).toEqual(["/unraid"]);
+    expect(NAV_ITEMS.filter((i) => i.feature === "unraid").map((i) => i.path)).toEqual(["/unraid"]);
     expect(NAV_ITEMS.find((i) => i.path === "/unraid")).toMatchObject({ remoteOff: true });
   });
 

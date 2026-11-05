@@ -30,20 +30,24 @@ function climateNamesFrom(raw) {
 }
 
 function loadEntities() {
-  // HA addon: read entity config from options.json
+  // HA addon: read entity config from options.json, which the Supervisor
+  // always writes. Any option may be left empty, the weather's too (0.159.0;
+  // a file without a weather entity was ignored before): a feature without
+  // its entities is left out of the pages (src/lib/features).
   const options = fs.existsSync("/data/options.json")
     ? loadJson("/data/options.json")
     : null;
 
-  if (options && options.weather_entity) {
+  if (options) {
     return {
       lights: options.light_entities ?? [],
       lightAreas: options.light_areas ?? [],
       weather: {
         current: options.weather_entity ?? "",
-        forecast: options.weather_forecast_entity ?? options.weather_entity ?? "",
+        forecast: options.weather_forecast_entity || options.weather_entity || "",
         temperature: options.weather_temperature_entity ?? "",
       },
+      internet: options.internet_entity ?? "",
       climate: options.climate_entities ?? [],
       climateNames: climateNamesFrom(options.climate_names),
       energy: {
@@ -86,6 +90,7 @@ function loadEntities() {
       lights: frame14.lights ?? [],
       lightAreas: frame14.lightAreas ?? [],
       weather: frame14.weather ?? {},
+      internet: frame14.internet ?? "",
       climate: frame14.climate ?? [],
       climateNames: climateNamesFrom(frame14.climateNames),
       energy: frame14.energy ?? {},
@@ -111,6 +116,7 @@ function loadEntities() {
     lights: [],
     lightAreas: [],
     weather: {},
+    internet: "",
     climate: [],
     climateNames: {},
     energy: {},

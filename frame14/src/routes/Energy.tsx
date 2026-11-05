@@ -9,6 +9,7 @@ import type { IconType } from "react-icons";
 import { IoFlash, IoFlashOutline } from "react-icons/io5";
 import { MdElectricBolt } from "react-icons/md";
 import { PiSolarRoof } from "react-icons/pi";
+import { useFeatures } from "../hooks/useFeatures";
 import { useLiveEnergy } from "../hooks/useLiveEnergy";
 import { Board } from "../components/Board";
 import { CircuitsCard } from "../components/CircuitsCard";
@@ -37,20 +38,27 @@ const TABS: { value: EnergyTab; label: string; icon: IconType }[] = [
  * tab is the sub-route (0.138; the `tab` search param before): /energy/solar
  * and /energy/circuits, so the old /power path can land on its tab. The page
  * alone, a tab it hasn't got, or the old `?tab=` lands on the right one.
+ * Only what the install has set up (lib/features, 0.159.0): Now and Solar
+ * with the solar sensors, Circuits with circuits — the page itself needs
+ * one of them (RequireFeature).
  */
 const isEnergyTab = (v: string | null | undefined): v is EnergyTab =>
   v === "solar" || v === "circuits";
 
 export function Energy() {
   const live = useLiveEnergy();
+  const features = useFeatures();
+  const tabs = TABS.filter((t) => features[t.value]);
   const navigate = useNavigate();
   const { tab: raw } = useParams();
   const [params] = useSearchParams();
-  if (!isEnergyTab(raw)) {
+  const has = (v: string | null | undefined): v is EnergyTab =>
+    isEnergyTab(v) && tabs.some((t) => t.value === v);
+  if (!has(raw)) {
     const legacy = params.get("tab");
     return (
       <Navigate
-        to={`/energy/${isEnergyTab(legacy) ? legacy : "solar"}`}
+        to={`/energy/${has(legacy) ? legacy : (tabs[0]?.value ?? "solar")}`}
         replace
       />
     );
@@ -65,27 +73,29 @@ export function Energy() {
     <PageShell fill>
       <PageHeader icon={<IoFlash />} title="Energy" />
 
-      {/* Now */}
-      <Board
-        collapsible
-        storageKey="energy-now"
-        title={
-          <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
-            <SectionTitle icon={<IoFlashOutline />}>Now</SectionTitle>
-            {grid(live.energy).active && (
-              <Box ms="auto">
-                <GridBadge energy={live.energy} />
-              </Box>
-            )}
-          </Flex>
-        }
-      >
-        {live.loading ? (
-          <Skeleton height="7.5rem" />
-        ) : (
-          <PowerFlow energy={live.energy} />
-        )}
-      </Board>
+      {/* Now: the solar sensors' power flow. */}
+      {features.solar && (
+        <Board
+          collapsible
+          storageKey="energy-now"
+          title={
+            <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
+              <SectionTitle icon={<IoFlashOutline />}>Now</SectionTitle>
+              {grid(live.energy).active && (
+                <Box ms="auto">
+                  <GridBadge energy={live.energy} />
+                </Box>
+              )}
+            </Flex>
+          }
+        >
+          {live.loading ? (
+            <Skeleton height="7.5rem" />
+          ) : (
+            <PowerFlow energy={live.energy} />
+          )}
+        </Board>
+      )}
 
       {/* Solar | Circuits. A tab mounts when first opened (lazyMount) and
           stays, so Solar keeps its period while Circuits is up. */}
@@ -102,14 +112,14 @@ export function Energy() {
         minH="0"
       >
         <Tabs.List flexShrink={0}>
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <Tabs.Trigger key={t.value} value={t.value}>
               <t.icon />
               {t.label}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <Tabs.Content
             key={t.value}
             value={t.value}

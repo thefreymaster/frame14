@@ -155,21 +155,36 @@ describe("shownNavItems", () => {
     const frame = defaultNavLayout("frame");
     const remote = defaultNavLayout("controller");
     expect(shownNavItems(frame, everyday).map((i) => i.path)).toContain("/photos");
-    expect(shownNavItems(frame, { ...everyday, photos: true }).map((i) => i.path)).toContain("/photos");
-    expect(shownNavItems(frame, { ...everyday, photos: false }).map((i) => i.path)).not.toContain("/photos");
+    expect(shownNavItems(frame, { ...everyday, features: { photos: true } }).map((i) => i.path)).toContain("/photos");
+    expect(shownNavItems(frame, { ...everyday, features: { photos: false } }).map((i) => i.path)).not.toContain("/photos");
     expect(shownNavItems(remote, everyday).map((i) => i.path)).toContain("/album");
-    expect(shownNavItems(remote, { ...everyday, photos: false }).map((i) => i.path)).not.toContain("/album");
+    expect(shownNavItems(remote, { ...everyday, features: { photos: false } }).map((i) => i.path)).not.toContain("/album");
+  });
+
+  it("leaves out what the install hasn't set up (0.159.0), and keeps it while that's unknown", () => {
+    const frame = defaultNavLayout("frame");
+    const none = { lights: false, climate: false, energy: false, weather: false, printer: false, vacuum: false, cameras: false, football: false, photos: false, unraid: false };
+    expect(shownNavItems(frame, { ...everyday, gameDay: true, features: none }).map((i) => i.path)).toEqual([
+      "/home", "/clock", "/calendar", "/control",
+    ]);
+    // Each alone takes out its own entry.
+    expect(shownNavItems(frame, { ...everyday, features: { energy: false } }).map((i) => i.path)).toEqual(
+      shownNavItems(frame, everyday).map((i) => i.path).filter((p) => p !== "/energy"),
+    );
+    expect(shownNavItems(frame, everyday).map((i) => i.path)).toEqual(expect.arrayContaining([
+      "/lights", "/climate", "/energy", "/weather", "/printer", "/vacuum", "/cameras",
+    ]));
   });
 
   it("shows Unraid only while Home Assistant has a server (0.151.0), and not while it's unknown", () => {
     const frame = defaultNavLayout("frame");
     expect(shownNavItems(frame, everyday).map((i) => i.path)).not.toContain("/unraid");
-    expect(shownNavItems(frame, { ...everyday, unraid: false }).map((i) => i.path)).not.toContain("/unraid");
-    expect(shownNavItems(frame, { ...everyday, unraid: true }).map((i) => i.path)).toContain("/unraid");
+    expect(shownNavItems(frame, { ...everyday, features: { unraid: false } }).map((i) => i.path)).not.toContain("/unraid");
+    expect(shownNavItems(frame, { ...everyday, features: { unraid: true } }).map((i) => i.path)).toContain("/unraid");
     // A remote starts with it off; turned on, it shows with a server.
     const remote = defaultNavLayout("controller");
-    expect(shownNavItems(remote, { ...everyday, unraid: true }).map((i) => i.path)).not.toContain("/unraid");
+    expect(shownNavItems(remote, { ...everyday, features: { unraid: true } }).map((i) => i.path)).not.toContain("/unraid");
     const turnedOn = remote.map((e) => (e.path === "/unraid" ? { ...e, shown: true } : e));
-    expect(shownNavItems(turnedOn, { ...everyday, unraid: true }).map((i) => i.path)).toContain("/unraid");
+    expect(shownNavItems(turnedOn, { ...everyday, features: { unraid: true } }).map((i) => i.path)).toContain("/unraid");
   });
 });

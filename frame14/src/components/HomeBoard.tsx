@@ -76,13 +76,17 @@ const noTransforms = () => null;
  *
  * Dragging reorders the real list while the card is in the air (onDragOver),
  * so the grid packs around it and shows exactly where it will land.
+ *
+ * `cards` holds what this install has (lib/features, 0.159.0): a card left
+ * out of it — a feature that isn't set up — isn't on the board at all, not
+ * even while arranging, and keeps its saved place for when it is.
  */
 export function HomeBoard({
   columns,
   cards,
 }: {
   columns: HomeColumns;
-  cards: Record<HomeCardId, React.ReactNode>;
+  cards: Partial<Record<HomeCardId, React.ReactNode>>;
 }) {
   const grid = homeGridFor(columns);
   const [layout, setLayout] = useState<HomeLayout>(() => loadHomeLayout(grid));
@@ -130,8 +134,10 @@ export function HomeBoard({
   // A phone shows the two-column order, every card full width.
   const spanOf = (span: number) => Math.min(span, columns);
 
-  // Hidden cards are on the board only while arranging, as stand-ins.
-  const shown = editing ? layout : layout.filter((card) => !card.hidden);
+  // Hidden cards are on the board only while arranging, as stand-ins; a
+  // card the install hasn't got, never.
+  const present = layout.filter((card) => cards[card.id] !== undefined);
+  const shown = editing ? present : present.filter((card) => !card.hidden);
   const order = shown.map((card) => card.id);
   // The set, order and widths of the cards: a new width re-packs too.
   const layoutKey = shown

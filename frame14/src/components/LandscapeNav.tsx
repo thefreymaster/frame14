@@ -5,8 +5,7 @@ import { socket } from "../lib/socket";
 import { useDeviceMode } from "../lib/deviceMode";
 import { useLiveGame } from "../hooks/useLiveGame";
 import { useHalloween } from "../hooks/useHalloween";
-import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
-import { useUnraidEnabled } from "../hooks/useUnraid";
+import { useFeatures } from "../hooks/useFeatures";
 import { ENTRY_RADIUS, NAV_PAD, NAV_SURFACE } from "../lib/floatingSurface";
 import {
   HEADER_CLEARANCE,
@@ -92,13 +91,11 @@ export function LandscapeNav({
   const { games } = useLiveGame();
   // This device's entries in its order, as /control sets them (lib/navLayout).
   const halloween = useHalloween();
-  const photos = usePhotosEnabled();
-  const unraid = useUnraidEnabled();
+  const features = useFeatures();
   const items = useNavItems({
     gameDay: games.length > 0,
     halloween,
-    photos,
-    unraid,
+    features,
   });
   const { bar, more } = splitForBar(items, NAV_BAR_ENTRIES[mode]);
   const barRef = useRef<HTMLDivElement>(null);

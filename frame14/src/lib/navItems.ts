@@ -29,6 +29,7 @@ import { TbVacuumCleaner } from "react-icons/tb";
 import { GiPumpkinLantern } from "react-icons/gi";
 import { LuServer } from "react-icons/lu";
 import type { DeviceMode } from "./deviceMode";
+import type { Feature } from "./features";
 import { Printer3dIcon, Printer3dOutlineIcon } from "./printerIcons";
 
 export type NavItem = {
@@ -50,13 +51,11 @@ export type NavItem = {
   gameDay?: boolean;
   /** In the nav on Oct 30 and 31 only (useHalloween). */
   halloween?: boolean;
-  /** In the nav only while Immich is set up (usePhotosEnabled, 0.145.0). */
-  photos?: boolean;
   /**
-   * In the nav only while Home Assistant's Unraid integration has a server
-   * (useUnraidEnabled, 0.151.0).
+   * In the nav only while this install has it set up (lib/features, 0.159.0;
+   * Photos with Immich since 0.145.0, Unraid with a server since 0.151.0).
    */
-  unraid?: boolean;
+  feature?: Feature;
 };
 
 /** Always first in the nav, and always in it. */
@@ -92,12 +91,14 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Lights",
     icon: RiLightbulbLine,
     activeIcon: RiLightbulbFill,
+    feature: "lights",
   },
   {
     path: "/climate",
     label: "Climate",
     icon: IoThermometerOutline,
     activeIcon: IoThermometer,
+    feature: "climate",
   },
   {
     path: "/photos",
@@ -105,7 +106,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoImagesOutline,
     activeIcon: IoImages,
     frameOnly: true,
-    photos: true,
+    feature: "photos",
   },
   // A remote's Photos: the album as a grid, to pick what the frames show.
   {
@@ -114,7 +115,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoImagesOutline,
     activeIcon: IoImages,
     remoteOnly: true,
-    photos: true,
+    feature: "photos",
   },
   {
     path: "/energy",
@@ -122,6 +123,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoFlashOutline,
     activeIcon: IoFlash,
     remoteOff: true,
+    feature: "energy",
   },
   // In Radar's old place (RENAMED_PATHS keeps a saved layout's), and on
   // every device, where Radar was the frame's alone.
@@ -131,6 +133,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoPartlySunnyOutline,
     activeIcon: IoPartlySunny,
     remoteOff: true,
+    feature: "weather",
   },
   {
     path: "/printer",
@@ -138,6 +141,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Printer3dOutlineIcon,
     activeIcon: Printer3dIcon,
     remoteOff: true,
+    feature: "printer",
   },
   {
     path: "/vacuum",
@@ -145,6 +149,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: TbVacuumCleaner,
     activeIcon: TbVacuumCleaner,
     remoteOff: true,
+    feature: "vacuum",
   },
   {
     path: "/cameras",
@@ -152,6 +157,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoVideocamOutline,
     activeIcon: IoVideocam,
     remoteOff: true,
+    feature: "cameras",
   },
   // The Unraid servers' (0.151.0): only while Home Assistant has one.
   {
@@ -159,7 +165,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Unraid",
     icon: LuServer,
     activeIcon: LuServer,
-    unraid: true,
+    feature: "unraid",
     remoteOff: true,
   },
   {
@@ -176,6 +182,7 @@ export const NAV_ITEMS: NavItem[] = [
     activeIcon: IoAmericanFootball,
     gameDay: true,
     remoteOff: true,
+    feature: "football",
   },
   // Oct 30 and 31 only (lib/halloween). Like Football it moves every frame
   // (not local-only) and "halloween" is a TRANSIENT_VIEW server-side, so no

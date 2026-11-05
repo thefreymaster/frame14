@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEntitiesConfig } from "./useEntitiesConfig";
+import { useFeatureData } from "./useFeatures";
 import { useEntities } from "./useEntity";
 import type { HomeEnergy } from "./useHomeData";
 
@@ -49,9 +50,12 @@ export function useLiveEnergy(): { energy: HomeEnergy; loading: boolean } {
     [entitiesQuery.data?.energy],
   );
 
+  // Without the solar sensors there's nothing to ask for (lib/features).
+  const { enabled, waiting } = useFeatureData("solar");
   const energyQuery = useQuery<EnergyResponse>({
     queryKey: ["home", "energy"],
     queryFn: fetchEnergy,
+    enabled,
     refetchInterval: 1000 * 30,
     staleTime: 1000 * 30,
   });
@@ -94,5 +98,5 @@ export function useLiveEnergy(): { energy: HomeEnergy; loading: boolean } {
       0,
   };
 
-  return { energy, loading: energyQuery.isPending };
+  return { energy, loading: (enabled || waiting) && energyQuery.isPending };
 }

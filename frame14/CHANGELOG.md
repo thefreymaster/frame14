@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.159.0
+
+- Added: anything you haven't set up is left out. Weather, energy, lights, thermostats, fans, the 3D printer, vacuums, cameras and football disappear when their entities are empty: no nav entry, no Home card, no row in Settings' Navigation card, and no tile in a remote's Views. Opening one of those pages directly goes to Home.
+- Changed: the Energy page shows only what's set up. The Now card and the Solar tab need the two power-now sensors, and the Circuits tab needs circuits. The Home Energy card's detail drops its Circuits tab without them.
+- Changed: these add-on options are now optional and can be left empty: `weather_entity`, `weather_forecast_entity`, `weather_temperature_entity`, `energy_current_production`, `energy_current_consumption`, `energy_production_today`, `energy_consumption_today` and `circuit_main_entity`.
+- Added: new option `internet_entity`, the binary sensor the Home weather card watches for an internet outage (Home Assistant's Ping integration, for example). It was always `binary_sensor.1_1_1_1` before, which is its default. Leave it empty and there's no Offline alert.
+- Fixed: leaving `weather_entity` empty no longer makes the add-on ignore all of its other options.
+
 ## 0.158.1
 
 - Changed: Check for updates on the Software card no longer pops a notification when it finds a new version. The card already shows it, with the Update available badge and the Install button. "Up to date" still appears when there's nothing newer.

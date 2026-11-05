@@ -12,6 +12,7 @@ import type { IconType } from "react-icons";
 import { MdElectricBolt } from "react-icons/md";
 import { PiSolarRoof } from "react-icons/pi";
 import { useCircuits } from "../hooks/useCircuits";
+import { useFeatures } from "../hooks/useFeatures";
 import type { HomeEnergy } from "../hooks/useHomeData";
 import type { useEnergyToday } from "../hooks/useEnergyToday";
 import { ENERGY_COLORS, coverage, fmtKwh } from "../lib/energy";
@@ -36,7 +37,8 @@ const TABS: { value: "solar" | "circuits"; label: string; icon: IconType }[] = [
  * (CircuitBreakdown, from /api/circuits every 10s while the tab is up — it
  * mounts when first opened, and the dialog unmounts on close), the house's
  * draw in its title as on the page's card. The dialog opens on Solar each
- * time: the tab isn't in the URL, as the dialog isn't.
+ * time: the tab isn't in the URL, as the dialog isn't. Without circuits set
+ * up (lib/features, 0.159.0) Solar stands alone, with no tabs over it.
  *
  * The curve and the split come from /api/energy/today — the card's query,
  * handed in, since the card draws the curve too; until it answers the totals
@@ -54,6 +56,7 @@ export function EnergyDialog({
   onClose: () => void;
 }) {
   const { productionToday: produced, consumptionToday: used } = energy;
+  const { circuits } = useFeatures();
   // The totals are /api/energy's; only the self-used share comes from the
   // curve, so the two halves of each bar add up to the total above it.
   const self =
@@ -81,14 +84,16 @@ export function EnergyDialog({
         flexDirection="column"
         gap="4"
       >
-        <Tabs.List>
-          {TABS.map((t) => (
-            <Tabs.Trigger key={t.value} value={t.value}>
-              <t.icon />
-              {t.label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
+        {circuits && (
+          <Tabs.List>
+            {TABS.map((t) => (
+              <Tabs.Trigger key={t.value} value={t.value}>
+                <t.icon />
+                {t.label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+        )}
 
         <Tabs.Content value="solar" p="0">
           <Stack gap="3">
@@ -169,9 +174,11 @@ export function EnergyDialog({
           </Stack>
         </Tabs.Content>
 
-        <Tabs.Content value="circuits" p="0">
-          <CircuitsTab />
-        </Tabs.Content>
+        {circuits && (
+          <Tabs.Content value="circuits" p="0">
+            <CircuitsTab />
+          </Tabs.Content>
+        )}
       </Tabs.Root>
     </PanelDialog>
   );

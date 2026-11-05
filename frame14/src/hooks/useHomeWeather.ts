@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEntitiesConfig } from "./useEntitiesConfig";
+import { useFeatureData } from "./useFeatures";
 import { useEntities } from "./useEntity";
 import type { HomeForecastPeriod, HomeWeather } from "./useHomeData";
 
@@ -59,6 +60,8 @@ export function useHomeWeather(): {
   const queryClient = useQueryClient();
   const entitiesQuery = useEntitiesConfig();
   const configured = entitiesQuery.data?.weather;
+  // Without a weather entity there's nothing to ask for (lib/features).
+  const { enabled, waiting } = useFeatureData("weather");
   const entities = useMemo(
     () =>
       [
@@ -71,6 +74,7 @@ export function useHomeWeather(): {
   const query = useQuery<WeatherResponse>({
     queryKey: ["home", "weather"],
     queryFn: fetchWeather,
+    enabled,
     refetchInterval: 1000 * 60 * 5,
     staleTime: 1000 * 60 * 5,
   });
@@ -90,7 +94,8 @@ export function useHomeWeather(): {
     entities.map(({ key }, index) => [key, states[index]?.data]),
   );
   const live = liveByKey.get("current");
-  const wx = query.data;
+  // A restored answer from before the entity was taken out isn't shown.
+  const wx = enabled || waiting ? query.data : undefined;
   const weather: HomeWeather | null =
     !live && !wx
       ? null
@@ -120,5 +125,8 @@ export function useHomeWeather(): {
           forecastDaily: wx?.forecastDaily ?? [],
         };
 
-  return { weather, loading: weather == null && query.isPending };
+  return {
+    weather,
+    loading: (enabled || waiting) && weather == null && query.isPending,
+  };
 }

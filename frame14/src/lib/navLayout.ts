@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { useDeviceMode, type DeviceMode } from "./deviceMode";
+import { FEATURES_UNTIL_LOADED, type Features } from "./features";
 import {
   HOME_PATH,
   NAV_ITEM_BY_PATH,
@@ -143,24 +144,29 @@ export interface NavToday {
   gameDay: boolean;
   /** Oct 30 or 31 (useHalloween): Halloween. */
   halloween: boolean;
-  /** Immich is set up (usePhotosEnabled, 0.145.0): Photos. Absent, it is. */
-  photos?: boolean;
   /**
-   * Home Assistant has an Unraid server (useUnraidEnabled, 0.151.0): Unraid.
-   * Absent, it hasn't.
+   * What this install has set up (useFeatures, 0.159.0): an entry's
+   * `feature`. One left out counts as it does before the config has loaded
+   * (FEATURES_UNTIL_LOADED: set up, but Unraid).
    */
-  unraid?: boolean;
+  features?: Partial<Features>;
+}
+
+/** Whether the install has what this entry shows (`feature`). */
+export function hasFeature(item: NavItem, features: Partial<Features> = {}) {
+  return !item.feature || (features[item.feature] ?? FEATURES_UNTIL_LOADED[item.feature]);
 }
 
 /**
  * This device's nav: the entries it shows, in its order. Football only while
- * a game is on, Halloween on its two days (`today`).
+ * a game is on, Halloween on its two days (`today`), and only what the
+ * install has set up.
  */
-export function useNavItems({ gameDay, halloween, photos, unraid }: NavToday): NavItem[] {
+export function useNavItems({ gameDay, halloween, features }: NavToday): NavItem[] {
   const layout = useNavLayout();
   return useMemo(
-    () => shownNavItems(layout, { gameDay, halloween, photos, unraid }),
-    [layout, gameDay, halloween, photos, unraid],
+    () => shownNavItems(layout, { gameDay, halloween, features }),
+    [layout, gameDay, halloween, features],
   );
 }
 
@@ -173,7 +179,6 @@ export function shownNavItems(layout: NavEntry[], today: NavToday): NavItem[] {
         i != null &&
         (today.gameDay || !i.gameDay) &&
         (today.halloween || !i.halloween) &&
-        (today.photos !== false || !i.photos) &&
-        (today.unraid === true || !i.unraid),
+        hasFeature(i, today.features),
     );
 }

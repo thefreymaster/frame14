@@ -22,8 +22,7 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { SortableNavLayoutRow } from "./SortableNavLayoutRow";
 import { useLiveGame } from "../hooks/useLiveGame";
 import { useHalloween } from "../hooks/useHalloween";
-import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
-import { useUnraidEnabled } from "../hooks/useUnraid";
+import { useFeatures } from "../hooks/useFeatures";
 import { useDeviceMode } from "../lib/deviceMode";
 import {
   HOME_PATH,
@@ -33,6 +32,7 @@ import {
   splitForBar,
 } from "../lib/navItems";
 import {
+  hasFeature,
   defaultNavLayout,
   resetNavLayout,
   sameNavLayout,
@@ -66,8 +66,7 @@ export function NavLayoutBoard() {
   const { games } = useLiveGame();
   const gameDay = games.length > 0;
   const halloween = useHalloween();
-  const photos = usePhotosEnabled();
-  const unraid = useUnraidEnabled();
+  const features = useFeatures();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
@@ -81,23 +80,22 @@ export function NavLayoutBoard() {
     () =>
       new Set(
         splitForBar(
-          shownNavItems(layout, { gameDay, halloween, photos, unraid }),
+          shownNavItems(layout, { gameDay, halloween, features }),
           slots,
         ).more.map((i) => i.path),
       ),
-    [layout, gameDay, halloween, photos, unraid, slots],
+    [layout, gameDay, halloween, features, slots],
   );
-  // The rows this device can have: Photos only while Immich is set up
-  // (0.145.0), Unraid while Home Assistant has a server (0.151.0), Halloween
-  // on Oct 30 and 31 (0.155.0, the user: "should only be available on Oct
-  // 30-31"; useHalloween turns it at midnight). The order and the moves are
-  // the whole layout's, so an entry left out keeps its place — and its
-  // switch — for when it comes back.
+  // The rows this device can have: only what the install has set up
+  // (lib/features, 0.159.0 — Photos with Immich since 0.145.0, Unraid with a
+  // server since 0.151.0), Halloween on Oct 30 and 31 (0.155.0, the user:
+  // "should only be available on Oct 30-31"; useHalloween turns it at
+  // midnight). The order and the moves are the whole layout's, so an entry
+  // left out keeps its place — and its switch — for when it comes back.
   const rows = rest.filter((e) => {
     const item = NAV_ITEM_BY_PATH.get(e.path);
     return (
-      (photos || !item?.photos) &&
-      (unraid || !item?.unraid) &&
+      (!item || hasFeature(item, features)) &&
       (halloween || !item?.halloween)
     );
   });

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEntitiesConfig } from "./useEntitiesConfig";
+import { useFeatureData } from "./useFeatures";
 import { useEntities, type HAState } from "./useEntity";
 import type { HomeClimate } from "./useHomeData";
 
@@ -105,10 +106,13 @@ export function useClimate(): { climate: HomeClimate[]; loading: boolean } {
     [configuredIds],
   );
   const names = entitiesQuery.data?.climateNames ?? NO_NAMES;
+  // Without a thermostat there's nothing to ask for (lib/features).
+  const { enabled, waiting } = useFeatureData("climate");
 
   const query = useQuery<ClimateResponse[]>({
     queryKey: ["home", "climate"],
     queryFn: fetchClimate,
+    enabled,
     staleTime: Infinity,
   });
   const states = useEntities<ClimateAttributes>(ids);
@@ -131,5 +135,8 @@ export function useClimate(): { climate: HomeClimate[]; loading: boolean } {
             .filter((unit): unit is HomeClimate => unit != null);
         })();
 
-  return { climate, loading: query.isPending && !allLive(states) };
+  return {
+    climate,
+    loading: (enabled || waiting) && query.isPending && !allLive(states),
+  };
 }

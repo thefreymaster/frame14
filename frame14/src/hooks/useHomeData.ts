@@ -5,6 +5,7 @@ import { useEnergyToday } from "./useEnergyToday";
 import { useHomeWeather } from "./useHomeWeather";
 import { useLiveEnergy } from "./useLiveEnergy";
 import { useEntitiesConfig } from "./useEntitiesConfig";
+import { useFeatureData } from "./useFeatures";
 import { useEntities, useEntity, type HAState } from "./useEntity";
 
 export interface HomeForecastPeriod {
@@ -58,11 +59,6 @@ export interface HomeClimate {
   hvacAction: string | null;
   fanMode: string | null;
   fanModes: string[];
-}
-
-export interface HomePerson {
-  name: string;
-  state: string;
 }
 
 export interface HomeVacuum {
@@ -126,7 +122,6 @@ export interface HomeLoading {
 export interface HomeData {
   weather: HomeWeather | null;
   climate: HomeClimate[];
-  people: HomePerson[];
   // The printer card reads usePrinter itself (0.127), as the pages do.
   vacuum: HomeVacuum[];
   fan: HomeFan[];
@@ -155,11 +150,6 @@ interface FanAttributes {
   percentage?: number | string | null;
   preset_mode?: string | null;
 }
-
-const PERSON_ENTITIES = [
-  { id: "person.evan", name: "Evan" },
-  { id: "person.elizabeth", name: "Elizabeth" },
-] as const;
 
 function parseFloatOrNull(
   value: number | string | undefined | null,
@@ -251,6 +241,9 @@ async function fetchCalendar(): Promise<CalendarResponse> {
 export function useHomeData() {
   const queryClient = useQueryClient();
   const entitiesQuery = useEntitiesConfig();
+  const vacuumData = useFeatureData("vacuum");
+  const fanData = useFeatureData("fans");
+  const solarData = useFeatureData("solar");
   const vacuumEntityIds = useMemo(
     () => [...new Set(entitiesQuery.data?.vacuums ?? [])],
     [entitiesQuery.data?.vacuums],
@@ -271,6 +264,7 @@ export function useHomeData() {
   const vacuumQuery = useQuery<VacuumResponse[]>({
     queryKey: ["home", "vacuum"],
     queryFn: fetchVacuum,
+    enabled: vacuumData.enabled,
     staleTime: Infinity,
   });
   const vacuumStates = useEntities<VacuumAttributes>(vacuumEntityIds);
@@ -279,6 +273,7 @@ export function useHomeData() {
   const fanQuery = useQuery<FanResponse[]>({
     queryKey: ["home", "fan"],
     queryFn: fetchFan,
+    enabled: fanData.enabled,
     refetchInterval: 1000 * 30,
     staleTime: 1000 * 30,
   });
@@ -291,12 +286,8 @@ export function useHomeData() {
   // the splash can wait for it, and the strip doesn't appear after the card.
   const energyTodayQuery = useEnergyToday();
 
-  // People
-  const personEvan = useEntity(PERSON_ENTITIES[0].id);
-  const personElizabeth = useEntity(PERSON_ENTITIES[1].id);
-
-  // Internet
-  const ping = useEntity("binary_sensor.1_1_1_1");
+  // Internet: the configured sensor (a Ping one here), none when it's empty.
+  const ping = useEntity(entitiesQuery.data?.internet ?? "");
 
   const calendarQuery = useQuery<CalendarResponse>({
     queryKey: ["home", "calendar"],
@@ -355,20 +346,6 @@ export function useHomeData() {
             .filter((fan): fan is HomeFan => fan != null);
         })();
 
-  const homePeople = useMemo<HomePerson[]>(
-    () => [
-      {
-        name: PERSON_ENTITIES[0].name,
-        state: personEvan.data?.state ?? "unknown",
-      },
-      {
-        name: PERSON_ENTITIES[1].name,
-        state: personElizabeth.data?.state ?? "unknown",
-      },
-    ],
-    [personEvan.data, personElizabeth.data],
-  );
-
   const homeInternet = useMemo<HomeInternet>(
     () => ({ connected: ping.data === undefined || ping.data.state === "on" }),
     [ping.data],
@@ -378,7 +355,6 @@ export function useHomeData() {
     () => ({
       weather: homeWeather,
       climate: homeClimate,
-      people: homePeople,
       vacuum: homeVacuum,
       fan: homeFan,
       energy: homeEnergy,
@@ -388,7 +364,6 @@ export function useHomeData() {
     [
       homeWeather,
       homeClimate,
-      homePeople,
       homeVacuum,
       homeFan,
       homeEnergy,
@@ -404,7 +379,8 @@ export function useHomeData() {
     weather: weatherLoading,
     climate: climateLoading,
     energy: energyLoading,
-    energyCurve: energyTodayQuery.isPending,
+    energyCurve:
+      (solarData.enabled || solarData.waiting) && energyTodayQuery.isPending,
     calendar: calendarQuery.isPending,
     fan: fanEntityIds.length > 0 && fanQuery.isPending && !allLive(fanStates),
     vacuum:

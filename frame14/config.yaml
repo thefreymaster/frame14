@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.158.1"
+version: "0.159.0"
 slug: frame14
 description: A wall-frame dashboard for Home Assistant — rooms, climate, energy, cameras, calendar and a photo slideshow
 url: https://github.com/thefreymaster/frame14
@@ -29,6 +29,7 @@ options:
   weather_entity: "weather.systems_weatherkit"
   weather_forecast_entity: "weather.systems_weatherkit"
   weather_temperature_entity: "sensor.weatherkit_temperature"
+  internet_entity: "binary_sensor.1_1_1_1"
   light_entities:
     - "light.living_room"
     - "light.kitchen_main_lights"
@@ -134,9 +135,10 @@ schema:
   web_ui_url: url?
   assist_pipeline_id: str?
   assist_speaker: str?
-  weather_entity: str
-  weather_forecast_entity: str
-  weather_temperature_entity: str
+  weather_entity: str?
+  weather_forecast_entity: str?
+  weather_temperature_entity: str?
+  internet_entity: str?
   light_entities:
     - str
   light_areas:
@@ -146,13 +148,13 @@ schema:
   climate_names:
     - entity: str
       name: str
-  energy_current_production: str
-  energy_current_consumption: str
-  energy_production_today: str
-  energy_consumption_today: str
+  energy_current_production: str?
+  energy_current_consumption: str?
+  energy_production_today: str?
+  energy_consumption_today: str?
   energy_lifetime_production: str?
   energy_lifetime_consumption: str?
-  circuit_main_entity: str
+  circuit_main_entity: str?
   circuit_balance_entity: str?
   circuit_entities:
     - name: str

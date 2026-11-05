@@ -46,7 +46,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 
    [![Open this add-on in your Home Assistant instance.][addon-badge]][addon]
 
-3. On the **Configuration** tab, fill in the options below — at least `ha_token` and `web_ui_url`, and the entities you want on screen. Everything else is optional: a feature whose option is empty is left out (no Immich, no Photos pages).
+3. On the **Configuration** tab, fill in the options below — at least `ha_token` and `web_ui_url`, and the entities you want on screen. Everything else is optional: a feature whose options are empty is left out — its nav entry, its Home card, its page and the remote's view of it (no Immich, no Photos pages; no thermostats, no Climate).
 4. Turn on **Start on boot** and **Watchdog**, then **Start** the add-on.
 5. Open the dashboard at `http://<home-assistant>:4000` on the tablet and on your phone (**Open Web UI** and the sidebar entry go there too). A phone starts as a remote and a tablet as a frame; **Settings → Use as display / Use as remote** switches it.
 
@@ -83,6 +83,9 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | `weather_entity` | Current conditions | `weather.systems_weatherkit` |
 | `weather_forecast_entity` | Hourly and daily forecasts | `weather.systems_weatherkit` |
 | `weather_temperature_entity` | An outdoor temperature sensor with long-term statistics, for the solar history's daily readout | `sensor.weatherkit_temperature` |
+| `internet_entity` | Optional: a binary sensor that's `on` while the internet is up, such as one from Home Assistant's Ping integration. The Home weather card shows an Offline alert while it's off | `binary_sensor.1_1_1_1` |
+
+Without `weather_entity` the Weather page and the Home weather and radar cards are left out; the frame's first card keeps the date and the clock.
 
 ### Lights, climate and fans
 
@@ -94,6 +97,8 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | `climate_names` | Optional labels for thermostats, by entity ID (otherwise the entity's name) | see below |
 | `fan_entities` | Fans, on the Home page's Fans card | `- fan.living_room_ceiling_fan` |
 | `light_all_off_exclude` | Optional: lights and switches the **All off** buttons leave on — a night light, say | `- light.kids_night_light` |
+
+Each left empty takes its page and Home card out: no lights or light areas, no Lights; no thermostats, no Climate; no fans, no Fans card.
 
 ### Energy
 
@@ -109,6 +114,8 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | `circuit_balance_entity` | Optional: the unmonitored balance | `sensor.balance_power_minute_average` |
 | `circuit_entities` | The circuits, a `name` and a `power` sensor each | see below |
 
+Without both power-now sensors (`energy_current_production` and `energy_current_consumption`) the Home Energy card and the Energy page's Now card and Solar tab are left out; without `circuit_entities`, the Circuits tab. With neither, there's no Energy page.
+
 ### Devices and cameras
 
 | Option | Description | Example |
@@ -120,6 +127,8 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 | `camera_entity` | The doorbell card's camera | `camera.front_porch_high` |
 | `camera_entities` | The Cameras page's cameras; the doorbell's when empty. A camera's full screen carries the lights of its Home Assistant area | `- camera.front_porch_rtsp` |
 | `calendar_exclude` | Optional: calendars to leave off the Home card and the Calendar page | `- calendar.radarr` |
+
+A printer, vacuums or TeamTracker sensors left empty take out their page and Home card; the Cameras page is there with a camera, the printer or a vacuum's map.
 
 ### The frames' motion wake-up
 

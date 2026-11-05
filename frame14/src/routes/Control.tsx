@@ -47,6 +47,7 @@ import {
 import { TbVacuumCleaner } from "react-icons/tb";
 import { GiPumpkinLantern } from "react-icons/gi";
 import type { IconType } from "react-icons";
+import type { Feature } from "../lib/features";
 import { useSocket } from "../hooks/useSocket";
 import { connectionLabel } from "../lib/connection";
 import { reloadApp, useAppVersion } from "../lib/appVersion";
@@ -54,7 +55,7 @@ import { socket } from "../lib/socket";
 import { getDeviceMode, setDeviceMode } from "../lib/deviceMode";
 import { useThemeMode } from "../hooks/useThemeMode";
 import { useHalloween } from "../hooks/useHalloween";
-import { usePhotosEnabled } from "../hooks/usePhotosEnabled";
+import { useFeatures } from "../hooks/useFeatures";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
 import { computeEffectiveMode } from "../lib/themeMode";
 import { useDesktop } from "../hooks/useDesktop";
@@ -83,6 +84,8 @@ type View = {
   label: string;
   icon: IconType;
   activeIcon: IconType;
+  /** Offered only while the install has it set up (lib/features, 0.159.0). */
+  feature?: Feature;
 };
 
 const VIEWS: View[] = [
@@ -98,48 +101,56 @@ const VIEWS: View[] = [
     label: "Photos",
     icon: IoImagesOutline,
     activeIcon: IoImages,
+    feature: "photos",
   },
   {
     path: "/lights",
     label: "Lights",
     icon: RiLightbulbLine,
     activeIcon: RiLightbulbFill,
+    feature: "lights",
   },
   {
     path: "/climate",
     label: "Climate",
     icon: IoThermometerOutline,
     activeIcon: IoThermometer,
+    feature: "climate",
   },
   {
     path: "/energy",
     label: "Energy",
     icon: IoFlashOutline,
     activeIcon: IoFlash,
+    feature: "energy",
   },
   {
     path: "/printer",
     label: "Printer",
     icon: Printer3dOutlineIcon,
     activeIcon: Printer3dIcon,
+    feature: "printer",
   },
   {
     path: "/vacuum",
     label: "Vacuum",
     icon: TbVacuumCleaner,
     activeIcon: TbVacuumCleaner,
+    feature: "vacuum",
   },
   {
     path: "/cameras",
     label: "Cameras",
     icon: IoVideocamOutline,
     activeIcon: IoVideocam,
+    feature: "cameras",
   },
   {
     path: "/weather",
     label: "Weather",
     icon: IoPartlySunnyOutline,
     activeIcon: IoPartlySunny,
+    feature: "weather",
   },
   {
     path: "/calendar",
@@ -148,14 +159,16 @@ const VIEWS: View[] = [
     activeIcon: IoCalendar,
   },
   { path: "/timer", label: "Timer", icon: IoTimerOutline, activeIcon: IoTimer },
-  // Always listed here, unlike the nav bar's tab which only appears on game
-  // day — the remote is where you go to put the frame on something, so the
-  // button should be there whether or not this phone thinks a game is on.
+  // Always listed here while a team is tracked, unlike the nav bar's tab
+  // which only appears on game day — the remote is where you go to put the
+  // frame on something, so the button should be there whether or not this
+  // phone thinks a game is on.
   {
     path: "/football",
     label: "Football",
     icon: IoAmericanFootballOutline,
     activeIcon: IoAmericanFootball,
+    feature: "football",
   },
 ];
 
@@ -201,10 +214,12 @@ export function Control() {
   const navVisible = useFramesNavVisible();
   const showViews = deviceMode !== "frame";
   const halloween = useHalloween();
-  // Photos only while Immich is set up (0.145.0), the album picker with it.
-  const photos = usePhotosEnabled();
+  // Only what the install has set up (lib/features, 0.159.0; Photos with
+  // Immich since 0.145.0, the album picker with it).
+  const features = useFeatures();
+  const photos = features.photos;
   const views = [
-    ...VIEWS.filter((v) => photos || v.path !== "/photos"),
+    ...VIEWS.filter((v) => !v.feature || features[v.feature]),
     ...(halloween ? [HALLOWEEN_VIEW] : []),
   ];
   // The tab — every device's since 0.139 (the user: "add the tabs that the

@@ -23,6 +23,12 @@ export interface EntitiesConfig {
   /** The lights by room (ha-areas.js, since 0.122): /lights' groups. */
   rooms?: LightRoom[];
   weather: { current: string; forecast: string };
+  /**
+   * A binary sensor that's on while the internet is up (`internet_entity`,
+   * 0.159.0; hard-coded before): off, the weather cards say Offline. Empty or
+   * absent, nothing is watched.
+   */
+  internet?: string;
   climate: string[];
   /** Labels for thermostats whose `friendly_name` shouldn't show, by entity id. */
   climateNames?: Record<string, string>;
@@ -33,6 +39,15 @@ export interface EntitiesConfig {
     consumptionToday: string;
     lifetimeProduction?: string;
     lifetimeConsumption?: string;
+  };
+  /**
+   * The Emporia Vue circuits (/api/circuits): the panel's main and balance
+   * sensors and each monitored circuit.
+   */
+  circuits?: {
+    main: string;
+    balance?: string;
+    items: { name: string; power: string }[];
   };
   vacuums: string[];
   fans: string[];

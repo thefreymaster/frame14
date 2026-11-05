@@ -25,6 +25,7 @@
     "forecast": "weather.systems_weatherkit",
     "temperature": "sensor.weatherkit_temperature"
   },
+  "internet": "binary_sensor.1_1_1_1",
   "climate": [
     "climate.samsung_airconditioner_1",
     "climate.samsung_airconditioner_2",

@@ -101,8 +101,10 @@ function releaseLink(repoUrl: string | null, version: string) {
  * nothing newer; no tag when Home Assistant has no update entity for it
  * (outside the add-on). Check for updates (since 0.116) is Home Assistant's
  * own, from here: the store reloaded and the entity refreshed (useSoftware's
- * `check`), a toast saying what it found — the Supervisor does this on its
- * own every few hours, so a version just published needs it. The Installed
+ * `check`), an "Up to date" toast when it finds nothing newer (a newer
+ * version shows on the card: no toast since 0.158.1, the user's ask) — the
+ * Supervisor does this on its own every few hours, so a version just
+ * published needs it. The Installed
  * and Latest versions are links to their releases on GitHub (0.149.1, the
  * user: "Instead of the big button linking to GitHub just make the installed
  * and latest versions be links that link to those releases"; 0.147.0 had a
@@ -169,15 +171,16 @@ export function SoftwareBoard() {
     setChecking(true);
     try {
       const info = await check();
-      const found = info.update?.available ? info.update.latest : null;
-      toaster.create({
-        type: found ? "success" : "info",
-        title: found ? `Frame14 ${found} is available` : "Up to date",
-        description: found
-          ? "Install it from the Software card."
-          : `Nothing newer than ${info.update?.latest ?? info.installed} in the add-on store.`,
-        duration: 6000,
-      });
+      // A newer version shows on the card itself — the badge and Install —
+      // so only finding nothing needs saying.
+      if (!info.update?.available) {
+        toaster.create({
+          type: "info",
+          title: "Up to date",
+          description: `Nothing newer than ${info.update?.latest ?? info.installed} in the add-on store.`,
+          duration: 6000,
+        });
+      }
     } catch (e) {
       toaster.create({
         type: "error",

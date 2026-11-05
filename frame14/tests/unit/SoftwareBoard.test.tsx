@@ -8,6 +8,8 @@ const state = vi.hoisted(() => ({
   repoUrl: null as string | null,
   status: "connected" as "connecting" | "connected" | "disconnected",
   reloadApp: vi.fn(),
+  check: vi.fn(),
+  toast: vi.fn(),
 }));
 vi.mock("../../src/hooks/useSoftware", () => ({
   useSoftware: () => ({
@@ -15,7 +17,7 @@ vi.mock("../../src/hooks/useSoftware", () => ({
     installed: "0.139.0",
     repoUrl: state.repoUrl,
     update: state.update,
-    check: vi.fn(),
+    check: state.check,
   }),
   installSoftware: vi.fn(),
 }));
@@ -26,6 +28,9 @@ vi.mock("../../src/lib/appVersion", () => ({
 }));
 vi.mock("../../src/lib/connection", () => ({
   useConnectionStatus: () => state.status,
+}));
+vi.mock("../../src/components/ui/toaster", () => ({
+  toaster: { create: state.toast },
 }));
 
 import { SoftwareBoard } from "../../src/components/SoftwareBoard";
@@ -48,6 +53,8 @@ const tryAgain = () => screen.queryByRole("button", { name: "Try again" });
 beforeEach(() => {
   state.repoUrl = null;
   state.reloadApp.mockReset();
+  state.check.mockReset();
+  state.toast.mockReset();
   state.status = "connected";
   vi.useFakeTimers();
 });
@@ -146,5 +153,30 @@ describe("the Software card's versions link their releases (0.149.1)", () => {
     renderWithProviders(<SoftwareBoard />);
     expect(screen.queryAllByRole("link")).toHaveLength(0);
     expect(screen.getAllByText("0.139.0").length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("the Software card's Check for updates", () => {
+  async function checkFinds(found: SoftwareUpdate) {
+    state.update = update({ available: false, latest: "0.139.0" });
+    state.check.mockResolvedValue({ installed: "0.139.0", repoUrl: null, update: found });
+    renderWithProviders(<SoftwareBoard />);
+    await act(async () => {
+      screen.getByRole("button", { name: "Check for updates" }).click();
+    });
+    expect(state.check).toHaveBeenCalledTimes(1);
+  }
+
+  it("pops no toast when it finds a newer version: the card shows it", async () => {
+    await checkFinds(update({ available: true, latest: "0.140.0" }));
+    expect(state.toast).not.toHaveBeenCalled();
+  });
+
+  it("says Up to date when the store has nothing newer", async () => {
+    await checkFinds(update({ available: false, latest: "0.139.0" }));
+    expect(state.toast).toHaveBeenCalledTimes(1);
+    expect(state.toast).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "info", title: "Up to date" }),
+    );
   });
 });

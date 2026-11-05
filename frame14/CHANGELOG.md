@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.158.1
+
+- Changed: Check for updates on the Software card no longer pops a notification when it finds a new version. The card already shows it, with the Update available badge and the Install button. "Up to date" still appears when there's nothing newer.
+
 ## 0.158.0
 
 - Added: the connection menu (the header's connection icon) has a Reload button once the app has been disconnected for a minute, so you can reload without closing the app.

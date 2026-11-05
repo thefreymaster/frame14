@@ -1,7 +1,9 @@
+import { Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { IoRefreshOutline } from "react-icons/io5";
 import { useSocket } from "../hooks/useSocket";
 import { useConnectionInfo } from "../hooks/useConnectionInfo";
-import { RUNNING_VERSION } from "../lib/appVersion";
+import { RUNNING_VERSION, reloadApp } from "../lib/appVersion";
 import {
   connectionLabel,
   useConnectionSince,
@@ -65,7 +67,10 @@ function useLatency(active: boolean): number | null {
  * as the server sees it, the server's address, whether the server is
  * connected to Home Assistant, and the version. The server-side facts come
  * from /api/connection while the menu is open; the rest the page knows
- * itself, so the menu still says something while disconnected.
+ * itself, so the menu still says something while disconnected. Once the
+ * connection has been given up on (disconnected, not still reconnecting) it
+ * ends in a Reload button: the page loads afresh, from the service worker's
+ * copy if the server is still out of reach.
  */
 export function ConnectionMenu() {
   const { status } = useSocket();
@@ -134,6 +139,12 @@ export function ConnectionMenu() {
         <DataListItem label="Home Assistant" value={ha} />
         <DataListItem label="Version" value={version} />
       </DataListRoot>
+      {status === "disconnected" && (
+        <Button size="sm" variant="outline" width="full" mt="3" onClick={reloadApp}>
+          <IoRefreshOutline />
+          Reload
+        </Button>
+      )}
     </HeaderMenu>
   );
 }

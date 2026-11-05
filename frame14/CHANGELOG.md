@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.158.0
+
+- Added: the connection menu (the header's connection icon) has a Reload button once the app has been disconnected for a minute, so you can reload without closing the app.
+
 ## 0.157.0
 
 - Changed: notifications (a light that didn't answer, a new version, an update check) appear in the bottom-right corner instead of the top right. On a phone and the frame they sit just above the bottom bar.

@@ -1,12 +1,4 @@
-import {
-  Alert,
-  Box,
-  HStack,
-  Skeleton,
-  Spacer,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Alert, Box, Grid, Skeleton, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import NumberFlow from "@number-flow/react";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
@@ -16,12 +8,13 @@ import { conditionLabel, weatherIcon } from "../lib/weatherIcons";
 import { WeatherDialog } from "./WeatherDialog";
 
 /**
- * The weather now, in one row — what /home's first card is on a phone in
- * place of HomeHeader. No clock (the phone shows one): the icon and the
- * temperature, with today's high and low under it (from the daily forecast,
- * as the desktop card's header has them), on the left; the condition and
- * humidity on the right. Same card id ("header"), so a saved layout keeps
- * its place. A tap opens WeatherDialog (0.136; it went to /weather from 0.97).
+ * The weather now — what /home's first card is on a phone in place of
+ * HomeHeader. No clock (the phone shows one): the icon centred on the
+ * temperature, today's high and low under both from the card's left edge
+ * (0.159.1, the user's ask; from the daily forecast, as the desktop card's
+ * header has them), and the condition and humidity on the right, centred on
+ * the two rows. Same card id ("header"), so a saved layout keeps its place.
+ * A tap opens WeatherDialog (0.136; it went to /weather from 0.97).
  */
 export function HomeWeatherCard({
   internet: { connected = true },
@@ -44,44 +37,63 @@ export function HomeWeatherCard({
         onClick={weather ? () => setOpen(true) : undefined}
         label="Show the weather"
       >
-        <HStack gap="3" align="center" minW="0">
+        <Grid
+          templateColumns="auto auto minmax(0, 1fr)"
+          columnGap="3"
+          rowGap="1"
+          alignItems="center"
+        >
           {loading ? (
-            <Skeleton boxSize="3rem" rounded="full" flexShrink={0} />
+            <Skeleton boxSize="3rem" rounded="full" />
           ) : (
             weather && (
-              <Box fontSize="3rem" lineHeight="1" flexShrink={0} aria-hidden>
+              <Box
+                fontSize="3rem"
+                lineHeight="1"
+                data-weather-icon
+                aria-hidden
+              >
                 {weatherIcon(weather.state, new Date().toISOString())}
               </Box>
             )
           )}
           {loading ? (
-            <VStack align="start" gap="1.5">
-              <Skeleton height="2.5rem" width="4rem" />
-              <Skeleton height="0.875rem" width="5.5rem" />
-            </VStack>
+            <Skeleton height="2.5rem" width="4rem" />
           ) : (
             weather?.temperature != null && (
-              <VStack align="start" gap="1">
-                <Text textStyle="5xl" fontWeight="semibold" lineHeight="1">
-                  <NumberFlow value={Math.round(weather.temperature)} />°
-                </Text>
-                {high != null && low != null && (
-                  <Text textStyle="sm" color="fg.muted" whiteSpace="nowrap">
-                    H {high}° · L {low}°
-                  </Text>
-                )}
-              </VStack>
+              <Text
+                textStyle="5xl"
+                fontWeight="semibold"
+                lineHeight="1"
+                data-weather-temperature
+              >
+                <NumberFlow value={Math.round(weather.temperature)} />°
+              </Text>
             )
           )}
-          <Spacer />
           {loading ? (
-            <VStack align="end" gap="1.5">
+            <VStack
+              align="end"
+              gap="1.5"
+              gridColumn="3"
+              gridRow="1 / span 2"
+              justifySelf="end"
+            >
               <Skeleton height="1.25rem" width="5rem" />
               <Skeleton height="1rem" width="6rem" />
             </VStack>
           ) : (
             weather && (
-              <VStack align="end" gap="0" minW="0" textAlign="end">
+              <VStack
+                align="end"
+                gap="0"
+                minW="0"
+                maxW="100%"
+                textAlign="end"
+                gridColumn="3"
+                gridRow="1 / span 2"
+                justifySelf="end"
+              >
                 <Text textStyle="lg" fontWeight="medium" truncate maxW="100%">
                   {conditionLabel(weather.state)}
                 </Text>
@@ -93,7 +105,28 @@ export function HomeWeatherCard({
               </VStack>
             )
           )}
-        </HStack>
+          {loading ? (
+            <Skeleton
+              height="0.875rem"
+              width="5.5rem"
+              gridColumn="1 / span 2"
+              gridRow="2"
+            />
+          ) : (
+            high != null &&
+            low != null && (
+              <Text
+                textStyle="sm"
+                color="fg.muted"
+                whiteSpace="nowrap"
+                gridColumn="1 / span 2"
+                gridRow="2"
+              >
+                H {high}° · L {low}°
+              </Text>
+            )
+          )}
+        </Grid>
 
         {connected === false && (
           <Alert.Root status="error" mt="3" borderRadius="sm">

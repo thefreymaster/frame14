@@ -305,3 +305,30 @@ test("a card dragged while arranging stays where it was dropped, through Done an
   // Back as it was, for the specs after this one.
   await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith("home-layout:")) localStorage.removeItem(k); });
 });
+
+test("a phone's weather card centres its icon on the temperature, the high and low under both from the left", async ({ page, isMobile }) => {
+  // 0.159.1, the user: "Center the weather icon with the temp, and push the
+  // high and low to the left". The icon sat centred on the temperature and
+  // the high and low together, so below the number, and the high and low
+  // were indented under the temperature.
+  test.skip(!isMobile, "a desktop's first card is the forecast card");
+  await page.goto("/home");
+  await splashGone(page);
+  const card = page.locator('[data-card="header"]');
+  const icon = card.locator("[data-weather-icon]");
+  const temperature = card.locator("[data-weather-temperature]");
+  const highLow = card.getByText(/^H \d+° · L \d+°$/);
+  await expect(highLow).toBeVisible();
+  // Polled: the page's scale-in draws every box a little short and off until
+  // it ends.
+  await expect
+    .poll(async () => {
+      const [i, t, h] = await Promise.all([icon, temperature, highLow].map(async (l) => (await l.boundingBox())!));
+      return {
+        iconCentred: Math.abs(i.y + i.height / 2 - (t.y + t.height / 2)) <= 1,
+        highLowFromTheLeft: Math.abs(h.x - i.x) <= 1,
+        highLowUnderBoth: h.y >= Math.max(i.y + i.height, t.y + t.height) - 1,
+      };
+    })
+    .toEqual({ iconCentred: true, highLowFromTheLeft: true, highLowUnderBoth: true });
+});

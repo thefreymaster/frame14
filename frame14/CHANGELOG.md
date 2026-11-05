@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.159.1
+
+- Changed: on a phone, the Home weather card's icon is centred on the temperature, and today's high and low sit under both at the card's left edge.
+
 ## 0.159.0
 
 - Added: anything you haven't set up is left out. Weather, energy, lights, thermostats, fans, the 3D printer, vacuums, cameras and football disappear when their entities are empty: no nav entry, no Home card, no row in Settings' Navigation card, and no tile in a remote's Views. Opening one of those pages directly goes to Home.

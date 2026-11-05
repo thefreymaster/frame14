@@ -91,6 +91,12 @@ const REGISTRY_EVENT_IDS = new Map([
   [4, "device_registry_updated"],
   [5, "entity_registry_updated"],
 ]);
+// Notifications for the phones (0.160.0): an automation fires this event
+// (`event: frame14_notify` with `title`, `message`, `tag`, `url`) and
+// startHaSocket's `hooks.onNotify` gets its data — push.js sends it on. Only
+// an administrator's token may subscribe to an event type of its own.
+export const NOTIFY_EVENT = "frame14_notify";
+const NOTIFY_EVENT_ID = 6;
 
 const stateCache = new Map();
 const pendingResults = new Map(); // id -> { resolve, reject }
@@ -101,7 +107,7 @@ const pendingResults = new Map(); // id -> { resolve, reject }
 const pendingSubscriptions = new Map(); // id -> { onEvent, onError, onClose }
 
 let haWs = null;
-let nextMsgId = 6;
+let nextMsgId = 7;
 
 const ALLOWED_DOMAINS = new Set(["light", "switch", "climate", "fan", "media_player"]);
 const ALLOWED_SERVICES = new Set([
@@ -558,7 +564,8 @@ export async function setLastRoute(route) {
 /**
  * `hooks` (0.122): `onPrimed()` once the cache is primed after a connect, and
  * `onRegistryChanged(eventType)` on an area / device / entity registry event
- * — index.js wires both to ha-areas.js, the lights by room.
+ * — index.js wires both to ha-areas.js, the lights by room; `onNotify(data)`
+ * (0.160.0) on a `frame14_notify` event, wired to push.js.
  */
 export function startHaSocket(io, hooks = {}) {
   if (hooks.lights) pageLights = hooks.lights;
@@ -764,6 +771,28 @@ export function startHaSocket(io, hooks = {}) {
         for (const [id, event_type] of REGISTRY_EVENT_IDS) {
           ws.send(JSON.stringify({ id, type: "subscribe_events", event_type }));
         }
+        ws.send(
+          JSON.stringify({
+            id: NOTIFY_EVENT_ID,
+            type: "subscribe_events",
+            event_type: NOTIFY_EVENT,
+          }),
+        );
+        return;
+      }
+
+      if (msg.type === "result" && msg.id === NOTIFY_EVENT_ID) {
+        if (!msg.success) {
+          console.warn(
+            `[ha-socket] can't hear ${NOTIFY_EVENT} — notifications need an administrator's HA_TOKEN:`,
+            msg.error?.message ?? msg.error,
+          );
+        }
+        return;
+      }
+
+      if (msg.type === "event" && msg.id === NOTIFY_EVENT_ID) {
+        hooks.onNotify?.(msg.event?.data ?? {});
         return;
       }
 

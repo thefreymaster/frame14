@@ -39,6 +39,7 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "swagger-ui-dist": "^5.32.1",
+    "web-push": "^3.6.7",
     "ws": "^8.20.0"
   },
   "devDependencies": {

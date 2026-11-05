@@ -68,6 +68,11 @@ export const openApiDocument = {
       description:
         "Voice assist. The spoken turn itself runs over Socket.IO (assist:start / assist:audio / assist:audio_end / assist:cancel, with assist:event and assist:error coming back); these endpoints cover configuration and audio playback.",
     },
+    {
+      name: "Notifications",
+      description:
+        "Web Push to the devices that turned notifications on in Settings. What is sent comes from Home Assistant: an automation fires the `frame14_notify` event with `title`, `message`, and optionally `tag` (a later notification with the same tag replaces it) and `url` (the page a tap opens, a path).",
+    },
   ],
   paths: {
     "/api": {
@@ -877,6 +882,74 @@ export const openApiDocument = {
             description: "Failed to fetch from Home Assistant.",
             content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
           },
+        },
+      },
+    },
+    "/api/push/key": {
+      get: {
+        tags: ["Notifications"],
+        operationId: "getPushKey",
+        summary: "The VAPID public key a browser subscribes with",
+        responses: {
+          200: {
+            description: "The key, base64url.",
+            content: { "application/json": { schema: { type: "object", properties: { publicKey: { type: "string" } } } } },
+          },
+        },
+      },
+    },
+    "/api/push/subscribe": {
+      post: {
+        tags: ["Notifications"],
+        operationId: "subscribePush",
+        summary: "Send this device the notifications",
+        description: "Takes a browser's PushSubscription (its `toJSON()`). Only a push service's endpoint is taken: Google's, Apple's, Mozilla's or Microsoft's.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["endpoint", "keys"],
+                properties: {
+                  endpoint: { type: "string", example: "https://fcm.googleapis.com/fcm/send/abc123" },
+                  keys: { type: "object", required: ["p256dh", "auth"], properties: { p256dh: { type: "string" }, auth: { type: "string" } } },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Subscribed.", content: { "application/json": { schema: { type: "object", properties: { ok: { type: "boolean", example: true } } } } } },
+          400: { description: "Not a push subscription from a push service.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/push/unsubscribe": {
+      post: {
+        tags: ["Notifications"],
+        operationId: "unsubscribePush",
+        summary: "Stop sending this device the notifications",
+        requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["endpoint"], properties: { endpoint: { type: "string", example: "https://fcm.googleapis.com/fcm/send/abc123" } } } } } },
+        responses: {
+          200: {
+            description: "Whether it was subscribed.",
+            content: { "application/json": { schema: { type: "object", properties: { ok: { type: "boolean" }, removed: { type: "boolean" } } } } },
+          },
+          400: { description: "No endpoint.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/push/test": {
+      post: {
+        tags: ["Notifications"],
+        operationId: "testPush",
+        summary: "Send this device a test notification",
+        requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["endpoint"], properties: { endpoint: { type: "string", example: "https://fcm.googleapis.com/fcm/send/abc123" } } } } } },
+        responses: {
+          200: { description: "Sent to the push service.", content: { "application/json": { schema: { type: "object", properties: { ok: { type: "boolean", example: true } } } } } },
+          404: { description: "That device isn't subscribed.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "The push service refused it.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },

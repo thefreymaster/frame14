@@ -33,6 +33,7 @@ import {
 } from "./ha-socket.js";
 import { startScreen } from "./screen.js";
 import { startTheme } from "./theme.js";
+import { startPush } from "./push.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
@@ -54,6 +55,7 @@ import cameraRouter from "./routes/camera.js";
 import printerRouter from "./routes/printer.js";
 import assistRouter, { attachAssistSocket } from "./routes/assist.js";
 import ingressRouter from "./routes/ingress.js";
+import pushRouter from "./routes/push.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +78,9 @@ app.locals.io = io;
 // The frames' screen: the state last asked for and the hours it is on.
 const screen = startScreen(io);
 app.locals.screen = screen;
+// The phones' notifications (push.js): their subscriptions and the VAPID keys.
+const push = startPush();
+app.locals.push = push;
 io.currentView = "clock";
 // The panels' theme and palette, kept across restarts (theme.js).
 const theme = startTheme();
@@ -293,6 +298,7 @@ app.use("/api/marquee", marqueeRouter);
 app.use("/api/camera", cameraRouter);
 app.use("/api/printer", printerRouter);
 app.use("/api/assist", assistRouter);
+app.use("/api/push", pushRouter);
 app.use("/api/home", homeRouter);
 
 // SPA fallback
@@ -318,6 +324,13 @@ httpServer.listen(PORT, () => {
     onRegistryChanged: () => scheduleLightAreasRefresh(io),
     // The lights a page may call: the ones the pages show, rooms and all.
     lights: () => lightsConfig().lights,
+    // An automation's `frame14_notify`: to every phone that turned them on.
+    onNotify: (data) => {
+      void push.notify(data).then((result) => {
+        if (!result) console.warn("[push] frame14_notify with no title or message");
+        else console.log(`[push] notification sent to ${result.sent} of ${result.sent + result.failed}`);
+      });
+    },
   });
 });
 

@@ -70,6 +70,7 @@ import { VoiceStatusBoard } from "../components/VoiceStatusBoard";
 import { AlbumSelect } from "../components/AlbumSelect";
 import { NavLayoutBoard } from "../components/NavLayoutBoard";
 import { UpdatesBoard } from "../components/UpdatesBoard";
+import { NotificationsBoard } from "../components/NotificationsBoard";
 import { SoftwareBoard } from "../components/SoftwareBoard";
 import { ScreenBoard } from "../components/ScreenBoard";
 import { Printer3dIcon, Printer3dOutlineIcon } from "../lib/printerIcons";
@@ -471,6 +472,9 @@ export function Control() {
               <>
                 {/* A remote's own theme; a frame wears the frames'. */}
                 {showViews && <AppearanceBoard />}
+                {/* Not on the kitchen frame: Fully Kiosk's WebView has no
+                    push, and the frame is never the one to tell. */}
+                {window.fully == null && <NotificationsBoard />}
                 <SoftwareBoard />
                 <UpdatesBoard />
               </>

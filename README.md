@@ -208,7 +208,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day — a frame opened mid-game goes there too |
 | `/halloween` | Happy Halloween in neon over a hill of jack-o'-lanterns, a witch flying through now and then; in the nav and on a remote's Views card on Oct 30 and 31 only |
 | `/blank` | Black screen (motion off) |
-| `/control` | Settings + remote control: device mode, this device's navigation, software updates, the frames' screen and the hours it is on |
+| `/control` | Settings + remote control: device mode, this device's navigation and notifications, software updates, the frames' screen and the hours it is on |
 
 ## Home Assistant automation (motion)
 
@@ -230,12 +230,31 @@ The brightness command takes a `level` from 0 to 255 (`action: rest_command.fram
 
 A remote (a phone) and any browser outside Fully ignore the command. The Settings page's **Screen** card does the same by hand — a switch — and on a frame the power button at the header's right turns the screen off with a tap; the card also keeps a schedule, the hours the screen is on, which the add-on runs itself: the screen goes off and on at those times whether or not a remote is open, and the switch works in between. On a phone and on the frame itself (not on a desktop) the card also has a brightness slider, **Adjust to the room** — the frames set their brightness from the tablet's light sensor, between the dimmest and brightest levels of a range slider, the room's light as the frame last read it shown under the switch; the dark hours win while they last, and moving the brightness slider turns it off — and the dark hours, a range during which the screen is at its darkest, the slider's level back at its end; the add-on runs those too, and a screen woken during the dark hours comes up dark. `GET /api/screen` answers the state, the brightness, both pairs of hours, the room-light setting and the last reading; `PUT /api/screen/schedule` and `PUT /api/screen/dark` set the hours, `PUT /api/screen/auto` the room-light setting (`{ "enabled": true, "min": 25, "max": 255 }`).
 
+## Notifications
+
+A phone can get notifications from Home Assistant, even with Frame14 closed. On the phone, open Frame14 at its https address (Web Push needs https, so the local `http://…:4000` address won't work), then turn on **Allow notifications** in Settings › Device and allow them when the browser asks. **Send a test** checks one arrives. On an iPhone or iPad, add Frame14 to the Home Screen first (Share › Add to Home Screen) and turn them on in that app: Apple allows notifications only for Home Screen apps.
+
+An automation sends one by firing the `frame14_notify` event. It goes to every device that turned notifications on:
+
+```yaml
+actions:
+  - event: frame14_notify
+    event_data:
+      title: "Washer finished"
+      message: "Time to move the clothes to the dryer."
+      tag: "appliance-washer"   # optional: a newer one with the same tag replaces it
+      url: "/home"              # optional: the page a tap opens
+```
+
+The add-on hears the event over its own connection to Home Assistant, so nothing goes in `configuration.yaml`. Subscribing to an event of its own takes an administrator's `ha_token`, which the Software card already needs. The add-on makes its own push keys on first start and keeps them, with the devices' subscriptions, in its data folder.
+
 ## Security
 
 Frame14 has no login of its own: anything that reaches its port can use it. Keep the port to the devices that use it, and reach it from outside through something that asks who you are, such as Cloudflare Access. What it does guard:
 
 - **Your token stays on the add-on.** `ha_token` is used by the server and never sent to a browser.
 - **Another website can't use it through your browser.** A browser's request from another site, or another app on the same domain, is refused, socket and routes alike (0.151.0). Home Assistant's `rest_command` calls still work.
+- **Notifications go only to browsers' push services.** A device's subscription is taken only when its address is Google's, Apple's, Mozilla's or Microsoft's push service, so the add-on never posts to an address a page chose (0.160.0). What is sent comes from Home Assistant's `frame14_notify` event, not from a request to the add-on.
 - **It only controls what it shows.** Lights: the ones in `light_entities`, the lights of the rooms in `light_areas`, and the printer's chamber light (0.156.0). Switches: the ones in `light_entities` and the chamber light (0.151.0). Fans and thermostats: the ones in `fan_entities` and `climate_entities` (0.156.0). The vacuum and printer controls are held to the configured devices, and a spoken reply plays only on `assist_speaker`. A call for anything else in Home Assistant is refused.
 
 ## Changelog & releases

@@ -51,6 +51,7 @@ let ha;
 let io;
 let rooms;
 const onRegistryChanged = vi.fn();
+const onNotify = vi.fn();
 
 beforeAll(async () => {
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -72,6 +73,7 @@ beforeAll(async () => {
     ha.startHaSocket(io, {
       onPrimed: primed,
       onRegistryChanged,
+      onNotify,
       lights: () => ["light.living_room", "switch.ihome_smartplug_05b4df_outlet", "light.lady_lamp"],
     });
   });
@@ -235,6 +237,17 @@ describe("the registries", () => {
     stub.pushEvent("entity_registry_updated", { action: "update", entity_id: "light.lady_lamp" });
     await until(() => onRegistryChanged.mock.calls.length > 0);
     expect(onRegistryChanged).toHaveBeenCalledWith("entity_registry_updated");
+  });
+});
+
+describe("notifications (0.160.0)", () => {
+  it("hands an automation's frame14_notify to the hook, and no other event", async () => {
+    stub.pushEvent("call_service", { domain: "light" });
+    stub.pushEvent("frame14_notify", { title: "Washer finished", message: "Time to move the clothes to the dryer.", tag: "appliance-washer" });
+    await until(() => onNotify.mock.calls.length > 0);
+    expect(onNotify.mock.calls).toEqual([
+      [{ title: "Washer finished", message: "Time to move the clothes to the dryer.", tag: "appliance-washer" }],
+    ]);
   });
 });
 

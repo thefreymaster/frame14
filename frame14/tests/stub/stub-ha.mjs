@@ -15,6 +15,11 @@
 //   POST /_stub/service  {"delay_ms", "fail": {"light.x": "why"}, "silent": [ids]}
 //                        — slow, refuse, or swallow service calls
 //   POST /_stub/registry {"entity_id", "area_id"} — move an entity to an area
+//   POST /_stub/event    {"event_type", "data"} — fire an event, as an
+//                        automation's `event:` action does (frame14_notify)
+//   POST /_stub/push/:id — a stand-in push service (0.160.0): what the add-on
+//                        sends a subscription with this endpoint is kept
+//   GET  /_stub/pushes   — what it kept: { id, headers, body (base64) }
 //   POST /_stub/reset    — every state, registry and behaviour as at start
 import http from "node:http";
 import { pathToFileURL } from "node:url";
@@ -487,6 +492,8 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
   let failing = new Map();
   let silent = new Set();
   const sockets = new Set();
+  // The stand-in push service's deliveries (POST /_stub/push/:id).
+  let pushes = [];
 
   function pushState(newState, oldState) {
     const msg = {
@@ -560,6 +567,7 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     }
   }
   function reset() {
+    pushes = [];
     const before = new Map(states);
     states.clear();
     for (const s of initialStates()) states.set(s.entity_id, s);
@@ -615,6 +623,20 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
       if (typeof entity_id !== "string") return json(res, 400, { error: "entity_id" });
       return json(res, 200, setState(entity_id, state, attributes));
     }
+    if (req.method === "POST" && p === "/_stub/event") {
+      const { event_type, data } = await readBody(req);
+      if (typeof event_type !== "string") return json(res, 400, { error: "event_type" });
+      pushEvent(event_type, data ?? {});
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === "POST" && (m = p.match(/^\/_stub\/push\/([^/]+)$/))) {
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      pushes.push({ id: m[1], headers: req.headers, body: Buffer.concat(chunks).toString("base64") });
+      res.writeHead(201);
+      return res.end();
+    }
+    if (req.method === "GET" && p === "/_stub/pushes") return json(res, 200, pushes);
     if (req.method === "POST" && p === "/_stub/reset") {
       reset();
       return json(res, 200, { ok: true });

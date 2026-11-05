@@ -115,3 +115,48 @@ self.addEventListener("fetch", (e) => {
     ),
   );
 });
+
+// Notifications (0.160.0): push.js sends { title, body, tag, url } — a Home
+// Assistant automation's `frame14_notify` — to the devices that turned them
+// on in Settings. A later one with the same tag replaces it. A tap opens the
+// app on its page: the window already open, else a new one.
+self.addEventListener("push", (e) => {
+  let data = {};
+  try {
+    data = e.data?.json() ?? {};
+  } catch {
+    data = { body: e.data?.text() ?? "" };
+  }
+  e.waitUntil(
+    self.registration.showNotification(data.title || "Frame14", {
+      body: data.body || "",
+      tag: data.tag || undefined,
+      icon: "/web-app-manifest-192x192.png",
+      badge: "/favicon-96x96.png",
+      data: { url: data.url || "/home" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = new URL(e.notification.data?.url || "/home", self.location.origin);
+  if (url.origin !== self.location.origin) return;
+  e.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      const open = windows.find(
+        (w) => new URL(w.url).origin === self.location.origin,
+      );
+      if (open) {
+        await open.focus();
+        await open.navigate?.(url.href).catch(() => {});
+        return;
+      }
+      await self.clients.openWindow(url.href);
+    })(),
+  );
+});

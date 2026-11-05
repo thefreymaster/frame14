@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.160.0
+
+- Added: notifications on your phone. Turn on **Allow notifications** in Settings › Device, and Home Assistant can send notifications to that phone, even with Frame14 closed. **Send a test** checks that they arrive. A Home Assistant automation sends one by firing the `frame14_notify` event with a `title` and a `message`. It can add a `tag`, so a newer notification with the same tag replaces the older one, and a `url`, the page a tap opens. On an iPhone, notifications need Frame14 added to the Home Screen, and every phone needs the https address rather than the local http one.
+
 ## 0.159.1
 
 - Changed: on a phone, the Home weather card's icon is centred on the temperature, and today's high and low sit under both at the card's left edge.

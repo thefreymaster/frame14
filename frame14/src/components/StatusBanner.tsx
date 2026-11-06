@@ -17,7 +17,9 @@ import { useDesktop } from "../hooks/useDesktop";
  * left; running appliances, the connection, the mic, the frames' power button
  * and (on a desktop) the date and time at the right. (The version is on the
  * Settings page.) The appliance
- * and connection icons each open a small menu on a tap (HeaderMenu).
+ * and connection icons each open a small menu on a tap (HeaderMenu). Those
+ * icons, the mic and the power button sit `xs` apart, one group; the clock
+ * keeps the header's wider gap from them.
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -102,10 +104,12 @@ export function StatusBanner({
         </Text>
       </HStack>
       <Spacer />
-      <ApplianceIndicators />
-      <ConnectionMenu />
-      {voice}
-      {screen}
+      <HStack gap="xs" data-header-buttons>
+        <ApplianceIndicators />
+        <ConnectionMenu />
+        {voice}
+        {screen}
+      </HStack>
       {desktop && <HeaderClock />}
       <ArrangingVeil shown={veiled} />
     </HStack>

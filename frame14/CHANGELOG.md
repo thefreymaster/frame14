@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.163.0
+
+- Changed: the connection menu (the connection icon in the header) always ends in a Reload button, not only once the connection has been lost.
+- Changed: the header's buttons — the running appliances, the connection, the mic and the power button — are all the same size and sit closer together, evenly spaced. The appliance and connection icons look as before, without a button background.
+- Added: on a computer, hovering the mic or the power button shows what a tap does: "Ask the house" (or "Stop" while a question is under way), "Turn the screen off" on a frame, and "Turn the frame's screen off" or "on" on a phone or other remote.
+- Changed: the voice assistant has a sleeker look. Its card is gone: a blue orb and the words float over the page, which is blurred behind them (on an iPhone, iPad or computer; on the frame and Android phones the page is faded instead, as before). The orb shows the mic while listening, a spinning ring while thinking, a speaker while it answers, a green check or a red alert at the end. In portrait the words stay above the bottom bar, and a tap anywhere closes it.
+
 ## 0.162.0
 
 - Changed: photos now come through Home Assistant's Immich integration, signed in with the add-on's Home Assistant token, so the add-on no longer talks to Immich itself. Add Immich in Home Assistant (Settings › Devices & services) if it isn't there yet. `ha_url` has to be Home Assistant's own address, such as `http://homeassistant.local:8123`, for the pictures to load.

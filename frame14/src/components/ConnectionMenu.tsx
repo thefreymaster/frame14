@@ -67,10 +67,9 @@ function useLatency(active: boolean): number | null {
  * as the server sees it, the server's address, whether the server is
  * connected to Home Assistant, and the version. The server-side facts come
  * from /api/connection while the menu is open; the rest the page knows
- * itself, so the menu still says something while disconnected. Once the
- * connection has been given up on (disconnected, not still reconnecting) it
- * ends in a Reload button: the page loads afresh, from the service worker's
- * copy if the server is still out of reach.
+ * itself, so the menu still says something while disconnected. It ends in a
+ * Reload button, whatever the status: the page loads afresh, from the
+ * service worker's copy if the server is out of reach.
  */
 export function ConnectionMenu() {
   const { status } = useSocket();
@@ -139,12 +138,10 @@ export function ConnectionMenu() {
         <DataListItem label="Home Assistant" value={ha} />
         <DataListItem label="Version" value={version} />
       </DataListRoot>
-      {status === "disconnected" && (
-        <Button size="sm" variant="outline" width="full" mt="3" onClick={reloadApp}>
-          <IoRefreshOutline />
-          Reload
-        </Button>
-      )}
+      <Button size="sm" variant="outline" width="full" mt="3" onClick={reloadApp}>
+        <IoRefreshOutline />
+        Reload
+      </Button>
     </HeaderMenu>
   );
 }

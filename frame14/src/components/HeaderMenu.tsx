@@ -1,10 +1,10 @@
 import {
   HStack,
   Icon,
+  IconButton,
   Popover,
   Portal,
   Text,
-  chakra,
 } from "@chakra-ui/react";
 import { DARK_RAISED } from "../lib/floatingSurface";
 import { HEADER_ICON_SIZE, PAGE_GUTTER } from "../lib/navMetrics";
@@ -14,9 +14,12 @@ import { HEADER_ICON_SIZE, PAGE_GUTTER } from "../lib/navMetrics";
  * connection, a running appliance) on a tap: a stock Popover on the bar's
  * surface (the cards' colour, edge and corners, raised shades in dark mode),
  * headed by the icon and a title, then the rows the caller gives it (DataList
- * rows, a few of them: these menus are small and local). The icon stays a
- * plain glyph in the header, with a focus ring when keyboard-focused. The
- * menu opens below it, its right edge on the icon's, so from the header's
+ * rows, a few of them: these menus are small and local). The icon is an
+ * IconButton the mic's and the power button's size and shape (xs, `l2`) but
+ * `plain` — no fill, no highlight, the glyph at the header's icon size — so
+ * every header button takes the same room and they sit evenly apart
+ * (0.163.0, the user's ask); a focus ring when keyboard-focused. The menu
+ * opens below it, its right edge on the icon's, so from the header's
  * right end it stays on screen. It mounts only while open, so a menu's own
  * polling (the connection's round trip) runs only then.
  */
@@ -46,20 +49,16 @@ export function HeaderMenu({
       onOpenChange={(e) => onOpenChange?.(e.open)}
     >
       <Popover.Trigger asChild>
-        <chakra.button
-          type="button"
+        <IconButton
           aria-label={label}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
+          variant="plain"
+          size="xs"
+          rounded="l2"
           flexShrink={0}
           color={color}
-          cursor="pointer"
-          rounded="sm"
-          focusVisibleRing="outside"
         >
           <Icon boxSize={HEADER_ICON_SIZE}>{icon}</Icon>
-        </chakra.button>
+        </IconButton>
       </Popover.Trigger>
       <Portal>
         <Popover.Positioner>

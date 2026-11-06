@@ -45,24 +45,16 @@ beforeEach(() => {
 });
 
 describe("the connection menu's Reload", () => {
-  it("is offered once the connection has been given up on, and reloads the page", async () => {
-    state.status = "disconnected";
-    await openMenu("Disconnected");
+  it.each([
+    ["connected", "Connected"],
+    ["connecting", "Reconnecting…"],
+    ["disconnected", "Disconnected"],
+  ] as const)("is offered while %s, and reloads the page", async (status, label) => {
+    state.status = status;
+    await openMenu(label);
     await act(async () => {
       reload()!.click();
     });
     expect(state.reloadApp).toHaveBeenCalledTimes(1);
-  });
-
-  it("isn't offered while connected", async () => {
-    state.status = "connected";
-    await openMenu("Connected");
-    expect(reload()).toBeNull();
-  });
-
-  it("isn't offered while still reconnecting", async () => {
-    state.status = "connecting";
-    await openMenu("Reconnecting…");
-    expect(reload()).toBeNull();
   });
 });

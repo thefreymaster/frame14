@@ -140,7 +140,7 @@ export function ApplianceIndicators() {
     return null;
 
   return (
-    <HStack gap="3" align="center">
+    <HStack gap="xs" align="center">
       {running.map(({ id, Icon: ApplianceIcon, name, since }) => (
         <HeaderMenu
           key={id}

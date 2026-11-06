@@ -34,6 +34,7 @@ import {
 import { startScreen } from "./screen.js";
 import { startTheme } from "./theme.js";
 import { startPush } from "./push.js";
+import { startPhotos } from "./photos.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
@@ -81,6 +82,9 @@ app.locals.screen = screen;
 // The phones' notifications (push.js): their subscriptions and the VAPID keys.
 const push = startPush();
 app.locals.push = push;
+// The frames' photos (photos.js): Immich albums through Home Assistant, and
+// the one the frames play.
+app.locals.photos = startPhotos();
 io.currentView = "clock";
 // The panels' theme and palette, kept across restarts (theme.js).
 const theme = startTheme();

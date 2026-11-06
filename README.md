@@ -25,7 +25,7 @@ A home dashboard for a tablet on the wall — clock, weather, photos, lights, cl
 Frame14 turns a wall-mounted tablet into the house's display and a phone into its remote. It runs as a Home Assistant add-on and follows Home Assistant's WebSocket API, so everything on screen is live.
 
 - **Home** — weather, thermostats, energy, the calendar, the lights that are on, fans, the 3D printer and the robot vacuums as cards you can rearrange, resize and hide per device (press and hold).
-- **Clock and Photos** — an analog or digital clock, and an Immich album as a slideshow; a remote picks the photo the frames show.
+- **Clock and Photos** — an analog or digital clock, and an Immich album as a slideshow, through Home Assistant's Immich integration; a remote picks the photo the frames show.
 - **Lights and Climate** — lights and switches grouped by room; thermostats with a dial, mode and fan controls.
 - **Energy** — the power flow now, today's solar curve, month and year history, and the draw per circuit.
 - **Weather** — conditions and advisories, hourly and daily forecasts, the radar.
@@ -46,7 +46,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 
    [![Open this add-on in your Home Assistant instance.][addon-badge]][addon]
 
-3. On the **Configuration** tab, fill in the options below — at least `ha_token` and `web_ui_url`, and the entities you want on screen. Everything else is optional: a feature whose options are empty is left out — its nav entry, its Home card, its page and the remote's view of it (no Immich, no Photos pages; no thermostats, no Climate).
+3. On the **Configuration** tab, fill in the options below — at least `ha_token` and `web_ui_url`, and the entities you want on screen. Everything else is optional: a feature whose options are empty is left out — its nav entry, its Home card, its page and the remote's view of it (no albums, no Photos pages; no thermostats, no Climate).
 4. Turn on **Start on boot** and **Watchdog**, then **Start** the add-on.
 5. Open the dashboard at `http://<home-assistant>:4000` on the tablet and on your phone (**Open Web UI** and the sidebar entry go there too). A phone starts as a remote and a tablet as a frame; **Settings → Use as display / Use as remote** switches it.
 
@@ -67,14 +67,14 @@ Set in the add-on's **Configuration** tab (lists in YAML mode). Entity IDs are H
 
 | Option | Description | Example |
 |---|---|---|
-| `immich_url` | Optional: the Immich server's URL, for the photo slideshow. Without it and the key, the Photos pages, the remote's Photos view and the album picker are left out | `http://192.168.1.20:2283` |
-| `immich_api_key` | Optional: an Immich API key | |
-| `album_entity` | Optional: an `input_select` whose options are Immich album IDs — the album the frames play, picked on the Settings page | `input_select.smart_frame_album` |
+| `immich_album_ids` | Optional: the Immich albums the frames can play, by id (see below). The frames play one of them, picked on the Settings page or a remote's Photos page, the first until one is picked. Without any, the Photos pages, the remote's Photos view and the album picker are left out | |
 | `plex_url` | Optional: the Plex server, by its `plex.direct` hostname, for full-resolution marquee posters | |
 | `plex_token` | Optional: the Plex token | |
 | `media_player_entity` | The marquee's Plex player: its poster fills the frames while a movie plays | `media_player.plex_plex_for_apple_tv_apple_tv` |
 | `assist_pipeline_id` | Optional: the Assist pipeline the mic runs; empty uses Home Assistant's preferred one | |
 | `assist_speaker` | Optional: a `media_player` that also speaks the reply | |
+
+The photos come through **Home Assistant's Immich integration** (Settings → Devices & services → Add integration → Immich), signed in with `ha_token`: the add-on has no Immich address or key of its own. An album's id is the last part of its address in Immich (`…/albums/<id>`). Home Assistant lists up to 2,000 photos of an album, newest first; videos are left out. `ha_url` has to be Home Assistant's own address (such as `http://homeassistant.local:8123`), because the pictures come from Home Assistant's `/immich` path rather than its API.
 
 ### Weather
 
@@ -177,6 +177,13 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
   name: 2nd Floor AC
 ```
 
+**`immich_album_ids`:**
+
+```yaml
+- faa8658c-4cc3-47b8-b912-6a713d7ed902
+- e38508c9-f876-4afb-a248-caca8efb0766
+```
+
 **`circuit_entities`:**
 
 ```yaml
@@ -199,8 +206,8 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/printer` | The 3D printer: camera, job progress and controls, temperatures; off by default in a remote's nav |
 | `/vacuum` | The robot vacuums: state, controls, map, wear parts; off by default in a remote's nav |
 | `/cameras` | Every camera live (stills when the stream won't start) — each goes full screen, with the lights of its room as buttons in the header — the printer's camera (full screen with its chamber light) and the vacuum maps; off by default in a remote's nav |
-| `/photos` | Immich photo slideshow; frame-only nav item, while Immich is set up |
-| `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames; while Immich is set up |
+| `/photos` | The album's photos as a slideshow; frame-only nav item, while `immich_album_ids` has an album |
+| `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames; while `immich_album_ids` has an album |
 | `/weather` | Now (conditions + advisories from the forecast), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |
 | `/calendar` | The next two weeks across every Home Assistant calendar, a card per day |
 | `/timer` | Timer; frame-only nav item |
@@ -255,6 +262,7 @@ Frame14 has no login of its own: anything that reaches its port can use it. Keep
 - **Your token stays on the add-on.** `ha_token` is used by the server and never sent to a browser.
 - **Another website can't use it through your browser.** A browser's request from another site, or another app on the same domain, is refused, socket and routes alike (0.151.0). Home Assistant's `rest_command` calls still work.
 - **Notifications go only to browsers' push services.** A device's subscription is taken only when its address is Google's, Apple's, Mozilla's or Microsoft's push service, so the add-on never posts to an address a page chose (0.160.0). What is sent comes from Home Assistant's `frame14_notify` event, not from a request to the add-on.
+- **It only shows the albums you listed.** A photo is served only when it is in one of `immich_album_ids`, and the add-on fetches it from Home Assistant with its token (0.162.0).
 - **It only controls what it shows.** Lights: the ones in `light_entities`, the lights of the rooms in `light_areas`, and the printer's chamber light (0.156.0). Switches: the ones in `light_entities` and the chamber light (0.151.0). Fans and thermostats: the ones in `fan_entities` and `climate_entities` (0.156.0). The vacuum and printer controls are held to the configured devices, and a spoken reply plays only on `assist_speaker`. A call for anything else in Home Assistant is refused.
 
 ## Changelog & releases

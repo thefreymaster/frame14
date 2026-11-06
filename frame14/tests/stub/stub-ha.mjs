@@ -32,7 +32,84 @@ export const STUB = {
   h2s: "h2s_0938aj622701347",
   vacuum: "roborock_q5_pro",
   addonUpdate: "update.frame14_update",
+  /** Home Assistant's Immich account (its config entry's unique id) and albums (0.162.0). */
+  immichAccount: "stub-immich",
+  albums: {
+    family: "aaaaaaaa-0000-4000-8000-000000000001",
+    garden: "aaaaaaaa-0000-4000-8000-000000000002",
+    // Not in frame14.test.json's albums: its photo is never served.
+    private: "aaaaaaaa-0000-4000-8000-000000000003",
+  },
 };
+
+// The photos in HA's Immich: id, file name, mime type — a video among them,
+// which the slideshow leaves out.
+const photo = (n) => `11111111-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const IMMICH_ALBUMS = [
+  {
+    id: STUB.albums.family,
+    name: "Family",
+    assets: [
+      [photo(1), "beach.jpg", "image/jpeg"],
+      [photo(2), "dog.heic", "image/heic"],
+      [photo(3), "party.mp4", "video/mp4"],
+      [photo(4), "lake.jpg", "image/jpeg"],
+    ],
+  },
+  { id: STUB.albums.garden, name: "Garden", assets: [[photo(5), "roses.png", "image/png"], [photo(6), "tulips.jpg", "image/jpeg"]] },
+  { id: STUB.albums.private, name: "Private", assets: [[photo(7), "secret.jpg", "image/jpeg"]] },
+];
+
+/**
+ * HA's Immich media source as `media_source/browse_media` answers it
+ * (homeassistant/components/immich/media_source.py): the accounts, an
+ * account's albums, an album's photos; null for anything else.
+ */
+function browseImmich(mediaContentId) {
+  const ROOT = "media-source://immich";
+  const acct = STUB.immichAccount;
+  const dir = (identifier, title, children) => ({
+    title,
+    media_class: "directory",
+    media_content_type: "image",
+    media_content_id: identifier ? `${ROOT}/${identifier}` : ROOT,
+    can_play: false,
+    can_expand: true,
+    children_media_class: "directory",
+    thumbnail: null,
+    not_shown: 0,
+    children,
+  });
+  const child = (identifier, title, extra = {}) => ({
+    title,
+    media_class: "directory",
+    media_content_type: "image",
+    media_content_id: `${ROOT}/${identifier}`,
+    can_play: false,
+    can_expand: true,
+    thumbnail: null,
+    ...extra,
+  });
+  if (mediaContentId === ROOT) return dir("", "Immich", [child(acct, "Evan")]);
+  if (mediaContentId === `${ROOT}/${acct}|albums`) {
+    return dir(`${acct}|albums`, "albums", IMMICH_ALBUMS.map((a) => child(`${acct}|albums|${a.id}`, a.name, { thumbnail: `/immich/${acct}/${a.assets[0][0]}/thumbnail/image/jpg` })));
+  }
+  const album = IMMICH_ALBUMS.find((a) => mediaContentId === `${ROOT}/${acct}|albums|${a.id}`);
+  if (!album) return null;
+  return dir(
+    `${acct}|albums|${album.id}`,
+    album.name,
+    album.assets.map(([id, file, mime]) => ({
+      title: file,
+      media_class: mime.startsWith("video/") ? "video" : "image",
+      media_content_type: mime,
+      media_content_id: `${ROOT}/${acct}|albums|${album.id}|${id}|${file}|${mime}`,
+      can_play: mime.startsWith("video/"),
+      can_expand: false,
+      thumbnail: `/immich/${acct}/${id}/thumbnail/${mime.startsWith("video/") ? "image/jpeg" : mime}`,
+    })),
+  );
+}
 
 // A 1x1 JPEG, for the camera stills and the printer camera's frames.
 const JPEG = Buffer.from(
@@ -227,7 +304,6 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     S("camera.front_porch_high", "idle", { friendly_name: "Front Porch High" }),
     S("camera.front_porch_rtsp", "idle", { friendly_name: "Front Porch RTSP" }),
     S("input_select.oledos_route", "home", { options: ["home", "clock", "digital", "blank", "photos"] }),
-    S("input_select.smart_frame_album", "e38508c9-f876-4afb-a248-caca8efb0766", { options: [] }),
 
     S(`${P}_print_status`, "running", { friendly_name: "A1 Print status" }),
     S(`${P}_print_progress`, "63", { unit_of_measurement: "%" }),
@@ -694,6 +770,14 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
       res.writeHead(200, { "content-type": "image/jpeg" });
       return res.end(JPEG);
     }
+    // HA's Immich view (ImmichMediaView): /immich/<account>/<asset>/<size>/<mime>.
+    if ((m = p.match(/^\/immich\/([^/]+)\/([^/]+)\/(thumbnail|preview|fullsize)\/image\/[^/]+$/))) {
+      if (!req.headers.authorization) return json(res, 401, { message: "stub: no auth" });
+      const known = m[1] === STUB.immichAccount && IMMICH_ALBUMS.some((a) => a.assets.some(([id]) => id === m[2]));
+      if (!known) return json(res, 404, { message: "stub: no such photo" });
+      res.writeHead(200, { "content-type": "image/jpeg" });
+      return res.end(JPEG);
+    }
     if (p.startsWith("/api/media_player_proxy/")) {
       if (!req.headers.authorization) return json(res, 401, { message: "stub: no auth" });
       res.writeHead(200, { "content-type": "image/svg+xml" });
@@ -780,6 +864,10 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
           return reply({ id: "stub", name: "Claude", stt_engine: "stt.stub", tts_engine: "tts.stub", conversation_engine: "conversation.claude" });
         case "camera/stream":
           return reply({ url: "/api/hls/stubtoken0123456789/master_playlist.m3u8" });
+        case "media_source/browse_media": {
+          const item = browseImmich(msg.media_content_id);
+          return item ? reply(item) : reply(null, false, { code: "browse_media_failed", message: "Unknown media item" });
+        }
         case "assist_pipeline/run":
           return reply(null, false, { code: "stub", message: "voice not available in the stub" });
         default:

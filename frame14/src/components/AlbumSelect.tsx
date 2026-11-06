@@ -5,9 +5,10 @@ import { toaster } from "./ui/toaster";
 import { NativeSelectField, NativeSelectRoot } from "./ui/native-select";
 
 /**
- * The slideshow's album, every frame's: the options of HA's
- * input_select.smart_frame_album, named from Immich. On /control and the
- * remote's photo grid.
+ * The slideshow's album, every frame's: one of the add-on's
+ * `immich_album_ids` (0.162.0; an input_select's options before), named by
+ * Home Assistant's Immich integration and kept by the server. On /control
+ * and the remote's photo grid.
  */
 export function AlbumSelect() {
   const queryClient = useQueryClient();

@@ -216,7 +216,7 @@ export function Control() {
   const showViews = deviceMode !== "frame";
   const halloween = useHalloween();
   // Only what the install has set up (lib/features, 0.159.0; Photos with
-  // Immich since 0.145.0, the album picker with it).
+  // its albums, 0.162.0, the album picker with them).
   const features = useFeatures();
   const photos = features.photos;
   const views = [

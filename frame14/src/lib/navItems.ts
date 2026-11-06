@@ -53,7 +53,7 @@ export type NavItem = {
   halloween?: boolean;
   /**
    * In the nav only while this install has it set up (lib/features, 0.159.0;
-   * Photos with Immich since 0.145.0, Unraid with a server since 0.151.0).
+   * Photos with its albums since 0.162.0, Unraid with a server since 0.151.0).
    */
   feature?: Feature;
 };

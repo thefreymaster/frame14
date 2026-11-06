@@ -87,7 +87,7 @@ export function NavLayoutBoard() {
     [layout, gameDay, halloween, features, slots],
   );
   // The rows this device can have: only what the install has set up
-  // (lib/features, 0.159.0 — Photos with Immich since 0.145.0, Unraid with a
+  // (lib/features, 0.159.0 — Photos with its albums since 0.162.0, Unraid with a
   // server since 0.151.0), Halloween on Oct 30 and 31 (0.155.0, the user:
   // "should only be available on Oct 30-31"; useHalloween turns it at
   // midnight). The order and the moves are the whole layout's, so an entry

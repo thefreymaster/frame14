@@ -73,7 +73,7 @@ function loadEntities() {
       cameras: options.camera_entities ?? [],
       motion: options.motion_entity ?? "",
       route: options.route_entity ?? "",
-      album: options.album_entity ?? "",
+      albums: options.immich_album_ids ?? [],
       lightAllOffExclude: options.light_all_off_exclude ?? [],
       calendarExclude: options.calendar_exclude ?? [],
     };
@@ -105,7 +105,7 @@ function loadEntities() {
       cameras: frame14.cameras ?? [],
       motion: frame14.motion ?? "",
       route: frame14.route ?? "",
-      album: frame14.album ?? "",
+      albums: frame14.albums ?? [],
       lightAllOffExclude: frame14.lightAllOffExclude ?? [],
       calendarExclude: frame14.calendarExclude ?? [],
     };
@@ -131,7 +131,7 @@ function loadEntities() {
     cameras: [],
     motion: "",
     route: "",
-    album: "",
+    albums: [],
     lightAllOffExclude: [],
     calendarExclude: [],
   };

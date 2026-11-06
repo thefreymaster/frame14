@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
+/** One of the configured albums, named by Home Assistant's Immich (its id until it has). */
 export interface ImmichAlbum {
   id: string;
   albumName: string;
-  assetCount: number;
-  thumbnailAssetId: string | null;
 }
 
 async function fetchAlbums(): Promise<ImmichAlbum[]> {

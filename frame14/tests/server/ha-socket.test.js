@@ -32,7 +32,6 @@ vi.mock("../../entities.js", () => ({
     // The house's helpers, options since 0.145.0.
     motion: "binary_sensor.kitchen_motion_sensor_motion",
     route: "input_select.oledos_route",
-    album: "input_select.smart_frame_album",
   },
 }));
 
@@ -266,11 +265,6 @@ describe("the watchers", () => {
     await until(() => io.currentView === "football");
     expect(io.emit).toHaveBeenCalledWith("change_view", "football");
     stub.setState("sensor.teamtracker_fsu", "PRE");
-  });
-
-  it("a new album refreshes the slideshows", async () => {
-    stub.setState("input_select.smart_frame_album", "another-album");
-    await until(() => io.emit.mock.calls.some((c) => c[0] === "photos_refresh"));
   });
 
   it("kitchen motion restores the last route", async () => {

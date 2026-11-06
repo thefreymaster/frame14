@@ -31,7 +31,7 @@ export const openApiDocument = {
     },
     {
       name: "Photos",
-      description: "Immich photo library proxy endpoints.",
+      description: "The frames' photo slideshow: Immich albums through Home Assistant's Immich integration.",
     },
     {
       name: "Marquee",
@@ -345,7 +345,7 @@ export const openApiDocument = {
         tags: ["Photos"],
         operationId: "getPhotosConfig",
         summary: "The slideshow's album",
-        description: "The album the slideshow plays (`defaultAlbumId`), from the configuration.",
+        description: "The album the frames play (`defaultAlbumId`, kept by the server: the first configured until one is picked) and the configured albums (`options`, the add-on's `immich_album_ids`). None without albums.",
         responses: {
           200: {
             description: "The photos configuration.",
@@ -353,11 +353,36 @@ export const openApiDocument = {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { defaultAlbumId: { type: "string", nullable: true } },
+                  properties: {
+                    defaultAlbumId: { type: "string", nullable: true },
+                    options: { type: "array", items: { type: "string" } },
+                  },
                 },
               },
             },
           },
+        },
+      },
+      post: {
+        tags: ["Photos"],
+        operationId: "setPhotosAlbum",
+        summary: "Pick the slideshow's album",
+        description: "Every frame plays the album (`photos_refresh` to all clients); kept across restarts.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", required: ["option"], properties: { option: { type: "string", description: "One of `options`." } } },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "The album picked.",
+            content: { "application/json": { schema: { type: "object", properties: { defaultAlbumId: { type: "string" } } } } },
+          },
+          400: { description: "Not one of the configured albums.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          404: { description: "No albums configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },
@@ -365,7 +390,8 @@ export const openApiDocument = {
       get: {
         tags: ["Photos"],
         operationId: "listAlbums",
-        summary: "List Immich albums",
+        summary: "The configured albums",
+        description: "The add-on's `immich_album_ids`, in their order, named by Home Assistant's Immich integration (an album it doesn't have is named by its id).",
         responses: {
           200: {
             description: "List of albums.",
@@ -375,7 +401,8 @@ export const openApiDocument = {
               },
             },
           },
-          503: { description: "Immich not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "Home Assistant's Immich integration failed (not set up, or Immich refused).", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "No albums configured, or Home Assistant isn't connected.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },
@@ -383,14 +410,16 @@ export const openApiDocument = {
       get: {
         tags: ["Photos"],
         operationId: "getAlbum",
-        summary: "Get assets in an Immich album",
+        summary: "A configured album's photos",
         parameters: [{ name: "albumId", in: "path", required: true, schema: { type: "string" } }],
         responses: {
           200: {
-            description: "Album with its image assets in the album's order: by date taken, newest first unless the album is set to oldest first.",
+            description: "The album's pictures (not its videos) as Home Assistant's Immich media source lists them: newest taken first, at most 2000.",
             content: { "application/json": { schema: { $ref: "#/components/schemas/AlbumDetail" } } },
           },
-          503: { description: "Immich not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          404: { description: "Not one of the configured albums, or Home Assistant's Immich doesn't have it.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "Home Assistant's Immich integration failed.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "No albums configured, or Home Assistant isn't connected.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },
@@ -398,7 +427,8 @@ export const openApiDocument = {
       get: {
         tags: ["Photos"],
         operationId: "getAssetThumbnail",
-        summary: "Proxy an Immich asset thumbnail",
+        summary: "A photo's picture",
+        description: "From Home Assistant's Immich view, signed in with the add-on's HA token. Only a photo of a configured album.",
         parameters: [
           { name: "assetId", in: "path", required: true, schema: { type: "string" } },
           {
@@ -411,7 +441,9 @@ export const openApiDocument = {
         ],
         responses: {
           200: { description: "Thumbnail image.", content: { "image/jpeg": {}, "image/webp": {} } },
-          503: { description: "Immich not configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          404: { description: "Not a photo of the configured albums.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          502: { description: "Home Assistant's Immich refused it.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          503: { description: "No albums configured.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },
@@ -1465,8 +1497,6 @@ export const openApiDocument = {
         properties: {
           id: { type: "string" },
           albumName: { type: "string" },
-          assetCount: { type: "number" },
-          thumbnailAssetId: { type: "string", nullable: true },
         },
       },
       AlbumDetail: {
@@ -1480,7 +1510,6 @@ export const openApiDocument = {
               type: "object",
               properties: {
                 id: { type: "string" },
-                createdAt: { type: "string" },
               },
             },
           },

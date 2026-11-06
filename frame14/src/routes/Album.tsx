@@ -46,7 +46,7 @@ export function Album() {
           <EmptyState
             icon={<IoImagesOutline />}
             title="Photos aren't set up"
-            description="Add immich_url and immich_api_key in the add-on's options."
+            description="Add Immich album ids to immich_album_ids in the add-on's options; Home Assistant's Immich integration serves them."
           />
         ) : loading ? (
           <Grid templateColumns="repeat(auto-fill, minmax(6rem, 1fr))" gap="2">

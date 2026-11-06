@@ -57,8 +57,6 @@ export default defineConfig({
         FRAME14_DATA_DIR: "test-results/data",
         // The stub's stand-in push service (/_stub/push/:id) counts as one.
         FRAME14_PUSH_ORIGINS: STUB_URL,
-        IMMICH_URL: "",
-        IMMICH_API_KEY: "",
         PLEX_URL: "",
         PLEX_TOKEN: "",
         WEB_UI_URL: "",

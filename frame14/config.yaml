@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.161.0"
+version: "0.162.0"
 slug: frame14
 description: A wall-frame dashboard for Home Assistant — rooms, climate, energy, cameras, calendar and a photo slideshow
 url: https://github.com/thefreymaster/frame14
@@ -18,8 +18,11 @@ panel_icon: mdi:image-frame
 options:
   ha_url: "http://supervisor/core"
   ha_token: ""
-  immich_url: ""
-  immich_api_key: ""
+  immich_album_ids:
+    - "b6dbcd29-35f6-48c6-83f2-dadb336a3447"
+    - "faa8658c-4cc3-47b8-b912-6a713d7ed902"
+    - "e38508c9-f876-4afb-a248-caca8efb0766"
+    - "09739108-74a4-4de1-9471-ec7819097b0b"
   plex_url: ""
   plex_token: ""
   port: 4000
@@ -119,7 +122,6 @@ options:
   camera_entities: []
   motion_entity: "binary_sensor.kitchen_motion_sensor_motion"
   route_entity: "input_select.oledos_route"
-  album_entity: "input_select.smart_frame_album"
   light_all_off_exclude:
     - "light.aidens_hatch_light"
   calendar_exclude:
@@ -127,8 +129,8 @@ options:
 schema:
   ha_url: str
   ha_token: password
-  immich_url: str?
-  immich_api_key: password?
+  immich_album_ids:
+    - str
   plex_url: str?
   plex_token: password?
   port: int
@@ -173,7 +175,6 @@ schema:
     - str
   motion_entity: str?
   route_entity: str?
-  album_entity: str?
   light_all_off_exclude:
     - str
   calendar_exclude:

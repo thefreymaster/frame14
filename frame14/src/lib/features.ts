@@ -13,7 +13,8 @@ import type { EntitiesConfig } from "../hooks/useEntitiesConfig";
  * - `lights`: a configured light or switch, or a light area.
  * - `cameras`: the Cameras page has something — a camera, the printer's, or
  *   a vacuum's map.
- * - `photos`: Immich (0.145.0); `unraid`: Home Assistant has a server
+ * - `photos`: an album in `immich_album_ids` (0.162.0; Immich's address and
+ *   key from 0.145.0); `unraid`: Home Assistant has a server
  *   (0.151.0), found rather than configured.
  */
 export type Feature =

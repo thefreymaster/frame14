@@ -63,8 +63,10 @@ export interface EntitiesConfig {
   /** The lights and switches the All off buttons leave on (`light_all_off_exclude`, 0.145.0). */
   lightAllOffExclude?: string[];
   /**
-   * Whether Immich is set up (0.145.0): without it the Photos pages, their
-   * nav entries, the remote's Photos view and the album picker are left out.
+   * Whether photos are set up — an album in `immich_album_ids` (0.162.0;
+   * Immich's address and key from 0.145.0): without one the Photos pages,
+   * their nav entries, the remote's Photos view and the album picker are
+   * left out.
    * Absent from a config restored from before it: set up.
    */
   photos?: boolean;

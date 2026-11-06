@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.162.0
+
+- Changed: photos now come through Home Assistant's Immich integration, signed in with the add-on's Home Assistant token, so the add-on no longer talks to Immich itself. Add Immich in Home Assistant (Settings › Devices & services) if it isn't there yet. `ha_url` has to be Home Assistant's own address, such as `http://homeassistant.local:8123`, for the pictures to load.
+- Added: new option `immich_album_ids`, the list of Immich albums the frames can play. It replaces the `immich_url`, `immich_api_key` and `album_entity` options, which are removed, and the `input_select` helper that held the albums is no longer used. The add-on keeps the album picked in Settings or on a remote's Photos page; after this update the frames start on the first album in the list.
+- Changed: an album's photos play newest first (an album set to oldest first in Immich no longer plays in that order), and Home Assistant lists up to 2,000 photos of an album. Videos are still left out.
+- Changed: only photos from the albums in `immich_album_ids` are shown or served.
+
 ## 0.161.0
 
 - Added: a phone or other remote has the power button in its header too. A tap turns the frame's screen off, and another turns it back on; the remote's own screen stays on. The icon is dimmed while the frame's screen is off, and it follows changes made elsewhere, such as Home Assistant, the schedule or the Screen card.

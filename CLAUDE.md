@@ -43,7 +43,7 @@ Vitest (`vitest.config.ts`: a jsdom client project and a node server project; `T
 
 - **`tests/unit/`** (jsdom) — `src/lib` on real values, and component tests rendered by `tests/unit/helpers/render.tsx` under Chakra's defaultSystem, with `useEntity` / `useEntities`, `callService` and the toaster mocked through `vi.mock` + a `vi.hoisted` state object. `tests/setup-dom.ts` runs before React loads (an AnimationEvent stub: jsdom has none, and without it React listens for WebKit-prefixed animation events, so `fireEvent.animationEnd` reaches no `onAnimationEnd`). `tests/setup.ts`: jest-dom, matchMedia / ResizeObserver / scrollIntoView polyfills, localStorage cleared after each test. Modules with state at load (themeMode, ha-areas, theme) get a fresh module per case (`vi.resetModules` / `vi.doMock`).
 - **`tests/server/`** (node) — routes through supertest with `config.js`, `entities.js`, `ha-socket.js`, `ha-areas.js` mocked as needed; the pure modules directly (`FRAME14_DATA_DIR` a temp dir); `openapi.test.js` fails an undocumented route; `ha-socket.test.js` drives the real module against the stub in-process on :8399 (fan-out, sendCommand, every callService refusal, the watchers).
-- **`tests/stub/stub-ha.mjs`** — the stand-in Home Assistant, REST + WebSocket on one port: the house's states (lights, thermostats, power, a printer in both integrations' names, a vacuum, fans, TeamTracker, cameras, an Unraid server, the add-on's `update.frame14_update`), the registries, forecasts, calendars, statistics, `update/release_notes`. Service calls change states and push `state_changed`. As a module `createStub({ port })` (`setState`, `pushEvent`, `reset`, `setServiceBehaviour`, `close`); test-only endpoints `POST /_stub/state`, `/_stub/service` (`delay_ms`, `fail: { id: why }`, `silent: [ids]`), `/_stub/registry` (move an entity to an area, with the event), `/_stub/event` (fire any event: `frame14_notify`), `/_stub/push/:id` (a stand-in push service, FRAME14_PUSH_ORIGINS in playwright.config) and `GET /_stub/pushes`, `/_stub/reset`. `tests/stub/frame14.test.json` is the entity config under test (`FRAME14_CONFIG` names it), `lightAreas` Living Room / Kitchen / Outside.
+- **`tests/stub/stub-ha.mjs`** — the stand-in Home Assistant, REST + WebSocket on one port: the house's states (lights, thermostats, power, a printer in both integrations' names, a vacuum, fans, TeamTracker, cameras, an Unraid server, the add-on's `update.frame14_update`), the registries, forecasts, calendars, statistics, `update/release_notes`. Service calls change states and push `state_changed`. As a module `createStub({ port })` (`setState`, `pushEvent`, `reset`, `setServiceBehaviour`, `close`); test-only endpoints `POST /_stub/state`, `/_stub/service` (`delay_ms`, `fail: { id: why }`, `silent: [ids]`), `/_stub/registry` (move an entity to an area, with the event), `/_stub/event` (fire any event: `frame14_notify`), `/_stub/push/:id` (a stand-in push service, FRAME14_PUSH_ORIGINS in playwright.config) and `GET /_stub/pushes`, `/_stub/reset`. HA's Immich: `media_source/browse_media` answers as HA's media source does (one account, `STUB.immichAccount`; albums Family, Garden and Private, `STUB.albums`; a video among Family's photos) and `/immich/<account>/<asset>/<size>/image/…` serves a JPEG with a token. `tests/stub/frame14.test.json` is the entity config under test (`FRAME14_CONFIG` names it), `lightAreas` Living Room / Kitchen / Outside, `albums` Family and Garden (Private is never served).
 - **`tests/e2e/`** — the stub on :8310 and `node index.js` on :4110 (`ports.ts`), one worker (the specs share one stub; every spec that changes state calls `resetStub` in beforeEach), two projects: `desktop` (Desktop Chrome 1920x1080 — a frame, by default) and `phone` (Pixel 7 — a remote, by its Android UA). Specs by area: api, pwa, home (cards live, arranging, the Lights card), lights, climate, fans, energy, cameras, doorbell, control (Settings' cards, theme, software update flow, screen), automation (`/api/change`, `/api/screen` reaching a stubbed `window.fully`), nav, tabs (sub-routes), modals (sheet / dialog / side panel, blur, swipe), corners and cards (sweeps over every page), unraid, origin (cross-site refusal), halloween (`page.clock.setFixedTime`), features (a config with features left empty, via `page.route` on /api/entities), notifications. State the server keeps across tests (`io.currentView`, the theme) must be put back in `finally` / afterEach.
 - **`tests/e2e/helpers.ts`**: `stub()`, `resetStub()`, `pageErrors()`, `lightTile()`, `lightButtons()` (a camera full screen's light buttons in order), `splashGone()`, `dialReading(scope)`, `cornersRounderThanConcentric()`, `squareInsideRings()`.
 
@@ -84,7 +84,6 @@ Layout bugs here aren't visible in JSX. Run the stub and the built server on fre
 | Variable | |
 |---|---|
 | `HA_URL` / `HA_TOKEN` | Home Assistant URL and long-lived token (an admin's: the Software card reloads the store) |
-| `IMMICH_URL` / `IMMICH_API_KEY` | Optional; without both `PHOTOS_ENABLED` is false and the Photos pages are left out |
 | `PLEX_URL` / `PLEX_TOKEN` | Optional full-res marquee posters; the URL must be the `plex.direct` hostname (a bare IP fails TLS). Without them, HA's 200x300 thumbnail |
 | `PORT` | Express port (4000) |
 | `ASSIST_PIPELINE_ID` / `ASSIST_SPEAKER` | Optional Assist pipeline (empty: HA's preferred) and a `media_player` to speak replies on |
@@ -115,7 +114,7 @@ Layout bugs here aren't visible in JSX. Run the stub and the built server on fre
   "cameras": ["camera.x"],
   "motion": "binary_sensor.kitchen_motion_sensor_motion",
   "route": "input_select.oledos_route",
-  "album": "input_select.smart_frame_album",
+  "albums": ["faa8658c-4cc3-47b8-b912-6a713d7ed902"],
   "lightAllOffExclude": ["light.aidens_hatch_light"],
   "calendarExclude": ["calendar.radarr"]
 }
@@ -127,7 +126,8 @@ The add-on options are config.yaml's snake_case names (`light_entities`, `climat
 - `climate_names` labels a thermostat in place of its `friendly_name` (the LocalThings Samsung entities are named after their devices); both `routes/climate.js` and `mapClimateState` (useClimate) apply it.
 - `internet` (`internet_entity`): a binary sensor, `on` while the internet is up (Ping); off, the Home weather card (each layout's first card) shows the Offline alert. Empty watches nothing.
 - `printer` is the status sensor: ha-bambulab's `sensor.xxx_print_status` or Bambuddy's `sensor.xxx_status`. The suffix picks the integration and every sibling entity is derived from the prefix (`src/lib/printerEntities.ts`, mirrored by `printer-entities.js` — keep them in step). Empty disables the printer.
-- Server-kept state (screen.json, theme.json) lives in `FRAME14_DATA_DIR`, else the add-on's `/data`, else `.data/` here (gitignored).
+- `albums` (`immich_album_ids`): the Immich albums the frames may play, served by Home Assistant's Immich integration with HA_TOKEN (photos.js) — no Immich address or key of the add-on's own since 0.162.0 (`immich_url` / `immich_api_key` and the `album_entity` input_select before). Empty, `PHOTOS_ENABLED` is false and Photos is left out. The pictures come from HA's `/immich/…` view, outside `/api`, so photos need `ha_url` to be HA's own address.
+- Server-kept state (screen.json, theme.json, photos.json — the frames' album) lives in `FRAME14_DATA_DIR`, else the add-on's `/data`, else `.data/` here (gitignored).
 
 ## Pages
 
@@ -141,7 +141,7 @@ The add-on options are config.yaml's snake_case names (`light_entities`, `climat
 | `/energy`, `/energy/:tab` | Energy | Now card (PowerFlow) over tabs Solar (Today + month/year history) and Circuits; `/solar`, `/power`, `?tab=` redirect |
 | `/weather`, `/weather/:tab` | Weather | Now card over tabs Hourly / Daily / Radar on a phone and the frame; on a desktop no tabs — a grid with the radar at the bottom (`/weather/radar` scrolls to it); `/radar` redirects |
 | `/calendar` | Calendar | 14 days of agenda cards |
-| `/photos` | Photos | Immich slideshow (frame); resumes per album (lib/slideshow); reports the photo on screen to remotes |
+| `/photos` | Photos | The album's slideshow (frame); resumes per album (lib/slideshow); reports the photo on screen to remotes |
 | `/album` | Album | A remote's Photos: the album grid; a tap shows that photo on the frames |
 | `/printer` | Printer | Status, camera (MJPEG), job, temperatures, chamber light; Pause / Resume / confirmed Stop |
 | `/vacuum` | Vacuum | Per vacuum: status and controls, map, wear parts |
@@ -233,6 +233,7 @@ ha-areas.js         — reads the area / device / entity registries; resolves li
 unraid.js           — resolveUnraid(devices, entities): servers by config entry, sensors / containers / VMs by unique-id key (entity ids follow no pattern); a hidden switch drops its guest; never the array, parity, autostart, buttons or update entities
 screen.js           — the frames' screen: state, schedule (edge-triggered ticks), brightness, dark hours (DARK_BRIGHTNESS), auto brightness from lux (levelForLux, AUTO_STEP hysteresis); saved in screen.json
 theme.js            — the frames' theme mode and palette, saved in theme.json
+photos.js           — the frames' photos (0.162.0): `immich_album_ids` (ALBUM_IDS, PHOTOS_ENABLED) through HA's Immich integration — `media_source/browse_media` (sendCommand) lists the accounts, their albums and an album's pictures (each listing cached LISTING_TTL_MS), HA's `/immich/<account>/<asset>/<size>/image/jpeg` view serves a picture with HA_TOKEN, only one a configured album's listing named (a miss lists them again); the frames' album in photos.json
 push.js             — the phones' notifications (Web Push): VAPID keys made once (vapid.json), the subscriptions (push.json, voided by new keys, capped at MAX_SUBSCRIPTIONS, a 404/410 drops one), `notify` — web-push's generateRequestDetails encrypts and signs, fetch posts. Endpoints only at the browsers' push services (PUSH_HOSTS; FRAME14_PUSH_ORIGINS adds the tests' stub)
 origin-guard.js     — crossSite / refuseCrossSite (all of /api) / allowSocket (Socket.IO's allowRequest)
 ha-proxy.js         — HA images and MJPEG through the server's token
@@ -263,7 +264,7 @@ Invariants:
 - `GET /api/energy`, `/today` (quarter hours, `selfConsumed`), `/monthly?month=`, `/yearly?year=`; `/api/circuits` (Emporia Vue). `GET /api/printer/camera/stream`, `/api/printer/cover`.
 - `GET /api/camera/hls?entity=` (configured cameras only; the master playlist under `/api/camera/hls/<token>/…`, which proxies HA's allow-listed HLS files), `/api/camera/snapshot`, `/api/camera/stream` (MJPEG, unused by the client).
 - `GET /api/marquee/art?v=` — the poster: Plex's transcoder at 1280x1920 by ratingKey with PLEX_*, else the entity picture. The client never supplies a URL.
-- `GET /api/photos/config|albums|albums/:id|asset/:id/thumbnail`, `POST /api/photos/config`; an album in Immich's order (`fileCreatedAt`, honouring oldest-first); without Immich or `album_entity`: no album, POST 404, Immich routes 503.
+- `GET /api/photos/config` (`defaultAlbumId`, the frames' album, and `options`, `immich_album_ids`), `POST /api/photos/config { option }` (one of them, kept in photos.json, `photos_refresh` to all; 400 another, 404 without albums), `GET /api/photos/albums` (the configured albums named by HA), `/albums/:id` (a configured album's pictures as HA's media source lists them — newest taken first, at most 2000, no videos; 404 another album), `/asset/:id/thumbnail?size=` (preview or thumbnail from HA's `/immich` view; 404 for a photo no configured album's listing named). Without albums: no album, POST 404, the rest 503; HA down 503, HA's Immich failing 502.
 - `GET /api/assist/config`, `/api/assist/tts/:id` (ids minted server-side). `GET /api/change/:view` — `change_view` to all clients (HA automations).
 - `GET /api/screen` (state, schedule, brightness, dark, auto, lux), `GET /api/screen/:state` (`on` / `off` to every frame), `GET /api/screen/brightness/:level` (0–255, turns auto off), `PUT /api/screen/schedule` / `/dark` / `/auto` (saved and applied; 400 when not a valid setting).
 
@@ -276,7 +277,7 @@ Adding an endpoint: the handler in a `routes/*.js` file, mounted in index.js (mo
 - `screen` (a command, never re-sent) and `brightness` go to frames' `window.fully`; frames send `brightness_report` and `lux_report`; the server sends `screen_state` on connect and after every change.
 - `nav_visibility`: the frames' setting; remotes relay it but keep their own nav.
 - Theme: `theme_mode` / `theme_palette` from the Display card, kept by theme.js and broadcast; `current_theme_mode` / `current_theme_palette` on connect.
-- Photos: a frame emits `photo_shown`; everyone gets `photos_shown`; a remote's `show_photo { albumId, assetId }` is broadcast and frames save it as the album's position. No view change goes with it.
+- Photos: `photos_refresh` (POST /api/photos/config picked an album) reloads every slideshow; a frame emits `photo_shown`; everyone gets `photos_shown`; a remote's `show_photo { albumId, assetId }` is broadcast and frames save it as the album's position. No view change goes with it.
 - Voice: `assist:start` (ack), `assist:audio` (Int16LE PCM), `assist:audio_end`, `assist:cancel`; the server emits `assist:event` (TTS path swapped for an opaque `audioUrl`; `intent-end` carries `cue` — a non-null cue plays a tone instead of speech, judged for LLM turns by the tool results in `intent-progress`, since an LLM labels every reply `action_done`) and `assist:error`. One run at a time.
 - `echo` with an ack: the connection menu's round trip; socketWake's liveness check.
 - `entities`: the entity payload again when the rooms or Unraid change. `ready` (server restart) reloads.
@@ -288,6 +289,7 @@ No login of its own, by the user's choice — anything that reaches the port can
 - origin-guard.js refuses a browser's request from another site — Sec-Fetch-Site `same-site` / `cross-site` (another app under the same Cloudflare domain counts), else an Origin that isn't the Host's or X-Forwarded-Host's — on all of /api (403) and the socket's handshake; requests with no browser headers (HA's `rest_command`, curl) pass.
 - `entity:call` is held to an allow-list of domains, services and argument shapes in ha-socket.js's `callService`, and every entity to one a page shows (`callableEntity`): a light the pages show (`hooks.lights` — index.js hands startHaSocket ha-areas.js's `lightsConfig().lights`, the configured lights and the rooms'; the configured ones without it) or the printer's chamber light; a switch via `callableSwitch` (the configured `light_entities` switches and the chamber light — never Unraid's array, VM or container switches); a configured fan (`fan_entities`) or thermostat (`climate_entities`); `media_player` only `play_media` of this HA's TTS on `assist_speaker`; vacuums and printer buttons only the configured devices with checked arguments. A page that calls a new kind of entity needs it added there, or the call is refused. `tests/server/callable-entity.test.js` and ha-socket.test's refusals cover it.
 - The Unraid page is read only: no start, stop or update, by the user's word.
+- Photos: only the configured albums' pictures (photos.js serves an asset only once a listing of one of `immich_album_ids` has named it; ids are UUIDs, the account is HA's).
 - Push subscriptions are the one URL a page hands the server to call: push.js takes only the browsers' push services' endpoints (https, PUSH_HOSTS), and a tap's `url` is held to an app path.
 
 ## Home Assistant add-on

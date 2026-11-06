@@ -25,7 +25,7 @@
 // The same read finds the Unraid servers (0.151.0, unraid.js): `unraid` in
 // the answer, none until the registries are in.
 import { ENTITIES } from "./entities.js";
-import { PHOTOS_ENABLED } from "./config.js";
+import { PHOTOS_ENABLED } from "./photos.js";
 import { isHaConnected, sendCommand } from "./ha-socket.js";
 import { resolveUnraid } from "./unraid.js";
 
@@ -39,7 +39,8 @@ export function lightsConfig() {
 
 /**
  * What GET /api/entities answers, and what io "entities" carries; `photos`
- * (0.145.0) is whether Immich is set up, for the pages to leave Photos out,
+ * (0.145.0) is whether photos are set up — `immich_album_ids` since 0.162.0 —
+ * for the pages to leave Photos out,
  * and `unraid` (0.151.0) the Unraid servers and their containers.
  */
 export function entitiesPayload() {

@@ -15,6 +15,8 @@ interface Props {
 export function PhotoSlide({ assetId, visible }: Props) {
   return (
     <Box
+      data-photo-slide={assetId}
+      data-visible={visible || undefined}
       position="absolute"
       inset={0}
       backgroundImage={`url(/api/photos/asset/${assetId}/thumbnail)`}

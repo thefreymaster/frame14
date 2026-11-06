@@ -5,7 +5,7 @@
  *   1. Seeds a local state cache from `get_states`
  *   2. Subscribes to `state_changed` events and keeps the cache fresh
  *   3. Fans out updates over Socket.IO rooms keyed by entity_id
- *   4. Runs the motion-sensor + album watcher that used to live in ha-motion.js
+ *   4. Runs the motion-sensor watcher that used to live in ha-motion.js
  *
  * Public API:
  *   startHaSocket(io)       — open WS, begin processing events
@@ -21,12 +21,12 @@ import { HA_URL, HA_TOKEN, ASSIST_SPEAKER } from "./config.js";
 import { ENTITIES } from "./entities.js";
 import { printerEntities } from "./printer-entities.js";
 
-// The house's helpers, options since 0.145.0 (`motion_entity`, `route_entity`,
-// `album_entity`; hard-coded to the first house's before). Each empty turns
-// its feature off: no wake on motion, no remembered route, no album refresh.
+// The house's helpers, options since 0.145.0 (`motion_entity`,
+// `route_entity`; hard-coded to the first house's before). Each empty turns
+// its feature off: no wake on motion, no remembered route. (The album was a
+// helper too until 0.162.0; photos.js keeps it now.)
 const MOTION_ENTITY = ENTITIES.motion ?? "";
 const ROUTE_ENTITY = ENTITIES.route ?? "";
-const ALBUM_ENTITY = ENTITIES.album ?? "";
 const RECONNECT_DELAY_MS = 5_000;
 
 // Plex marquee: route the frame to /marquee while a movie is playing.
@@ -721,15 +721,6 @@ export function startHaSocket(io, hooks = {}) {
       // (PRE/IN/POST) can start or end the view.
       if (prevState?.state !== newState.state) onFootballState();
       return;
-    }
-
-    if (ALBUM_ENTITY && entityId === ALBUM_ENTITY) {
-      const prev = prevState?.state;
-      const next = newState.state;
-      if (prev !== next) {
-        console.log(`[ha-socket] album changed: ${prev} → ${next}`);
-        io.emit("photos_refresh");
-      }
     }
   }
 

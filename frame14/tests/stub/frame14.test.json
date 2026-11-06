@@ -64,7 +64,7 @@
   "cameras": ["camera.front_porch_high", "camera.front_porch_rtsp"],
   "motion": "binary_sensor.kitchen_motion_sensor_motion",
   "route": "input_select.oledos_route",
-  "album": "input_select.smart_frame_album",
+  "albums": ["aaaaaaaa-0000-4000-8000-000000000001", "aaaaaaaa-0000-4000-8000-000000000002"],
   "lightAllOffExclude": ["light.aidens_hatch_light"],
   "calendarExclude": ["calendar.radarr"]
 }

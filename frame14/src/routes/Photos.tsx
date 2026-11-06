@@ -194,8 +194,8 @@ export function Photos() {
     return () => reportPhotoShown(null);
   }, [remote]);
 
-  // HA fires /api/photos/refresh when input_select.smart_frame_album changes;
-  // server broadcasts photos_refresh so all frames reload their album.
+  // The server broadcasts photos_refresh when the album is changed (POST
+  // /api/photos/config), so all frames reload theirs.
   useEffect(() => {
     function onRefresh() {
       queryClient.invalidateQueries({ queryKey: ["photos", "config"] });
@@ -269,7 +269,7 @@ export function Photos() {
         <EmptyState
           icon={<IoImagesOutline />}
           title="Photos aren't set up"
-          description="Add immich_url and immich_api_key in the add-on's options."
+          description="Add Immich album ids to immich_album_ids in the add-on's options; Home Assistant's Immich integration serves them."
         />
       </Box>
     );

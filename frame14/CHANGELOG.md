@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.163.1
+
+- Changed: the temperature line in the weather's next-hours chart is a smooth curve instead of a jagged run of steps and corners.
+
 ## 0.163.0
 
 - Changed: the connection menu (the connection icon in the header) always ends in a Reload button, not only once the connection has been lost.

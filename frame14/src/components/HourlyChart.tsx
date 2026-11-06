@@ -1,6 +1,7 @@
 import { Box, HStack, Text } from "@chakra-ui/react";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
 import { RAIN_SHOWN_FROM, roundTemp } from "../lib/forecast";
+import { smoothLineAt, smoothLinePath } from "../lib/smoothLine";
 
 /** The plot's own units: the hours across, the scale's span up. */
 const VIEW_W = 1000;
@@ -19,12 +20,14 @@ const isNumber = (n: number | null | undefined): n is number => n != null;
 
 /**
  * The hours ahead as a chart, in the energy card's style: the temperature as
- * a line from the first hour at the left edge to the last at the right, its
- * high and low labelled, with each hour's rain chance (from RAIN_SHOWN_FROM)
- * as a blue bar up from the baseline — a sure thing reaching halfway up. The
- * scale is the hours' range a couple of degrees either side. Hour marks every
- * six hours under it. Stretched SVG, non-scaling strokes; the labels are
- * HTML over it. The legend row carries the extremes; the plot is aria-hidden.
+ * a smooth line (lib/smoothLine — the forecast's whole degrees drew a
+ * staircase of flats and corners) from the first hour at the left edge to the
+ * last at the right, its high and low labelled where the line passes them,
+ * with each hour's rain chance (from RAIN_SHOWN_FROM) as a blue bar up from
+ * the baseline — a sure thing reaching halfway up. The scale is the hours'
+ * range a couple of degrees either side. Hour marks every six hours under it.
+ * Stretched SVG, non-scaling strokes; the labels are HTML over it. The legend
+ * row carries the extremes; the plot is aria-hidden.
  */
 export function HourlyChart({
   hours,
@@ -54,16 +57,7 @@ export function HourlyChart({
   const pctClamped = (i: number) =>
     `${Math.min(94, Math.max(6, (i / last) * 100))}%`;
 
-  let line = "";
-  let pen = false;
-  temps.forEach((t, i) => {
-    if (!isNumber(t)) {
-      pen = false;
-      return;
-    }
-    line += `${pen ? "L" : "M"}${xOf(i).toFixed(1)},${yOf(t).toFixed(1)}`;
-    pen = true;
-  });
+  const line = smoothLinePath(temps, xOf, yOf);
 
   let hiAt = -1;
   let loAt = -1;
@@ -72,6 +66,10 @@ export function HourlyChart({
     if (hiAt < 0 || t > temps[hiAt]!) hiAt = i;
     if (loAt < 0 || t < temps[loAt]!) loAt = i;
   });
+  // The labels sit on the line, which passes an hour between it and its
+  // neighbours.
+  const hiY = pctY(smoothLineAt(temps, hiAt)!);
+  const loY = pctY(smoothLineAt(temps, loAt)!);
   const hourOf = (i: number) =>
     new Date(hours[i].datetime).toLocaleTimeString([], { hour: "numeric" });
 
@@ -149,7 +147,7 @@ export function HourlyChart({
         <Text
           position="absolute"
           left={pctClamped(hiAt)}
-          top={pctY(temps[hiAt]!)}
+          top={hiY}
           transform="translate(-50%, -135%)"
           textStyle="xs"
           fontWeight="medium"
@@ -161,7 +159,7 @@ export function HourlyChart({
           <Text
             position="absolute"
             left={pctClamped(loAt)}
-            top={pctY(temps[loAt]!)}
+            top={loY}
             transform="translate(-50%, 35%)"
             textStyle="xs"
             color="fg.muted"

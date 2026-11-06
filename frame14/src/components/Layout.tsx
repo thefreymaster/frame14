@@ -120,7 +120,8 @@ export function Layout() {
             <VoiceAssistButton onTap={voiceTap} state={voice.state} />
           )
         }
-        // The power button decides for itself: a frame's only (0.130).
+        // The power button decides for itself: a frame's turns the screen
+        // off (0.130), a remote's switches the frames' screen (0.161).
         screen={<ScreenOffButton />}
       />
 

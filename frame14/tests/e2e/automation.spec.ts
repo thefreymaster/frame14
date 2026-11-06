@@ -120,22 +120,41 @@ test("GET /api/screen/:state and /brightness/:level reach Fully on a frame, and 
 });
 
 // 0.130: the header's power button is the same command from the frame's own
-// header, so the server knows the screen is off; a remote has no button.
-test("the header's power button turns a frame's screen off, and a remote has none", async ({ page, request, isMobile }) => {
+// header, so the server knows the screen is off. 0.161: a remote's is a
+// switch for the frames' screen, and its own screen is left alone — the
+// remote has a stubbed Fully too, which must hear nothing.
+test("the header's power button turns a frame's screen off, and switches the frames' screen from a remote", async ({ page, request, isMobile }) => {
   await resetStub(request);
   await request.get("/api/screen/on");
   await page.addInitScript(FULLY_STUB);
   await page.goto("/home");
   await expect(page.getByText("1st Floor AC")).toBeVisible();
-  const power = page.getByRole("button", { name: "Turn the screen off" });
-  if (isMobile) {
-    await expect(power).toHaveCount(0);
-    return;
+  const calls = () => page.evaluate(() => (window as unknown as { screenCalls: string[] }).screenCalls);
+  const state = async () => ((await (await request.get("/api/screen")).json()) as { state: string }).state;
+  try {
+    if (!isMobile) {
+      await expect(page.getByRole("button", { name: "Turn the frame's screen off" })).toHaveCount(0);
+      await page.getByRole("button", { name: "Turn the screen off" }).click();
+      await expect.poll(calls).toEqual(["off"]);
+      expect(await state()).toBe("off");
+      return;
+    }
+    await expect(page.getByRole("button", { name: "Turn the screen off" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Turn the frame's screen off" }).click();
+    await expect.poll(state).toBe("off");
+    const on = page.getByRole("button", { name: "Turn the frame's screen on" });
+    await expect(on).toHaveAttribute("data-state", "off");
+    await on.click();
+    await expect.poll(state).toBe("on");
+    // Turned off elsewhere (Home Assistant, the schedule), the button follows.
+    await request.get("/api/screen/off");
+    await expect(on).toBeVisible();
+    await request.get("/api/screen/on");
+    await expect(page.getByRole("button", { name: "Turn the frame's screen off" })).toBeVisible();
+    expect(await calls()).toEqual([]);
+  } finally {
+    await request.get("/api/screen/on");
   }
-  await power.click();
-  await expect.poll(() => page.evaluate(() => (window as unknown as { screenCalls: string[] }).screenCalls)).toEqual(["off"]);
-  expect(await (await request.get("/api/screen")).json()).toMatchObject({ state: "off" });
-  await request.get("/api/screen/on");
 });
 
 // 0.137: a frame reports the room's light; with "Adjust to the room" on the

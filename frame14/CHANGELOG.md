@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.161.0
+
+- Added: a phone or other remote has the power button in its header too. A tap turns the frame's screen off, and another turns it back on; the remote's own screen stays on. The icon is dimmed while the frame's screen is off, and it follows changes made elsewhere, such as Home Assistant, the schedule or the Screen card.
+
 ## 0.160.0
 
 - Added: notifications on your phone. Turn on **Allow notifications** in Settings › Device, and Home Assistant can send notifications to that phone, even with Frame14 closed. **Send a test** checks that they arrive. A Home Assistant automation sends one by firing the `frame14_notify` event with a `title` and a `message`. It can add a `tag`, so a newer notification with the same tag replaces the older one, and a `url`, the page a tap opens. On an iPhone, notifications need Frame14 added to the Home Screen, and every phone needs the https address rather than the local http one.

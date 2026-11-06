@@ -14,7 +14,7 @@ import { useDesktop } from "../hooks/useDesktop";
 
 /**
  * The header across the top of every view: the app's icon and name at the
- * left; running appliances, the connection, the mic, a frame's power button
+ * left; running appliances, the connection, the mic, the frames' power button
  * and (on a desktop) the date and time at the right. (The version is on the
  * Settings page.) The appliance
  * and connection icons each open a small menu on a tap (HeaderMenu).
@@ -51,7 +51,7 @@ export function StatusBanner({
   scrolled?: boolean;
   /** The mic, after the status icons (before the clock on a desktop). */
   voice?: React.ReactNode;
-  /** A frame's power button (ScreenOffButton), after the mic. */
+  /** The power button for the frames' screen (ScreenOffButton), after the mic. */
   screen?: React.ReactNode;
 }) {
   // The date and clock only on a desktop: a phone shows its own, and the

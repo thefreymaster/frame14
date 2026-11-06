@@ -163,18 +163,20 @@ test.describe("the Settings page", () => {
   test("the tabs' cards are two columns on a desktop, one on a phone (0.148.0)", async ({ page, isMobile }) => {
     await page.goto("/control/device");
     const box = async (name: string) =>
-      (await page.locator(".chakra-card__root", { has: page.getByRole("heading", { name }) }).boundingBox())!;
+      (await page.locator(".chakra-card__root", { has: page.getByRole("heading", { name, exact: true }) }).boundingBox())!;
     await expect(page.getByRole("heading", { name: "Navigation" })).toBeVisible();
     // Polled: the page scales in as it opens (PageTransition), and a box read
     // meanwhile is off by a pixel or two.
+    // Notifications heads the left column (0.160.0; Software did before),
+    // Navigation the right.
     const apart = async () => {
-      const software = await box("Software");
+      const notifications = await box("Notifications");
       const navigation = await box("Navigation");
       return {
-        across: Math.round(navigation.x - (software.x + software.width)),
-        down: Math.round(navigation.y - (software.y + software.height)),
-        tops: Math.round(Math.abs(navigation.y - software.y)),
-        lefts: Math.round(Math.abs(navigation.x - software.x)),
+        across: Math.round(navigation.x - (notifications.x + notifications.width)),
+        down: Math.round(navigation.y - (notifications.y + notifications.height)),
+        tops: Math.round(Math.abs(navigation.y - notifications.y)),
+        lefts: Math.round(Math.abs(navigation.x - notifications.x)),
       };
     };
     if (isMobile) {

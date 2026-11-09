@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.163.2
+
+- Fixed: the Bright theme stays bright on a frame whose Android tablet is set to dark mode. The tablet's browser was darkening the page itself, so a frame set to Bright still looked dark; phones whose browser darkens web pages are spared the same way.
+
 ## 0.163.1
 
 - Changed: the temperature line in the weather's next-hours chart is a smooth curve instead of a jagged run of steps and corners.

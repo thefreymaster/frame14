@@ -75,7 +75,10 @@
         var root = document.documentElement;
         root.dataset.themeMode = mode;
         root.dataset.palette = palette;
-        root.style.colorScheme = mode === "bright" ? "light" : "dark";
+        // `only light`: no browser darkens a Bright page itself (Android's
+        // WebView under a dark system theme did; lib/themeMode's
+        // colorSchemeFor).
+        root.style.colorScheme = mode === "bright" ? "only light" : "dark";
         // /blank stays black: a reload at night shouldn't light the kitchen.
         if (location.pathname === "/blank") return;
         var QUICK_MS = 1200;

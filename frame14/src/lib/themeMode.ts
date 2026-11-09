@@ -74,9 +74,22 @@ export function computeEffectiveMode(
 }
 
 /**
+ * The page's `color-scheme` for a mode. Bright is `only light` (0.163.2): a
+ * browser that darkens pages itself — Android's WebView under a dark system
+ * theme (algorithmic darkening; the frames' Fully Kiosk), Chrome's and
+ * Samsung Internet's dark modes for web pages — repainted a plain `light`
+ * page dark ("Bright mode isn't working on frame14 devices"), and `only` is
+ * the page saying not to. Dark already says the page has its own dark.
+ */
+export function colorSchemeFor(mode: EffectiveThemeMode): string {
+  return mode === "dark" ? "dark" : "only light";
+}
+
+/**
  * Mark `mode` and `palette` on <html> before React mounts, so the first paint
  * is already in the right colours; the colour-mode provider keeps the mode in
- * step afterwards. (Name kept from when it wrote CSS vars.)
+ * step afterwards. This module alone sets `color-scheme` (the provider's
+ * next-themes is told not to). (Name kept from when it wrote CSS vars.)
  */
 export function applyThemeVars(
   mode: EffectiveThemeMode,
@@ -87,7 +100,7 @@ export function applyThemeVars(
   root.dataset.themeMode = mode;
   root.dataset.palette = palette;
   root.classList.toggle("dark", mode === "dark");
-  root.style.colorScheme = mode === "dark" ? "dark" : "light";
+  root.style.colorScheme = colorSchemeFor(mode);
 }
 
 function read(key: string): string | null {

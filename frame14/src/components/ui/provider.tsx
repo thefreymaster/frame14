@@ -226,6 +226,8 @@ const system = createSystem(
  * The dashboard's Auto / Device / Bright / Dark preference (lib/themeMode.ts —
  * the daylight window, the system's setting and the socket sync) picks
  * Chakra's own light or dark mode; the palette is on <html> (see above).
+ * next-themes leaves `color-scheme` to lib/themeMode: its plain `light` let
+ * Android's WebView darken a Bright page (0.163.2).
  */
 export function Provider({ children }: { children: React.ReactNode }) {
   const { effectiveMode } = useThemeMode();
@@ -233,6 +235,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     <ChakraProvider value={system}>
       <ColorModeProvider
         forcedTheme={effectiveMode === "bright" ? "light" : "dark"}
+        enableColorScheme={false}
       >
         {children}
       </ColorModeProvider>

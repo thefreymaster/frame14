@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.164.0
+
+- Changed: the three colour themes (Settings → Display → Colors, and a remote's own under Device) have new colours. **Slate** is a soft steel blue-gray instead of a saturated navy, **Sand** is ivory by day and a warm graphite by night instead of yellow cream and brown, and both have a softer dark mode: a charcoal page rather than a near-black one. **Gray** keeps its dark mode as it was; in the light theme its page is now a soft gray, so the white cards stand out from it. Nothing to set: whichever theme a frame or remote wears simply has the new colours.
+- Changed: the little colour chips beside Gray, Slate and Sand show each theme's own tint, so the three can be told apart before one is picked.
+
 ## 0.163.2
 
 - Fixed: the Bright theme stays bright on a frame whose Android tablet is set to dark mode. The tablet's browser was darkening the page itself, so a frame set to Bright still looked dark; phones whose browser darkens web pages are spared the same way.

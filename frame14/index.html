@@ -97,26 +97,26 @@
       })();
     </script>
     <style>
-      /* The page's colour (bg: the palette's ink / paper — Chakra's black /
-         white in gray; lib/themePalettes has them), in the first layer so
-         Chakra's layers win once its styles load. */
+      /* The page's colour (bg: the palette's ink / paper — lib/themePalettes
+         has them, and its test holds these copies to them), in the first
+         layer so Chakra's layers win once its styles load. */
       html {
         --splash-bg: #09090b;
       }
       html[data-theme-mode="bright"] {
-        --splash-bg: #fff;
+        --splash-bg: #f6f6f8;
       }
       html[data-palette="slate"] {
-        --splash-bg: #02081a;
+        --splash-bg: #0f141c;
       }
       html[data-palette="slate"][data-theme-mode="bright"] {
-        --splash-bg: #f3f6fa;
+        --splash-bg: #f2f6fa;
       }
       html[data-palette="sand"] {
-        --splash-bg: #0c0906;
+        --splash-bg: #151411;
       }
       html[data-palette="sand"][data-theme-mode="bright"] {
-        --splash-bg: #faf5eb;
+        --splash-bg: #faf8f4;
       }
       @layer splash {
         html {

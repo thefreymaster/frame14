@@ -5,11 +5,22 @@
 // gray — bg, fg, border, the gray colorPalette, the cards' DARK_RAISED
 // steps — follows without a component knowing.
 //
-// Each palette keeps Chakra gray's lightness at every step (OKLCH L) and
-// changes only the hue and chroma, so contrast stays where Chakra put it: the
-// muted text on a card, the borders, the wells inside a card, the cards on the
-// page. Only the hue is new — and Slate's and Sand's light page (`paper`),
-// tinted under the white cards where Chakra's is white.
+// The colours (0.164.0, "they use really ugly colors"): quiet neutrals, a
+// whisper of hue rather than a colour — the first Slate was a saturated navy
+// and the first Sand a yellow cream over espresso brown.
+//
+// - The light half (50–400, 600) keeps Chakra gray's lightness step for step
+//   and changes only the hue, at a chroma that stays a gray's (TINT_CHROMA_MAX
+//   in the test). Each palette's light page (`paper`) is a faint tint of it
+//   under the white cards, lighter than the wells (100) inside them.
+// - The dark half (700–950, `ink`, `card`) is gray's own near-black in Gray,
+//   and one softer ramp shared by Slate and Sand: a charcoal page rather than
+//   a black one, the cards, wells and borders the same distances apart. Their
+//   500 — the dark cards' faintest text — is a little lighter than gray's, so
+//   it reads as well on the lighter cards.
+//
+// The values were made in OKLCH (a hue, a chroma, and the lightness above) and
+// are kept as hex; index.html's splash copies each `paper` and `ink`.
 
 export type ThemePalette = "gray" | "slate" | "sand";
 
@@ -37,7 +48,7 @@ export interface PaletteColors {
   label: string;
   /** The gray scale, 50–950. */
   scale: Record<PaletteStep, string>;
-  /** The page in light mode (Chakra's `white` there). */
+  /** The page in light mode (where Chakra has `white`), under the white cards. */
   paper: string;
   /** The page in dark mode and the text in light mode (Chakra's `black`). */
   ink: string;
@@ -46,9 +57,10 @@ export interface PaletteColors {
 }
 
 export const PALETTES: Record<ThemePalette, PaletteColors> = {
-  // Chakra's own: its gray scale (Tailwind's zinc, with a #111 950), white,
-  // its #09090B black, and iOS's #1C1C1E grouped-cell grey for the cards
-  // (0.71, the user's pick).
+  // Chakra's own: its gray scale (Tailwind's zinc, with a #111 950), its
+  // #09090B black, and iOS's #1C1C1E grouped-cell grey for the cards (0.71,
+  // the user's pick). The light page alone isn't Chakra's white: a soft gray,
+  // so the white cards stand on it.
   gray: {
     label: "Gray",
     scale: {
@@ -64,53 +76,53 @@ export const PALETTES: Record<ThemePalette, PaletteColors> = {
       "900": "#18181b",
       "950": "#111111",
     },
-    paper: "#FFFFFF",
+    paper: "#f6f6f8",
     ink: "#09090B",
     card: "#1C1C1E",
   },
-  // Blue grays: Tailwind's slate, 50–900 (the same lightness as zinc's, so
-  // it drops in step for step), and the 950, ink and card at Chakra's
-  // lightness in slate's hue. Light mode puts the white cards on a faint
-  // blue-gray page.
+  // Blue grays: steel rather than navy (hue 250–257, a third of the chroma
+  // Tailwind's slate carries in the dark), a blue-charcoal page by night and
+  // a cool off-white one by day.
   slate: {
     label: "Slate",
     scale: {
-      "50": "#f8fafc",
+      "50": "#f8fafd",
       "100": "#f1f5f9",
-      "200": "#e2e8f0",
-      "300": "#cbd5e1",
-      "400": "#94a3b8",
-      "500": "#64748b",
-      "600": "#475569",
-      "700": "#334155",
-      "800": "#1e293b",
-      "900": "#0f172a",
-      "950": "#071123",
+      "200": "#dfe5ec",
+      "300": "#cdd5de",
+      "400": "#99a3b0",
+      "500": "#737e8c",
+      "600": "#495461",
+      "700": "#3d4652",
+      "800": "#2a323d",
+      "900": "#1c222b",
+      "950": "#161c25",
     },
-    paper: "#f3f6fa",
-    ink: "#02081a",
-    card: "#121c2f",
+    paper: "#f2f6fa",
+    ink: "#0f141c",
+    card: "#202731",
   },
-  // Warm grays: sand and linen by day — white cards on a cream page — and
-  // espresso by night, easier on a kitchen at midnight than a cold gray.
+  // Warm grays: ivory by day — white cards on an off-white page, no yellow in
+  // it — and a warm graphite by night, easier on a kitchen at midnight than a
+  // cold gray (hue 90–95; the brown is gone).
   sand: {
     label: "Sand",
     scale: {
-      "50": "#fcfaf6",
-      "100": "#f7f4ee",
-      "200": "#e9e4db",
-      "300": "#dad4c8",
-      "400": "#aaa193",
-      "500": "#7b7063",
-      "600": "#5b5146",
-      "700": "#473e35",
-      "800": "#2c2620",
-      "900": "#1c1813",
-      "950": "#14110d",
+      "50": "#fbfaf7",
+      "100": "#f5f4f0",
+      "200": "#e6e4de",
+      "300": "#d6d4cd",
+      "400": "#a4a29a",
+      "500": "#7f7c75",
+      "600": "#55534c",
+      "700": "#474540",
+      "800": "#33312d",
+      "900": "#23221e",
+      "950": "#1d1c19",
     },
-    paper: "#faf5eb",
-    ink: "#0c0906",
-    card: "#211c17",
+    paper: "#faf8f4",
+    ink: "#151411",
+    card: "#272623",
   },
 };
 

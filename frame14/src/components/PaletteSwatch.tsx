@@ -2,13 +2,14 @@ import { Box } from "@chakra-ui/react";
 import { PALETTES, type ThemePalette } from "../lib/themePalettes";
 
 /**
- * A palette as a round chip for the Display card's Colors control: its light
- * page and its dark card, split on the diagonal — the palette's two faces.
- * Its values are the palette's own (lib/themePalettes), not tokens, since the
- * tokens are the palette on screen.
+ * A palette as a round chip for the Display card's Colors control: a light
+ * and a dark step of it, split on the diagonal. Mid steps (300 and 600), where
+ * a palette's hue shows most — its page and its card are so near white and
+ * black that the three chips looked alike. Its values are the palette's own
+ * (lib/themePalettes), not tokens, since the tokens are the palette on screen.
  */
 export function PaletteSwatch({ palette }: { palette: ThemePalette }) {
-  const { paper, card } = PALETTES[palette];
+  const { scale } = PALETTES[palette];
   return (
     <Box
       aria-hidden
@@ -18,7 +19,7 @@ export function PaletteSwatch({ palette }: { palette: ThemePalette }) {
       rounded="full"
       borderWidth="1px"
       borderColor="border.emphasized"
-      bgImage={`linear-gradient(135deg, ${paper} 50%, ${card} 50%)`}
+      bgImage={`linear-gradient(135deg, ${scale["300"]} 50%, ${scale["600"]} 50%)`}
     />
   );
 }

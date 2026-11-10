@@ -76,9 +76,10 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
  * own value and whose `_slate` / `_sand` conditions (`<html data-palette>`)
  * are the tint's, so everything Chakra builds on gray — bg, fg, border, the
  * gray colorPalette — and every `gray.N` here follows; `neutral.paper` (the
- * light page, Chakra's white), `neutral.ink` (the dark page and the light
- * text, Chakra's black) and `neutral.card` (the dark cards, #1C1C1E in gray)
- * carry what isn't on the scale. In the gray palette every value is Chakra's.
+ * light page, where Chakra has white), `neutral.ink` (the dark page and the
+ * light text, Chakra's black) and `neutral.card` (the dark cards, #1C1C1E in
+ * gray) carry what isn't on the scale. In the gray palette every value is
+ * Chakra's but the paper, a soft gray under the white cards (0.164.0).
  *
  * Spacing has a named `xs` (0.25rem, 4px at the base size), `sm` (0.5rem) and
  * `md` (1rem), and `gutter`, the page's padding around the cards and the gap
@@ -126,7 +127,8 @@ const system = createSystem(
             focusRing: { value: "#18a0ff" },
           },
           bg: {
-            // The page: Chakra's white / black, the palette's paper / ink.
+            // The page: the palette's paper / ink, where Chakra has white /
+            // black.
             DEFAULT: {
               value: {
                 _light: "{colors.neutral.paper}",

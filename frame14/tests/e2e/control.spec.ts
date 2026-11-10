@@ -95,15 +95,15 @@ test.describe("the Settings page", () => {
       } else {
         // A frame wears it: Slate's page, and a card in dark mode.
         await expect(html).toHaveAttribute("data-palette", "slate");
-        await expect.poll(pageColour).toBe("#02081a");
-        await expect(page.locator(".chakra-card__root").first()).toHaveCSS("background-color", "rgb(18, 28, 47)");
+        await expect.poll(pageColour).toBe("#0f141c");
+        await expect(page.locator(".chakra-card__root").first()).toHaveCSS("background-color", "rgb(32, 39, 49)");
         // Device: its system's setting, followed as it changes.
         await theme.getByText("Device", { exact: true }).click();
         await expect(html).toHaveAttribute("data-theme-mode", "dark");
         await page.emulateMedia({ colorScheme: "light" });
         await expect(html).toHaveAttribute("data-theme-mode", "bright");
         await expect(html).not.toHaveClass(/\bdark\b/);
-        await expect.poll(pageColour).toBe("#f3f6fa");
+        await expect.poll(pageColour).toBe("#f2f6fa");
       }
       // A change reaches the frames live.
       await colors.getByText("Sand", { exact: true }).click();

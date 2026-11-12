@@ -66,5 +66,6 @@
   "route": "input_select.oledos_route",
   "albums": ["aaaaaaaa-0000-4000-8000-000000000001", "aaaaaaaa-0000-4000-8000-000000000002"],
   "lightAllOffExclude": ["light.aidens_hatch_light"],
+  "scenes": ["automation.living_room_movie_mode", "scene.reading"],
   "calendarExclude": ["calendar.radarr"]
 }

@@ -91,6 +91,26 @@ export function callLightService(
   });
 }
 
+/**
+ * Runs one of the Lights page's scenes (0.165.0): a scene or a script is
+ * turned on, an automation's actions are triggered. The server takes these
+ * for the entities `scene_entities` names only. Resolves with its ack as
+ * callService does, once Home Assistant has run it.
+ */
+export function runScene(entityId: string): Promise<CallResult> {
+  const domain = entityId.split(".")[0];
+  if (domain !== "scene" && domain !== "script" && domain !== "automation")
+    return Promise.resolve({
+      ok: false,
+      error: "Not a scene, script or automation",
+    });
+  return emitCall({
+    domain,
+    service: domain === "automation" ? "trigger" : "turn_on",
+    entity_id: entityId,
+  });
+}
+
 export function callFanService(
   entityId: string,
   service: "turn_on" | "turn_off" | "set_percentage",

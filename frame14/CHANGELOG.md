@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.165.0
+
+- Added: **Scenes** on the Lights page — a card at the top with a button for each scene, script or automation you choose, so a tap runs it from the frame or a phone the way a dashboard button does. Each button takes its name and icon from Home Assistant, spins while Home Assistant runs it, shows a tick when it has, and says why if it couldn't. New option `scene_entities` (a list of `scene.…`, `script.…` and `automation.…` ids, in the order the buttons show); its default is this house's Living Room Movie Mode automation, which dims the living room and turns the kitchen off. An automation's actions run whatever its conditions say, like Home Assistant's own "Run actions". Leave the list empty for no card. Only the entities listed there can be run.
+
 ## 0.164.0
 
 - Changed: the three colour themes (Settings → Display → Colors, and a remote's own under Device) have new colours. **Slate** is a soft steel blue-gray instead of a saturated navy, **Sand** is ivory by day and a warm graphite by night instead of yellow cream and brown, and both have a softer dark mode: a charcoal page rather than a near-black one. **Gray** keeps its dark mode as it was; in the light theme its page is now a soft gray, so the white cards stand out from it. Nothing to set: whichever theme a frame or remote wears simply has the new colours.

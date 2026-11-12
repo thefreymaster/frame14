@@ -75,6 +75,7 @@ function loadEntities() {
       route: options.route_entity ?? "",
       albums: options.immich_album_ids ?? [],
       lightAllOffExclude: options.light_all_off_exclude ?? [],
+      scenes: options.scene_entities ?? [],
       calendarExclude: options.calendar_exclude ?? [],
     };
   }
@@ -107,6 +108,7 @@ function loadEntities() {
       route: frame14.route ?? "",
       albums: frame14.albums ?? [],
       lightAllOffExclude: frame14.lightAllOffExclude ?? [],
+      scenes: frame14.scenes ?? [],
       calendarExclude: frame14.calendarExclude ?? [],
     };
   }
@@ -133,6 +135,7 @@ function loadEntities() {
     route: "",
     albums: [],
     lightAllOffExclude: [],
+    scenes: [],
     calendarExclude: [],
   };
 }

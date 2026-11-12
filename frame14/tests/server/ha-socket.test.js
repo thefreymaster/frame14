@@ -32,6 +32,9 @@ vi.mock("../../entities.js", () => ({
     // The house's helpers, options since 0.145.0.
     motion: "binary_sensor.kitchen_motion_sensor_motion",
     route: "input_select.oledos_route",
+    // The Lights page's scenes (0.165.0): the stub has a script and another
+    // automation too, which this doesn't list.
+    scenes: [STUB.scenes.movie, STUB.scenes.reading],
   },
 }));
 
@@ -174,6 +177,20 @@ describe("callService", () => {
       { domain: "light", service: "turn_off", entity_id: "light.kitchen_main_lights" },
       { domain: "fan", service: "turn_off", entity_id: "fan.aidens_fan" },
       { domain: "climate", service: "set_hvac_mode", entity_id: "climate.samsung_airconditioner_3", hvac_mode: "off" },
+      // A scene, script or automation only if scene_entities names it
+      // (0.165.0), and only run: never switched off, toggled or reloaded.
+      { domain: "script", service: "turn_on", entity_id: STUB.scenes.script },
+      { domain: "automation", service: "trigger", entity_id: STUB.scenes.automation },
+      { domain: "automation", service: "turn_off", entity_id: STUB.scenes.movie },
+      { domain: "automation", service: "toggle", entity_id: STUB.scenes.movie },
+      { domain: "automation", service: "turn_on", entity_id: STUB.scenes.movie },
+      { domain: "automation", service: "reload" },
+      { domain: "scene", service: "trigger", entity_id: STUB.scenes.reading },
+      { domain: "scene", service: "apply", entity_id: STUB.scenes.reading },
+      { domain: "scene", service: "turn_on", entity_id: STUB.scenes.movie },
+      { domain: "script", service: "turn_on", entity_id: STUB.scenes.reading },
+      { domain: "scene", service: "turn_on", entity_id: [STUB.scenes.reading] },
+      { domain: "scene", service: "turn_on" },
       {
         domain: "media_player",
         service: "play_media",
@@ -185,6 +202,43 @@ describe("callService", () => {
     for (const call of refused) expect(ha.callService(call), JSON.stringify(call)).toBe(false);
     expect(ha.getState("switch.unserver_container_plex").state).toBe("on");
     expect(ha.getState("light.front_yard").state).toBe("off");
+    expect(ha.getState(STUB.scenes.script).attributes.last_triggered).toBeNull();
+    expect(ha.getState(STUB.scenes.automation).attributes.last_triggered).toBeNull();
+    expect(ha.getState(STUB.scenes.movie).state).toBe("on");
+  });
+
+  it("runs a configured automation's actions and a configured scene (0.165.0)", async () => {
+    stub.setState("light.kitchen_cabinet_lights", "on");
+    await until(() => ha.getState("light.kitchen_cabinet_lights").state === "on");
+    await expect(ha.callService({ domain: "automation", service: "trigger", entity_id: STUB.scenes.movie })).resolves.toEqual({ ok: true });
+    // Movie mode: the living room down to a quarter, the kitchen off.
+    await until(() => ha.getState("light.kitchen_cabinet_lights").state === "off");
+    expect(ha.getState("light.living_room")).toMatchObject({ state: "on", attributes: { brightness: 64 } });
+    expect(ha.getState(STUB.scenes.movie).attributes.last_triggered).not.toBeNull();
+
+    await expect(ha.callService({ domain: "scene", service: "turn_on", entity_id: STUB.scenes.reading })).resolves.toEqual({ ok: true });
+    await until(() => ha.getState("light.lady_lamp").state === "on");
+    stub.reset();
+    await until(() => ha.getState("light.kitchen_cabinet_lights").state === "on");
+  });
+
+  it("an automation still running when the wait ends has run; a scene that never answers hasn't (0.165.0)", async () => {
+    // Home Assistant answers automation.trigger once the actions are done:
+    // one with a delay in it outlasts the wait without having failed.
+    stub.setServiceBehaviour({ delay_ms: 300 });
+    await expect(
+      ha.callService({ domain: "automation", service: "trigger", entity_id: STUB.scenes.movie }, { timeoutMs: 50 }),
+    ).resolves.toEqual({ ok: true });
+    await expect(
+      ha.callService({ domain: "scene", service: "turn_on", entity_id: STUB.scenes.reading }, { timeoutMs: 50 }),
+    ).resolves.toEqual({ ok: false, error: "Home Assistant didn't answer within 10s" });
+    // A refusal is still a refusal, whatever the domain.
+    stub.setServiceBehaviour({ fail: { [STUB.scenes.movie]: "Automation is disabled" } });
+    await expect(
+      ha.callService({ domain: "automation", service: "trigger", entity_id: STUB.scenes.movie }),
+    ).resolves.toEqual({ ok: false, error: "Automation is disabled" });
+    await new Promise((r) => setTimeout(r, 350));
+    stub.reset();
   });
 
   it("switches a configured switch (0.151.0: the only kind it does, with the printer's chamber light)", async () => {

@@ -10,7 +10,8 @@ import type { EntitiesConfig } from "../hooks/useEntitiesConfig";
  *
  * - `solar`: both power-now sensors (what /api/energy needs); `circuits`: a
  *   monitored circuit; `energy`, the Energy page: either.
- * - `lights`: a configured light or switch, or a light area.
+ * - `lights`: a configured light or switch, a light area, or a scene (the
+ *   Lights page holds the scenes, 0.165.0).
  * - `cameras`: the Cameras page has something — a camera, the printer's, or
  *   a vacuum's map.
  * - `photos`: an album in `immich_album_ids` (0.162.0; Immich's address and
@@ -66,7 +67,8 @@ export function featuresOf(config: EntitiesConfig | undefined): Features {
   const printer = Boolean(config.printer);
   const vacuum = some(config.vacuums);
   return {
-    lights: some(config.lights) || some(config.lightAreas),
+    lights:
+      some(config.lights) || some(config.lightAreas) || some(config.scenes),
     climate: some(config.climate),
     fans: some(config.fans),
     solar,

@@ -26,7 +26,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 
 - **Home** — weather, thermostats, energy, the calendar, the lights that are on, fans, the 3D printer and the robot vacuums as cards you can rearrange, resize and hide per device (press and hold).
 - **Clock and Photos** — an analog or digital clock, and an Immich album as a slideshow, through Home Assistant's Immich integration; a remote picks the photo the frames show.
-- **Lights and Climate** — lights and switches grouped by room; thermostats with a dial, mode and fan controls.
+- **Lights and Climate** — lights and switches grouped by room, under a card of scenes a tap runs; thermostats with a dial, mode and fan controls.
 - **Energy** — the power flow now, today's solar curve, month and year history, and the draw per circuit.
 - **Weather** — conditions and advisories, hourly and daily forecasts, the radar.
 - **Printer, Vacuum, Cameras, Calendar** — a Bambu Lab printer with its camera and job, Roborock vacuums with their maps, every camera live — and full screen, with its room's lights at hand — and a two-week agenda.
@@ -97,8 +97,9 @@ Without `weather_entity` the Weather page and the Home weather and radar cards a
 | `climate_names` | Optional labels for thermostats, by entity ID (otherwise the entity's name) | see below |
 | `fan_entities` | Fans, on the Home page's Fans card | `- fan.living_room_ceiling_fan` |
 | `light_all_off_exclude` | Optional: lights and switches the **All off** buttons leave on — a night light, say | `- light.kids_night_light` |
+| `scene_entities` | Optional: scenes, scripts and automations to run from the Lights page's **Scenes** card, in the order listed | `- scene.movie_night` |
 
-Each left empty takes its page and Home card out: no lights or light areas, no Lights; no thermostats, no Climate; no fans, no Fans card.
+Each left empty takes its page and Home card out: no lights, light areas or scenes, no Lights; no thermostats, no Climate; no fans, no Fans card.
 
 ### Energy
 
@@ -157,6 +158,8 @@ A printer, vacuums or TeamTracker sensors left empty take out their page and Hom
 ```
 
 The Lights page groups the lights by room — the areas they (or their devices) are assigned to in Home Assistant, the listed rooms first in that order. A light in no area shows under "Other lights". Lights disabled or hidden in Home Assistant, and config or diagnostic entities such as a plug's indicator LED, are not imported from a room.
+
+The **Scenes** card at the top of the Lights page has a button for each entity in `scene_entities`: a scene or a script is turned on, an automation's actions are run (whatever its conditions say, as Home Assistant's "Run actions" does). The buttons take their names and icons from Home Assistant — set an icon on the scene, script or automation there to change one.
 
 Light names and icons are derived from entity IDs — `light.kitchen_main_lights` becomes "Kitchen Main Lights" — until Home Assistant's own names arrive.
 
@@ -263,7 +266,7 @@ Frame14 has no login of its own: anything that reaches its port can use it. Keep
 - **Another website can't use it through your browser.** A browser's request from another site, or another app on the same domain, is refused, socket and routes alike (0.151.0). Home Assistant's `rest_command` calls still work.
 - **Notifications go only to browsers' push services.** A device's subscription is taken only when its address is Google's, Apple's, Mozilla's or Microsoft's push service, so the add-on never posts to an address a page chose (0.160.0). What is sent comes from Home Assistant's `frame14_notify` event, not from a request to the add-on.
 - **It only shows the albums you listed.** A photo is served only when it is in one of `immich_album_ids`, and the add-on fetches it from Home Assistant with its token (0.162.0).
-- **It only controls what it shows.** Lights: the ones in `light_entities`, the lights of the rooms in `light_areas`, and the printer's chamber light (0.156.0). Switches: the ones in `light_entities` and the chamber light (0.151.0). Fans and thermostats: the ones in `fan_entities` and `climate_entities` (0.156.0). The vacuum and printer controls are held to the configured devices, and a spoken reply plays only on `assist_speaker`. A call for anything else in Home Assistant is refused.
+- **It only controls what it shows.** Lights: the ones in `light_entities`, the lights of the rooms in `light_areas`, and the printer's chamber light (0.156.0). Switches: the ones in `light_entities` and the chamber light (0.151.0). Fans and thermostats: the ones in `fan_entities` and `climate_entities` (0.156.0). Scenes, scripts and automations: the ones in `scene_entities`, and only run — never switched off or changed (0.165.0). The vacuum and printer controls are held to the configured devices, and a spoken reply plays only on `assist_speaker`. A call for anything else in Home Assistant is refused.
 
 ## Changelog & releases
 

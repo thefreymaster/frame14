@@ -80,5 +80,6 @@
   "route": "input_select.oledos_route",
   "albums": ["b6dbcd29-35f6-48c6-83f2-dadb336a3447", "faa8658c-4cc3-47b8-b912-6a713d7ed902", "e38508c9-f876-4afb-a248-caca8efb0766", "09739108-74a4-4de1-9471-ec7819097b0b"],
   "lightAllOffExclude": ["light.aidens_hatch_light"],
+  "scenes": ["automation.new_automation_3"],
   "calendarExclude": ["calendar.radarr"]
 }

@@ -123,6 +123,8 @@ const ALLOWED_HVAC_MODES = new Set(["heat", "cool", "off", "auto", "heat_cool", 
 const ENTITY_ID_RE = /^[a-z_]+\.[a-z0-9_]+$/;
 // Fan mode names vary per device ("auto", "Low", "wind free"), so validate shape not value.
 const FAN_MODE_RE = /^[A-Za-z0-9 _-]{1,32}$/;
+// How long a service call waits for Home Assistant's answer.
+const SERVICE_TIMEOUT_MS = 10_000;
 const VACUUM_SERVICES = new Set(["start", "pause", "return_to_base", "locate", "set_fan_speed"]);
 
 /**
@@ -147,6 +149,25 @@ function deviceControlData({ domain, service, entity_id, fan_speed }) {
     return { entity_id };
   }
   return null;
+}
+
+// What runs each kind of scene: a scene and a script are turned on, an
+// automation's actions are triggered.
+const SCENE_SERVICES = new Map([["scene", "turn_on"], ["script", "turn_on"], ["automation", "trigger"]]);
+
+/**
+ * Service data for one of the Lights page's scenes (0.165.0), or null if the
+ * call isn't one: a scene, script or automation in ENTITIES.scenes
+ * (`scene_entities`), by the one service that runs it — never an
+ * automation's turn_off, a script's stop, or any the option doesn't name.
+ * An automation's actions run whatever its conditions say, as Home
+ * Assistant's own "Run actions" does: the tap is the decision.
+ */
+function sceneCallData({ domain, service, entity_id }) {
+  if (SCENE_SERVICES.get(domain) !== service) return null;
+  if (typeof entity_id !== "string" || !entity_id.startsWith(domain + ".")) return null;
+  if (!(ENTITIES.scenes ?? []).includes(entity_id)) return null;
+  return domain === "automation" ? { entity_id, skip_condition: true } : { entity_id };
 }
 
 /**
@@ -211,16 +232,20 @@ export function getAllStates() {
  * Assistant has run it, `{ ok: false, error }` when HA rejects it or hasn't
  * answered in 10s. Never rejects — a caller that doesn't wait loses nothing,
  * and the process's unhandledRejection handler exits.
+ *
+ * `slowIsRunning` (0.165.0): no answer in time counts as ok. Home Assistant
+ * answers automation.trigger only once the automation's actions have
+ * finished, so one with a delay in it is still running then, not refused.
  */
-function sendServiceCall(domain, service, service_data) {
-  return sendCommand("call_service", { domain, service, service_data }, 10_000)
+function sendServiceCall(domain, service, service_data, { slowIsRunning = false, timeoutMs = SERVICE_TIMEOUT_MS } = {}) {
+  return sendCommand("call_service", { domain, service, service_data }, timeoutMs)
     .then(() => ({ ok: true }))
     .catch((e) => {
+      const slow = /timed out/.test(e.message);
+      if (slow && slowIsRunning) return { ok: true };
       console.warn(`[ha-socket] ${domain}.${service} failed:`, e.message);
       // sendCommand's timeout names the message id; the user needs the gist.
-      const error = /timed out/.test(e.message)
-        ? "Home Assistant didn't answer within 10s"
-        : e.message;
+      const error = slow ? "Home Assistant didn't answer within 10s" : e.message;
       return { ok: false, error };
     });
 }
@@ -231,8 +256,14 @@ function sendServiceCall(domain, service, service_data) {
  * (truthy — `if (!ok)` keeps working — and awaited by index.js's entity:call
  * for its ack, since 0.125).
  */
-export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type }) {
+export function callService({ domain, service, entity_id, hvac_mode, temperature, fan_mode, fan_speed, percentage, brightness_pct, color_temp_kelvin, rgb_color, media_content_id, media_content_type }, { timeoutMs } = {}) {
   if (!haWs || haWs.readyState !== 1 /* WebSocket.OPEN */) return false;
+
+  if (SCENE_SERVICES.has(domain)) {
+    const service_data = sceneCallData({ domain, service, entity_id });
+    if (!service_data) return false;
+    return sendServiceCall(domain, service, service_data, { slowIsRunning: domain === "automation", timeoutMs });
+  }
 
   if (domain === "vacuum" || domain === "button") {
     const service_data = deviceControlData({ domain, service, entity_id, fan_speed });

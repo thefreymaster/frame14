@@ -52,6 +52,7 @@ const OPTIONS = {
   route_entity: "input_select.route",
   immich_album_ids: ["aaaaaaaa-0000-4000-8000-000000000001"],
   light_all_off_exclude: ["light.night"],
+  scene_entities: ["automation.movie_mode", "scene.reading"],
   calendar_exclude: ["calendar.radarr"],
 };
 
@@ -97,13 +98,15 @@ describe("the add-on's options", () => {
     // The photo albums (0.162.0; an input_select of them before).
     expect(e.albums).toEqual(["aaaaaaaa-0000-4000-8000-000000000001"]);
     expect(e.lightAllOffExclude).toEqual(["light.night"]);
+    // The Lights page's scenes (0.165.0).
+    expect(e.scenes).toEqual(["automation.movie_mode", "scene.reading"]);
     expect(e.calendarExclude).toEqual(["calendar.radarr"]);
   });
 
   it("turns the helpers off and leaves nothing out when they aren't set", async () => {
     files.set("/data/options.json", JSON.stringify({ weather_entity: "weather.home" }));
     const e = await load();
-    expect(e).toMatchObject({ internet: "", motion: "", route: "", albums: [], lightAllOffExclude: [], calendarExclude: [] });
+    expect(e).toMatchObject({ internet: "", motion: "", route: "", albums: [], lightAllOffExclude: [], scenes: [], calendarExclude: [] });
   });
 
   it("turns climate_names into a map, trimmed, dropping the malformed", async () => {
@@ -170,7 +173,7 @@ describe("with nothing to read", () => {
       lights: [], lightAreas: [], weather: {}, internet: "", climate: [], climateNames: {}, energy: {},
       circuits: { main: "", balance: "", items: [] }, vacuums: [], fans: [], mediaPlayer: "",
       printer: "", teamTracker: [], person: "", camera: "", cameras: [],
-      motion: "", route: "", albums: [], lightAllOffExclude: [], calendarExclude: [],
+      motion: "", route: "", albums: [], lightAllOffExclude: [], scenes: [], calendarExclude: [],
     });
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("no entity config"));
   });

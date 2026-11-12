@@ -21,6 +21,7 @@ import { useDesktop } from "../hooks/useDesktop";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, useEntitiesAcked } from "../hooks/useEntity";
 import { LightsAllOffButton } from "../components/LightsAllOffButton";
+import { ScenesCard } from "../components/ScenesCard";
 import { IoStar, IoToggle, IoToggleOutline } from "react-icons/io5";
 
 // A stable empty list while the config loads: useEntities re-subscribes when
@@ -136,6 +137,8 @@ export function Lights() {
           width="100%"
           alignItems="start"
         >
+          {/* The scenes a tap runs (0.165.0), over everything else. */}
+          <ScenesCard />
           {(favorites.length > 0 || !loading) && (
             // Across every column: the page's first card on any screen, its
             // tiles as many across as the Home card's. Mounted with none, and

@@ -24,6 +24,7 @@ import {
   callService,
   callVacuumService,
   pressButton,
+  runScene,
 } from "../../src/lib/callService";
 
 type Ack = (err: Error | null, result?: unknown) => void;
@@ -119,5 +120,28 @@ describe("the other calls", () => {
       { domain: "vacuum", service: "set_fan_speed", entity_id: "vacuum.x", fan_speed: "max_plus" },
       { domain: "button", service: "press", entity_id: "button.x" },
     ]);
+  });
+});
+
+describe("runScene (0.165.0)", () => {
+  it("triggers an automation, turns a scene or a script on, and resolves with the ack", async () => {
+    const result = runScene("automation.movie_mode");
+    void runScene("scene.reading");
+    void runScene("script.good_night");
+    expect(fake.timedEmit.mock.calls.map((c) => c[1])).toEqual([
+      { domain: "automation", service: "trigger", entity_id: "automation.movie_mode" },
+      { domain: "scene", service: "turn_on", entity_id: "scene.reading" },
+      { domain: "script", service: "turn_on", entity_id: "script.good_night" },
+    ]);
+    (fake.timedEmit.mock.calls[0][2] as Ack)(null, { ok: false, error: "Not allowed" });
+    await expect(result).resolves.toEqual({ ok: false, error: "Not allowed" });
+  });
+
+  it("refuses anything else without asking the server", async () => {
+    await expect(runScene("light.living_room")).resolves.toEqual({
+      ok: false,
+      error: "Not a scene, script or automation",
+    });
+    expect(fake.timedEmit).not.toHaveBeenCalled();
   });
 });

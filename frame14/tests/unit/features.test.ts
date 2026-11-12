@@ -50,6 +50,9 @@ describe("featuresOf", () => {
   it("has lights with a light or an area, before the area's lights are found", () => {
     expect(on({ lights: ["switch.x"] })).toEqual(["lights"]);
     expect(on({ lightAreas: ["Kitchen"] })).toEqual(["lights"]);
+    // The Lights page holds the scenes too (0.165.0): scenes alone keep it.
+    expect(on({ scenes: ["scene.reading"] })).toEqual(["lights"]);
+    expect(on({ scenes: [] })).toEqual([]);
   });
 
   it("has cameras with a camera, the doorbell's, the printer's or a vacuum's map", () => {

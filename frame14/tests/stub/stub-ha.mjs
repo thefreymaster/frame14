@@ -32,6 +32,13 @@ export const STUB = {
   h2s: "h2s_0938aj622701347",
   vacuum: "roborock_q5_pro",
   addonUpdate: "update.frame14_update",
+  /** The scenes (0.165.0): the two frame14.test.json lists, and two it doesn't. */
+  scenes: {
+    movie: "automation.living_room_movie_mode",
+    reading: "scene.reading",
+    script: "script.good_night",
+    automation: "automation.vacation_mode",
+  },
   /** Home Assistant's Immich account (its config entry's unique id) and albums (0.162.0). */
   immichAccount: "stub-immich",
   albums: {
@@ -241,6 +248,15 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     light("light.workshop", "Workshop", false),
     light("light.living_room_floor_lamp", "Floor Lamp", false),
     light("light.kitchen_plug_indicator", "Kitchen Plug Indicator", true),
+
+    // The Lights page's scenes (0.165.0): an automation with no trigger of
+    // its own (a dashboard button's), a scene never yet turned on (Home
+    // Assistant says "unknown" until one is) with an icon, and a script and
+    // an automation frame14.test.json doesn't list, which nothing may run.
+    S(STUB.scenes.movie, "on", { friendly_name: "Living Room Movie Mode", id: "1779408135975", last_triggered: null, mode: "single", current: 0 }),
+    S(STUB.scenes.reading, "unknown", { friendly_name: "Reading", icon: "mdi:book-open-variant", entity_id: ["light.lady_lamp"] }),
+    S(STUB.scenes.script, "off", { friendly_name: "Good Night", last_triggered: null, mode: "single", current: 0 }),
+    S(STUB.scenes.automation, "on", { friendly_name: "Vacation Mode", id: "1779408135976", last_triggered: null, mode: "single", current: 0 }),
 
     S("weather.systems_weatherkit", "cloudy", {
       friendly_name: "weatherkit",
@@ -601,6 +617,28 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     for (const id of ids) {
       const cur = states.get(id);
       if (!cur) continue;
+      // Movie mode, as the house's: the living room dimmed to a quarter, the
+      // kitchen and dining lights off.
+      if (domain === "automation" && service === "trigger") {
+        setState(id, cur.state, { last_triggered: iso(new Date()) });
+        if (id === STUB.scenes.movie) {
+          applyService("light", "turn_on", { entity_id: "light.living_room", brightness_pct: 25 });
+          applyService("light", "turn_off", {
+            entity_id: ["light.kitchen_cabinet_lights", "light.living_room_fireplace", "light.kitchen_main_lights", "light.dining_room_chandelier"],
+          });
+        }
+        continue;
+      }
+      // A scene's state is when it was last turned on.
+      if (domain === "scene" && service === "turn_on") {
+        setState(id, iso(new Date()));
+        if (id === STUB.scenes.reading) applyService("light", "turn_on", { entity_id: "light.lady_lamp", brightness_pct: 60 });
+        continue;
+      }
+      if (domain === "script" && service === "turn_on") {
+        setState(id, cur.state, { last_triggered: iso(new Date()) });
+        continue;
+      }
       if (service === "toggle") setState(id, cur.state === "on" ? "off" : "on");
       else if (service === "turn_on" && domain === "light") {
         const a = {};

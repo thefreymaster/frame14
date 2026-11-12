@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import { MdAutoAwesome, MdOutlinePalette } from "react-icons/md";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { HAState } from "../../src/hooks/useEntity";
 import type { SceneAttrs } from "../../src/lib/scenes";
@@ -57,6 +58,14 @@ describe("ScenesCard", () => {
     live.scenes = [READING, MOVIE];
     renderWithProviders(<ScenesCard />);
     expect(tiles()).toEqual(["Run Reading", "Run Living Room Movie Mode"]);
+  });
+
+  it("titles itself with a palette, Home Assistant's icon for scenes, not the sparkles (0.165.1)", () => {
+    const drawn = (glyph: React.ReactElement) => render(glyph).container.querySelector("svg")!.innerHTML;
+    renderWithProviders(<ScenesCard />);
+    const glyph = screen.getByText("Scenes").closest(".chakra-card__header")!.querySelector("svg")!.innerHTML;
+    expect(glyph).toBe(drawn(<MdOutlinePalette />));
+    expect(glyph).not.toBe(drawn(<MdAutoAwesome />));
   });
 
   it("isn't there with no scenes configured", () => {

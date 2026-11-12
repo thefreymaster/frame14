@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Card, HStack, Icon, Spinner, Text } from "@chakra-ui/react";
-import { MdAutoAwesome, MdCheck } from "react-icons/md";
+import { MdCheck, MdOutlinePlayCircle } from "react-icons/md";
 import { toaster } from "./ui/toaster";
 import { useEntity } from "../hooks/useEntity";
 import { runScene } from "../lib/callService";
@@ -16,9 +16,9 @@ type Phase = "idle" | "running" | "done";
 /**
  * One of the Lights page's scenes as a tile (0.165.0): a scene, a script or
  * an automation from `scene_entities`, shaped as a light's tile — the icon
- * set for it in Home Assistant (a sparkle without one) beside its name —
- * with nothing under the name, since there is no state to show: a tap runs
- * it. From the tap until the server's ack (Home Assistant's answer) a
+ * set for it in Home Assistant beside its name (without one a play button,
+ * since a tap runs it; 0.165.0's sparkles read as an AI badge and went in
+ * 0.165.1) — with nothing under the name, since there is no state to show. From the tap until the server's ack (Home Assistant's answer) a
  * spinner stands in for the icon and further taps are ignored; then a tick
  * for DONE_MS, the only sign it ran when no light on the page changes, or an
  * error toast with Home Assistant's words when it didn't.
@@ -97,7 +97,7 @@ export function SceneTile({ entityId }: { entityId: string }) {
               <MdiIcon name={haIcon} boxSize="7" />
             ) : (
               <Icon boxSize="7">
-                <MdAutoAwesome />
+                <MdOutlinePlayCircle />
               </Icon>
             )}
           </Box>

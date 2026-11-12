@@ -1,5 +1,5 @@
 import { Box, Grid } from "@chakra-ui/react";
-import { MdAutoAwesome } from "react-icons/md";
+import { MdOutlinePalette } from "react-icons/md";
 import { useEntitiesConfig } from "../hooks/useEntitiesConfig";
 import { useEntities, useEntitiesAcked } from "../hooks/useEntity";
 import { LIGHT_TILE_COLUMNS_CARD } from "../lib/lightsConfig";
@@ -38,7 +38,9 @@ export function ScenesCard() {
       <Board
         collapsible
         storageKey="lights-scenes"
-        title={<SectionTitle icon={<MdAutoAwesome />}>Scenes</SectionTitle>}
+        // A palette, Home Assistant's own icon for scenes (0.165.1; sparkles
+        // before, which read as an AI badge).
+        title={<SectionTitle icon={<MdOutlinePalette />}>Scenes</SectionTitle>}
       >
         {loading ? (
           <ScenesSkeleton count={ids.length} />

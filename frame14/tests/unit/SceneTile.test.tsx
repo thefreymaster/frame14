@@ -1,5 +1,6 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MdAutoAwesome, MdOutlinePlayCircle } from "react-icons/md";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HAState } from "../../src/hooks/useEntity";
 import type { SceneAttrs } from "../../src/lib/scenes";
@@ -34,6 +35,8 @@ const scene = (state: string, attributes: SceneAttrs = {}): HAState<SceneAttrs> 
 });
 
 const tile = () => screen.getByRole("button", { name: "Run Living Room Movie Mode" });
+/** What a react-icons glyph draws: its paths. */
+const drawn = (glyph: React.ReactElement) => render(glyph).container.querySelector("svg")!.innerHTML;
 const phase = () => tile().getAttribute("data-scene-phase");
 
 beforeEach(() => {
@@ -56,10 +59,12 @@ describe("SceneTile", () => {
     expect(tile()).toHaveAttribute("aria-busy", "false");
   });
 
-  it("shows Home Assistant's icon when it has one, a glyph of its own when not", () => {
+  it("shows Home Assistant's icon when it has one, a play button when not — never the sparkles (0.165.1)", () => {
     const { unmount } = renderWithProviders(<SceneTile entityId={MOVIE} />);
     expect(tile().querySelector("[data-mdi-icon]")).toBeNull();
-    expect(tile().querySelector("svg")).not.toBeNull();
+    const glyph = tile().querySelector("svg")!.innerHTML;
+    expect(glyph).toBe(drawn(<MdOutlinePlayCircle />));
+    expect(glyph).not.toBe(drawn(<MdAutoAwesome />));
     unmount();
     live.state = scene("on", { icon: "mdi:movie-open" });
     renderWithProviders(<SceneTile entityId={MOVIE} />);

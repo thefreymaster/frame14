@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.165.1
+
+- Changed: the Scenes card on the Lights page no longer uses the sparkles icon. Its title has a palette (Home Assistant's own icon for scenes), and a scene, script or automation with no icon set in Home Assistant shows a play button. One that has an icon there shows it, as before.
+
 ## 0.165.0
 
 - Added: **Scenes** on the Lights page — a card at the top with a button for each scene, script or automation you choose, so a tap runs it from the frame or a phone the way a dashboard button does. Each button takes its name and icon from Home Assistant, spins while Home Assistant runs it, shows a tick when it has, and says why if it couldn't. New option `scene_entities` (a list of `scene.…`, `script.…` and `automation.…` ids, in the order the buttons show); its default is this house's Living Room Movie Mode automation, which dims the living room and turns the kitchen off. An automation's actions run whatever its conditions say, like Home Assistant's own "Run actions". Leave the list empty for no card. Only the entities listed there can be run.

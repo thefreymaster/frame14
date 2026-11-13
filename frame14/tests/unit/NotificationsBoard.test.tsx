@@ -50,7 +50,10 @@ describe("the Notifications card", () => {
     toggle();
     await waitFor(() => expect(control()).toHaveAttribute("data-state", "checked"));
     expect(push.enablePush).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole("button", { name: "Send a test" }));
+    // 0.166.1: in the card's header, beside the title, not under the switch.
+    const send = screen.getByRole("button", { name: "Send a test" });
+    expect(send.closest(".chakra-card__header")).toContainElement(screen.getByText("Notifications"));
+    fireEvent.click(send);
     await waitFor(() => expect(push.toast).toHaveBeenCalledWith(expect.objectContaining({ title: "Test sent" })));
     expect(push.sendTestPush).toHaveBeenCalledTimes(1);
   });

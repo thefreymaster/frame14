@@ -96,8 +96,16 @@ test.describe("notifications", () => {
     await subscribed;
     await expect(allow(page)).toBeChecked();
 
-    // Send a test: to this device, from the server.
-    await page.getByRole("button", { name: "Send a test" }).click();
+    // Send a test: to this device, from the server. It's the card's header
+    // action (0.166.1): on the title's row, at its right, above the switch.
+    const send = page.getByRole("button", { name: "Send a test" });
+    const title = page.locator(".chakra-card__header h2", { hasText: "Notifications" });
+    await expect(page.locator(".chakra-card__header", { has: send })).toContainText("Notifications");
+    const [sendBox, titleBox, switchBox] = await Promise.all([send.boundingBox(), title.boundingBox(), page.getByText("Allow notifications", { exact: true }).boundingBox()]);
+    expect(Math.abs(sendBox!.y + sendBox!.height / 2 - (titleBox!.y + titleBox!.height / 2))).toBeLessThan(4);
+    expect(sendBox!.x).toBeGreaterThan(titleBox!.x + titleBox!.width);
+    expect(sendBox!.y + sendBox!.height).toBeLessThan(switchBox!.y);
+    await send.click();
     await expect(page.getByText("Test sent")).toBeVisible();
     await expect.poll(() => received(request, keys)).toEqual([
       { title: "Frame14", body: "Notifications are on for this device.", tag: "frame14-test", url: "/control/device" },

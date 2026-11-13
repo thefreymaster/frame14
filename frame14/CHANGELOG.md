@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.166.1
+
+- Changed: on Settings' Device tab, the Notifications card's **Send a test** button is a small button in the card's header, beside its title, instead of a wide one under the switch. It still shows only while notifications are on.
+
 ## 0.166.0
 
 - Added: an **Outlines** colour theme, next to Gray, Slate and Sand under Colors (the frames' on Settings' Display card, a phone's own under Device). The cards and the navigation bar are the same colour as the page, white by day and near-black by night, with no shadow, so only their thin outline marks them out. Its swatch is an empty ring.

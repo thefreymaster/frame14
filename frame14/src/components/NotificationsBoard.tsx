@@ -33,7 +33,10 @@ function failed(title: string, e: unknown) {
  * finishing here — even with Frame14 closed (usePushNotifications). Turning
  * it on asks the browser's permission first. Where it can't be on, the
  * switch is off and disabled and the reason is under it. While on, Send a
- * test has the server send one to this device alone.
+ * test has the server send one to this device alone; it sits in the card's
+ * header, as the other cards' actions do (0.166.1, the user: "Make the test
+ * button be in the header instead" — it was a full-width button under the
+ * switch).
  */
 export function NotificationsBoard() {
   const { support, on, busy, enable, disable, test } = usePushNotifications();
@@ -45,6 +48,31 @@ export function NotificationsBoard() {
         <SectionTitle icon={<IoNotificationsOutline />}>
           Notifications
         </SectionTitle>
+      }
+      action={
+        on && (
+          <Button
+            size="xs"
+            variant="outline"
+            // Taller than the title row; don't let it grow the header.
+            my="-1"
+            loading={busy}
+            onClick={() => {
+              test()
+                .then(() =>
+                  toaster.create({
+                    type: "info",
+                    title: "Test sent",
+                    description: "It should arrive on this device in a moment.",
+                  }),
+                )
+                .catch((err) => failed("Couldn't send a test", err));
+            }}
+          >
+            <IoSend />
+            Send a test
+          </Button>
+        )
       }
     >
       <Field.Root disabled={!available}>
@@ -71,28 +99,6 @@ export function NotificationsBoard() {
             : WHY_NOT[support]}
         </Field.HelperText>
       </Field.Root>
-      {on && (
-        <Button
-          size="sm"
-          variant="outline"
-          mt="4"
-          loading={busy}
-          onClick={() => {
-            test()
-              .then(() =>
-                toaster.create({
-                  type: "info",
-                  title: "Test sent",
-                  description: "It should arrive on this device in a moment.",
-                }),
-              )
-              .catch((err) => failed("Couldn't send a test", err));
-          }}
-        >
-          <IoSend />
-          Send a test
-        </Button>
-      )}
     </Board>
   );
 }

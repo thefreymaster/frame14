@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.166.0
+
+- Added: an **Outlines** colour theme, next to Gray, Slate and Sand under Colors (the frames' on Settings' Display card, a phone's own under Device). The cards and the navigation bar are the same colour as the page, white by day and near-black by night, with no shadow, so only their thin outline marks them out. Its swatch is an empty ring.
+
 ## 0.165.1
 
 - Changed: the Scenes card on the Lights page no longer uses the sparkles icon. Its title has a palette (Home Assistant's own icon for scenes), and a scene, script or automation with no icon set in Home Assistant shows a play button. One that has an icon there shows it, as before.

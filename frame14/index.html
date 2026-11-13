@@ -70,7 +70,9 @@
           ) {
             mode = "bright";
           }
-          if (saved === "slate" || saved === "sand") palette = saved;
+          if (saved === "slate" || saved === "sand" || saved === "outlines") {
+            palette = saved;
+          }
         } catch (e) {}
         var root = document.documentElement;
         root.dataset.themeMode = mode;
@@ -117,6 +119,12 @@
       }
       html[data-palette="sand"][data-theme-mode="bright"] {
         --splash-bg: #faf8f4;
+      }
+      html[data-palette="outlines"] {
+        --splash-bg: #09090b;
+      }
+      html[data-palette="outlines"][data-theme-mode="bright"] {
+        --splash-bg: #ffffff;
       }
       @layer splash {
         html {

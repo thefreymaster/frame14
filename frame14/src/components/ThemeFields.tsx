@@ -1,4 +1,5 @@
 import { Field, HStack, Stack } from "@chakra-ui/react";
+import { PHONE_MEDIA } from "../lib/homeLayout";
 import type { ThemeChoice, ThemeModePreference } from "../lib/themeMode";
 import {
   isThemePalette,
@@ -22,16 +23,26 @@ const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
 const PALETTE_ITEMS = THEME_PALETTES.map((value) => ({
   value,
   label: (
-    <HStack gap="2">
+    <HStack gap="2" data-palette-label>
       <PaletteSwatch palette={value} />
       {PALETTES[value].label}
     </HStack>
   ),
 }));
 
+// Four palettes with their swatches are wider than a small phone's card at
+// the control's own padding (0.166.0, Outlines the fourth): closer together
+// there, so the row stays inside the card down to a 360px screen.
+const PALETTE_CONTROL_CSS = {
+  [PHONE_MEDIA]: {
+    "& [data-part=item]": { px: "2" },
+    "& [data-palette-label]": { gap: "1.5" },
+  },
+};
+
 /**
  * A theme's two controls: Theme (Auto · Device · Bright · Dark) over Colors
- * (Gray · Slate · Sand). The Display card's for the frames' theme and the
+ * (Gray · Slate · Sand · Outlines). The Display card's for the frames' theme and the
  * Appearance card's for this device's own (0.148.0); `helper` says whose.
  */
 export function ThemeFields({
@@ -64,6 +75,7 @@ export function ThemeFields({
           items={PALETTE_ITEMS}
           value={value.palette}
           aria-label="Colors"
+          css={PALETTE_CONTROL_CSS}
           onValueChange={(e) => {
             if (isThemePalette(e.value)) onPalette(e.value);
           }}

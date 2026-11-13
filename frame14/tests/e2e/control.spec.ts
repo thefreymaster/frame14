@@ -117,6 +117,80 @@ test.describe("the Settings page", () => {
     }
   });
 
+  test("Outlines draws the cards and the nav by their outline alone: the page's colour, no shadow (0.166.0)", async ({ page, isMobile }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    // A frame's theme is the Display card's (the server's, put back below); a
+    // remote's its own, under Device.
+    await page.goto(isMobile ? "/control/device" : "/control/display");
+    const html = page.locator("html");
+    const board = page.locator(".chakra-card__root", {
+      has: page.getByRole("heading", { name: isMobile ? "Appearance" : "Display", exact: true }),
+    });
+    const theme = board.getByRole("radiogroup", { name: "Theme" });
+    const colors = board.getByRole("radiogroup", { name: "Colors" });
+    // The nav this screen shows: a phone's portrait bar, a desktop's rail.
+    const nav = page.locator(`[data-nav="${isMobile ? "bar" : "rail"}"]`);
+    // The page as painted: Chakra puts `bg` on <html> (body is transparent).
+    const pageColour = () => page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
+    const drawn = (el: typeof board) =>
+      el.evaluate((node) => {
+        const s = getComputedStyle(node);
+        return { shadow: s.boxShadow, edge: s.borderTopWidth, edgeColour: s.borderTopColor };
+      });
+    try {
+      await theme.getByText("Dark", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-theme-mode", "dark");
+      // Gray: a card of its own colour on the page, casting the navs' shadow.
+      await expect(html).toHaveAttribute("data-palette", "gray");
+      await expect(board).toHaveCSS("background-color", "rgb(28, 28, 30)");
+      expect((await drawn(board)).shadow).not.toBe("none");
+      expect((await drawn(nav)).shadow).not.toBe("none");
+
+      await colors.getByText("Outlines", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-palette", "outlines");
+      await expect(colors.getByRole("radio", { name: "Outlines" })).toBeChecked();
+      // The page's own near-black, and only the 1px edge to say where it is.
+      await expect.poll(pageColour).toBe("rgb(9, 9, 11)");
+      await expect(board).toHaveCSS("background-color", "rgb(9, 9, 11)");
+      await expect.poll(() => drawn(board)).toEqual({ shadow: "none", edge: "1px", edgeColour: "rgb(63, 63, 70)" });
+      await expect.poll(() => drawn(nav)).toEqual({ shadow: "none", edge: "1px", edgeColour: "rgb(63, 63, 70)" });
+
+      // By day: white on white.
+      await theme.getByText("Bright", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-theme-mode", "bright");
+      await expect.poll(pageColour).toBe("rgb(255, 255, 255)");
+      await expect(board).toHaveCSS("background-color", "rgb(255, 255, 255)");
+      await expect.poll(() => drawn(board)).toEqual({ shadow: "none", edge: "1px", edgeColour: "rgb(228, 228, 231)" });
+
+      // Worn from the first paint after a reload (index.html's early script).
+      await page.reload();
+      await expect(html).toHaveAttribute("data-palette", "outlines");
+      await expect(board).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+      if (isMobile) {
+        // Four palettes still fit a small phone's card.
+        await page.setViewportSize({ width: 360, height: 780 });
+        await expect
+          .poll(() =>
+            colors.evaluate((group) => {
+              const body = group.closest(".chakra-card__body") as HTMLElement;
+              const inner = body.getBoundingClientRect().right - parseFloat(getComputedStyle(body).paddingRight);
+              return group.getBoundingClientRect().right - inner;
+            }),
+          )
+          .toBeLessThanOrEqual(0);
+      }
+    } finally {
+      // Back to what every later page expects: Dark, Gray (the frames' is the
+      // add-on's to keep; a remote's goes with its context).
+      if (!isMobile) {
+        await theme.getByText("Dark", { exact: true }).click();
+        await colors.getByText("Gray", { exact: true }).click();
+        await expect(colors.getByRole("radio", { name: "Gray" })).toBeChecked();
+      }
+    }
+  });
+
   test("a remote has its own theme and colors under Device; a frame has none (0.148.0)", async ({ page, browser, isMobile }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/control/device");

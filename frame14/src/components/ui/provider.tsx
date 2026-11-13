@@ -23,8 +23,10 @@ import {
 import { useThemeMode } from "../../hooks/useThemeMode";
 
 // Every palette but Chakra's own gray, each a condition on <html
-// data-palette> (lib/themeMode sets it): `_slate`, `_sand`.
+// data-palette> (lib/themeMode sets it): `_slate`, `_sand`, `_outlines`.
 const TINTS = THEME_PALETTES.filter((p) => p !== "gray");
+// The palettes whose cards are an outline and nothing else (Outlines).
+const OUTLINED = THEME_PALETTES.filter((p) => PALETTES[p].outlined);
 
 /**
  * One neutral as a token per palette: Chakra's value as the base, each tint's
@@ -72,9 +74,11 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
  *
  * The neutrals come in palettes (lib/themePalettes, the user's ask: "a slate
  * mode that is blue grays and another you make up"): Chakra's gray, Slate and
- * Sand. The gray scale is redefined as semantic tokens whose base is Chakra's
- * own value and whose `_slate` / `_sand` conditions (`<html data-palette>`)
- * are the tint's, so everything Chakra builds on gray — bg, fg, border, the
+ * Sand, and Outlines (0.166.0: gray, its cards and navs drawn by their edge
+ * alone — the page's colour, and the `surface` shadow none). The gray scale
+ * is redefined as semantic tokens whose base is Chakra's own value and whose
+ * `_slate` / `_sand` / `_outlines` conditions (`<html data-palette>`) are the
+ * palette's, so everything Chakra builds on gray — bg, fg, border, the
  * gray colorPalette — and every `gray.N` here follows; `neutral.paper` (the
  * light page, where Chakra has white), `neutral.ink` (the dark page and the
  * light text, Chakra's black) and `neutral.card` (the dark cards, #1C1C1E in
@@ -164,6 +168,17 @@ const system = createSystem(
                 _light: "{colors.gray.200}",
                 _dark: "{colors.gray.700}",
               },
+            },
+          },
+        },
+        shadows: {
+          // The shade under every card and both floating navs (lib/
+          // floatingSurface's SURFACE_SHADOW): Chakra's `lg`, and none in a
+          // palette that draws them by their outline alone.
+          surface: {
+            value: {
+              base: "{shadows.lg}",
+              ...Object.fromEntries(OUTLINED.map((p) => [`_${p}`, "none"])),
             },
           },
         },

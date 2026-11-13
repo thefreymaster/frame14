@@ -22,9 +22,21 @@
 // The values were made in OKLCH (a hue, a chroma, and the lightness above) and
 // are kept as hex; index.html's splash copies each `paper` and `ink`.
 
-export type ThemePalette = "gray" | "slate" | "sand";
+//
+// Outlines (0.166.0, "the cards are just outline only with the same
+// background color") isn't a tint but a way of drawing the cards: gray's
+// scale, with the cards and the navs the page's own colour — white on white
+// by day, gray's near-black on itself by night — so their 1px edge is all
+// that sets them off, and no shadow under them (`outlined`).
 
-export const THEME_PALETTES: readonly ThemePalette[] = ["gray", "slate", "sand"];
+export type ThemePalette = "gray" | "slate" | "sand" | "outlines";
+
+export const THEME_PALETTES: readonly ThemePalette[] = [
+  "gray",
+  "slate",
+  "sand",
+  "outlines",
+];
 
 export const DEFAULT_PALETTE: ThemePalette = "gray";
 
@@ -54,7 +66,30 @@ export interface PaletteColors {
   ink: string;
   /** The cards and the navs in dark mode (`bg.surface`; light uses bg.panel). */
   card: string;
+  /**
+   * The cards and the navs are drawn by their edge alone: the page's colour
+   * (`card` is `ink`, `paper` the light cards' white) and no shadow.
+   */
+  outlined?: boolean;
 }
+
+// Chakra's gray scale (Tailwind's zinc, with a #111 950).
+const GRAY_SCALE: Record<PaletteStep, string> = {
+  "50": "#fafafa",
+  "100": "#f4f4f5",
+  "200": "#e4e4e7",
+  "300": "#d4d4d8",
+  "400": "#a1a1aa",
+  "500": "#71717a",
+  "600": "#52525b",
+  "700": "#3f3f46",
+  "800": "#27272a",
+  "900": "#18181b",
+  "950": "#111111",
+};
+
+/** The light cards' colour in every palette: Chakra's `bg.panel` by day. */
+export const LIGHT_CARD = "#ffffff";
 
 export const PALETTES: Record<ThemePalette, PaletteColors> = {
   // Chakra's own: its gray scale (Tailwind's zinc, with a #111 950), its
@@ -63,19 +98,7 @@ export const PALETTES: Record<ThemePalette, PaletteColors> = {
   // so the white cards stand on it.
   gray: {
     label: "Gray",
-    scale: {
-      "50": "#fafafa",
-      "100": "#f4f4f5",
-      "200": "#e4e4e7",
-      "300": "#d4d4d8",
-      "400": "#a1a1aa",
-      "500": "#71717a",
-      "600": "#52525b",
-      "700": "#3f3f46",
-      "800": "#27272a",
-      "900": "#18181b",
-      "950": "#111111",
-    },
+    scale: GRAY_SCALE,
     paper: "#f6f6f8",
     ink: "#09090B",
     card: "#1C1C1E",
@@ -123,6 +146,17 @@ export const PALETTES: Record<ThemePalette, PaletteColors> = {
     paper: "#faf8f4",
     ink: "#151411",
     card: "#272623",
+  },
+  // Gray with nothing filled in: the page is the cards' white by day and
+  // gray's near-black by night, and a card is the same colour as the page it
+  // is on — its outline alone draws it.
+  outlines: {
+    label: "Outlines",
+    scale: GRAY_SCALE,
+    paper: LIGHT_CARD,
+    ink: "#09090B",
+    card: "#09090B",
+    outlined: true,
   },
 };
 

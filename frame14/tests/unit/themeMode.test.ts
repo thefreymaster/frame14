@@ -103,6 +103,20 @@ describe("the frames' theme", () => {
     expect(sock.emit).not.toHaveBeenCalled();
   });
 
+  it("wears Outlines like any palette: stored, sent, and on <html> (0.166.0)", async () => {
+    stubSystem(false);
+    localStorage.setItem("theme-palette", "outlines");
+    const { getTheme, setThemePalette } = await load("frame");
+    expect(getTheme().frames.palette).toBe("outlines");
+    expect(html.dataset.palette).toBe("outlines");
+    sock.handlers.get("theme_palette")?.("gray");
+    expect(html.dataset.palette).toBe("gray");
+    setThemePalette("outlines");
+    expect(sock.emit).toHaveBeenCalledWith("theme_palette", "outlines");
+    expect(localStorage.getItem("theme-palette")).toBe("outlines");
+    expect(html.dataset.palette).toBe("outlines");
+  });
+
   it("ignores what isn't a mode or a palette, stored or sent", async () => {
     stubSystem(false);
     localStorage.setItem("theme-mode-preference", "sepia");

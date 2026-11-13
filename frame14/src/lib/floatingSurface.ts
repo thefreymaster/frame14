@@ -7,9 +7,11 @@ export const NAV_PAD = "0.375rem";
 /**
  * The drop shadow of a floating surface — and, since 0.126, of every card
  * (Board, and the framed Photos on a desktop): the user asked for the cards
- * to have the same shade as the side navigation.
+ * to have the same shade as the side navigation. The theme's `surface`
+ * shadow: Chakra's `lg`, and none in the Outlines palette, whose cards and
+ * navs are their outline alone.
  */
-export const SURFACE_SHADOW = "lg";
+export const SURFACE_SHADOW = "surface";
 
 /**
  * The cards' colour (the theme's `bg.surface`) and corners (the theme's

@@ -30,7 +30,7 @@ describe("the panels' theme (0.146.0)", () => {
       expect(theme.setMode(mode)).toBe(true);
       expect(theme.state().mode).toBe(mode);
     }
-    for (const palette of ["slate", "sand", "gray"]) {
+    for (const palette of ["slate", "sand", "outlines", "gray"]) {
       expect(theme.setPalette(palette)).toBe(true);
       expect(theme.state().palette).toBe(palette);
     }

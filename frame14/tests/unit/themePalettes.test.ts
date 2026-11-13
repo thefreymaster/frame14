@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   PALETTE_STEPS,
   PALETTES,
+  LIGHT_CARD,
   THEME_PALETTES,
   isThemePalette,
   type PaletteColors,
@@ -54,9 +55,14 @@ const DARK_ORDER = ["ink", "950", "900", "card", "800", "700"] as const;
 const TINT_CHROMA_MAX = 0.03;
 const PAPER_CHROMA_MAX = 0.008;
 
+// The palettes whose cards have a colour of their own; Outlines' are the
+// page's (0.166.0), so the rules about a card on its page aren't its.
+const FILLED = THEME_PALETTES.filter((name) => !PALETTES[name].outlined);
+
 describe("the palettes", () => {
-  it("are gray, slate and sand, each a whole scale of colours", () => {
-    expect(THEME_PALETTES).toEqual(["gray", "slate", "sand"]);
+  it("are gray, slate, sand and outlines, each a whole scale of colours", () => {
+    expect(THEME_PALETTES).toEqual(["gray", "slate", "sand", "outlines"]);
+    expect(FILLED).toEqual(["gray", "slate", "sand"]);
     for (const name of THEME_PALETTES) {
       expect(Object.keys(PALETTES[name].scale)).toEqual([...PALETTE_STEPS]);
       for (const value of Object.values(colours(PALETTES[name]))) {
@@ -64,6 +70,7 @@ describe("the palettes", () => {
       }
     }
     expect(isThemePalette("slate")).toBe(true);
+    expect(isThemePalette("outlines")).toBe(true);
     expect(isThemePalette("neon")).toBe(false);
   });
 
@@ -101,7 +108,7 @@ describe("the palettes", () => {
   });
 
   it("put the white cards on a tinted page in light mode, lighter than their wells (0.164.0)", () => {
-    for (const name of THEME_PALETTES) {
+    for (const name of FILLED) {
       const { paper, scale } = PALETTES[name];
       // Not white — gray's too: white cards on a white page had no edge.
       expect(contrast(paper, "#ffffff"), `${name} paper`).toBeGreaterThan(1.05);
@@ -124,7 +131,7 @@ describe("the palettes", () => {
   });
 
   it("keep the dark surfaces in gray's order and the text on them readable", () => {
-    for (const name of THEME_PALETTES) {
+    for (const name of FILLED) {
       const own = colours(PALETTES[name]);
       const levels = DARK_ORDER.map((step) => luminance(own[step]));
       expect([...levels].sort((a, b) => a - b), name).toEqual(levels);
@@ -148,6 +155,31 @@ describe("the palettes", () => {
     expect(PALETTES.gray.scale["950"]).toBe("#111111");
   });
 
+  it("draw Outlines' cards as the page: gray's scale, the card the page's colour in both modes (0.166.0)", () => {
+    const { scale, paper, ink, card, outlined } = PALETTES.outlines;
+    expect(outlined).toBe(true);
+    expect(scale).toEqual(PALETTES.gray.scale);
+    // Dark: `bg.surface` is the card, the page the ink. Light: the cards are
+    // Chakra's panel white, so the page is too.
+    expect(card).toBe(ink);
+    expect(ink).toBe(PALETTES.gray.ink);
+    expect(paper).toBe(LIGHT_CARD);
+    expect(paper).toBe("#ffffff");
+    // The outline is all there is: `border.surface` (200 by day, 700 by
+    // night) off the page, and the tiles' wells off the card.
+    expect(contrast(scale["200"], paper), "outline by day").toBeGreaterThan(1.2);
+    expect(contrast(scale["700"], ink), "outline by night").toBeGreaterThan(1.8);
+    expect(contrast(scale["900"], card), "well in a card").toBeGreaterThan(1.1);
+    // And the text on it.
+    expect(contrast(ink, paper), "text by day").toBeGreaterThan(15);
+    expect(contrast(scale["600"], paper), "muted text by day").toBeGreaterThan(7);
+    expect(contrast(scale["50"], card), "text by night").toBeGreaterThan(15);
+    expect(contrast(scale["400"], card), "muted text by night").toBeGreaterThan(7);
+    expect(contrast(scale["500"], card), "subtle text by night").toBeGreaterThan(3.4);
+    // No other palette is outlined.
+    expect(THEME_PALETTES.filter((name) => PALETTES[name].outlined)).toEqual(["outlines"]);
+  });
+
   it("are what the launch splash paints before the bundle (index.html's copies)", () => {
     const html = readFileSync("index.html", "utf-8");
     const splash = (selector: string) => {
@@ -157,11 +189,13 @@ describe("the palettes", () => {
     };
     expect(splash("html")).toBe(PALETTES.gray.ink.toLowerCase());
     expect(splash('html[data-theme-mode="bright"]')).toBe(PALETTES.gray.paper.toLowerCase());
-    for (const name of ["slate", "sand"] as const) {
+    for (const name of THEME_PALETTES.filter((p) => p !== "gray")) {
       expect(splash(`html[data-palette="${name}"]`)).toBe(PALETTES[name].ink.toLowerCase());
       expect(splash(`html[data-palette="${name}"][data-theme-mode="bright"]`)).toBe(
         PALETTES[name].paper.toLowerCase(),
       );
+      // And its early script wears a stored one from the first paint.
+      expect(html, name).toContain(`saved === "${name}"`);
     }
   });
 });

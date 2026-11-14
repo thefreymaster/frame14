@@ -96,8 +96,8 @@ describe("the frames' theme", () => {
     stubSystem(false);
     const { getTheme } = await load("frame");
     sock.handlers.get("current_theme_mode")?.("bright");
-    sock.handlers.get("current_theme_palette")?.("sand");
-    expect(getTheme()).toMatchObject({ frames: { preference: "bright", palette: "sand" }, palette: "sand" });
+    sock.handlers.get("current_theme_palette")?.("embossed");
+    expect(getTheme()).toMatchObject({ frames: { preference: "bright", palette: "embossed" }, palette: "embossed" });
     sock.handlers.get("theme_palette")?.("slate");
     expect(html.dataset.palette).toBe("slate");
     expect(sock.emit).not.toHaveBeenCalled();
@@ -131,6 +131,24 @@ describe("the frames' theme", () => {
     expect(html.dataset.palette).toBe("embossed");
   });
 
+  it("puts a device that wore Sand, a palette until 0.169.0, back in Gray", async () => {
+    stubSystem(false);
+    // A frame: the frames' stored palette, and one the server still sends.
+    localStorage.setItem("theme-palette", "sand");
+    const frame = await load("frame");
+    expect(frame.getTheme().frames.palette).toBe("gray");
+    expect(html.dataset.palette).toBe("gray");
+    sock.handlers.get("current_theme_palette")?.("sand");
+    expect(html.dataset.palette).toBe("gray");
+    // A remote: its own stored palette.
+    localStorage.clear();
+    localStorage.setItem("local-theme-mode", "dark");
+    localStorage.setItem("local-theme-palette", "sand");
+    const remote = await load("controller");
+    expect(remote.getTheme().local.palette).toBe("gray");
+    expect(html.dataset.palette).toBe("gray");
+  });
+
   it("ignores what isn't a mode or a palette, stored or sent", async () => {
     stubSystem(false);
     localStorage.setItem("theme-mode-preference", "sepia");
@@ -159,11 +177,11 @@ describe("a remote's own theme (0.148.0)", () => {
     expect(html.dataset.themeMode).toBe("dark");
     // Its own: worn, kept here, sent nowhere.
     sock.emit.mockClear();
-    setLocalThemePalette("sand");
+    setLocalThemePalette("embossed");
     setLocalThemePreference("bright");
-    expect(html.dataset.palette).toBe("sand");
+    expect(html.dataset.palette).toBe("embossed");
     expect(html.dataset.themeMode).toBe("bright");
-    expect(localStorage.getItem("local-theme-palette")).toBe("sand");
+    expect(localStorage.getItem("local-theme-palette")).toBe("embossed");
     expect(localStorage.getItem("local-theme-mode")).toBe("bright");
     expect(sock.emit).not.toHaveBeenCalled();
   });
@@ -182,21 +200,21 @@ describe("a remote's own theme (0.148.0)", () => {
     expect(fresh.getTheme().local).toEqual({ preference: "device", palette: "gray" });
     expect(fresh.getTheme().effectiveMode).toBe("dark");
     // Saved, so the frames' theme arriving later doesn't become it.
-    sock.handlers.get("current_theme_palette")?.("sand");
+    sock.handlers.get("current_theme_palette")?.("embossed");
     expect(fresh.getTheme().local.palette).toBe("gray");
   });
 
   it("is worn from the moment the device becomes a remote, and the frames' when it's a frame again", async () => {
     stubSystem(false);
     localStorage.setItem("local-theme-mode", "bright");
-    localStorage.setItem("local-theme-palette", "sand");
+    localStorage.setItem("local-theme-palette", "embossed");
     localStorage.setItem("theme-mode-preference", "dark");
     localStorage.setItem("theme-palette", "slate");
     const { getTheme, setDeviceMode } = await load("frame");
     expect(html.dataset.palette).toBe("slate");
     setDeviceMode("controller");
     expect(getTheme().own).toBe(true);
-    expect(html.dataset.palette).toBe("sand");
+    expect(html.dataset.palette).toBe("embossed");
     expect(html.dataset.themeMode).toBe("bright");
     setDeviceMode("frame");
     expect(html.dataset.palette).toBe("slate");

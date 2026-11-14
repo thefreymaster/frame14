@@ -63,9 +63,9 @@ const FILLED = THEME_PALETTES.filter(
 );
 
 describe("the palettes", () => {
-  it("are gray, slate, sand, outlines and embossed, each a whole scale of colours", () => {
-    expect(THEME_PALETTES).toEqual(["gray", "slate", "sand", "outlines", "embossed"]);
-    expect(FILLED).toEqual(["gray", "slate", "sand"]);
+  it("are gray, slate, outlines and embossed, each a whole scale of colours", () => {
+    expect(THEME_PALETTES).toEqual(["gray", "slate", "outlines", "embossed"]);
+    expect(FILLED).toEqual(["gray", "slate"]);
     for (const name of THEME_PALETTES) {
       expect(Object.keys(PALETTES[name].scale)).toEqual([...PALETTE_STEPS]);
       for (const value of Object.values(colours(PALETTES[name]))) {
@@ -76,6 +76,9 @@ describe("the palettes", () => {
     expect(isThemePalette("outlines")).toBe(true);
     expect(isThemePalette("embossed")).toBe(true);
     expect(isThemePalette("neon")).toBe(false);
+    // Sand was one until 0.169.0 ("Get rid of the sand theme").
+    expect(isThemePalette("sand")).toBe(false);
+    expect(Object.keys(PALETTES)).toEqual([...THEME_PALETTES]);
   });
 
   it("keep Chakra gray's lightness through the light half, so its contrast holds", () => {
@@ -100,14 +103,10 @@ describe("the palettes", () => {
     }
   });
 
-  it("keep one hue each: Slate a blue gray, Sand a warm gray that isn't brown (0.164.0)", () => {
+  it("keep one hue: Slate a blue gray through every step (0.164.0)", () => {
     for (const [step, value] of Object.entries(colours(PALETTES.slate))) {
       expect(tint(value).hue, `slate ${step}`).toBeGreaterThan(240);
       expect(tint(value).hue, `slate ${step}`).toBeLessThan(265);
-    }
-    for (const [step, value] of Object.entries(colours(PALETTES.sand))) {
-      expect(tint(value).hue, `sand ${step}`).toBeGreaterThan(80);
-      expect(tint(value).hue, `sand ${step}`).toBeLessThan(100);
     }
   });
 
@@ -123,14 +122,11 @@ describe("the palettes", () => {
     }
   });
 
-  it("give Slate and Sand one dark ramp, softer than gray's (0.164.0)", () => {
+  it("give Slate a dark ramp softer than gray's (0.164.0)", () => {
     const gray = colours(PALETTES.gray);
     const slate = colours(PALETTES.slate);
-    const sand = colours(PALETTES.sand);
     for (const step of DARK_HALF) {
-      expect(contrast(slate[step], sand[step]), `slate and sand ${step}`).toBeLessThan(1.06);
       expect(luminance(slate[step]), `slate ${step}`).toBeGreaterThan(luminance(gray[step]));
-      expect(luminance(sand[step]), `sand ${step}`).toBeGreaterThan(luminance(gray[step]));
     }
   });
 
@@ -233,5 +229,8 @@ describe("the palettes", () => {
       // And its early script wears a stored one from the first paint.
       expect(html, name).toContain(`saved === "${name}"`);
     }
+    // And nothing of a palette that is gone (Sand, 0.169.0): a device that
+    // stored it launches in Gray.
+    expect(html).not.toContain('"sand"');
   });
 });

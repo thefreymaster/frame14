@@ -36,7 +36,8 @@ export function HomeCardWidthPicker({
       transform="translate(-50%, 50%)"
       zIndex="1"
       shadow="md"
-      rounded="full"
+      // The control's own corner, for the shadow to follow it.
+      rounded="surface"
       onPointerDown={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >

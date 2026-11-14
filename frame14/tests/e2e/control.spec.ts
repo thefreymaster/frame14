@@ -106,8 +106,11 @@ test.describe("the Settings page", () => {
         await expect.poll(pageColour).toBe("#f2f6fa");
       }
       // A change reaches the frames live.
-      await colors.getByText("Sand", { exact: true }).click();
-      await expect(frame.locator("html")).toHaveAttribute("data-palette", "sand");
+      await colors.getByText("Embossed", { exact: true }).click();
+      await expect(frame.locator("html")).toHaveAttribute("data-palette", "embossed");
+      // Sand, a palette until 0.169.0, is offered no more.
+      await expect(colors.getByRole("radio")).toHaveCount(4);
+      await expect(colors.getByText("Sand", { exact: true })).toHaveCount(0);
     } finally {
       await other.close();
       // The add-on keeps the theme for every later page: back to Dark, Gray.
@@ -216,9 +219,9 @@ test.describe("the Settings page", () => {
       expect((await shadow(board)).shade).toBeGreaterThan(0);
       expect((await shadow(nav)).shade).toBeGreaterThan(0);
 
-      // Five palettes, each its swatch over its name, inside the card: a
+      // The palettes, each its swatch over its name, inside the card: a
       // desktop's half-width one here, a phone's below.
-      await expect(colors.getByRole("radio")).toHaveCount(5);
+      await expect(colors.getByRole("radio")).toHaveCount(4);
       expect(await overflow()).toBeLessThanOrEqual(0);
 
       await colors.getByText("Embossed", { exact: true }).click();
@@ -248,7 +251,7 @@ test.describe("the Settings page", () => {
       await expect.poll(() => shadow(board)).toEqual({ inset: 2, shade: 0, hairline: 1 });
 
       if (isMobile) {
-        // Five palettes still fit a small phone's card.
+        // The palettes still fit a small phone's card.
         await page.setViewportSize({ width: 360, height: 780 });
         await expect.poll(overflow).toBeLessThanOrEqual(0);
       }
@@ -259,6 +262,41 @@ test.describe("the Settings page", () => {
         await expect(colors.getByRole("radio", { name: "Gray" })).toBeChecked();
       }
     }
+  });
+
+  test("buttons and segmented controls have the cards' corners, not pill ends (0.169.0)", async ({ page, isMobile }) => {
+    await page.goto(isMobile ? "/control/device" : "/control/display");
+    const board = page.locator(".chakra-card__root", {
+      has: page.getByRole("heading", { name: isMobile ? "Appearance" : "Display", exact: true }),
+    });
+    await expect(board).toBeVisible();
+    // The card's corner: the theme's `surface` radius, three quarters of a rem.
+    const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    const corner = await board.evaluate((node) => getComputedStyle(node).borderTopLeftRadius);
+    expect(parseFloat(corner)).toBeCloseTo(0.75 * rem, 1);
+    // A segmented control: its track, and the indicator that sits flush in it.
+    const theme = board.getByRole("radiogroup", { name: "Theme" });
+    await expect(theme).toHaveCSS("border-radius", corner);
+    await expect(theme.locator('[data-part="indicator"]')).toHaveCSS("border-radius", corner);
+    await expect(board.getByRole("radiogroup", { name: "Colors" })).toHaveCSS("border-radius", corner);
+    // The page header's own, Device mode.
+    await expect(page.getByRole("radiogroup", { name: "Device mode" })).toHaveCSS("border-radius", corner);
+    // Buttons: every one on the page — text buttons and icon buttons, the
+    // header's small ones too — and none of them a pill. (The navs' entries
+    // are concentric with their bar, and aren't the button recipe's.)
+    const buttons = await page.locator(".chakra-button:visible").evaluateAll((els) =>
+      els.map((el) => {
+        const cs = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        return { label: (el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 24), radius: cs.borderTopLeftRadius, pill: parseFloat(cs.borderTopLeftRadius) > Math.min(r.width, r.height) };
+      }),
+    );
+    expect(buttons.length).toBeGreaterThan(2);
+    expect(buttons.filter((b) => b.pill)).toEqual([]);
+    expect(buttons.filter((b) => b.radius !== corner)).toEqual([]);
+    // The header's small icon buttons among them: the mic and the power.
+    await expect(page.getByRole("button", { name: "Ask the house" })).toHaveCSS("border-radius", corner);
+    if (!isMobile) await expect(board.getByRole("button", { name: "Refresh displays" })).toHaveCSS("border-radius", corner);
   });
 
   test("a remote has its own theme and colors under Device; a frame has none (0.148.0)", async ({ page, browser, isMobile }) => {
@@ -279,10 +317,10 @@ test.describe("the Settings page", () => {
     await expect(html).toHaveAttribute("data-theme-mode", "bright");
     await expect(appearance.getByText("device · bright")).toBeVisible();
     // Its colors: worn here, kept through a reload, and the frames' untouched.
-    await appearance.getByRole("radiogroup", { name: "Colors" }).getByText("Sand", { exact: true }).click();
-    await expect(html).toHaveAttribute("data-palette", "sand");
+    await appearance.getByRole("radiogroup", { name: "Colors" }).getByText("Embossed", { exact: true }).click();
+    await expect(html).toHaveAttribute("data-palette", "embossed");
     await page.reload();
-    await expect(html).toHaveAttribute("data-palette", "sand");
+    await expect(html).toHaveAttribute("data-palette", "embossed");
     const other = await browser.newContext({ baseURL: APP_URL });
     await other.addInitScript(() => localStorage.setItem("device-mode", "frame"));
     const frame = await other.newPage();

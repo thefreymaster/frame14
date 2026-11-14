@@ -179,7 +179,6 @@ export function PrinterCameraCard({
               aria-label="Full screen"
               variant="subtle"
               size="xs"
-              rounded="l2"
               onClick={() => show(true)}
             >
               <MdFullscreen />

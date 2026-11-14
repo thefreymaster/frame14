@@ -9,7 +9,7 @@ import * as Modal from "./Modal";
  * FanControls (the dial for the speed and the power switch) — a sheet from
  * the bottom on a phone and the frame, as tall as the controls, the md
  * dialog on a desktop. The close button is the header mic's shape
- * (VoiceAssistButton: subtle, xs, `l2`), in the title's row.
+ * (VoiceAssistButton: subtle, xs), in the title's row.
  */
 export function FanDialog({
   fan,
@@ -42,7 +42,6 @@ export function FanDialog({
                   aria-label="Close"
                   variant="subtle"
                   size="xs"
-                  rounded="l2"
                 >
                   <IoClose />
                 </IconButton>

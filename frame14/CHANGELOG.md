@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.169.0
+
+- Changed: the **Sand** colour theme is gone. Colors now offers Gray, Slate, Outlines and Embossed. The frames, or a phone, that wore Sand wear Gray until you pick another.
+- Changed: buttons and segmented controls (Theme, Colors, Device mode, a thermostat's modes…) have the same rounded corners as the cards, instead of fully rounded pill ends. Icon buttons are rounded squares with that corner too: a dial's − and +, the timer's, and the small ones in the header and on a sheet's close. Progress bars stay fully rounded.
+
 ## 0.168.0
 
 - Added: an **Account** card on Settings' Device tab that says who is signed in, for installs reached through Cloudflare Access. It shows the email Access signed this device in as, and everyone signed in — a row per person and kind of device (iPhone, iPad, Mac…), with a green **Here now** while they have Frame14 open and when they were last here after that; the list updates as people come and go. Frame14 only reads what Access says: there is nothing to sign in to, and nothing is refused to anyone. A device that didn't come through Access — one on your home network, the frame on the wall — shows no Account card, is told no names, and works exactly as before. New option `cloudflare_access_team`: your Zero Trust team's name (`example` for `example.cloudflareaccess.com`). It is empty by default, and until it is set nothing changes. With it set, the add-on's log also says who switched something (`… by someone@example.com`).

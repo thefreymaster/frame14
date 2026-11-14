@@ -138,7 +138,6 @@ export function Timer() {
             <IconButton
               variant="subtle"
               size="2xl"
-              rounded="full"
               onClick={reset}
               aria-label="Reset timer"
             >
@@ -147,7 +146,6 @@ export function Timer() {
             <IconButton
               variant="solid"
               size="2xl"
-              rounded="full"
               onClick={toggle}
               disabled={remaining === 0}
               aria-pressed={running}

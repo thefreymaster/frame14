@@ -13,7 +13,7 @@ import { Tooltip } from "./ui/tooltip";
  * (0.161) it is a switch for the frames' screen: off while it's on, on while
  * it's off, the icon dimmed while the frames are dark, following the
  * server's `screen_state`. A remote's own screen is its own: its
- * ScreenListener ignores the command. The mic's shape (`l2`, xs), and like
+ * ScreenListener ignores the command. The mic's shape (xs), and like
  * the mic a tooltip saying what a tap does (on a pointer's hover or a
  * keyboard's focus; a touch only taps).
  */
@@ -28,7 +28,6 @@ export function ScreenOffButton() {
           onClick={() => void setScreen("off")}
           variant="subtle"
           size="xs"
-          rounded="l2"
         >
           <IoPowerOutline />
         </IconButton>
@@ -44,7 +43,6 @@ export function ScreenOffButton() {
         onClick={() => void setScreen(on ? "off" : "on")}
         variant="subtle"
         size="xs"
-        rounded="l2"
         color={on ? undefined : "fg.subtle"}
       >
         <IoPowerOutline />

@@ -23,7 +23,7 @@ import {
 import { useThemeMode } from "../../hooks/useThemeMode";
 
 // Every palette but Chakra's own gray, each a condition on <html
-// data-palette> (lib/themeMode sets it): `_slate`, `_sand`, `_outlines`,
+// data-palette> (lib/themeMode sets it): `_slate`, `_outlines`,
 // `_embossed`.
 const TINTS = THEME_PALETTES.filter((p) => p !== "gray");
 // The palettes whose cards are an outline and nothing else (Outlines).
@@ -54,10 +54,13 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
 /**
  * Chakra's stock system with a few additions.
  *
- * Buttons are fully rounded: the button recipe also drives IconButton and
- * CloseButton, so text buttons are pills and icon buttons are circles;
- * segmented controls (a row of buttons) get the same pill track and indicator.
- * Progress bars are pills too (0.138.1, the user's ask): the `full` shape for
+ * Buttons have the cards' corners (0.169.0, the user: "I want buttons and
+ * segmented controllers to use the same border radius as cards"; they were
+ * fully rounded before, pills and circles): the `surface` radius on the
+ * button recipe, which also drives IconButton and CloseButton, and on a
+ * segmented control's track and indicator. A button too short for it — half
+ * its height under the radius — is still a pill, as CSS draws any corner.
+ * Progress bars stay pills (0.138.1, the user's ask): the `full` shape for
  * the track, and the range rounded with it, so the fill ends round rather
  * than cut square by the track's clip — and the logo's blue (0.139, "matching
  * the logo"): the `brand` palette below, the app icon's #18a0ff, the recipe's
@@ -83,13 +86,14 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
  * (ui/toaster.tsx) colours the indicator to match.
  *
  * The neutrals come in palettes (lib/themePalettes, the user's ask: "a slate
- * mode that is blue grays and another you make up"): Chakra's gray, Slate and
- * Sand, Outlines (0.166.0: gray, its cards and navs drawn by their edge
+ * mode that is blue grays and another you make up" — that other, Sand, went
+ * again in 0.169.0): Chakra's gray, Slate,
+ * Outlines (0.166.0: gray, its cards and navs drawn by their edge
  * alone — the page's colour, and the `surface` shadow none) and Embossed
  * (0.168.0: gray, its cards and navs pressed into the page — the `surface`
  * shadow an inner one, EMBOSSED_SHADOW). The gray scale
  * is redefined as semantic tokens whose base is Chakra's own value and whose
- * `_slate` / `_sand` / `_outlines` / `_embossed` conditions (`<html
+ * `_slate` / `_outlines` / `_embossed` conditions (`<html
  * data-palette>`) are the palette's, so everything Chakra builds on gray — bg, fg, border, the
  * gray colorPalette — and every `gray.N` here follows; `neutral.paper` (the
  * light page, where Chakra has white), `neutral.ink` (the dark page and the
@@ -214,7 +218,7 @@ const system = createSystem(
         },
       },
       recipes: {
-        button: { base: { borderRadius: "full" } },
+        button: { base: { borderRadius: "surface" } },
       },
       slotRecipes: {
         card: {
@@ -223,7 +227,7 @@ const system = createSystem(
         },
         segmentGroup: {
           slots: segmentGroupAnatomy.keys(),
-          base: { root: { "--segment-radius": "radii.full" } },
+          base: { root: { "--segment-radius": "radii.surface" } },
         },
         progress: {
           slots: progressAnatomy.keys(),

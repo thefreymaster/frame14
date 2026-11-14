@@ -39,7 +39,6 @@ export function CameraLightButton({ entityId }: { entityId: string }) {
       data-camera-light={entityId}
       variant="subtle"
       size="xs"
-      rounded="l2"
       color={color ? rgba(color) : "fg.muted"}
       transition="color 300ms ease"
       onClick={() => void toggle()}

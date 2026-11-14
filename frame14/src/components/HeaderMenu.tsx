@@ -15,7 +15,7 @@ import { HEADER_ICON_SIZE, PAGE_GUTTER } from "../lib/navMetrics";
  * surface (the cards' colour, edge and corners, raised shades in dark mode),
  * headed by the icon and a title, then the rows the caller gives it (DataList
  * rows, a few of them: these menus are small and local). The icon is an
- * IconButton the mic's and the power button's size and shape (xs, `l2`) but
+ * IconButton the mic's and the power button's size and shape (xs) but
  * `plain` — no fill, no highlight, the glyph at the header's icon size — so
  * every header button takes the same room and they sit evenly apart
  * (0.163.0, the user's ask); a focus ring when keyboard-focused. The menu
@@ -53,7 +53,6 @@ export function HeaderMenu({
           aria-label={label}
           variant="plain"
           size="xs"
-          rounded="l2"
           flexShrink={0}
           color={color}
         >

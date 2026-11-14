@@ -30,11 +30,12 @@ describe("the panels' theme (0.146.0)", () => {
       expect(theme.setMode(mode)).toBe(true);
       expect(theme.state().mode).toBe(mode);
     }
-    for (const palette of ["slate", "sand", "outlines", "embossed", "gray"]) {
+    for (const palette of ["slate", "outlines", "embossed", "gray"]) {
       expect(theme.setPalette(palette)).toBe(true);
       expect(theme.state().palette).toBe(palette);
     }
-    for (const bad of ["sepia", "", null, 3, { mode: "dark" }]) {
+    // Sand was a palette until 0.169.0.
+    for (const bad of ["sepia", "sand", "", null, 3, { mode: "dark" }]) {
       expect(theme.setMode(bad)).toBe(false);
       expect(theme.setPalette(bad)).toBe(false);
     }
@@ -51,8 +52,11 @@ describe("the panels' theme (0.146.0)", () => {
   });
 
   it("falls back on what a damaged file doesn't say", async () => {
-    fs.writeFileSync(file, JSON.stringify({ mode: "sepia", palette: "sand" }));
-    expect((await load()).startTheme().state()).toEqual({ mode: "dark", palette: "sand" });
+    fs.writeFileSync(file, JSON.stringify({ mode: "sepia", palette: "slate" }));
+    expect((await load()).startTheme().state()).toEqual({ mode: "dark", palette: "slate" });
+    // The frames that wore Sand, a palette until 0.169.0: Gray, their mode kept.
+    fs.writeFileSync(file, JSON.stringify({ mode: "bright", palette: "sand" }));
+    expect((await load()).startTheme().state()).toEqual({ mode: "bright", palette: "gray" });
     fs.writeFileSync(file, "{not json");
     expect((await load()).startTheme().state()).toEqual({ mode: "dark", palette: "gray" });
   });

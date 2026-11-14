@@ -20,9 +20,9 @@ const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
 ];
 
 // The palettes (lib/themePalettes), each its swatch over its name. Side by
-// side — swatch, then name — five are wider than any card they sit in: a
-// desktop's half-width one, the frame's, a phone's (four fitted, tightened on
-// a phone, in 0.166.0; Embossed is the fifth, 0.168.0).
+// side — swatch, then name — five were wider than any card they sit in: a
+// desktop's half-width one, the frame's, a phone's (0.168.0, with Embossed;
+// four again since Sand went in 0.169.0, and still one way on every device).
 const PALETTE_ITEMS = THEME_PALETTES.map((value) => ({
   value,
   label: (
@@ -34,8 +34,8 @@ const PALETTE_ITEMS = THEME_PALETTES.map((value) => ({
 }));
 
 // An item is as tall as its swatch and name, not the control's one line. On
-// a phone the five share the card's width, closer together and in smaller
-// type, so the row stays inside the card down to a 360px screen.
+// a phone they share the card's width, closer together and in smaller type,
+// so the row stays inside the card down to a 360px screen.
 const PALETTE_CONTROL_CSS = {
   "& [data-part=item]": { height: "auto", py: "1.5" },
   [PHONE_MEDIA]: {
@@ -48,7 +48,7 @@ const PALETTE_CONTROL_CSS = {
 
 /**
  * A theme's two controls: Theme (Auto · Device · Bright · Dark) over Colors
- * (Gray · Slate · Sand · Outlines · Embossed). The Display card's for the frames' theme and the
+ * (Gray · Slate · Outlines · Embossed). The Display card's for the frames' theme and the
  * Appearance card's for this device's own (0.148.0); `helper` says whose.
  */
 export function ThemeFields({

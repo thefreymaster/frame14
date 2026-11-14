@@ -91,7 +91,6 @@ export function CameraDialog({
                   aria-label="Close"
                   variant="subtle"
                   size="xs"
-                  rounded="l2"
                 >
                   <IoClose />
                 </IconButton>

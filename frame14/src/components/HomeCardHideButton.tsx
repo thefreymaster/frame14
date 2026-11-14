@@ -3,7 +3,7 @@ import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { HOME_CARDS, type HomeCardId } from "../lib/homeLayout";
 
 /**
- * Hides a card from /home, or brings it back, while arranging: a round button
+ * Hides a card from /home, or brings it back, while arranging: a button
  * straddling the card's top-left corner, opposite the drag grip and its size
  * — an eye crossed out on a card that shows, an open eye on the stand-in of
  * one that's hidden. Like the width picker it sits inside the card's drag
@@ -26,7 +26,6 @@ export function HomeCardHideButton({
       aria-label={hidden ? `Show ${label}` : `Hide ${label}`}
       aria-pressed={hidden}
       size="md"
-      rounded="full"
       shadow="md"
       position="absolute"
       top="0"

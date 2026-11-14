@@ -6,18 +6,20 @@
 // steps — follows without a component knowing.
 //
 // The colours (0.164.0, "they use really ugly colors"): quiet neutrals, a
-// whisper of hue rather than a colour — the first Slate was a saturated navy
-// and the first Sand a yellow cream over espresso brown.
+// whisper of hue rather than a colour — the first Slate was a saturated navy.
+// A warm gray, Sand, stood beside it until 0.169.0 ("Get rid of the sand
+// theme"): a device that wore it wears Gray, as for any name that isn't a
+// palette's.
 //
 // - The light half (50–400, 600) keeps Chakra gray's lightness step for step
 //   and changes only the hue, at a chroma that stays a gray's (TINT_CHROMA_MAX
 //   in the test). Each palette's light page (`paper`) is a faint tint of it
 //   under the white cards, lighter than the wells (100) inside them.
 // - The dark half (700–950, `ink`, `card`) is gray's own near-black in Gray,
-//   and one softer ramp shared by Slate and Sand: a charcoal page rather than
-//   a black one, the cards, wells and borders the same distances apart. Their
-//   500 — the dark cards' faintest text — is a little lighter than gray's, so
-//   it reads as well on the lighter cards.
+//   and a softer ramp in Slate: a charcoal page rather than a black one, the
+//   cards, wells and borders the same distances apart. Its 500 — the dark
+//   cards' faintest text — is a little lighter than gray's, so it reads as
+//   well on the lighter cards.
 //
 // The values were made in OKLCH (a hue, a chroma, and the lightness above) and
 // are kept as hex; index.html's splash copies each `paper` and `ink`.
@@ -38,12 +40,11 @@
 // deeper off-white by day under the cards' white, and by night a charcoal
 // with the cards darker than it, the one palette where they are.
 
-export type ThemePalette = "gray" | "slate" | "sand" | "outlines" | "embossed";
+export type ThemePalette = "gray" | "slate" | "outlines" | "embossed";
 
 export const THEME_PALETTES: readonly ThemePalette[] = [
   "gray",
   "slate",
-  "sand",
   "outlines",
   "embossed",
 ];
@@ -139,28 +140,6 @@ export const PALETTES: Record<ThemePalette, PaletteColors> = {
     paper: "#f2f6fa",
     ink: "#0f141c",
     card: "#202731",
-  },
-  // Warm grays: ivory by day — white cards on an off-white page, no yellow in
-  // it — and a warm graphite by night, easier on a kitchen at midnight than a
-  // cold gray (hue 90–95; the brown is gone).
-  sand: {
-    label: "Sand",
-    scale: {
-      "50": "#fbfaf7",
-      "100": "#f5f4f0",
-      "200": "#e6e4de",
-      "300": "#d6d4cd",
-      "400": "#a4a29a",
-      "500": "#7f7c75",
-      "600": "#55534c",
-      "700": "#474540",
-      "800": "#33312d",
-      "900": "#23221e",
-      "950": "#1d1c19",
-    },
-    paper: "#faf8f4",
-    ink: "#151411",
-    card: "#272623",
   },
   // Gray with nothing filled in: the page is the cards' white by day and
   // gray's near-black by night, and a card is the same colour as the page it

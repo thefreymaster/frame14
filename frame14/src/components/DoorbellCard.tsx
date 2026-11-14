@@ -188,7 +188,6 @@ export function DoorbellCard() {
           zIndex={1}
           size="sm"
           variant="solid"
-          rounded="full"
           onClick={(e) => {
             e.stopPropagation();
             hide();
@@ -253,7 +252,6 @@ export function DoorbellCard() {
           aria-label="Full screen"
           variant="subtle"
           size="xs"
-          rounded="l2"
           ms="auto"
           flexShrink={0}
           onClick={(e) => {

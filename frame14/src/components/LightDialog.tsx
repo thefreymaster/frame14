@@ -12,7 +12,7 @@ import * as Modal from "./Modal";
  * A light's controls in a Modal (a stock Chakra Dialog; a drawer from the
  * bottom on a phone and the frame, 0.134 / 0.135), opened by press and hold
  * on its tile. Since 0.141 it is FanDialog's shape — ClimateDialog's: the md
- * dialog, the mic's close button (subtle, xs, `l2`) in the title's row —
+ * dialog, the mic's close button (subtle, xs) in the title's row —
  * holding LightControls, the thermostat's dial for the brightness; a light
  * that only turns on and off, or a switch, holds LightPowerControls (0.153.0,
  * when every tile's hold began opening one). Beside the close button the
@@ -61,7 +61,6 @@ export function LightDialog({
                   aria-pressed={favorite}
                   variant="subtle"
                   size="xs"
-                  rounded="l2"
                   color={favorite ? "yellow.500" : undefined}
                   onClick={() => {
                     if (shownId) setLightFavorite(shownId, !favorite);
@@ -75,7 +74,6 @@ export function LightDialog({
                     aria-label="Close"
                     variant="subtle"
                     size="xs"
-                    rounded="l2"
                   >
                     <IoClose />
                   </IconButton>

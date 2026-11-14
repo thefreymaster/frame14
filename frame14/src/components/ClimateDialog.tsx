@@ -11,7 +11,7 @@ import * as Modal from "./Modal";
  * bottom on a phone and the frame, as tall as the controls (0.135: the user
  * asked for none full height, after 0.133's full screen), the md dialog on a
  * desktop. The close button is the header mic's shape (VoiceAssistButton:
- * subtle, xs, `l2`), in the title's row rather than the recipe's corner.
+ * subtle, xs), in the title's row rather than the recipe's corner.
  */
 export function ClimateDialog({
   unit,
@@ -44,7 +44,6 @@ export function ClimateDialog({
                   aria-label="Close"
                   variant="subtle"
                   size="xs"
-                  rounded="l2"
                 >
                   <IoClose />
                 </IconButton>

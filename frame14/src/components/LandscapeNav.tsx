@@ -33,12 +33,16 @@ import { pageOf } from "../lib/pagePath";
 import { ArrangingVeil } from "./ArrangingVeil";
 import { NavMoreMenu } from "./NavMoreMenu";
 
+// Entries a frame's tap opens on that frame alone: the others stay where
+// they are, and the server never hears of it (so it isn't the view a frame
+// wakes onto). The speed test is one device's measurement (0.167.0).
 const LOCAL_ONLY_PATHS = new Set([
   "/control",
   "/lights",
   "/radar",
   "/timer",
   "/album",
+  "/speedtest",
 ]);
 
 // Each nav entry's look. In the portrait bar entries fill its height, and on

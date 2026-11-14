@@ -21,6 +21,7 @@ import { Printer } from "./routes/Printer";
 import { Vacuum } from "./routes/Vacuum";
 import { Unraid } from "./routes/Unraid";
 import { Halloween } from "./routes/Halloween";
+import { SpeedTest } from "./routes/SpeedTest";
 
 /** A page that needs `feature` set up; without it a visit goes Home (0.159.0). */
 const needs = (feature: Feature, page: React.ReactNode) => (
@@ -63,6 +64,8 @@ export const router = createBrowserRouter([
       // Offered on Oct 30 and 31 (lib/halloween); routed all year, for an
       // automation or a bookmark.
       { path: "/halloween", element: <Halloween /> },
+      // This device's connection to the server (0.167.0): needs nothing set up.
+      { path: "/speedtest", element: <SpeedTest /> },
     ],
   },
 ]);

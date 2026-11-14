@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.167.0
+
+- Added: a **Speed test** page (`/speedtest`) that measures the connection between the device you're holding — or the frame on the wall — and the add-on: the ping and its jitter, then the download and upload speeds, each over five seconds, with a live figure and a small trace of how steady the link was. Tap **Start**; **Stop** ends a test early. The last result stays on that device. It tests the path to the add-on (your Wi-Fi and LAN, or the tunnel when you're away), not your internet connection, and a test moves real data — a few hundred megabytes on fast Wi-Fi, more on a wired link — so mind a metered connection. On a frame the entry is in the navigation (under **More** on the wall tablet) and opens on that frame alone; on a phone, turn it on under Settings → Device → Navigation. Nothing to configure.
+
 ## 0.166.1
 
 - Changed: on Settings' Device tab, the Notifications card's **Send a test** button is a small button in the card's header, beside its title, instead of a wide one under the switch. It still shows only while notifications are on.

@@ -31,6 +31,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 - **Weather** — conditions and advisories, hourly and daily forecasts, the radar.
 - **Printer, Vacuum, Cameras, Calendar** — a Bambu Lab printer with its camera and job, Roborock vacuums with their maps, every camera live — and full screen, with its room's lights at hand — and a two-week agenda.
 - **Unraid** — with Home Assistant's Unraid integration, the server's CPU, memory and temperature, and the status of every Docker container and VM. Read only. Found in Home Assistant; nothing to configure.
+- **Speed test** — how fast the device in your hand, or on the wall, reaches the add-on: ping, download and upload over the Wi-Fi and LAN (or the tunnel from outside), measured on demand. Nothing to configure.
 - **And more** — a Plex movie takes over the frames as its poster; a tracked team's game day gets a scoreboard; a doorbell card pops up when someone is at the door; the mic runs an Assist pipeline.
 - **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. Installable as a PWA.
 
@@ -213,6 +214,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames; while `immich_album_ids` has an album |
 | `/weather` | Now (conditions + advisories from the forecast), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |
 | `/calendar` | The next two weeks across every Home Assistant calendar, a card per day |
+| `/speedtest` | A speed test between this device and the add-on: ping and jitter, then download and upload for five seconds each, with the last result kept on the device. It measures the path to the add-on (Wi-Fi, LAN, a tunnel), not your internet connection. Each device's own page: a frame's tap on it moves no other frame; off by default in a remote's nav |
 | `/timer` | Timer; frame-only nav item |
 | `/marquee` | Plex now-playing poster art; auto-routed while a movie plays — a frame opened mid-movie goes there too |
 | `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day — a frame opened mid-game goes there too |

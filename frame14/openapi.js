@@ -69,6 +69,11 @@ export const openApiDocument = {
         "Voice assist. The spoken turn itself runs over Socket.IO (assist:start / assist:audio / assist:audio_end / assist:cancel, with assist:event and assist:error coming back); these endpoints cover configuration and audio playback.",
     },
     {
+      name: "Speed test",
+      description:
+        "The Speed test page's measurements (0.167.0): the connection between the device that asks and this server — its Wi-Fi, the LAN, a tunnel — and not the internet beyond it. The page times round trips, then pulls and pushes bytes over several requests at once for a few seconds each, stopping every request when its time is up.",
+    },
+    {
       name: "Notifications",
       description:
         "Web Push to the devices that turned notifications on in Settings. What is sent comes from Home Assistant: an automation fires the `frame14_notify` event with `title`, `message`, and optionally `tag` (a later notification with the same tag replaces it) and `url` (the page a tap opens, a path).",
@@ -107,6 +112,67 @@ export const openApiDocument = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ConnectionInfo" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/speedtest/ping": {
+      get: {
+        tags: ["Speed test"],
+        operationId: "speedTestPing",
+        summary: "Answer at once, for the round trip to be timed",
+        responses: {
+          204: { description: "Nothing: the time the answer took is the measurement." },
+        },
+      },
+    },
+    "/api/speedtest/download": {
+      get: {
+        tags: ["Speed test"],
+        operationId: "speedTestDownload",
+        summary: "Send random bytes for the download speed to be measured",
+        description:
+          "Streams `bytes` random bytes (application/octet-stream, never compressed or cached) as fast as the caller takes them. One request sends at most 128 MiB; a page that wants more asks again. A caller that stops reading just ends the stream.",
+        parameters: [
+          {
+            name: "bytes",
+            in: "query",
+            required: false,
+            description: "How many bytes to send: a whole number above zero. 16 MiB when left out; more than 128 MiB is cut to that.",
+            schema: { type: "integer", minimum: 1, example: 16777216 },
+          },
+        ],
+        responses: {
+          200: {
+            description: "The bytes, with their count as the Content-Length.",
+            content: { "application/octet-stream": { schema: { type: "string", format: "binary" } } },
+          },
+          400: {
+            description: "`bytes` isn't a whole number above zero.",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+          },
+        },
+      },
+    },
+    "/api/speedtest/upload": {
+      post: {
+        tags: ["Speed test"],
+        operationId: "speedTestUpload",
+        summary: "Take bytes for the upload speed to be measured",
+        description:
+          "Reads the request's body, keeps none of it, and says how much arrived. A caller that leaves before the body's end gets no answer.",
+        requestBody: {
+          required: false,
+          content: { "application/octet-stream": { schema: { type: "string", format: "binary" } } },
+        },
+        responses: {
+          200: {
+            description: "How many bytes arrived.",
+            content: {
+              "application/json": {
+                schema: { type: "object", required: ["bytes"], properties: { bytes: { type: "integer", example: 16777216 } } },
               },
             },
           },

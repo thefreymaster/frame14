@@ -37,6 +37,8 @@ const SCROLLING_PATHS = new Set([
   "/vacuum",
   // Dozens of containers (0.151.0).
   "/unraid",
+  // Its card is as tall as its figures, stacked in a narrow window (0.167.0).
+  "/speedtest",
 ]);
 // Pages that scroll on a desktop only: /weather lays its cards out in full
 // there (the frame keeps its fixed, tabbed form), and /energy's Solar tab —

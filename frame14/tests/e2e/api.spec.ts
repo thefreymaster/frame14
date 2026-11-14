@@ -100,3 +100,20 @@ test("GET /api/docs/openapi.json is the API's own description", async ({ request
   expect(doc.openapi).toMatch(/^3\./);
   expect(Object.keys(doc.paths)).toEqual(expect.arrayContaining(["/api/entities", "/api/software", "/api/home/climate"]));
 });
+
+test("the speed test's routes move their bytes as they are: counted, never compressed or cached (0.167.0)", async ({ request }) => {
+  expect((await request.get("/api/speedtest/ping")).status()).toBe(204);
+  // Past the 1 KB the server compresses a live response from.
+  const down = await request.get("/api/speedtest/download?bytes=50000", { headers: { "Accept-Encoding": "gzip, br" } });
+  expect(down.status()).toBe(200);
+  expect(down.headers()["content-encoding"]).toBeUndefined();
+  expect(down.headers()["content-length"]).toBe("50000");
+  expect(down.headers()["cache-control"]).toBe("no-store, no-transform");
+  expect((await down.body()).length).toBe(50_000);
+  expect((await request.get("/api/speedtest/download?bytes=0")).status()).toBe(400);
+  const up = await request.post("/api/speedtest/upload", {
+    data: Buffer.alloc(120_000),
+    headers: { "Content-Type": "application/octet-stream" },
+  });
+  expect(await up.json()).toEqual({ bytes: 120_000 });
+});

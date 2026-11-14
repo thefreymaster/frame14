@@ -18,6 +18,8 @@ import {
   IoCalendar,
   IoVideocamOutline,
   IoVideocam,
+  IoSpeedometerOutline,
+  IoSpeedometer,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -67,9 +69,10 @@ export const SETTINGS_PATH = "/control";
 /**
  * Every nav entry, in the default order (since 0.109: Home, Clock, Lights,
  * Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Unraid (0.151.0),
- * Calendar, Football, Halloween (0.128: Oct 30 and 31), Settings — Lights and Climate
- * before Photos, Weather with Energy before the devices; a remote starts with
- * everything from Energy to Halloween off, `remoteOff`). Each device shows the ones for its mode, in the order
+ * Calendar, Football, Halloween (0.128: Oct 30 and 31), Speed test (0.167.0),
+ * Settings — Lights and Climate before Photos, Weather with Energy before the
+ * devices; a remote starts with everything from Energy to Speed test off,
+ * `remoteOff`). Each device shows the ones for its mode, in the order
  * and with the ones hidden that /control sets for it (lib/navLayout).
  */
 export const NAV_ITEMS: NavItem[] = [
@@ -193,6 +196,16 @@ export const NAV_ITEMS: NavItem[] = [
     icon: GiPumpkinLantern,
     activeIcon: GiPumpkinLantern,
     halloween: true,
+    remoteOff: true,
+  },
+  // This device's connection to the server (0.167.0). Its own measurement,
+  // so a frame's tap on it moves no other frame (LandscapeNav's
+  // LOCAL_ONLY_PATHS); last before Settings, a tool rather than a view.
+  {
+    path: "/speedtest",
+    label: "Speed test",
+    icon: IoSpeedometerOutline,
+    activeIcon: IoSpeedometer,
     remoteOff: true,
   },
   {

@@ -164,8 +164,9 @@ describe("shownNavItems", () => {
   it("leaves out what the install hasn't set up (0.159.0), and keeps it while that's unknown", () => {
     const frame = defaultNavLayout("frame");
     const none = { lights: false, climate: false, energy: false, weather: false, printer: false, vacuum: false, cameras: false, football: false, photos: false, unraid: false };
+    // What needs nothing set up stays: the speed test (0.167.0) among them.
     expect(shownNavItems(frame, { ...everyday, gameDay: true, features: none }).map((i) => i.path)).toEqual([
-      "/home", "/clock", "/calendar", "/control",
+      "/home", "/clock", "/calendar", "/speedtest", "/control",
     ]);
     // Each alone takes out its own entry.
     expect(shownNavItems(frame, { ...everyday, features: { energy: false } }).map((i) => i.path)).toEqual(

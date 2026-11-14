@@ -37,11 +37,22 @@ describe("NAV_ITEMS", () => {
     });
   });
 
-  it("keeps the 0.109 order, Unraid (0.151.0) after Cameras, Halloween (0.128) before Settings", () => {
+  it("keeps the 0.109 order, Unraid (0.151.0) after Cameras, Halloween (0.128) and then Speed test (0.167.0) before Settings", () => {
     expect(paths(NAV_ITEMS)).toEqual([
       "/home", "/clock", "/lights", "/climate", "/photos", "/album", "/energy",
-      "/weather", "/printer", "/vacuum", "/cameras", "/unraid", "/calendar", "/football", "/halloween", "/control",
+      "/weather", "/printer", "/vacuum", "/cameras", "/unraid", "/calendar", "/football", "/halloween", "/speedtest", "/control",
     ]);
+  });
+
+  it("offers Speed test (0.167.0) on every device with nothing set up, off on a remote until turned on", () => {
+    const speed = NAV_ITEMS.find((i) => i.path === "/speedtest");
+    expect(speed).toMatchObject({ label: "Speed test", remoteOff: true });
+    expect(speed?.feature).toBeUndefined();
+    expect(speed?.frameOnly).toBeUndefined();
+    expect(speed?.remoteOnly).toBeUndefined();
+    for (const mode of ["frame", "controller"] as const) {
+      expect(paths(navItemsFor(mode))).toContain("/speedtest");
+    }
   });
 
   it("offers Unraid (0.151.0) only with a server, and off on a remote until turned on", () => {

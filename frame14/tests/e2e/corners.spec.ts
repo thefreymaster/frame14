@@ -21,6 +21,7 @@ const PAGES = [
   "/cameras",
   "/unraid",
   "/calendar",
+  "/speedtest",
   "/control/views",
   "/control/display",
   "/control/device",

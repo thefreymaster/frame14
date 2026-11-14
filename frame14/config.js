@@ -71,6 +71,15 @@ export const REPO_URL = loadManifestValue("url");
 // send the browser (routes/ingress.js). Empty = they say how to set it.
 export const WEB_UI_URL = get("web_ui_url", "WEB_UI_URL", "");
 
+// Cloudflare Access (0.168.0): the Zero Trust team whose sign-in is in front
+// of the add-on — its name ("example" for example.cloudflareaccess.com) or
+// that whole address. Set, the server reads who each visitor is from the
+// token Access adds to every request it lets through (access.js) and Settings
+// names them; empty, nobody is named and nothing is asked of Cloudflare.
+export const ACCESS_TEAM = String(
+  get("cloudflare_access_team", "CLOUDFLARE_ACCESS_TEAM", "") ?? "",
+).trim();
+
 // The port Home Assistant's ingress proxies to (config.yaml's ingress_port).
 // Only the add-on listens on it; 0 in local dev.
 export const INGRESS_PORT = options

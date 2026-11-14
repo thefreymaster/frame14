@@ -34,6 +34,8 @@ describe("PaletteSwatch", () => {
       expect(chip, palette).not.toBeNull();
       const image = getComputedStyle(chip as Element).backgroundImage;
       if (PALETTES[palette].outlined) return image;
+      // A dimple, not a split chip: told apart by its shade (below).
+      if (PALETTES[palette].embossed) return getComputedStyle(chip as Element).boxShadow;
       expect(image, palette).toContain(rgb(PALETTES[palette].scale["300"]));
       expect(image, palette).toContain(rgb(PALETTES[palette].scale["600"]));
       return image;
@@ -58,5 +60,27 @@ describe("PaletteSwatch", () => {
     expect(ruleBorderWidth(ring)).toBe("2px");
     expect(ruleBorderWidth(gray)).toBe("1px");
     expect(getComputedStyle(ring).borderColor).toBe(rgb(PALETTES.outlines.scale["400"]));
+  });
+
+  it("shows Embossed as what it draws: a dimple, shaded inside its top edge, not gray's chip again (0.168.0)", () => {
+    const { container } = renderWithProviders(
+      <>
+        <PaletteSwatch palette="gray" />
+        <PaletteSwatch palette="embossed" />
+      </>,
+    );
+    const dimple = container.querySelector('[data-palette-swatch="embossed"]') as Element;
+    const gray = container.querySelector('[data-palette-swatch="gray"]') as Element;
+    expect(dimple).toHaveAttribute("data-embossed");
+    expect(dimple).not.toHaveAttribute("data-outlined");
+    expect(gray).not.toHaveAttribute("data-embossed");
+    // One flat step of the palette, pressed in: an inner shadow, no split.
+    const drawn = getComputedStyle(dimple);
+    expect(drawn.backgroundImage).not.toContain("gradient");
+    expect(drawn.backgroundColor).toBe(rgb(PALETTES.embossed.scale["300"]));
+    expect(drawn.boxShadow).toContain("inset");
+    expect(getComputedStyle(gray).boxShadow).not.toContain("inset");
+    // A filled chip's hairline edge, not the ring's.
+    expect(ruleBorderWidth(dimple)).toBe("1px");
   });
 });

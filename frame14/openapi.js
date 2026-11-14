@@ -74,6 +74,11 @@ export const openApiDocument = {
         "The Speed test page's measurements (0.167.0): the connection between the device that asks and this server — its Wi-Fi, the LAN, a tunnel — and not the internet beyond it. The page times round trips, then pulls and pushes bytes over several requests at once for a few seconds each, stopping every request when its time is up.",
     },
     {
+      name: "Account",
+      description:
+        "Who is signed in (0.168.0): the people Cloudflare Access named, by the device each is on. The server only reads what Access says; it signs nobody in and refuses nobody.",
+    },
+    {
       name: "Notifications",
       description:
         "Web Push to the devices that turned notifications on in Settings. What is sent comes from Home Assistant: an automation fires the `frame14_notify` event with `title`, `message`, and optionally `tag` (a later notification with the same tag replaces it) and `url` (the page a tap opens, a path).",
@@ -112,6 +117,25 @@ export const openApiDocument = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/ConnectionInfo" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/account": {
+      get: {
+        tags: ["Account"],
+        operationId: "getAccount",
+        summary: "Say who the caller is and who is signed in",
+        description:
+          "For Settings' Account card. With `cloudflare_access_team` set, the server reads who a caller is from the token Cloudflare Access adds to every request it lets through (the `Cf-Access-Jwt-Assertion` header, or the browser's `CF_Authorization` cookie), checked against the team's signing keys. `user` is null for a caller Access didn't sign in — a device on the house's own network — and nothing is refused to one: this names people, it is not a login. `people` is everyone signed in, a row per person and kind of device, those with a page open now first; a caller who isn't named gets none of them. Without a team configured, `enabled` is false and nobody is named. Never cached.",
+        responses: {
+          200: {
+            description: "The caller and the people signed in.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Account" },
               },
             },
           },
@@ -1421,6 +1445,41 @@ export const openApiDocument = {
           message: {
             type: "string",
             example: "API is running",
+          },
+        },
+      },
+      Account: {
+        type: "object",
+        required: ["enabled", "user", "people"],
+        properties: {
+          enabled: {
+            type: "boolean",
+            description: "Whether people are named at all: `cloudflare_access_team` names a Cloudflare Zero Trust team.",
+          },
+          user: {
+            type: "object",
+            nullable: true,
+            description: "Who this caller is, when Cloudflare Access signed them in.",
+            required: ["email"],
+            properties: { email: { type: "string", example: "someone@example.com" } },
+          },
+          people: {
+            type: "array",
+            description: "Everyone signed in, for a caller who is: those with a page open now first, by email, then the rest, the latest seen first. A device not seen in thirty days is dropped. Empty for a caller Access didn't name.",
+            items: {
+              type: "object",
+              required: ["email", "device", "online", "lastSeen"],
+              properties: {
+                email: { type: "string", example: "someone@example.com" },
+                device: {
+                  type: "string",
+                  description: "The kind of device, as its page said of itself.",
+                  enum: ["iPhone", "iPad", "Mac", "Windows PC", "Android phone", "Android tablet", "Chromebook", "Linux PC", "Frame", "Browser"],
+                },
+                online: { type: "boolean", description: "A page of theirs is open on that device now." },
+                lastSeen: { type: "string", format: "date-time", description: "When it arrived, or — once gone — when it left." },
+              },
+            },
           },
         },
       },

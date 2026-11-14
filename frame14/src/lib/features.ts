@@ -17,6 +17,9 @@ import type { EntitiesConfig } from "../hooks/useEntitiesConfig";
  * - `photos`: an album in `immich_album_ids` (0.162.0; Immich's address and
  *   key from 0.145.0); `unraid`: Home Assistant has a server
  *   (0.151.0), found rather than configured.
+ * - `account`: `cloudflare_access_team` names a Cloudflare Access team
+ *   (0.168.0), so the server knows who each visitor is — Settings' Account
+ *   card.
  */
 export type Feature =
   | "lights"
@@ -31,14 +34,16 @@ export type Feature =
   | "cameras"
   | "football"
   | "photos"
-  | "unraid";
+  | "unraid"
+  | "account";
 
 export type Features = Record<Feature, boolean>;
 
 /**
  * Before the config has loaded (a first launch: it's persisted after), every
- * feature counts as set up but Unraid — a page that has one can't flicker it
- * out and back — and Unraid arrives instead, as most installs have none.
+ * feature counts as set up but Unraid and the account — a page that has one
+ * can't flicker it out and back — and those two arrive instead, as most
+ * installs have neither.
  */
 export const FEATURES_UNTIL_LOADED: Features = {
   lights: true,
@@ -54,6 +59,7 @@ export const FEATURES_UNTIL_LOADED: Features = {
   football: true,
   photos: true,
   unraid: false,
+  account: false,
 };
 
 const some = (list: readonly unknown[] | undefined) => (list?.length ?? 0) > 0;
@@ -82,5 +88,6 @@ export function featuresOf(config: EntitiesConfig | undefined): Features {
     // Absent from a config restored from before 0.145.0: set up.
     photos: config.photos !== false,
     unraid: some(config.unraid),
+    account: config.account === true,
   };
 }

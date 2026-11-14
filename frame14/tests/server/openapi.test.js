@@ -15,6 +15,7 @@ describe("the OpenAPI document", () => {
       "/api/screen/brightness/{level}", "/api/screen/dark", "/api/screen/auto", "/api/icon/{name}",
       "/api/push/key", "/api/push/subscribe", "/api/push/unsubscribe", "/api/push/test",
       "/api/speedtest/ping", "/api/speedtest/download", "/api/speedtest/upload",
+      "/api/account",
     ]) {
       expect(openApiDocument.paths, path).toHaveProperty(path);
     }

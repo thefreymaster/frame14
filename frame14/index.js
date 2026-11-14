@@ -35,6 +35,8 @@ import { startScreen } from "./screen.js";
 import { startTheme } from "./theme.js";
 import { startPush } from "./push.js";
 import { startPhotos } from "./photos.js";
+import { startAccess } from "./access.js";
+import { calledBy, startPeople } from "./people.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
@@ -58,6 +60,7 @@ import printerRouter from "./routes/printer.js";
 import assistRouter, { attachAssistSocket } from "./routes/assist.js";
 import ingressRouter from "./routes/ingress.js";
 import pushRouter from "./routes/push.js";
+import accountRouter from "./routes/account.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -86,6 +89,18 @@ app.locals.push = push;
 // The frames' photos (photos.js): Immich albums through Home Assistant, and
 // the one the frames play.
 app.locals.photos = startPhotos();
+// Who is signed in (0.168.0): Cloudflare Access names the people who come
+// through it (access.js), and each one's open pages are their presence
+// (people.js). The pages of the people it named hear the list again as
+// someone comes or goes; a page it didn't name — the house's own network,
+// the frame — is told nothing of it.
+const SIGNED_IN = "signed-in";
+const access = startAccess();
+app.locals.access = access;
+const people = startPeople({
+  onChange: () => io.to(SIGNED_IN).emit("people", people.list()),
+});
+app.locals.people = people;
 io.currentView = "clock";
 // The panels' theme and palette, kept across restarts (theme.js).
 const theme = startTheme();
@@ -105,6 +120,18 @@ io.on("connection", (socket) => {
   socket.emit("nav_visibility", io.navVisible);
   socket.emit("photos_shown", photosShown());
   socket.emit("screen_state", screen.state());
+
+  // Who this is, when Access signed them in — read off the handshake without
+  // holding it up (the first token of a start fetches the team's keys). The
+  // page says what kind of device it is as it connects (`auth.device`).
+  if (access.enabled) {
+    void access.identify(socket.handshake.headers).then((user) => {
+      if (!user || socket.disconnected) return;
+      socket.data.user = user;
+      socket.join(SIGNED_IN);
+      people.arrive(socket.id, user.email, socket.handshake.auth?.device);
+    });
+  }
 
   // A frame says what its screen's brightness is as it arrives
   // (ScreenListener): the level while none has been set here (0.131).
@@ -134,6 +161,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
+    people.leave(socket.id);
     if (io.photosShown.delete(socket.id)) {
       io.emit("photos_shown", photosShown());
     }
@@ -198,7 +226,7 @@ io.on("connection", (socket) => {
     };
     const sent = callService(payload);
     if (!sent) {
-      console.warn("[entity:call] rejected", payload);
+      console.warn("[entity:call] rejected", payload, ...calledBy(socket.data.user));
       reply({
         ok: false,
         error: isHaConnected()
@@ -207,9 +235,12 @@ io.on("connection", (socket) => {
       });
       return;
     }
-    console.log("[entity:call] sent", payload);
+    // Named when Access knows who it is (0.168.0): "… by someone@example.com".
+    console.log("[entity:call] sent", payload, ...calledBy(socket.data.user));
     const result = await sent;
-    if (!result.ok) console.warn("[entity:call] failed", payload, result.error);
+    if (!result.ok) {
+      console.warn("[entity:call] failed", payload, result.error, ...calledBy(socket.data.user));
+    }
     reply(result);
   });
 
@@ -305,6 +336,7 @@ app.use("/api/camera", cameraRouter);
 app.use("/api/printer", printerRouter);
 app.use("/api/assist", assistRouter);
 app.use("/api/push", pushRouter);
+app.use("/api/account", accountRouter);
 app.use("/api/home", homeRouter);
 
 // SPA fallback

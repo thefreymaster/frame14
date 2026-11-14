@@ -84,6 +84,16 @@ describe("before the registries are read", () => {
     expect(entitiesPayload().unraid).toEqual([]);
   });
 
+  it("says whether people are named (0.168.0), for Settings to show its Account card", async () => {
+    expect((await fresh()).entitiesPayload().account).toBe(false);
+    process.env.CLOUDFLARE_ACCESS_TEAM = "e2e";
+    try {
+      expect((await fresh()).entitiesPayload().account).toBe(true);
+    } finally {
+      delete process.env.CLOUDFLARE_ACCESS_TEAM;
+    }
+  });
+
   it("does nothing without the socket", async () => {
     mocks.connected = false;
     const { refreshLightAreas, lightsConfig } = await fresh();

@@ -20,7 +20,12 @@
 //   POST /_stub/push/:id — a stand-in push service (0.160.0): what the add-on
 //                        sends a subscription with this endpoint is kept
 //   GET  /_stub/pushes   — what it kept: { id, headers, body (base64) }
+//   GET  /_stub/access/certs — a stand-in Cloudflare Access team's signing
+//                        keys (0.168.0; FRAME14_ACCESS_CERTS_URL names it)
+//   POST /_stub/access/token {"email", "expires_in"} — a token as Access
+//                        issues one for that person, signed with that key
 //   POST /_stub/reset    — every state, registry and behaviour as at start
+import crypto from "node:crypto";
 import http from "node:http";
 import { pathToFileURL } from "node:url";
 import { WebSocketServer } from "ws";
@@ -32,6 +37,9 @@ export const STUB = {
   h2s: "h2s_0938aj622701347",
   vacuum: "roborock_q5_pro",
   addonUpdate: "update.frame14_update",
+  /** The stand-in Cloudflare Access team (0.168.0): CLOUDFLARE_ACCESS_TEAM in playwright.config. */
+  accessTeam: "e2e",
+  accessIssuer: "https://e2e.cloudflareaccess.com",
   /** The scenes (0.165.0): the two frame14.test.json lists, and two it doesn't. */
   scenes: {
     movie: "automation.living_room_movie_mode",
@@ -586,6 +594,25 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
   const sockets = new Set();
   // The stand-in push service's deliveries (POST /_stub/push/:id).
   let pushes = [];
+  // The stand-in Cloudflare Access team (0.168.0): one signing key, made at
+  // start, and the tokens it signs (POST /_stub/access/token).
+  const accessKey = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const accessJwk = { ...accessKey.publicKey.export({ format: "jwk" }), kid: "stub-key-1", alg: "RS256", use: "sig" };
+  function accessToken(email, expiresIn = 3600) {
+    const part = (v) => Buffer.from(JSON.stringify(v)).toString("base64url");
+    const now = Math.floor(Date.now() / 1000);
+    const body = `${part({ alg: "RS256", kid: accessJwk.kid, typ: "JWT" })}.${part({
+      iss: STUB.accessIssuer,
+      aud: ["stub-app"],
+      email,
+      type: "app",
+      sub: `stub-${email}`,
+      iat: now,
+      nbf: now,
+      exp: now + expiresIn,
+    })}`;
+    return `${body}.${crypto.sign("RSA-SHA256", Buffer.from(body), accessKey.privateKey).toString("base64url")}`;
+  }
 
   function pushState(newState, oldState) {
     const msg = {
@@ -751,6 +778,12 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
       return res.end();
     }
     if (req.method === "GET" && p === "/_stub/pushes") return json(res, 200, pushes);
+    if (req.method === "GET" && p === "/_stub/access/certs") return json(res, 200, { keys: [accessJwk] });
+    if (req.method === "POST" && p === "/_stub/access/token") {
+      const { email, expires_in } = await readBody(req);
+      if (typeof email !== "string") return json(res, 400, { error: "email" });
+      return json(res, 200, { token: accessToken(email, expires_in ?? 3600) });
+    }
     if (req.method === "POST" && p === "/_stub/reset") {
       reset();
       return json(res, 200, { ok: true });

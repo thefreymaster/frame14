@@ -70,7 +70,12 @@
           ) {
             mode = "bright";
           }
-          if (saved === "slate" || saved === "sand" || saved === "outlines") {
+          if (
+            saved === "slate" ||
+            saved === "sand" ||
+            saved === "outlines" ||
+            saved === "embossed"
+          ) {
             palette = saved;
           }
         } catch (e) {}
@@ -125,6 +130,12 @@
       }
       html[data-palette="outlines"][data-theme-mode="bright"] {
         --splash-bg: #ffffff;
+      }
+      html[data-palette="embossed"] {
+        --splash-bg: #1f1f23;
+      }
+      html[data-palette="embossed"][data-theme-mode="bright"] {
+        --splash-bg: #ececf0;
       }
       @layer splash {
         html {

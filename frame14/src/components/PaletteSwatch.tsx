@@ -9,24 +9,33 @@ import { PALETTES, type ThemePalette } from "../lib/themePalettes";
  * (lib/themePalettes), not tokens, since the tokens are the palette on screen.
  *
  * An outlined palette (Outlines, whose scale is gray's) is what it draws: an
- * empty ring, `data-outlined`.
+ * empty ring, `data-outlined`. An embossed one (Embossed, gray's scale too)
+ * likewise: a dimple, `data-embossed` — one flat step with the shade inside
+ * its top edge and the light inside its lower one.
  */
 export function PaletteSwatch({ palette }: { palette: ThemePalette }) {
-  const { scale, outlined } = PALETTES[palette];
+  const { scale, outlined, embossed } = PALETTES[palette];
   return (
     <Box
       aria-hidden
       data-palette-swatch={palette}
       data-outlined={outlined ? "" : undefined}
+      data-embossed={embossed ? "" : undefined}
       boxSize="3.5"
       flexShrink={0}
       rounded="full"
       borderWidth={outlined ? "2px" : "1px"}
       borderColor={outlined ? scale["400"] : "border.emphasized"}
+      bgColor={embossed ? scale["300"] : undefined}
       bgImage={
-        outlined
+        outlined || embossed
           ? undefined
           : `linear-gradient(135deg, ${scale["300"]} 50%, ${scale["600"]} 50%)`
+      }
+      boxShadow={
+        embossed
+          ? `inset 0 0.125rem 0.125rem ${scale["600"]}, inset 0 -0.0625rem 0 ${scale["50"]}`
+          : undefined
       }
     />
   );

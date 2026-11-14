@@ -28,14 +28,24 @@
 // scale, with the cards and the navs the page's own colour — white on white
 // by day, gray's near-black on itself by night — so their 1px edge is all
 // that sets them off, and no shadow under them (`outlined`).
+//
+// Embossed (0.168.0, "a new theme called embossed where all the cards are
+// indented") is a way of drawing them too: gray's scale, and every card and
+// both navs pressed into the page rather than floating over it — the
+// `surface` shadow an inner one, the shade along a recess's top edge and the
+// light on its lower lip (`embossed`). A recess is only seen in a page with
+// some body to it, so its page isn't gray's near-white or near-black: a
+// deeper off-white by day under the cards' white, and by night a charcoal
+// with the cards darker than it, the one palette where they are.
 
-export type ThemePalette = "gray" | "slate" | "sand" | "outlines";
+export type ThemePalette = "gray" | "slate" | "sand" | "outlines" | "embossed";
 
 export const THEME_PALETTES: readonly ThemePalette[] = [
   "gray",
   "slate",
   "sand",
   "outlines",
+  "embossed",
 ];
 
 export const DEFAULT_PALETTE: ThemePalette = "gray";
@@ -71,6 +81,11 @@ export interface PaletteColors {
    * (`card` is `ink`, `paper` the light cards' white) and no shadow.
    */
   outlined?: boolean;
+  /**
+   * The cards and the navs are pressed into the page: an inner shadow in
+   * place of the one they cast, and in dark mode a `card` darker than `ink`.
+   */
+  embossed?: boolean;
 }
 
 // Chakra's gray scale (Tailwind's zinc, with a #111 950).
@@ -157,6 +172,18 @@ export const PALETTES: Record<ThemePalette, PaletteColors> = {
     ink: "#09090B",
     card: "#09090B",
     outlined: true,
+  },
+  // Gray with the cards pressed in. By day the cards keep their white, in a
+  // page a step deeper than gray's so the recess has an edge to catch the
+  // light; by night the page is a charcoal and the cards the darker floor of
+  // it, their tiles (900) standing back up from that.
+  embossed: {
+    label: "Embossed",
+    scale: GRAY_SCALE,
+    paper: "#ececf0",
+    ink: "#1f1f23",
+    card: "#111113",
+    embossed: true,
   },
 };
 

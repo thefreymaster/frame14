@@ -1,4 +1,4 @@
-import { Field, HStack, Stack } from "@chakra-ui/react";
+import { Field, Stack, VStack } from "@chakra-ui/react";
 import { PHONE_MEDIA } from "../lib/homeLayout";
 import type { ThemeChoice, ThemeModePreference } from "../lib/themeMode";
 import {
@@ -19,30 +19,36 @@ const THEME_MODES: { value: ThemeModePreference; label: string }[] = [
   { value: "dark", label: "Dark" },
 ];
 
-// The palettes (lib/themePalettes), each with its swatch.
+// The palettes (lib/themePalettes), each its swatch over its name. Side by
+// side — swatch, then name — five are wider than any card they sit in: a
+// desktop's half-width one, the frame's, a phone's (four fitted, tightened on
+// a phone, in 0.166.0; Embossed is the fifth, 0.168.0).
 const PALETTE_ITEMS = THEME_PALETTES.map((value) => ({
   value,
   label: (
-    <HStack gap="2" data-palette-label>
+    <VStack gap="1" textStyle="sm" data-palette-label>
       <PaletteSwatch palette={value} />
       {PALETTES[value].label}
-    </HStack>
+    </VStack>
   ),
 }));
 
-// Four palettes with their swatches are wider than a small phone's card at
-// the control's own padding (0.166.0, Outlines the fourth): closer together
-// there, so the row stays inside the card down to a 360px screen.
+// An item is as tall as its swatch and name, not the control's one line. On
+// a phone the five share the card's width, closer together and in smaller
+// type, so the row stays inside the card down to a 360px screen.
 const PALETTE_CONTROL_CSS = {
+  "& [data-part=item]": { height: "auto", py: "1.5" },
   [PHONE_MEDIA]: {
-    "& [data-part=item]": { px: "2" },
-    "& [data-palette-label]": { gap: "1.5" },
+    display: "flex",
+    width: "full",
+    "& [data-part=item]": { flex: "1 1 auto", px: "1.5" },
+    "& [data-palette-label]": { textStyle: "xs" },
   },
 };
 
 /**
  * A theme's two controls: Theme (Auto · Device · Bright · Dark) over Colors
- * (Gray · Slate · Sand · Outlines). The Display card's for the frames' theme and the
+ * (Gray · Slate · Sand · Outlines · Embossed). The Display card's for the frames' theme and the
  * Appearance card's for this device's own (0.148.0); `helper` says whose.
  */
 export function ThemeFields({

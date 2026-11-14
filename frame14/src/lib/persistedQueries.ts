@@ -35,6 +35,9 @@ const PERSISTED = new Set([
   "home",
   "energy",
   "assist-config",
+  // Who this device is signed in as (0.168.0): the Account card shows only
+  // for a device Cloudflare Access named, and would pop in late otherwise.
+  "account",
 ]);
 
 function persisted(query: Query): boolean {

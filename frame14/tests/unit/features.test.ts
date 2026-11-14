@@ -32,9 +32,9 @@ describe("featuresOf", () => {
     expect(on({})).toEqual([]);
   });
 
-  it("counts everything but Unraid as set up until the config has loaded", () => {
+  it("counts everything but Unraid and the account as set up until the config has loaded", () => {
     expect(featuresOf(undefined)).toBe(FEATURES_UNTIL_LOADED);
-    expect(Object.entries(FEATURES_UNTIL_LOADED).filter(([, v]) => !v).map(([k]) => k)).toEqual(["unraid"]);
+    expect(Object.entries(FEATURES_UNTIL_LOADED).filter(([, v]) => !v).map(([k]) => k)).toEqual(["unraid", "account"]);
   });
 
   it("needs both power-now sensors for solar, and either solar or a circuit for Energy", () => {
@@ -73,5 +73,12 @@ describe("featuresOf", () => {
     expect(on({ photos: undefined })).toEqual(["photos"]);
     expect(on({ unraid: undefined })).toEqual([]);
     expect(on({ unraid: [{} as NonNullable<EntitiesConfig["unraid"]>[number]] })).toEqual(["unraid"]);
+  });
+
+  it("has the account only where the server names people (0.168.0)", () => {
+    expect(on({ account: true })).toEqual(["account"]);
+    expect(on({ account: false })).toEqual([]);
+    // A config restored from before it: nobody is named.
+    expect(on({ account: undefined })).toEqual([]);
   });
 });

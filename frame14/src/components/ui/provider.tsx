@@ -23,10 +23,20 @@ import {
 import { useThemeMode } from "../../hooks/useThemeMode";
 
 // Every palette but Chakra's own gray, each a condition on <html
-// data-palette> (lib/themeMode sets it): `_slate`, `_sand`, `_outlines`.
+// data-palette> (lib/themeMode sets it): `_slate`, `_sand`, `_outlines`,
+// `_embossed`.
 const TINTS = THEME_PALETTES.filter((p) => p !== "gray");
 // The palettes whose cards are an outline and nothing else (Outlines).
 const OUTLINED = THEME_PALETTES.filter((p) => PALETTES[p].outlined);
+// The palettes whose cards are pressed into the page (Embossed).
+const EMBOSSED = THEME_PALETTES.filter((p) => PALETTES[p].embossed);
+// A recess, as a shadow: the shade its top edge throws inside it, and the
+// light on its lower lip, just outside. In rem, so it is as deep on the
+// frame's larger type as on a phone. Its two colours are tokens of their own
+// (`emboss.shade` / `emboss.lip`) because they differ by mode, and a palette's
+// token value can't nest one (see lib/themePalettes).
+const EMBOSSED_SHADOW =
+  "inset 0 0.1875rem 0.4375rem {colors.emboss.shade}, inset 0 0 0.0625rem {colors.emboss.shade}, 0 0.0625rem 0 {colors.emboss.lip}";
 
 /**
  * One neutral as a token per palette: Chakra's value as the base, each tint's
@@ -74,11 +84,13 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
  *
  * The neutrals come in palettes (lib/themePalettes, the user's ask: "a slate
  * mode that is blue grays and another you make up"): Chakra's gray, Slate and
- * Sand, and Outlines (0.166.0: gray, its cards and navs drawn by their edge
- * alone — the page's colour, and the `surface` shadow none). The gray scale
+ * Sand, Outlines (0.166.0: gray, its cards and navs drawn by their edge
+ * alone — the page's colour, and the `surface` shadow none) and Embossed
+ * (0.168.0: gray, its cards and navs pressed into the page — the `surface`
+ * shadow an inner one, EMBOSSED_SHADOW). The gray scale
  * is redefined as semantic tokens whose base is Chakra's own value and whose
- * `_slate` / `_sand` / `_outlines` conditions (`<html data-palette>`) are the
- * palette's, so everything Chakra builds on gray — bg, fg, border, the
+ * `_slate` / `_sand` / `_outlines` / `_embossed` conditions (`<html
+ * data-palette>`) are the palette's, so everything Chakra builds on gray — bg, fg, border, the
  * gray colorPalette — and every `gray.N` here follows; `neutral.paper` (the
  * light page, where Chakra has white), `neutral.ink` (the dark page and the
  * light text, Chakra's black) and `neutral.card` (the dark cards, #1C1C1E in
@@ -119,6 +131,17 @@ const system = createSystem(
             paper: paletteToken((c) => c.paper),
             ink: paletteToken((c) => c.ink),
             card: paletteToken((c) => c.card),
+          },
+          // A recess's shade and the light on its lip (EMBOSSED_SHADOW): black
+          // and white at what each mode can show — a white card takes little
+          // shade, a charcoal page gives back little light.
+          emboss: {
+            shade: {
+              value: { _light: "{colors.blackAlpha.400}", _dark: "{colors.blackAlpha.900}" },
+            },
+            lip: {
+              value: { _light: "{colors.white}", _dark: "{colors.whiteAlpha.200}" },
+            },
           },
           // The logo's blue as a palette: `colorPalette="brand"`.
           brand: {
@@ -173,12 +196,16 @@ const system = createSystem(
         },
         shadows: {
           // The shade under every card and both floating navs (lib/
-          // floatingSurface's SURFACE_SHADOW): Chakra's `lg`, and none in a
-          // palette that draws them by their outline alone.
+          // floatingSurface's SURFACE_SHADOW): Chakra's `lg`, none in a
+          // palette that draws them by their outline alone, and the recess
+          // in one that presses them into the page.
           surface: {
             value: {
               base: "{shadows.lg}",
               ...Object.fromEntries(OUTLINED.map((p) => [`_${p}`, "none"])),
+              ...Object.fromEntries(
+                EMBOSSED.map((p) => [`_${p}`, EMBOSSED_SHADOW]),
+              ),
             },
           },
         },

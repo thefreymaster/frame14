@@ -167,22 +167,92 @@ test.describe("the Settings page", () => {
       await expect(html).toHaveAttribute("data-palette", "outlines");
       await expect(board).toHaveCSS("background-color", "rgb(255, 255, 255)");
 
-      if (isMobile) {
-        // Four palettes still fit a small phone's card.
-        await page.setViewportSize({ width: 360, height: 780 });
-        await expect
-          .poll(() =>
-            colors.evaluate((group) => {
-              const body = group.closest(".chakra-card__body") as HTMLElement;
-              const inner = body.getBoundingClientRect().right - parseFloat(getComputedStyle(body).paddingRight);
-              return group.getBoundingClientRect().right - inner;
-            }),
-          )
-          .toBeLessThanOrEqual(0);
-      }
     } finally {
       // Back to what every later page expects: Dark, Gray (the frames' is the
       // add-on's to keep; a remote's goes with its context).
+      if (!isMobile) {
+        await theme.getByText("Dark", { exact: true }).click();
+        await colors.getByText("Gray", { exact: true }).click();
+        await expect(colors.getByRole("radio", { name: "Gray" })).toBeChecked();
+      }
+    }
+  });
+
+  test("Embossed presses the cards and the nav into the page: an inner shadow, the cards the page's floor by night (0.168.0)", async ({ page, isMobile }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto(isMobile ? "/control/device" : "/control/display");
+    const html = page.locator("html");
+    const board = page.locator(".chakra-card__root", {
+      has: page.getByRole("heading", { name: isMobile ? "Appearance" : "Display", exact: true }),
+    });
+    const theme = board.getByRole("radiogroup", { name: "Theme" });
+    const colors = board.getByRole("radiogroup", { name: "Colors" });
+    const nav = page.locator(`[data-nav="${isMobile ? "bar" : "rail"}"]`);
+    const pageColour = () => page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
+    // A shadow's layers: how many are drawn inside the box, and, of those
+    // cast outside it, how many are blurred — a shade under a floating card,
+    // where a hairline (the lip's light) has no blur.
+    const shadow = (el: typeof board) =>
+      el.evaluate((node) => {
+        const layers = getComputedStyle(node).boxShadow.split(/,(?![^(]*\))/).map((l) => l.trim());
+        const cast = layers.filter((l) => l !== "none" && !l.includes("inset"));
+        // "<colour> <x> <y> <blur> <spread>": the blur is the third length
+        // (the colour is rgb(), rgba() or color(), as Chromium writes it).
+        const blur = (l: string) => parseFloat(l.replace(/^[a-z-]+\([^)]*\)\s*/, "").split(/\s+/)[2]);
+        return { inset: layers.filter((l) => l.includes("inset")).length, shade: cast.filter((l) => blur(l) > 0).length, hairline: cast.filter((l) => blur(l) === 0).length };
+      });
+    // How far the Colors control's right edge is past the inside of its card.
+    const overflow = () =>
+      colors.evaluate((group) => {
+        const body = group.closest(".chakra-card__body") as HTMLElement;
+        const inner = body.getBoundingClientRect().right - parseFloat(getComputedStyle(body).paddingRight);
+        return group.getBoundingClientRect().right - inner;
+      });
+    try {
+      await theme.getByText("Dark", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-theme-mode", "dark");
+      // Gray: the card stands on the page and casts a shade under it.
+      await expect(html).toHaveAttribute("data-palette", "gray");
+      expect((await shadow(board)).shade).toBeGreaterThan(0);
+      expect((await shadow(nav)).shade).toBeGreaterThan(0);
+
+      // Five palettes, each its swatch over its name, inside the card: a
+      // desktop's half-width one here, a phone's below.
+      await expect(colors.getByRole("radio")).toHaveCount(5);
+      expect(await overflow()).toBeLessThanOrEqual(0);
+
+      await colors.getByText("Embossed", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-palette", "embossed");
+      await expect(colors.getByRole("radio", { name: "Embossed" })).toBeChecked();
+      // A charcoal page, and the card darker than it: the floor of a recess.
+      await expect.poll(pageColour).toBe("rgb(31, 31, 35)");
+      await expect(board).toHaveCSS("background-color", "rgb(17, 17, 19)");
+      // Shaded inside its edge, and no shade cast under it: all there is
+      // outside is the hairline of light on its lower lip. The nav is pressed
+      // in with it.
+      await expect.poll(() => shadow(board)).toEqual({ inset: 2, shade: 0, hairline: 1 });
+      await expect.poll(() => shadow(nav)).toEqual({ inset: 2, shade: 0, hairline: 1 });
+
+      // By day: the cards keep their white, in a page a step deeper than
+      // gray's, and are pressed in the same.
+      await theme.getByText("Bright", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-theme-mode", "bright");
+      await expect.poll(pageColour).toBe("rgb(236, 236, 240)");
+      await expect(board).toHaveCSS("background-color", "rgb(255, 255, 255)");
+      await expect.poll(() => shadow(board)).toEqual({ inset: 2, shade: 0, hairline: 1 });
+
+      // Worn from the first paint after a reload (index.html's early script).
+      await page.reload();
+      await expect(html).toHaveAttribute("data-palette", "embossed");
+      await expect.poll(pageColour).toBe("rgb(236, 236, 240)");
+      await expect.poll(() => shadow(board)).toEqual({ inset: 2, shade: 0, hairline: 1 });
+
+      if (isMobile) {
+        // Five palettes still fit a small phone's card.
+        await page.setViewportSize({ width: 360, height: 780 });
+        await expect.poll(overflow).toBeLessThanOrEqual(0);
+      }
+    } finally {
       if (!isMobile) {
         await theme.getByText("Dark", { exact: true }).click();
         await colors.getByText("Gray", { exact: true }).click();

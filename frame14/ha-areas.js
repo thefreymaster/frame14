@@ -26,6 +26,7 @@
 // the answer, none until the registries are in.
 import { ENTITIES } from "./entities.js";
 import { PHOTOS_ENABLED } from "./photos.js";
+import { ACCESS_ENABLED } from "./access.js";
 import { isHaConnected, sendCommand } from "./ha-socket.js";
 import { resolveUnraid } from "./unraid.js";
 
@@ -41,6 +42,8 @@ export function lightsConfig() {
  * What GET /api/entities answers, and what io "entities" carries; `photos`
  * (0.145.0) is whether photos are set up — `immich_album_ids` since 0.162.0 —
  * for the pages to leave Photos out,
+ * `account` (0.168.0) whether Cloudflare Access names people
+ * (`cloudflare_access_team`), for Settings to show its Account card,
  * and `unraid` (0.151.0) the Unraid servers and their containers.
  */
 export function entitiesPayload() {
@@ -49,6 +52,7 @@ export function entitiesPayload() {
     lights: resolved.lights,
     rooms: resolved.rooms,
     photos: PHOTOS_ENABLED,
+    account: ACCESS_ENABLED,
     unraid,
   };
 }

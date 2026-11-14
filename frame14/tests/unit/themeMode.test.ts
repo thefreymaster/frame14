@@ -117,6 +117,20 @@ describe("the frames' theme", () => {
     expect(html.dataset.palette).toBe("outlines");
   });
 
+  it("wears Embossed like any palette: stored, sent, and on <html> (0.168.0)", async () => {
+    stubSystem(false);
+    localStorage.setItem("theme-palette", "embossed");
+    const { getTheme, setThemePalette } = await load("frame");
+    expect(getTheme().frames.palette).toBe("embossed");
+    expect(html.dataset.palette).toBe("embossed");
+    sock.handlers.get("theme_palette")?.("gray");
+    expect(html.dataset.palette).toBe("gray");
+    setThemePalette("embossed");
+    expect(sock.emit).toHaveBeenCalledWith("theme_palette", "embossed");
+    expect(localStorage.getItem("theme-palette")).toBe("embossed");
+    expect(html.dataset.palette).toBe("embossed");
+  });
+
   it("ignores what isn't a mode or a palette, stored or sent", async () => {
     stubSystem(false);
     localStorage.setItem("theme-mode-preference", "sepia");

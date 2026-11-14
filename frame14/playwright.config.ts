@@ -57,6 +57,10 @@ export default defineConfig({
         FRAME14_DATA_DIR: "test-results/data",
         // The stub's stand-in push service (/_stub/push/:id) counts as one.
         FRAME14_PUSH_ORIGINS: STUB_URL,
+        // Who is signed in (0.168.0): the stub is the Cloudflare Access team
+        // too — its keys page, and tokens signed with that key.
+        CLOUDFLARE_ACCESS_TEAM: "e2e",
+        FRAME14_ACCESS_CERTS_URL: `${STUB_URL}/_stub/access/certs`,
         PLEX_URL: "",
         PLEX_TOKEN: "",
         WEB_UI_URL: "",

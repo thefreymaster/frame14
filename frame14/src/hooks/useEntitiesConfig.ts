@@ -77,6 +77,12 @@ export interface EntitiesConfig {
    */
   photos?: boolean;
   /**
+   * Whether people are named (0.168.0): `cloudflare_access_team` is set, so
+   * the server reads who each visitor is from Cloudflare Access and Settings
+   * shows its Account card. Absent from a config restored from before it: no.
+   */
+  account?: boolean;
+  /**
    * The Unraid servers (0.151.0, unraid.js): found in Home Assistant's
    * registries, none until they've been read. Absent from a config restored
    * from before it: none.

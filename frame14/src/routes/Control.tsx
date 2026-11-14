@@ -59,6 +59,7 @@ import { useFeatures } from "../hooks/useFeatures";
 import { useFramesNavVisible, setNavVisible } from "../lib/navVisibility";
 import { computeEffectiveMode } from "../lib/themeMode";
 import { useDesktop } from "../hooks/useDesktop";
+import { AccountBoard } from "../components/AccountBoard";
 import { AppearanceBoard } from "../components/AppearanceBoard";
 import { ControlColumns } from "../components/ControlColumns";
 import { ThemeFields } from "../components/ThemeFields";
@@ -470,6 +471,9 @@ export function Control() {
           <ControlColumns
             start={
               <>
+                {/* Who Cloudflare Access signed this device in as; nothing
+                    where it didn't (0.168.0). */}
+                <AccountBoard />
                 {/* A remote's own theme; a frame wears the frames'. */}
                 {showViews && <AppearanceBoard />}
                 {/* Not on the kitchen frame: Fully Kiosk's WebView has no

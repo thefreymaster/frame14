@@ -55,13 +55,16 @@ const DARK_ORDER = ["ink", "950", "900", "card", "800", "700"] as const;
 const TINT_CHROMA_MAX = 0.03;
 const PAPER_CHROMA_MAX = 0.008;
 
-// The palettes whose cards have a colour of their own; Outlines' are the
-// page's (0.166.0), so the rules about a card on its page aren't its.
-const FILLED = THEME_PALETTES.filter((name) => !PALETTES[name].outlined);
+// The palettes whose cards stand on their page with a colour of their own.
+// Outlines' are the page's (0.166.0) and Embossed's are pressed into it
+// (0.168.0), so the rules about a card on its page aren't theirs.
+const FILLED = THEME_PALETTES.filter(
+  (name) => !PALETTES[name].outlined && !PALETTES[name].embossed,
+);
 
 describe("the palettes", () => {
-  it("are gray, slate, sand and outlines, each a whole scale of colours", () => {
-    expect(THEME_PALETTES).toEqual(["gray", "slate", "sand", "outlines"]);
+  it("are gray, slate, sand, outlines and embossed, each a whole scale of colours", () => {
+    expect(THEME_PALETTES).toEqual(["gray", "slate", "sand", "outlines", "embossed"]);
     expect(FILLED).toEqual(["gray", "slate", "sand"]);
     for (const name of THEME_PALETTES) {
       expect(Object.keys(PALETTES[name].scale)).toEqual([...PALETTE_STEPS]);
@@ -71,6 +74,7 @@ describe("the palettes", () => {
     }
     expect(isThemePalette("slate")).toBe(true);
     expect(isThemePalette("outlines")).toBe(true);
+    expect(isThemePalette("embossed")).toBe(true);
     expect(isThemePalette("neon")).toBe(false);
   });
 
@@ -178,6 +182,38 @@ describe("the palettes", () => {
     expect(contrast(scale["500"], card), "subtle text by night").toBeGreaterThan(3.4);
     // No other palette is outlined.
     expect(THEME_PALETTES.filter((name) => PALETTES[name].outlined)).toEqual(["outlines"]);
+  });
+
+  it("press Embossed's cards into the page: gray's scale, a page with body to it, the cards its floor by night (0.168.0)", () => {
+    const { scale, paper, ink, card, embossed, outlined } = PALETTES.embossed;
+    expect(embossed).toBe(true);
+    expect(outlined).toBeUndefined();
+    expect(scale).toEqual(PALETTES.gray.scale);
+    // By day the cards keep their white (`bg.surface` is the panel's), so
+    // what Chakra draws on a white card still shows; the page is deeper than
+    // gray's, for the recess to have an edge, and still lighter than the
+    // borders drawn on it.
+    expect(contrast(paper, LIGHT_CARD), "page under the cards by day").toBeGreaterThan(1.15);
+    expect(luminance(paper), "deeper than gray's page").toBeLessThan(luminance(PALETTES.gray.paper));
+    expect(luminance(paper), "lighter than a border").toBeGreaterThan(luminance(scale["200"]));
+    // By night the one palette whose cards are darker than its page, with
+    // the tiles' wells (900) standing back up from them.
+    expect(luminance(card), "card under the page").toBeLessThan(luminance(ink));
+    expect(contrast(ink, card), "card in the page by night").toBeGreaterThan(1.12);
+    expect(luminance(scale["900"]), "tile on the card").toBeGreaterThan(luminance(card));
+    expect(contrast(scale["700"], card), "card border").toBeGreaterThan(1.8);
+    // The text: on the white cards and the page by day, on the cards and the
+    // page by night (fg, fg.muted, and the cards' faintest).
+    expect(contrast(ink, LIGHT_CARD), "text by day").toBeGreaterThan(15);
+    expect(contrast(ink, paper), "text on the page by day").toBeGreaterThan(13);
+    expect(contrast(scale["600"], paper), "muted text on the page by day").toBeGreaterThan(6);
+    expect(contrast(scale["50"], card), "text by night").toBeGreaterThan(15);
+    expect(contrast(scale["400"], card), "muted text by night").toBeGreaterThan(7);
+    expect(contrast(scale["500"], card), "subtle text by night").toBeGreaterThan(3.4);
+    expect(contrast(scale["50"], ink), "text on the page by night").toBeGreaterThan(13);
+    expect(contrast(scale["400"], ink), "muted text on the page by night").toBeGreaterThan(5.5);
+    // No other palette is embossed.
+    expect(THEME_PALETTES.filter((name) => PALETTES[name].embossed)).toEqual(["embossed"]);
   });
 
   it("are what the launch splash paints before the bundle (index.html's copies)", () => {

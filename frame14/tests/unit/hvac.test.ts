@@ -5,6 +5,7 @@ import {
   climateGridCss,
   climateStatus,
   climateTempRange,
+  displayClimateName,
   fanModePercentage,
   fmtClimateTemp,
   getClimateAction,
@@ -234,5 +235,25 @@ describe("fanModePercentage", () => {
     expect(fanModePercentage("turbo")).toBe(100);
     expect(fanModePercentage("auto")).toBeNull();
     expect(fanModePercentage(null)).toBeNull();
+  });
+});
+
+// 0.169.2, the user: "Remove the word AC from the names".
+describe("displayClimateName", () => {
+  it("drops the word AC, wherever it stands and however it is written", () => {
+    expect(displayClimateName("1st Floor AC")).toBe("1st Floor");
+    expect(displayClimateName("Main Bedroom AC")).toBe("Main Bedroom");
+    expect(displayClimateName("Localthings 1st FLR AC")).toBe("Localthings 1st FLR");
+    expect(displayClimateName("AC Upstairs")).toBe("Upstairs");
+    expect(displayClimateName("Garage A/C")).toBe("Garage");
+    expect(displayClimateName("Office ac unit")).toBe("Office unit");
+  });
+
+  it("leaves a name without the word alone, and one that is only the word", () => {
+    expect(displayClimateName("Living Room")).toBe("Living Room");
+    expect(displayClimateName("Acme Heat Pump")).toBe("Acme Heat Pump");
+    expect(displayClimateName("Mac Room")).toBe("Mac Room");
+    expect(displayClimateName("climate.samsung_ac")).toBe("climate.samsung_ac");
+    expect(displayClimateName("AC")).toBe("AC");
   });
 });

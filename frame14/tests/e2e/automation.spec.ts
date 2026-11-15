@@ -6,7 +6,7 @@ import { resetStub } from "./helpers";
 test("GET /api/change/:view moves the frame, and a remote stays put", async ({ page, request, isMobile }) => {
   await resetStub(request);
   await page.goto("/home");
-  await expect(page.getByText("1st Floor AC")).toBeVisible();
+  await expect(page.getByText("1st Floor")).toBeVisible();
 
   const res = await request.get("/api/change/clock");
   expect(res.status()).toBe(200);
@@ -33,7 +33,7 @@ test("a page that opens while the frames are on a game goes to it, and a remote 
   try {
     await page.goto("/home");
     if (isMobile) {
-      await expect(page.getByText("1st Floor AC")).toBeVisible();
+      await expect(page.getByText("1st Floor")).toBeVisible();
       await page.waitForTimeout(1000);
       await expect(page).toHaveURL(/\/home$/);
       return;
@@ -95,7 +95,7 @@ test("GET /api/screen/:state and /brightness/:level reach Fully on a frame, and 
   await resetStub(request);
   await page.addInitScript(FULLY_STUB);
   await page.goto("/home");
-  await expect(page.getByText("1st Floor AC")).toBeVisible();
+  await expect(page.getByText("1st Floor")).toBeVisible();
   const calls = () => page.evaluate(() => (window as unknown as { screenCalls: string[] }).screenCalls);
 
   expect((await request.get("/api/screen/off")).status()).toBe(200);
@@ -128,7 +128,7 @@ test("the header's power button turns a frame's screen off, and switches the fra
   await request.get("/api/screen/on");
   await page.addInitScript(FULLY_STUB);
   await page.goto("/home");
-  await expect(page.getByText("1st Floor AC")).toBeVisible();
+  await expect(page.getByText("1st Floor")).toBeVisible();
   const calls = () => page.evaluate(() => (window as unknown as { screenCalls: string[] }).screenCalls);
   const state = async () => ((await (await request.get("/api/screen")).json()) as { state: string }).state;
   try {
@@ -166,7 +166,7 @@ test("the frame's light sensor sets the brightness while the room-light setting 
   await request.put("/api/screen/dark", { data: { enabled: false, from: "21:00", to: "06:30" } });
   await page.addInitScript(FULLY_STUB);
   await page.goto("/home");
-  await expect(page.getByText("1st Floor AC")).toBeVisible();
+  await expect(page.getByText("1st Floor")).toBeVisible();
   const screen = async () => (await request.get("/api/screen")).json();
   const calls = () => page.evaluate(() => (window as unknown as { screenCalls: string[] }).screenCalls);
   // The reading reaches the add-on, and changes nothing while the setting is off.

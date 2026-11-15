@@ -173,7 +173,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 - climate.samsung_airconditioner_3rd_flr
 ```
 
-**`climate_names`** (a thermostat without an entry shows its Home Assistant name):
+**`climate_names`** (a thermostat without an entry shows its Home Assistant name; either is shown without the word AC, as the card says Climate already):
 
 ```yaml
 - entity: climate.samsung_airconditioner_1

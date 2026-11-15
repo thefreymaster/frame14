@@ -8,10 +8,10 @@ test.describe("the Climate page", () => {
 
   test("shows every thermostat with what it's doing", async ({ page }) => {
     await page.goto("/climate");
-    await expect(page.getByRole("button", { name: /^1st Floor AC: 64°, Heating to 70°/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^2nd Floor AC: 68°, Off/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^3rd Floor AC: 75°, Cooling to 72°/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^Master Room AC: 68°, Off/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^1st Floor: 64°, Heating to 70°/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^2nd Floor: 68°, Off/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^3rd Floor: 75°, Cooling to 72°/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Master Room: 68°, Off/ })).toBeVisible();
   });
 
   test("a lit tile's ring is rounded inside as well as out, as wide all round (0.149.0)", async ({ page }) => {
@@ -27,14 +27,14 @@ test.describe("the Climate page", () => {
         return { outer: outer / rem, ring: (parseFloat(cs.borderTopWidth) + spread) / rem, inner: (outer - parseFloat(cs.borderTopWidth) - spread) / rem };
       });
     // Heating: a 0.25rem ring, its inner edge `sm` (0.25rem) — it was square.
-    await expect.poll(() => corner(/^1st Floor AC:/)).toEqual({ outer: 0.5, ring: 0.25, inner: 0.25 });
+    await expect.poll(() => corner(/^1st Floor:/)).toEqual({ outer: 0.5, ring: 0.25, inner: 0.25 });
     // Off: the plain outline card, `sm` outside.
-    expect((await corner(/^2nd Floor AC:/)).outer).toBe(0.25);
+    expect((await corner(/^2nd Floor:/)).outer).toBe(0.25);
   });
 
   test("the dial's marked tick slides to a step, and the reading rolls (0.149.0)", async ({ page }) => {
     await page.goto("/climate");
-    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    await page.getByRole("button", { name: /^1st Floor:/ }).click();
     const dialog = page.getByRole("dialog");
     const marker = dialog.locator("[data-dial-marker]");
     await expect.poll(() => dialReading(dialog)).toBe("70°");
@@ -51,7 +51,7 @@ test.describe("the Climate page", () => {
 
   test("a tile opens the dialog, and a new mode reaches Home Assistant", async ({ page }) => {
     await page.goto("/climate");
-    await page.getByRole("button", { name: /^2nd Floor AC:/ }).click();
+    await page.getByRole("button", { name: /^2nd Floor:/ }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("System off")).toBeVisible();
@@ -60,12 +60,12 @@ test.describe("the Climate page", () => {
     await expect(dialog.getByText("Heat standby")).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole("button", { name: /^2nd Floor AC: 68°, Heat, set to 68°/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^2nd Floor: 68°, Heat, set to 68°/ })).toBeVisible();
   });
 
   test("the dialog is a sheet on a phone, and its close button closes it", async ({ page, isMobile }) => {
     await page.goto("/climate");
-    await page.getByRole("button", { name: /^2nd Floor AC:/ }).click();
+    await page.getByRole("button", { name: /^2nd Floor:/ }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("System off")).toBeVisible();
     // A drawer from the bottom on a phone (0.134), as tall as the controls —
@@ -98,7 +98,7 @@ test.describe("the Climate page", () => {
 
   test("the dial's − and + step the target, sent once the taps stop", async ({ page }) => {
     await page.goto("/climate");
-    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    await page.getByRole("button", { name: /^1st Floor:/ }).click();
     const dialog = page.getByRole("dialog");
     const raise = dialog.getByRole("button", { name: "Raise the target temperature" });
     await raise.click();
@@ -109,12 +109,12 @@ test.describe("the Climate page", () => {
     // Closed before the taps' send: it still reaches Home Assistant.
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole("button", { name: /^1st Floor AC: 64°, Heating to 71°/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^1st Floor: 64°, Heating to 71°/ })).toBeVisible();
   });
 
   test("the fan speed slider's marks sit under the thumb's stops, inside the track (0.144.1)", async ({ page }) => {
     await page.goto("/climate");
-    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    await page.getByRole("button", { name: /^1st Floor:/ }).click();
     const dialog = page.getByRole("dialog");
     const thumb = dialog.getByRole("slider", { name: "Fan speed" });
     await expect(thumb).toBeVisible();
@@ -153,13 +153,13 @@ test.describe("the Climate page", () => {
       const b = (await box)!;
       return { x: b.x + b.width / 2, y: b.y + b.height / 2, bottom: b.y + b.height };
     };
-    // Master Room AC's name is the long one: a line, ellipsised if it must
+    // Master Room's name is the long one: a line, ellipsised if it must
     // be, so its tile stays square with the dial's 6xl reading (0.145.3).
     for (const [name, reading, status] of [
-      ["1st Floor AC", "64°", "Heating to 70°"],
-      ["2nd Floor AC", "68°", "Off"],
-      ["3rd Floor AC", "75°", "Cooling to 72°"],
-      ["Master Room AC", "68°", "Off"],
+      ["1st Floor", "64°", "Heating to 70°"],
+      ["2nd Floor", "68°", "Off"],
+      ["3rd Floor", "75°", "Cooling to 72°"],
+      ["Master Room", "68°", "Off"],
     ]) {
       const tile = page.getByRole("button", { name: new RegExp(`^${name}:`) });
       await expect(tile).toBeVisible();
@@ -191,7 +191,7 @@ test.describe("the Climate page", () => {
           figures: cs.fontVariantNumeric,
         };
       });
-    const tile = page.getByRole("button", { name: /^1st Floor AC:/ });
+    const tile = page.getByRole("button", { name: /^1st Floor:/ });
     const tileFont = await font(tile.getByText("64°", { exact: true }));
     await tile.click();
     const dialog = page.getByRole("dialog");
@@ -211,7 +211,7 @@ test.describe("the Climate page", () => {
   test("a desktop's tiles show the temperature a size larger", async ({ page, isMobile }) => {
     test.skip(isMobile, "a phone's tiles are the squares at the md size");
     await page.goto("/climate");
-    const tile = page.getByRole("button", { name: /^1st Floor AC:/ });
+    const tile = page.getByRole("button", { name: /^1st Floor:/ });
     await expect(tile).toBeVisible();
     // 7xl, 4.5rem (0.127; the frame's lg tile is 6xl, 3.75rem). The root's
     // size grows with the screen, so compare with it rather than a pixel count.
@@ -226,13 +226,13 @@ test.describe("the Climate page", () => {
   // mode's pace, on the tile and in the dialog's readout.
   test("a thermostat in Fan mode spins its fan", async ({ page, request }) => {
     await page.goto("/climate");
-    const tile = page.getByRole("button", { name: /^1st Floor AC:/ });
+    const tile = page.getByRole("button", { name: /^1st Floor:/ });
     await expect(tile).toHaveAccessibleName(/Heating to 70°/);
     await expect(tile.locator("[data-fan-icon]")).toHaveCount(0);
     await request.post("http://127.0.0.1:8310/_stub/state", {
       data: { entity_id: "climate.samsung_airconditioner_1", state: "fan_only", attributes: { hvac_action: "fan", fan_mode: "low" } },
     });
-    await expect(tile).toHaveAccessibleName(/^1st Floor AC: 64°, Fan/);
+    await expect(tile).toHaveAccessibleName(/^1st Floor: 64°, Fan/);
     const icon = tile.locator("[data-fan-icon]");
     await expect(icon).toHaveCSS("animation-name", "spin");
     // Low: a quarter's pace, 7.5s a turn.
@@ -245,10 +245,10 @@ test.describe("the Climate page", () => {
 
   test("a live change from Home Assistant updates the tile", async ({ page, request }) => {
     await page.goto("/climate");
-    await expect(page.getByRole("button", { name: /^1st Floor AC: 64°, Heating to 70°/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^1st Floor: 64°, Heating to 70°/ })).toBeVisible();
     await request.post("http://127.0.0.1:8310/_stub/state", {
       data: { entity_id: "climate.samsung_airconditioner_1", state: "heat", attributes: { current_temperature: 70, hvac_action: "idle" } },
     });
-    await expect(page.getByRole("button", { name: /^1st Floor AC: 70°, Heat, set to 70°/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^1st Floor: 70°, Heat, set to 70°/ })).toBeVisible();
   });
 });

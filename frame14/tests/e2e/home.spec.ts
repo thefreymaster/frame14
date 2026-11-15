@@ -10,10 +10,11 @@ test("the home page comes up with live cards and no errors", async ({ page }) =>
   await page.goto("/");
   await expect(page).toHaveURL(/\/home$/);
 
-  // The header, the climate card's tiles (named by climate_names, read live
-  // from the stub), the energy card's figure.
+  // The header, the climate card's tiles (named by climate_names — "1st
+  // Floor AC", shown without the word AC since 0.169.2 —, read live from the
+  // stub), the energy card's figure.
   await expect(page.getByText("Frame14").first()).toBeVisible();
-  await expect(page.getByText("1st Floor AC")).toBeVisible();
+  await expect(page.getByText("1st Floor", { exact: true })).toBeVisible();
   await expect(page.getByText("Heating to 70°")).toBeVisible();
   await expect(page.getByText("Cooling to 72°")).toBeVisible();
   await expect(page.getByText("Solar covered today")).toBeVisible();

@@ -269,7 +269,7 @@ test.describe("the Settings page", () => {
     // the inner radius, like on the thermostats"): a tile that's off, since a
     // lit one's is that much rounder for its ring.
     await page.goto("/climate");
-    const tile = page.getByRole("button", { name: /^2nd Floor AC: 68°, Off/ });
+    const tile = page.getByRole("button", { name: /^2nd Floor: 68°, Off/ });
     await expect(tile).toBeVisible();
     const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
     const inner = await tile.evaluate((node) => getComputedStyle(node).borderTopLeftRadius);

@@ -45,7 +45,7 @@ test.describe("nested corners", () => {
 
   test("and the thermostat's drawer or dialog", async ({ page }) => {
     await page.goto("/climate");
-    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    await page.getByRole("button", { name: /^1st Floor:/ }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));

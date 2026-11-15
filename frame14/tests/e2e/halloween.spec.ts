@@ -64,7 +64,7 @@ test.describe("the Halloween page", () => {
     test.skip(isMobile, "a remote ignores the frames' view changes");
     await page.clock.setFixedTime(HALLOWEEN);
     await page.goto("/home");
-    await expect(page.getByText("1st Floor AC")).toBeVisible();
+    await expect(page.getByText("1st Floor")).toBeVisible();
     await request.get("/api/change/halloween");
     await expect(page).toHaveURL(/\/halloween$/);
     await expect(page.getByRole("heading", { name: "Happy Halloween" })).toBeVisible();
@@ -77,7 +77,7 @@ test.describe("the Halloween page", () => {
     // spec before may have left the frames on Halloween).
     await request.get("/api/change/clock");
     await page.goto("/home");
-    await expect(page.getByText("1st Floor AC")).toBeVisible();
+    await expect(page.getByText("1st Floor")).toBeVisible();
     await stub(request, "/_stub/state", { entity_id: ROUTE, state: "clock" });
     // Motion wakes the frames onto the saved route — so first, that the
     // watcher is awake at all...

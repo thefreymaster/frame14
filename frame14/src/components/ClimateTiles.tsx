@@ -6,6 +6,7 @@ import { FanIcon } from "./FanIcon";
 import {
   climateGridCss,
   climateStatus,
+  displayClimateName,
   fanModePercentage,
   fmtClimateTemp,
   hvacPalette,
@@ -57,6 +58,8 @@ export function ClimateTile({
   const lg = size !== "md";
   const xl = size === "xl";
   const { shown, on, running, status, spoken } = climateStatus(unit);
+  // Without the word AC (lib/hvac): the card says Climate.
+  const name = displayClimateName(unit.name);
   const { accent, ring, palette } = hvacPalette(shown);
   const ModeIcon = MODE_ICON[shown];
   const currentTemp = fmtClimateTemp(unit.currentTemp);
@@ -112,7 +115,7 @@ export function ClimateTile({
     >
       <button
         type="button"
-        aria-label={`${unit.name}: ${reading}, ${spoken}`}
+        aria-label={`${name}: ${reading}, ${spoken}`}
         onClick={onTap}
       >
         <Card.Body p={lg ? "5" : "3"}>
@@ -144,7 +147,7 @@ export function ClimateTile({
                 lineClamp={square ? "1" : "2"}
                 textStyle={lg ? "lg" : undefined}
               >
-                {unit.name}
+                {name}
               </Stat.Label>
               {shown === "fan_only" ? (
                 // In Fan mode the fan glyph spins, at the fan mode's pace,

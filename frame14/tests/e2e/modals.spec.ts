@@ -143,7 +143,7 @@ test.describe("modals", () => {
     // behind them as Safari did (0.149.0).
     test.skip(isMobile, "a phone's is a sheet (the Android one, unblurred: expectSheet)");
     await page.goto("/climate");
-    await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+    await page.getByRole("button", { name: /^1st Floor:/ }).click();
     const modal = page.getByRole("dialog");
     await expect(modal.getByText("Heating now")).toBeVisible();
     await expect(modal).toHaveClass(/chakra-dialog__content/);
@@ -186,7 +186,7 @@ test.describe("modals", () => {
     test("the page behind a sheet is blurred as well as dimmed", async ({ page }) => {
       test.skip(test.info().project.name !== "desktop", "one run is enough");
       await page.goto("/climate");
-      await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+      await page.getByRole("button", { name: /^1st Floor:/ }).click();
       await expect(page.getByRole("dialog")).toBeVisible();
       await expect(page.locator("html")).toHaveAttribute("data-backdrop-blur", "");
       await expect(page.locator('[data-scope="dialog"][data-part="backdrop"]')).toHaveCSS("backdrop-filter", "blur(2px)");
@@ -205,7 +205,7 @@ test.describe("modals", () => {
     test("the thermostat is a sheet from the bottom, as tall as its controls", async ({ page }) => {
       test.skip(test.info().project.name !== "desktop", "one run is enough; the phone project is the phone");
       await page.goto("/climate");
-      await page.getByRole("button", { name: /^1st Floor AC:/ }).click();
+      await page.getByRole("button", { name: /^1st Floor:/ }).click();
       const modal = page.getByRole("dialog");
       await expect(modal.getByText("Heating now")).toBeVisible();
       await expectSheet(page, modal);

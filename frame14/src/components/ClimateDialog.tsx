@@ -2,6 +2,7 @@ import { IconButton, Portal } from "@chakra-ui/react";
 import { IoClose } from "react-icons/io5";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { ClimateControls } from "./ClimateControls";
+import { displayClimateName } from "../lib/hvac";
 import * as Modal from "./Modal";
 
 /**
@@ -38,7 +39,9 @@ export function ClimateDialog({
         <Modal.Positioner>
           <Modal.Content>
             <Modal.Header alignItems="center" justifyContent="space-between">
-              <Modal.Title>{unit?.name ?? "Thermostat"}</Modal.Title>
+              <Modal.Title>
+                {unit ? displayClimateName(unit.name) : "Thermostat"}
+              </Modal.Title>
               <Modal.CloseTrigger asChild position="static">
                 <IconButton
                   aria-label="Close"

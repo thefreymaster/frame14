@@ -40,6 +40,22 @@ export function hvacPalette(key: string): HvacPalette {
   return { accent, ring, palette };
 }
 
+/**
+ * A thermostat's name as the pages show it (0.169.2, the user: "Remove the
+ * word AC from the names"): "1st Floor AC" is "1st Floor", "Garage A/C"
+ * "Garage" — the card and the page say Climate already, as a light's name
+ * drops Light (lightsConfig's displayLightName). Whichever name it is, a
+ * climate_names label or Home Assistant's own; a name that is only that word
+ * keeps it.
+ */
+export function displayClimateName(name: string): string {
+  const trimmed = name
+    .replace(/\s*\bA\/?C\b\s*/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return trimmed || name;
+}
+
 /** How wide the ring is that a thermostat or fan tile wears while it's on. */
 export const TILE_RING_WIDTH = "0.25rem";
 

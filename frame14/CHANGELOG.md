@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.169.2
+
+- Changed: a thermostat's name is shown without the word AC — "1st Floor AC" is "1st Floor", "Main Bedroom AC" "Main Bedroom" — on the Home card, the Climate page and the thermostat's own sheet, whether the name comes from `climate_names` or from Home Assistant. Nothing needs changing in the configuration.
+
 ## 0.169.1
 
 - Changed: buttons and segmented controls have the smaller corner of the tiles inside a card — a thermostat's, a light's — rather than the cards' own larger one, which 0.169.0 gave them. That goes for every button: a dial's − and +, the timer's, and the small ones in the header and on a sheet's close.

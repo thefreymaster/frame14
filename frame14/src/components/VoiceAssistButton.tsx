@@ -6,9 +6,8 @@ import { Tooltip } from "./ui/tooltip";
 /**
  * The mic button, on every view: you walk up to the panel and talk. A plain
  * button at the right of StatusBanner, after the status icons (before the
- * clock on a desktop), on every device, with the cards' corner as every
- * button has (0.169.0; Chakra's tighter `l2` before, when the theme's
- * buttons were pills). A tooltip says what a tap does: ask,
+ * clock on a desktop), on every device, with the tiles' small corner as
+ * every button has (0.169.1). A tooltip says what a tap does: ask,
  * or, while a question is under way, stop it (on a pointer's hover or a
  * keyboard's focus; a touch only taps).
  */

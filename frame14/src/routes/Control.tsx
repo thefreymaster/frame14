@@ -288,14 +288,10 @@ export function Control() {
                 onClick={() => changeView(v.path)}
                 width="100%"
                 height="auto"
-                // A tile, not a control: its corners are `sm`, concentric
-                // with the card's, where a button's are the card's own
-                // (0.145.4: the card's 0.75rem here before, the corner tiles'
-                // curves fighting it). `data-tile` keeps it in corners.spec's
-                // check, which leaves buttons out.
-                data-tile=""
+                // A tile: its corners are every button's `sm`, concentric
+                // with the card's (0.145.4: the card's 0.75rem here before,
+                // the corner tiles' curves fighting it).
                 aspectRatio="4 / 3"
-                borderRadius="sm"
                 flexDirection="column"
                 gap="2"
               >

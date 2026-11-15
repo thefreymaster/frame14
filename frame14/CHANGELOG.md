@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.169.1
+
+- Changed: buttons and segmented controls have the smaller corner of the tiles inside a card — a thermostat's, a light's — rather than the cards' own larger one, which 0.169.0 gave them. That goes for every button: a dial's − and +, the timer's, and the small ones in the header and on a sheet's close.
+
 ## 0.169.0
 
 - Changed: the **Sand** colour theme is gone. Colors now offers Gray, Slate, Outlines and Embossed. The frames, or a phone, that wore Sand wear Gray until you pick another.

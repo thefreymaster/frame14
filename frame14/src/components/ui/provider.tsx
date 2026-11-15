@@ -54,12 +54,14 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
 /**
  * Chakra's stock system with a few additions.
  *
- * Buttons have the cards' corners (0.169.0, the user: "I want buttons and
- * segmented controllers to use the same border radius as cards"; they were
- * fully rounded before, pills and circles): the `surface` radius on the
- * button recipe, which also drives IconButton and CloseButton, and on a
- * segmented control's track and indicator. A button too short for it — half
- * its height under the radius — is still a pill, as CSS draws any corner.
+ * Buttons and segmented controls have a tile's corner: `sm`, the inner
+ * radius of the tiles in a card — a thermostat's, a light's — not the card's
+ * own (0.169.1, the user: "it should've been the inner radius, like on the
+ * thermostats"; 0.169.0 had given them the cards' `surface` radius, and they
+ * were fully rounded before that, pills and circles). It is on the button
+ * recipe, which also drives IconButton and CloseButton, and on a segmented
+ * control's track and indicator. The value is Chakra's own for both (`l2`);
+ * it is named here as the tiles name it, so the two are one.
  * Progress bars stay pills (0.138.1, the user's ask): the `full` shape for
  * the track, and the range rounded with it, so the fill ends round rather
  * than cut square by the track's clip — and the logo's blue (0.139, "matching
@@ -218,7 +220,7 @@ const system = createSystem(
         },
       },
       recipes: {
-        button: { base: { borderRadius: "surface" } },
+        button: { base: { borderRadius: "sm" } },
       },
       slotRecipes: {
         card: {
@@ -227,7 +229,7 @@ const system = createSystem(
         },
         segmentGroup: {
           slots: segmentGroupAnatomy.keys(),
-          base: { root: { "--segment-radius": "radii.surface" } },
+          base: { root: { "--segment-radius": "radii.sm" } },
         },
         progress: {
           slots: progressAnatomy.keys(),

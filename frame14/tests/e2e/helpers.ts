@@ -99,13 +99,6 @@ export function cornersRounderThanConcentric(page: Page): Promise<CornerFinding[
       const cs = getComputedStyle(el);
       const r = el.getBoundingClientRect();
       if (!shown(el, r) || !drawn(el, cs)) continue;
-      // A button or a segmented control has the cards' own corner wherever
-      // it sits (0.169.0, the user: "I want buttons and segmented controllers
-      // to use the same border radius as cards"), as it was a pill wherever
-      // it sat before: a control's shape, not a box nested in a box. A
-      // button drawn as a tile (`data-tile`: the remote's Views tiles) is a
-      // box in a box, and is checked.
-      if (el.matches('.chakra-button:not([data-tile]), [data-scope="segment-group"]')) continue;
       const ec = corners(cs);
       const rE = Math.max(...ec);
       if (rE <= 0.5 || rE >= Math.min(r.width, r.height) / 2 - 1) continue; // square, or a pill or a circle

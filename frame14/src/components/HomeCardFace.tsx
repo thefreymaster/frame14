@@ -1,4 +1,4 @@
-import { Card, Circle, HStack, Icon } from "@chakra-ui/react";
+import { Card, HStack, Icon, Square } from "@chakra-ui/react";
 import { MdDragIndicator, MdOutlineLightbulb } from "react-icons/md";
 import { HOME_CARDS, type HomeCardId } from "../lib/homeLayout";
 import { IoCalendarOutline, IoFlash, IoPartlySunnyOutline, IoRainyOutline, IoThermometerOutline, IoTrophyOutline } from "react-icons/io5";
@@ -76,14 +76,19 @@ export function HomeCardFace({
             </Card.Body>
           </Card.Root>
           {/* Straddles the card's corner rather than sitting inside it, where
-              it would cover header text like the weather or the energy chip. */}
-          <Circle
+              it would cover header text like the weather or the energy chip.
+              Not a button, but drawn as the hide button opposite is: its
+              size, and a button's corner (`sm`; both were circles while
+              buttons were). */}
+          <Square
             aria-hidden
+            data-drag-grip=""
             position="absolute"
             top="0"
             right="0"
             transform="translate(30%, -30%)"
             size="10"
+            rounded="sm"
             bg="colorPalette.solid"
             color="colorPalette.contrast"
             shadow="md"
@@ -92,7 +97,7 @@ export function HomeCardFace({
             <Icon boxSize="5">
               <MdDragIndicator />
             </Icon>
-          </Circle>
+          </Square>
         </>
       )}
     </>

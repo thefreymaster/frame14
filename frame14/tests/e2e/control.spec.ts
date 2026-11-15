@@ -264,39 +264,48 @@ test.describe("the Settings page", () => {
     }
   });
 
-  test("buttons and segmented controls have the cards' corners, not pill ends (0.169.0)", async ({ page, isMobile }) => {
+  test("buttons and segmented controls have a tile's inner corner, as a thermostat's, not the card's own (0.169.1)", async ({ page, isMobile }) => {
+    // The inner corner, from the thermostats (the user: "it should've been
+    // the inner radius, like on the thermostats"): a tile that's off, since a
+    // lit one's is that much rounder for its ring.
+    await page.goto("/climate");
+    const tile = page.getByRole("button", { name: /^2nd Floor AC: 68°, Off/ });
+    await expect(tile).toBeVisible();
+    const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    const inner = await tile.evaluate((node) => getComputedStyle(node).borderTopLeftRadius);
+    // The theme's `sm`, a quarter of a rem.
+    expect(parseFloat(inner)).toBeCloseTo(0.25 * rem, 1);
+
     await page.goto(isMobile ? "/control/device" : "/control/display");
     const board = page.locator(".chakra-card__root", {
       has: page.getByRole("heading", { name: isMobile ? "Appearance" : "Display", exact: true }),
     });
     await expect(board).toBeVisible();
-    // The card's corner: the theme's `surface` radius, three quarters of a rem.
-    const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
-    const corner = await board.evaluate((node) => getComputedStyle(node).borderTopLeftRadius);
-    expect(parseFloat(corner)).toBeCloseTo(0.75 * rem, 1);
+    // The card's own corner is the rounder one: the `surface` radius, three
+    // quarters of a rem — what 0.169.0 gave the controls.
+    const outer = await board.evaluate((node) => getComputedStyle(node).borderTopLeftRadius);
+    expect(parseFloat(outer)).toBeCloseTo(0.75 * rem, 1);
     // A segmented control: its track, and the indicator that sits flush in it.
     const theme = board.getByRole("radiogroup", { name: "Theme" });
-    await expect(theme).toHaveCSS("border-radius", corner);
-    await expect(theme.locator('[data-part="indicator"]')).toHaveCSS("border-radius", corner);
-    await expect(board.getByRole("radiogroup", { name: "Colors" })).toHaveCSS("border-radius", corner);
+    await expect(theme).toHaveCSS("border-radius", inner);
+    await expect(theme.locator('[data-part="indicator"]')).toHaveCSS("border-radius", inner);
+    await expect(board.getByRole("radiogroup", { name: "Colors" })).toHaveCSS("border-radius", inner);
     // The page header's own, Device mode.
-    await expect(page.getByRole("radiogroup", { name: "Device mode" })).toHaveCSS("border-radius", corner);
+    await expect(page.getByRole("radiogroup", { name: "Device mode" })).toHaveCSS("border-radius", inner);
     // Buttons: every one on the page — text buttons and icon buttons, the
-    // header's small ones too — and none of them a pill. (The navs' entries
-    // are concentric with their bar, and aren't the button recipe's.)
+    // header's small ones too. (The navs' entries are concentric with their
+    // bar, and aren't the button recipe's.)
     const buttons = await page.locator(".chakra-button:visible").evaluateAll((els) =>
-      els.map((el) => {
-        const cs = getComputedStyle(el);
-        const r = el.getBoundingClientRect();
-        return { label: (el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 24), radius: cs.borderTopLeftRadius, pill: parseFloat(cs.borderTopLeftRadius) > Math.min(r.width, r.height) };
-      }),
+      els.map((el) => ({
+        label: (el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 24),
+        radius: getComputedStyle(el).borderTopLeftRadius,
+      })),
     );
     expect(buttons.length).toBeGreaterThan(2);
-    expect(buttons.filter((b) => b.pill)).toEqual([]);
-    expect(buttons.filter((b) => b.radius !== corner)).toEqual([]);
+    expect(buttons.filter((b) => b.radius !== inner)).toEqual([]);
     // The header's small icon buttons among them: the mic and the power.
-    await expect(page.getByRole("button", { name: "Ask the house" })).toHaveCSS("border-radius", corner);
-    if (!isMobile) await expect(board.getByRole("button", { name: "Refresh displays" })).toHaveCSS("border-radius", corner);
+    await expect(page.getByRole("button", { name: "Ask the house" })).toHaveCSS("border-radius", inner);
+    if (!isMobile) await expect(board.getByRole("button", { name: "Refresh displays" })).toHaveCSS("border-radius", inner);
   });
 
   test("a remote has its own theme and colors under Device; a frame has none (0.148.0)", async ({ page, browser, isMobile }) => {

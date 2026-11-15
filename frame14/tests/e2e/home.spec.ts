@@ -287,6 +287,17 @@ test("a card dragged while arranging stays where it was dropped, through Done an
   await page.waitForTimeout(800);
   await page.mouse.up();
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
+  // What a card wears while arranging has a button's corner, a tile's small
+  // one (0.169.1): the eye, the grip drawn opposite it — no button, but its
+  // twin —, and the width picker with the box that casts its shadow.
+  const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+  const eye = a.getByRole("button", { name: /^Hide / });
+  const corner = await eye.evaluate((el) => getComputedStyle(el).borderTopLeftRadius);
+  expect(parseFloat(corner)).toBeCloseTo(0.25 * rem, 1);
+  await expect(a.locator("[data-drag-grip]")).toHaveCSS("border-radius", corner);
+  const picker = a.getByRole("radiogroup", { name: / width$/ });
+  await expect(picker).toHaveCSS("border-radius", corner);
+  await expect(picker.locator("xpath=..")).toHaveCSS("border-radius", corner);
   // One drag: the first card onto the second, in one move.
   const bb = (await b.boundingBox())!;
   await page.mouse.move(ab.x + ab.width / 2, ab.y + 40);

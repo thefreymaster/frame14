@@ -64,6 +64,10 @@ describe("the Notifications card", () => {
     renderWithProviders(<NotificationsBoard />);
     await waitFor(() => expect(control()).toHaveAttribute("data-state", "checked"));
     expect(push.remindServer).toHaveBeenCalledWith(push.subscription);
+    // And its hidden input, which zag checks a tick after the control: a
+    // click while it still says off turns it "on" — a change to nothing, so
+    // nothing is turned off (the test failed that way on GitHub, 0.169.1).
+    await waitFor(() => expect(allow()).toBeChecked());
     toggle();
     await waitFor(() => expect(control()).toHaveAttribute("data-state", "unchecked"));
     expect(push.disablePush).toHaveBeenCalledTimes(1);

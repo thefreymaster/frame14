@@ -108,6 +108,14 @@ describe("watchHapticTriggers", () => {
       <header style="position: relative"><button id="stretch" data-stretched>Title</button></header>
       <button id="off" style="position: relative" disabled>Off</button>
       <div id="card" role="button" style="position: relative"><button id="inner" style="position: relative">In</button></div>
+      <div id="plain" role="button" style="position: relative"><p id="words">Open</p></div>
+      <div id="item" role="menuitem" style="position: relative">Energy</div>
+      <div id="gone" role="menuitem" aria-disabled="true" style="position: relative">Unraid</div>
+      <div data-scope="segment-group">
+        <label id="heat" data-scope="segment-group" style="position: relative"><span>Heat</span><input type="radio" name="mode" value="heat" /></label>
+        <label id="cool" data-scope="segment-group" style="position: relative"><span>Cool</span><input type="radio" name="mode" value="cool" /></label>
+        <label id="dead" data-scope="segment-group" data-disabled style="position: relative"><span>Dry</span><input type="radio" name="mode" value="dry" disabled /></label>
+      </div>
       <a id="link" href="/x" style="position: relative">Link</a>`;
   });
 
@@ -139,17 +147,64 @@ describe("watchHapticTriggers", () => {
       }
     });
 
-    it("leaves alone a card that is a button, and a link", () => {
+    it("and over whatever else takes a press: a menu's item, a card that is one button, a segment (0.171.0)", () => {
+      for (const id of ["item", "plain", "heat", "cool"]) {
+        expect(label($(id)), id).not.toBeNull();
+        expect($(id).querySelectorAll(`[${haptics.HAPTIC_LABEL}]`), id).toHaveLength(1);
+      }
+    });
+
+    it("leaves alone a card that holds buttons of its own, and a link", () => {
       // A label over the card would cover the card's own buttons.
       expect(label($("card"))).toBeNull();
+      expect(label($("inner"))).not.toBeNull();
       // Inside a link the label takes the click, and the link goes nowhere.
       expect(label($("link"))).toBeNull();
     });
 
-    it("keeps the label on top of its button, and off a disabled one", () => {
+    it("takes a card's label away when a button arrives inside it", async () => {
+      $("plain").insertAdjacentHTML("afterbegin", `<span><button id="arrived" style="position: relative">New</button></span>`);
+      await settled();
+      expect(label($("plain"))).toBeNull();
+      expect(label($("arrived"))).not.toBeNull();
+      // And it stays away as the card goes on changing.
+      $("words").textContent = "Opened";
+      await settled();
+      expect(label($("plain"))).toBeNull();
+    });
+
+    it("keeps the label on top of its button, and off anything disabled", () => {
       expect(getComputedStyle(label($("go"))!).zIndex).toBe("1");
       expect(getComputedStyle(label($("go"))!).display).not.toBe("none");
-      expect(getComputedStyle(label($("off"))!).display).toBe("none");
+      for (const id of ["off", "gone", "dead"]) {
+        expect(getComputedStyle(label($(id))!).display, id).toBe("none");
+      }
+    });
+
+    it("a tap on a segment still picks it — the label inside takes the tap, and its radio is handed the click", () => {
+      const radio = (id: string) => $(id).querySelector<HTMLInputElement>("input[type=radio]")!;
+      const picked = vi.fn();
+      radio("cool").addEventListener("change", picked);
+
+      label($("cool"))!.click();
+
+      expect(radio("cool").checked).toBe(true);
+      expect(picked).toHaveBeenCalledTimes(1);
+      // And the label's own switch was toggled: what ticks, on the phone.
+      expect(switchOf($("cool"))!.checked).toBe(true);
+      // The other segment then, once each.
+      label($("heat"))!.click();
+      expect(radio("heat").checked).toBe(true);
+      expect(radio("cool").checked).toBe(false);
+      expect(picked).toHaveBeenCalledTimes(1);
+    });
+
+    it("a tap on a menu's item is the item's click, once", () => {
+      const clicks = vi.fn();
+      $("item").addEventListener("click", clicks);
+      label($("item"))!.click();
+      expect(clicks).toHaveBeenCalledTimes(1);
+      expect(switchOf($("item"))!.checked).toBe(true);
     });
 
     it("lets the library make a static button the label's box, but not one that stretches its tap target over an ancestor", () => {

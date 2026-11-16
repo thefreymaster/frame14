@@ -212,6 +212,8 @@ export function LightControl({
     <Card.Root
       asChild
       data-light-entry=""
+      // A row /home's Lights card can be cut under, to fit the screen.
+      data-fit-row=""
       // The tile's hold is its own (the drawer), not the page's: /home's board
       // leaves a hold that starts here alone (0.143; every tile's since
       // 0.153.0, a dimmable one's before).

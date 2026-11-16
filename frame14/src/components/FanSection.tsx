@@ -45,6 +45,8 @@ function FanTile({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
   return (
     <Card.Root
       asChild
+      // A row /home's Fans card can be cut under, to fit the screen.
+      data-fit-row=""
       size="sm"
       variant="outline"
       colorPalette={palette}

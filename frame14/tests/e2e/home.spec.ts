@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pageErrors, resetStub, splashGone, stub } from "./helpers";
+import { pageErrors, quietHouse, resetStub, splashGone, stub } from "./helpers";
 
 test.beforeEach(async ({ request }) => {
   await resetStub(request);
@@ -51,6 +51,9 @@ test("the 3D printer card shows the job, its status and progress, follows a paus
 
 // 0.143: the Lights card — the lights that are on, as the Lights page's tiles.
 test("the Lights card shows the lights that are on as the Lights page's tiles, a tap turns one off, and the last one off takes the card", async ({ page, request }) => {
+  // An ordinary day: on a desktop the board fits the screen (0.171.0), and
+  // with every card the stub has the Lights card is folded to its header.
+  await quietHouse(request);
   await page.goto("/home");
   const card = page.locator('[data-card="lights"]');
   await expect(card.getByRole("heading", { name: "Lights" })).toBeVisible();
@@ -87,7 +90,8 @@ test("the Lights card shows the lights that are on as the Lights page's tiles, a
   await expect(card.getByText("1 on")).toBeVisible();
 });
 
-test("a hold on a light's tile opens its drawer, not arranging, and the tile stays while the drawer turns it off", async ({ page }) => {
+test("a hold on a light's tile opens its drawer, not arranging, and the tile stays while the drawer turns it off", async ({ page, request }) => {
+  await quietHouse(request);
   await page.goto("/home");
   const card = page.locator('[data-card="lights"]');
   const tile = card.getByRole("button", { name: /^Living Room: / });
@@ -120,7 +124,8 @@ test("a hold on a light's tile opens its drawer, not arranging, and the tile sta
 
 // 0.153.0: this device's favourites, starred in a light's drawer, are the
 // card's in place of the lights that are on — on or off.
-test("with favourites starred, the Lights card shows them, on or off, in place of the lights that are on", async ({ page }) => {
+test("with favourites starred, the Lights card shows them, on or off, in place of the lights that are on", async ({ page, request }) => {
+  await quietHouse(request);
   await page.goto("/home");
   const card = page.locator('[data-card="lights"]');
   const labels = () => card.locator("[data-light-entry]").evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
@@ -205,10 +210,16 @@ async function settledCardBoxes(page: Page) {
   }
 }
 
-test("collapsing a card keeps every card in its column and moves only the cards under it", async ({ page }) => {
+test("collapsing a card keeps every card in its column and moves only the cards under it", async ({ page, isMobile }) => {
+  // The packing alone, every card whole: a desktop window too short to be
+  // held to the screen (HOME_FIT_QUERY), so the board scrolls as it used to.
+  // Where it is held (0.171.0), a card that folds also gives its room to the
+  // cards cut short under it — fit.spec's.
+  if (!isMobile) await page.setViewportSize({ width: 1920, height: 540 });
   await page.goto("/home");
   await expect(page.getByText("Heating to 70°")).toBeVisible();
   await expect(page.getByText("Solar covered today")).toBeVisible();
+  await expect(page.locator(".home-card[data-fit-cut]")).toHaveCount(0);
   const before = await settledCardBoxes(page);
   const climate = before.find((b) => b.id === "climate");
   if (!climate) throw new Error("no climate card on the page");

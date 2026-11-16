@@ -105,6 +105,8 @@ export function ClimateTile({
   return (
     <Card.Root
       asChild
+      // A row /home's Climate card can be cut under, to fit the screen.
+      data-fit-row=""
       size="sm"
       variant="outline"
       colorPalette={palette}

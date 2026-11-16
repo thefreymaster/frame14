@@ -82,6 +82,72 @@ body {
   display: none;
 }
 
+/* A card the board has cut short so that /home fits the screen
+   (hooks/usePackedGrid's fit, 0.171.0) has a button to the whole of it
+   (HomeCardSlot's, HomeCardDialog). Where the cut falls under a row of the
+   card's content it lies along the card's foot, inside its edge — the
+   card's own padding again, in the card's own colour, closing it over what
+   comes next — and says what is hidden ("+3 more"); over a card folded to
+   its header (`data-fit-cut="header"`) it is the whole card, unseen, under
+   the header's own buttons. Decided here because only the DOM knows where
+   the cut fell: the hook shows it and gives it its height and words. */
+.home-card {
+  position: relative;
+}
+
+.home-card-more {
+  position: absolute;
+  inset: auto 1px 1px;
+  /* Over the card's content, under whatever it raises (a header's action). */
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chakra-colors-bg-surface);
+  border-radius: 0 0 calc(var(--chakra-radii-surface) - 1px)
+    calc(var(--chakra-radii-surface) - 1px);
+  color: var(--chakra-colors-fg-muted);
+  font-size: var(--chakra-font-sizes-xs);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.home-card-more[hidden] {
+  display: none;
+}
+
+.home-card-more:focus-visible {
+  outline: 2px solid var(--chakra-colors-fg);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .home-card-more:hover {
+    color: var(--chakra-colors-fg);
+  }
+}
+
+/* Held down (lib/press). */
+.home-card-more[data-pressing] {
+  color: var(--chakra-colors-fg);
+}
+
+.home-card[data-fit-cut="header"] > .home-card-more {
+  inset: 0;
+  background: none;
+  border-radius: var(--chakra-radii-surface);
+}
+
+/* What a card says in its header only when it is folded to that header
+   (`data-fit-cut="header"`) — the one figure its body would have shown. */
+[data-fit-folded] {
+  display: none;
+}
+
+.home-card[data-fit-cut="header"] [data-fit-folded] {
+  display: inline;
+}
+
 /* The Halloween page (routes/Halloween, components/halloween): its display
    face and its animations. Creepster (SIL Open Font License; the file and
    its licence in src/assets/fonts/creepster) is the app's one webfont, and

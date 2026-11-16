@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { Box, Card, chakra, Collapsible } from "@chakra-ui/react";
+import { useContext, useState } from "react";
+import { Box, Card, chakra, Collapsible, IconButton } from "@chakra-ui/react";
+import { IoClose } from "react-icons/io5";
 import { LuChevronDown } from "react-icons/lu";
+import { BoardFrame } from "../lib/boardFrame";
+import * as Modal from "./Modal";
 import { DARK_RAISED, SURFACE_SHADOW } from "../lib/floatingSurface";
 import { pressable } from "../lib/press";
 
@@ -72,6 +75,11 @@ function writeOpen(key: string | undefined, open: boolean) {
  * otherwise skeleton bars, switch tracks, outline buttons and field borders
  * vanish into it. Rows and tiles inside a card stay `bg.muted` / `bg.panel`
  * and read as wells.
+ *
+ * Inside a modal (lib/boardFrame: a /home card opened out, 0.171.0) it is
+ * not a card but that modal's parts: a header of its title and action, with
+ * the close button, over a body of its contents — always whole, whatever its
+ * collapse.
  */
 export const Board = ({
   children,
@@ -110,6 +118,7 @@ export const Board = ({
    */
   bg?: string;
 }) => {
+  const frame = useContext(BoardFrame);
   const persistKey = collapsible
     ? storageKey || (typeof title === "string" ? slugify(title) : undefined)
     : undefined;
@@ -127,6 +136,30 @@ export const Board = ({
     ) : null;
 
   const clickable = onClick != null && !collapsible;
+
+  if (frame === "modal")
+    return (
+      <>
+        <Modal.Header alignItems="center" gap="3">
+          <Box flex="1" minW="0">
+            {typeof title === "string" ? (
+              <Modal.Title>{title}</Modal.Title>
+            ) : (
+              title
+            )}
+          </Box>
+          {actionNode}
+          <Modal.CloseTrigger asChild inRow>
+            <IconButton aria-label="Close" variant="subtle" size="xs">
+              <IoClose />
+            </IconButton>
+          </Modal.CloseTrigger>
+        </Modal.Header>
+        {children != null && children !== false && (
+          <Modal.Body>{children}</Modal.Body>
+        )}
+      </>
+    );
 
   const hasBody = children != null && children !== false;
   const body = hasBody ? (

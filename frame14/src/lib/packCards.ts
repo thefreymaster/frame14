@@ -25,12 +25,21 @@ export function packCards(
   columns: number,
   cards: PackedCard[],
 ): CardPlacement[] {
+  return pack(columns, cards).places;
+}
+
+/** How many rows each column is filled to, once the cards are packed. */
+export function packedDepths(columns: number, cards: PackedCard[]): number[] {
+  return pack(columns, cards).free.map((row) => row - 1);
+}
+
+function pack(columns: number, cards: PackedCard[]) {
   const width = Math.max(1, Math.floor(columns));
   // The first free row of each column.
   const free: number[] = Array(width).fill(1);
   // The column the next card starts at, in the band being filled.
   let next = 0;
-  return cards.map(({ span, rows }) => {
+  const places = cards.map(({ span, rows }) => {
     const across = Math.min(Math.max(1, Math.floor(span)), width);
     if (next + across > width) next = 0;
     const start = next;
@@ -39,4 +48,5 @@ export function packCards(
     free.fill(row + Math.max(0, rows), start, start + across);
     return { column: start + 1, row };
   });
+  return { places, free };
 }

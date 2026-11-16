@@ -66,7 +66,9 @@ test("a drawing circuit's bar flows at the pace of its draw, and the bars are pi
 // draw. It opens on Solar.
 test("the Home card's dialog has a Circuits tab with the per-circuit draw, under Now", async ({ page }) => {
   await page.goto("/home");
-  await page.getByRole("button", { name: "Show energy detail" }).click();
+  // At the flow, the card's first half: on a desktop the board fits the
+  // screen (0.171.0) and the second may be cut off, under the card's More.
+  await page.getByRole("button", { name: "Show energy detail" }).click({ position: { x: 60, y: 30 } });
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("heading", { name: "Energy" })).toBeVisible();
   // The focus opens on the panel itself, which draws no ring: the card's

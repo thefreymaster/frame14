@@ -71,6 +71,15 @@ export const HOME_FOUR_COLUMN_QUERY =
   "(orientation: landscape) and (min-width: 1024px)";
 
 /**
+ * Where /home fits the screen instead of scrolling (0.171.0, the user: "I
+ * want the Home Screen on frame14 and desktops to not scroll"): every screen
+ * wider than a phone's with the height to hold a few cards — the frame, a
+ * tablet, a desktop. A phone scrolls, as its apps do; so does a phone on its
+ * side, wide but with room for a card's header and little else.
+ */
+export const HOME_FIT_QUERY = "(min-width: 768px) and (min-height: 560px)";
+
+/**
  * A phone: the one-column screens. The theme's `phone` condition, which
  * narrows spacing.gutter (between and around cards) from md to sm.
  */

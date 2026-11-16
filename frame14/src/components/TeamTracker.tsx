@@ -425,6 +425,8 @@ export function TeamTracker() {
           <Box
             key={game.entity_id}
             as="button"
+            // A game the card can be cut under, to fit the screen.
+            data-fit-row=""
             onClick={openFootball}
             display="block"
             width="100%"

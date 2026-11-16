@@ -31,6 +31,18 @@ export const PAGES = [
   "/control/device",
 ];
 
+/**
+ * The stub's house on an ordinary day: the game over, the print done, the
+ * vacuum home — three cards off /home. Its usual state is the busiest one,
+ * and where /home fits the screen instead of scrolling (0.171.0) a busy
+ * board has its cards cut short; a test of one card whole asks for this.
+ */
+export async function quietHouse(request: APIRequestContext) {
+  await stub(request, "/_stub/state", { entity_id: "sensor.teamtracker_fsu", state: "NOT_FOUND" });
+  await stub(request, "/_stub/state", { entity_id: "sensor.a1_03919c442700723_print_status", state: "idle" });
+  await stub(request, "/_stub/state", { entity_id: "vacuum.roborock_q5_pro", state: "docked" });
+}
+
 /** Collects the page's uncaught errors, for a test to assert there were none. */
 export function pageErrors(page: Page): string[] {
   const errors: string[] = [];

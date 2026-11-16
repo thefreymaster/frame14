@@ -382,6 +382,67 @@ test.describe("on an iPhone", () => {
     }
   });
 
+  // 0.171.0, the user, of the nav's More menu on a phone: "These menu items
+  // don't have haptics on click". Buttons alone had the label until then.
+  test("a menu's items, a segment and a card that is one button wear the label too", async ({ browser }) => {
+    const { context, page } = await iphone(browser);
+    try {
+      // A sixth nav entry, so the bar has a More menu.
+      await page.goto("/control/device");
+      await splashGone(page);
+      const speedTest = page.getByRole("checkbox", { name: "Show Speed test in the nav" });
+      await page.locator("label", { has: speedTest }).tap();
+      await expect(speedTest).toBeChecked();
+
+      const toggles = await watchSwitch(page);
+      await page.locator('[data-nav="bar"]').getByRole("button", { name: "More" }).tap();
+      const items = page.getByRole("menuitem");
+      await expect(items).toHaveText(["Speed test", "Settings"]);
+      await expect(page.locator("[role=menuitem] > label[data-haptic-trigger]")).toHaveCount(2);
+      await items.filter({ hasText: "Speed test" }).tap();
+      await expect(page).toHaveURL(/\/speedtest$/);
+      // The More button's tap, and the item's.
+      expect(await toggles()).toEqual([true, true]);
+
+      // A segmented control's segment is a label round its radio: the tap
+      // lands on the label inside it, and the radio is still picked, once.
+      await page.goto("/climate");
+      await splashGone(page);
+      const picked = await watchSwitch(page);
+      await page.getByRole("button", { name: /^2nd Floor:/ }).tap();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog.getByText("System off")).toBeVisible();
+      const segment = (name: string) => dialog.locator('label[data-scope="segment-group"]', { hasText: name });
+      await expect(dialog.locator('label[data-scope="segment-group"] > label[data-haptic-trigger]')).toHaveCount(4);
+      await segment("Heat").tap();
+      await expect(dialog.getByText("Heat standby")).toBeVisible();
+      await expect(segment("Heat").locator("input[type=radio]")).toBeChecked();
+      await segment("Cool").tap();
+      await expect(segment("Cool").locator("input[type=radio]")).toBeChecked();
+      await expect(segment("Heat").locator("input[type=radio]")).not.toBeChecked();
+      // The tile's tap and the two segments'.
+      expect(await picked()).toEqual([true, true, true]);
+
+      // A card that is one button — and one with buttons of its own, which
+      // a label over the whole of it would cover, goes without.
+      await page.goto("/home");
+      await splashGone(page);
+      const weather = page.locator('[role=button][aria-label="Show the weather"]');
+      await expect(weather.locator(":scope > label[data-haptic-trigger]")).toHaveCount(1);
+      expect(
+        await page.locator("[role=button]:not(button)").evaluateAll((els) =>
+          els.filter((el) => el.querySelector("button") && el.querySelector(":scope > label[data-haptic-trigger]")).length,
+        ),
+      ).toBe(0);
+      const opened = await watchSwitch(page);
+      await weather.tap();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      expect(await opened()).toEqual([true]);
+    } finally {
+      await context.close();
+    }
+  });
+
   test("a switch is a real one, which ticks by itself", async ({ browser }) => {
     const { context, page } = await iphone(browser);
     try {

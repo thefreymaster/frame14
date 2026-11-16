@@ -47,6 +47,8 @@ export function CalendarEventList({
         return (
           <Card.Root
             key={i}
+            // Where /home's card can be cut to fit the screen (usePackedGrid).
+            data-fit-row=""
             size="sm"
             variant="subtle"
             borderRadius="sm"

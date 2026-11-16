@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { resetStub } from "./helpers";
+import { quietHouse, resetStub } from "./helpers";
 
 // 0.134 / 0.135: on a phone and the frame every modal is a drawer that comes in
 // from the bottom (components/Modal), a sheet as tall as its content; a desktop
@@ -96,7 +96,9 @@ test.describe("modals", () => {
 
   test("a phone's detail panel is a drawer from the bottom, a desktop's a drawer from the right edge", async ({ page, isMobile }) => {
     await page.goto("/home");
-    await page.getByRole("button", { name: "Show energy detail" }).click();
+    // At the flow, the card's first half: where a desktop's board fits the
+    // screen (0.171.0) the second may be cut off, under the card's More.
+    await page.getByRole("button", { name: "Show energy detail" }).click({ position: { x: 60, y: 30 } });
     const modal = page.getByRole("dialog");
     const viewport = page.viewportSize()!;
 
@@ -121,10 +123,13 @@ test.describe("modals", () => {
     await expect(modal).toBeHidden();
   });
 
-  test("the Home weather card opens the weather as a modal, and stays on Home", async ({ page, isMobile }) => {
+  test("the Home weather card opens the weather as a modal, and stays on Home", async ({ page, request, isMobile }) => {
     // 0.136: the tap went to /weather from 0.97 (the user: the page "feels
     // out of place now with the drawers"). The phone's weather row and the
     // desktop's Weather card both carry the label.
+    // On an ordinary day: with every card the stub has, a desktop's board
+    // cuts the weather card short to fit the screen (0.171.0).
+    await quietHouse(request);
     await page.goto("/home");
     await page.getByRole("button", { name: "Show the weather" }).click();
     const modal = page.getByRole("dialog", { name: "Weather" });

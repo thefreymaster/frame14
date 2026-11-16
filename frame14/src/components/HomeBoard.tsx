@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Box, Grid } from "@chakra-ui/react";
+import { Box, Grid, useMediaQuery } from "@chakra-ui/react";
 import {
   closestCenter,
   DndContext,
@@ -22,17 +22,23 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { HomeCardSlot } from "./HomeCardSlot";
+import { HomeCardDialog } from "./HomeCardDialog";
 import { HomeCardFace } from "./HomeCardFace";
 import { HomeLayoutToolbar } from "./HomeLayoutToolbar";
 import { toaster } from "./ui/toaster";
 import { useLongPress } from "../hooks/useLongPress";
-import { PACKED_ROW_PX, usePackedGrid } from "../hooks/usePackedGrid";
+import {
+  PACKED_ROW_PX,
+  usePackedGrid,
+  type GridFit,
+} from "../hooks/usePackedGrid";
 import { hapticTick } from "../lib/haptics";
 import { setHomeArranging } from "../lib/homeArranging";
 import {
   clearHomeLayout,
   defaultHomeLayout,
   homeGridFor,
+  HOME_FIT_QUERY,
   loadHomeLayout,
   saveHomeLayout,
   type HomeCardId,
@@ -51,6 +57,14 @@ const SWAP_TRAVEL_PX = 32;
 
 // The board never animates a card into place, so sortable has nothing to do.
 const noTransforms = () => null;
+
+// The part of a card's slot that is cut short when the board must fit the
+// screen: the card itself (a Board), so its own edge and corners close it.
+const cardOf: GridFit["box"] = (slot) =>
+  slot.querySelector<HTMLElement>(":scope > .home-card-body > .chakra-card__root");
+// And its button to the whole card (HomeCardSlot).
+const moreOf: GridFit["more"] = (slot) =>
+  slot.querySelector<HTMLElement>(":scope > .home-card-more");
 
 /**
  * The /home cards, rearrangeable. Press and hold any card to start arranging;
@@ -94,8 +108,18 @@ export function HomeBoard({
   const [editing, setEditing] = useState(false);
   const [activeId, setActiveId] = useState<HomeCardId | null>(null);
   const [activity, setActivity] = useState(0);
+  // The card opened out whole (HomeCardDialog); it stays named while its
+  // dialog closes, so the card is there through the exit.
+  const [expanded, setExpanded] = useState<HomeCardId | null>(null);
+  const [expandedOpen, setExpandedOpen] = useState(false);
 
   const gridRef = useRef<HTMLDivElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  // Fitted to the screen, not scrolled (0.171.0), wherever there is the room
+  // (HOME_FIT_QUERY) — except while arranging, when every card is whole, with
+  // its width picker under it, and the page scrolls to reach them all.
+  const [roomy] = useMediaQuery([HOME_FIT_QUERY], { ssr: false });
+  const fits = roomy && !editing;
   const beforeDrag = useRef<HomeLayout | null>(null);
   // The order as the drag has it, kept as each move is applied: the drop
   // fires before React has committed the last move's state, so `layout` in
@@ -145,7 +169,12 @@ export function HomeBoard({
     .map((card) => `${card.id}:${spanOf(card.span)}`)
     .join();
 
-  usePackedGrid(gridRef, columns, [layoutKey, columns, editing]);
+  usePackedGrid(
+    gridRef,
+    columns,
+    [layoutKey, columns, editing, fits],
+    fits ? { frame: boardRef, box: cardOf, more: moreOf } : undefined,
+  );
 
   useEffect(() => {
     setHomeArranging(editing);
@@ -262,15 +291,21 @@ export function HomeBoard({
       onDragCancel={onDragCancel}
     >
       <Box
+        ref={boardRef}
         className="home-board"
         data-editing={editing || undefined}
+        data-fits={fits || undefined}
         position="relative"
         width="100%"
-        minHeight="100%"
+        // Fitted, the board is the page's height exactly (Layout's
+        // `--page-height`) and the grid is held to it; nothing is clipped
+        // here, so a board that can't be made to fit still scrolls.
+        height={fits ? "var(--page-height)" : undefined}
+        minHeight={fits ? undefined : "100%"}
         p="gutter"
         // Room to scroll the last card (and its width picker) clear of the
         // arranging bar.
-        pb={editing ? "12rem" : "4"}
+        pb={editing ? "12rem" : fits ? "gutter" : "4"}
         onPointerDownCapture={
           editing ? () => setActivity((n) => n + 1) : undefined
         }
@@ -322,6 +357,10 @@ export function HomeBoard({
                 hidden={card.hidden === true}
                 onSpanChange={(span) => setSpan(card.id, span)}
                 onHiddenChange={(hidden) => setHidden(card.id, hidden)}
+                onExpand={() => {
+                  setExpanded(card.id);
+                  setExpandedOpen(true);
+                }}
               >
                 {cards[card.id]}
               </HomeCardSlot>
@@ -353,6 +392,14 @@ export function HomeBoard({
         </DragOverlay>,
         document.body,
       )}
+
+      <HomeCardDialog
+        id={expanded}
+        open={expandedOpen && !editing}
+        onClose={() => setExpandedOpen(false)}
+      >
+        {expanded && cards[expanded]}
+      </HomeCardDialog>
 
       <HomeLayoutToolbar
         open={editing}

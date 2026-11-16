@@ -133,7 +133,9 @@ test.describe("a feature without its entities", () => {
     await expect(page).toHaveURL(/\/energy\/solar$/);
     await page.goto("/home");
     await splashGone(page);
-    await page.getByRole("button", { name: "Show energy detail" }).click();
+    // At the flow, the card's first half: on a desktop the board fits the
+    // screen (0.171.0) and the second may be cut off, under the card's More.
+    await page.getByRole("button", { name: "Show energy detail" }).click({ position: { x: 60, y: 30 } });
     const detail = page.getByRole("dialog");
     await expect(detail.getByRole("heading", { name: "Today" })).toBeVisible();
     await expect(detail.getByRole("tab")).toHaveCount(0);

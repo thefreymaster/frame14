@@ -71,6 +71,13 @@ export function HomeForecastCard({
               today?.temperature != null &&
               today.templow != null && (
                 <Text textStyle="sm" color="fg.muted" ms="auto">
+                  {/* Folded to its header to fit the screen, the header is
+                      all there is: it says what it is out now, too. */}
+                  {weather && current != null && (
+                    <span data-fit-folded="">
+                      {current}° {conditionLabel(weather.state)} ·{" "}
+                    </span>
+                  )}
                   H {round(today.temperature)}° · L {round(today.templow)}°
                 </Text>
               )
@@ -96,8 +103,17 @@ export function HomeForecastCard({
               : undefined
           }
         >
-          {/* Now: the condition's icon and the temperature, the words beside. */}
-          <HStack gap="4" rowGap="2" align="center" minW="0" wrap="wrap">
+          {/* Now: the condition's icon and the temperature, the words beside.
+              The card can be cut under it to fit the screen (usePackedGrid),
+              leaving the hours for the dialog. */}
+          <HStack
+            gap="4"
+            rowGap="2"
+            align="center"
+            minW="0"
+            wrap="wrap"
+            data-fit-row="block"
+          >
             {loading ? (
               <>
                 <Skeleton boxSize="4.5rem" rounded="full" />
@@ -172,7 +188,7 @@ export function HomeForecastCard({
             <Skeleton height="6.5rem" rounded="sm" mt="6" />
           ) : (
             hours.length > 0 && (
-              <Stack gap="3" mt="6">
+              <Stack gap="3" mt="6" data-fit-row="block">
                 <SectionTitle>Next hours</SectionTitle>
                 <HourlyForecast hours={hours} />
               </Stack>

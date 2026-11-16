@@ -51,11 +51,22 @@ export function hapticTick() {
 /** The label the library lays over a button (its attribute, not ours to name). */
 export const HAPTIC_LABEL = "data-haptic-trigger";
 
-// What gets a label: a button, and nothing wider. A card that is one big
-// button holds buttons of its own, which a label over the whole card would
-// cover; inside a link the label takes the click over, and the link no
-// longer goes anywhere.
-const TRIGGERS = "button";
+// What gets a label: what lib/press calls pressable, less two kinds. A real
+// switch ticks by itself (ui/switch.tsx). And a link is left without: inside
+// one the label takes the click over, and the link no longer goes anywhere.
+// (0.171.0: buttons alone until then — the user, of the nav's More menu on a
+// phone: "These menu items don't have haptics on click".)
+const TRIGGERS = [
+  "button",
+  "[role=button]",
+  "[role=menuitem]",
+  "label[data-scope=segment-group]",
+].join(", ");
+
+// A trigger that holds pressable things of its own (a card that is one big
+// button, with buttons in it) goes without: the label would lie over them.
+// A segment's own radio is the one thing a trigger may hold.
+const HELD = "button, [role=button], [role=menuitem], a[href], label, input:not([type=radio])";
 
 /**
  * On a static button that stretches its tap target over a positioned
@@ -70,13 +81,14 @@ export const STRETCHED = "data-stretched";
 // On top of its button — over the button's own ::after too (the stretch of a
 // `data-stretched` one), which comes after it in the tree: under that the tap
 // lands on the button instead, and nothing ticks. And gone from a disabled
-// button, which would tick for a tap that does nothing.
+// thing, which would tick for a tap that does nothing.
 const STYLE = `
 [${HAPTIC_LABEL}] {
   z-index: 1;
 }
 :disabled > [${HAPTIC_LABEL}],
-[aria-disabled="true"] > [${HAPTIC_LABEL}] {
+[aria-disabled="true"] > [${HAPTIC_LABEL}],
+[data-disabled] > [${HAPTIC_LABEL}] {
   display: none;
 }
 `;
@@ -88,22 +100,62 @@ export function ticksThroughSwitch(): boolean {
   return device === "iPhone" || device === "iPad";
 }
 
-function decorate(button: Element) {
-  if (!(button instanceof HTMLElement)) return;
-  const position = button.style.position;
-  // Once only: the library leaves a button that has its label alone.
-  hapticTrigger(button);
-  if (button.hasAttribute(STRETCHED)) button.style.position = position;
+const labelOf = (trigger: Element) =>
+  trigger.querySelector(`:scope > [${HAPTIC_LABEL}]`);
+
+/** Whether the trigger holds something pressable besides the label's own switch. */
+function holdsPressables(trigger: Element) {
+  for (const held of trigger.querySelectorAll(HELD)) {
+    if (!held.closest(`[${HAPTIC_LABEL}]`)) return true;
+  }
+  return false;
+}
+
+function decorate(trigger: Element) {
+  if (!(trigger instanceof HTMLElement)) return;
+  if (holdsPressables(trigger)) {
+    labelOf(trigger)?.remove();
+    return;
+  }
+  const position = trigger.style.position;
+  // Once only: the library leaves alone what has its label already.
+  hapticTrigger(trigger);
+  if (trigger.hasAttribute(STRETCHED)) trigger.style.position = position;
 }
 
 function decorateWithin(root: Element) {
   if (root.matches(TRIGGERS)) decorate(root);
-  for (const button of root.querySelectorAll(TRIGGERS)) decorate(button);
+  for (const trigger of root.querySelectorAll(TRIGGERS)) decorate(trigger);
+  // Something pressable arriving inside a trigger takes that trigger's label.
+  if (root.hasAttribute(HAPTIC_LABEL)) return;
+  for (
+    let outer = root.parentElement?.closest(TRIGGERS);
+    outer;
+    outer = outer.parentElement?.closest(TRIGGERS)
+  )
+    decorate(outer);
+}
+
+// A segment of a segmented control is a <label> round its radio. With the
+// library's label inside it, that inner label is what takes the tap — and
+// the outer one no longer hands its radio the click (a label does nothing
+// for a click on something interactive inside it). So it is handed over
+// here: the tap that lands on a haptic label inside a label clicks the
+// outer label's own control.
+function handOver(e: MouseEvent) {
+  const label = e.target;
+  if (!(label instanceof HTMLLabelElement) || !label.hasAttribute(HAPTIC_LABEL))
+    return;
+  const outer = label.parentElement;
+  if (!(outer instanceof HTMLLabelElement)) return;
+  for (const control of outer.querySelectorAll("input")) {
+    if (!label.contains(control)) return control.click();
+  }
 }
 
 /**
- * Gives every button its label, now and as the page changes, on a browser
- * that ticks through a switch; does nothing on any other. Returns what undoes
+ * Gives everything pressable its label, now and as the page changes, on a
+ * browser that ticks through a switch; does nothing on any other. Returns what undoes
  * it (the labels and the watching; a button the library positioned stays so).
  */
 export function watchHapticTriggers(): () => void {
@@ -132,9 +184,11 @@ export function watchHapticTriggers(): () => void {
   });
   observer.observe(document.body, { childList: true, subtree: true });
   decorateWithin(document.body);
+  document.addEventListener("click", handOver, true);
 
   return () => {
     observer.disconnect();
+    document.removeEventListener("click", handOver, true);
     for (const label of document.querySelectorAll(`[${HAPTIC_LABEL}]`))
       label.remove();
     style.remove();

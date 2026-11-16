@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.171.0
+
+- Changed: **Home fits the screen and no longer scrolls** on the wall frame, a tablet and a desktop or laptop — a phone's Home scrolls as before. Every card stays on the board. When they can't all be shown whole, a long list is trimmed first — the calendar shows the events there is room for and says **+4 more** along its foot —, then a card with two parts shows its first (the energy flow without the day's totals, the weather now without the next hours) with **More** under it, and only when nothing else will do is a card folded to its header line, which still says the essential (the weather's adds what it is out now). **Nothing is out of reach**: tap **+4 more**, **More** or a folded card and the whole card opens — a sheet on the frame, a dialog on a desktop —, scrolling inside itself if it is taller than the screen. Folding a card by hand gives its room to the others, and arranging (press and hold) shows every card whole, with the page scrolling, until **Done**. If a column runs short while another has room to spare, move a card across or make one half width: the board only ever cuts what its own column can't hold.
+- Fixed: on an iPhone or iPad, the tick under a tap was missing from the navigation's **More** menu, from segmented controls (a thermostat's Heat / Cool / Fan / Off, Theme, Colors, Device mode…) and from the cards that open something when tapped (the weather, the energy and the printer cards on Home). Only buttons had it.
+
 ## 0.170.1
 
 - Changed: on a desktop or laptop, a room's card on the Lights page holds two light tiles a row at most — it fitted as many as it could, three across on a wide window, and names like "Kitchen Cabinet" broke over two or three lines. In a narrower window, where even two would be too narrow for a name, each tile takes the card's full width. Favorites and Scenes, which span the page, are as they were.

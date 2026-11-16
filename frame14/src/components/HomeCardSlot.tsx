@@ -2,7 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { HomeCardFace } from "./HomeCardFace";
 import { HomeCardHideButton } from "./HomeCardHideButton";
 import { HomeCardWidthPicker } from "./HomeCardWidthPicker";
-import type { HomeCardId, HomeGrid } from "../lib/homeLayout";
+import { HOME_CARDS, type HomeCardId, type HomeGrid } from "../lib/homeLayout";
 
 /**
  * One card's place on /home: a grid item spanning `span` columns. Outside
@@ -25,6 +25,7 @@ export function HomeCardSlot({
   hidden,
   onSpanChange,
   onHiddenChange,
+  onExpand,
   children,
 }: {
   id: HomeCardId;
@@ -38,6 +39,8 @@ export function HomeCardSlot({
   hidden: boolean;
   onSpanChange: (span: number) => void;
   onHiddenChange: (hidden: boolean) => void;
+  /** Open the card out whole (HomeCardDialog): its `more` button's tap. */
+  onExpand: () => void;
   children: React.ReactNode;
 }) {
   // No transform: the board reorders the real list while a card is in the air
@@ -76,6 +79,19 @@ export function HomeCardSlot({
       <HomeCardFace id={id} editing={editing} hidden={hidden}>
         {children}
       </HomeCardFace>
+      {/* The way to all of a card the board has cut short to fit the screen
+          (0.171.0). Hidden until it is: hooks/usePackedGrid shows it, with
+          its height and what it says ("+3 more"), where the cut fell — along
+          the card's foot, or over a card folded to its header (index.css). */}
+      {!editing && (
+        <button
+          type="button"
+          className="home-card-more"
+          hidden
+          aria-label={`Show all of ${HOME_CARDS[id].label}`}
+          onClick={onExpand}
+        />
+      )}
       {editing && (
         <HomeCardHideButton id={id} hidden={hidden} onChange={onHiddenChange} />
       )}

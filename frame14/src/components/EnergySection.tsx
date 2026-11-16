@@ -115,9 +115,13 @@ export function EnergySection({
             cursor="pointer"
             css={pressable("card", { shade: false })}
           >
-            <PowerFlow energy={energy} size="sm" />
+            {/* The two halves the card can be cut between to fit the screen
+                (usePackedGrid): the flow, and the day's totals under it. */}
+            <Box data-fit-row="block">
+              <PowerFlow energy={energy} size="sm" />
+            </Box>
 
-            <HStack gap="4" align="stretch">
+            <HStack gap="4" align="stretch" data-fit-row="block">
               <Stack gap="1" justify="center" flexShrink={0}>
                 <Text
                   textStyle="4xl"

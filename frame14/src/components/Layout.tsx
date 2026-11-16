@@ -151,6 +151,16 @@ export function Layout() {
             _portrait: showNav ? NAV_BAR_CLEARANCE : "0px",
             _landscape: "0px",
           }}
+          // What is left for the page between the header and the bar: the
+          // height of a page that fills the screen rather than scrolling
+          // (/home's board, 0.171.0), which a percentage can't give it — the
+          // page's wrapper grows with its content.
+          css={{
+            "--page-height": {
+              _portrait: `calc(var(--app-height, 100dvh) - ${showNav ? HEADER_CLEARANCE : "0px"} - ${showNav ? NAV_BAR_CLEARANCE : "0px"})`,
+              _landscape: `calc(var(--app-height, 100dvh) - ${showNav ? HEADER_CLEARANCE : "0px"})`,
+            },
+          }}
         >
           {content}
         </Box>

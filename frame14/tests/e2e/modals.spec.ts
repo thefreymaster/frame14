@@ -127,11 +127,12 @@ test.describe("modals", () => {
     // 0.136: the tap went to /weather from 0.97 (the user: the page "feels
     // out of place now with the drawers"). The phone's weather row and the
     // desktop's Weather card both carry the label.
-    // On an ordinary day: with every card the stub has, a desktop's board
-    // cuts the weather card short to fit the screen (0.171.0).
+    // On an ordinary day, and at what the card shows first: a desktop's
+    // board may cut the weather card short to fit the screen (0.171.0), its
+    // hours under the card's More.
     await quietHouse(request);
     await page.goto("/home");
-    await page.getByRole("button", { name: "Show the weather" }).click();
+    await page.getByRole("button", { name: "Show the weather" }).click({ position: { x: 60, y: 40 } });
     const modal = page.getByRole("dialog", { name: "Weather" });
     await expect(modal.getByText("Next hours")).toBeVisible();
     await expect(modal.getByText(/-day forecast/)).toBeVisible();

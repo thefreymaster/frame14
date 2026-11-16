@@ -80,17 +80,19 @@ export function HomeCardSlot({
         {children}
       </HomeCardFace>
       {/* The way to all of a card the board has cut short to fit the screen
-          (0.171.0). Hidden until it is: hooks/usePackedGrid shows it, with
-          its height and what it says ("+3 more"), where the cut fell — along
-          the card's foot, or over a card folded to its header (index.css). */}
+          (0.171.0). Hidden until it is: hooks/usePackedGrid shows the foot,
+          with its height and what its button says ("+3 more"), where the cut
+          fell — along the card's foot, a full row to tap (0.171.1), or over
+          a card folded to its header (index.css). */}
       {!editing && (
-        <button
-          type="button"
-          className="home-card-more"
-          hidden
-          aria-label={`Show all of ${HOME_CARDS[id].label}`}
-          onClick={onExpand}
-        />
+        <div className="home-card-foot" hidden>
+          <button
+            type="button"
+            className="home-card-more"
+            aria-label={`Show all of ${HOME_CARDS[id].label}`}
+            onClick={onExpand}
+          />
+        </div>
       )}
       {editing && (
         <HomeCardHideButton id={id} hidden={hidden} onChange={onHiddenChange} />

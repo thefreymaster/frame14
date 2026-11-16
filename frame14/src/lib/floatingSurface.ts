@@ -27,33 +27,54 @@ export const RECESS_SHADE = "recess.shade";
 export const RECESS_LIP = "recess.lip";
 
 /**
- * The lip once more, as one layer of a longer shadow: for a box that wears a
- * ring as well (lib/hvac's tileRing), listed after it. The theme's
- * `recess.edge` — a shadow of nothing outside Embossed, where the two above
- * are `none`, which a list can't hold.
+ * A button standing up out of its card, where the theme presses the cards in
+ * (Embossed; 0.171.1, the user: "In embossed mode instead of having the
+ * buttons feel indented, change them to feel like convexed popping out, so
+ * inverted of the embossed feel" — the tiles were pressed in too for a
+ * version, 0.170.0). The theme's `raised` shadows, none in every other
+ * palette: `raised.face` is the bevel inside the button — light along its
+ * top edge, shade along its lower one — and `raised.drop` the shadow it
+ * casts on the card. `raised` is both, which the button recipe wears.
+ *
+ * Held down it goes from pushed out to pushed in, as a real button does (the
+ * user again: "When pressed it would go from pushing out to pushing in like
+ * a real button"): the recess the cards have, in place of the bevel and the
+ * shadow.
  */
-export const RECESS_EDGE = "var(--chakra-shadows-recess-edge)";
+export const RAISED_FACE = "raised.face";
 
-/** How long a tile's ring, and the recess inside it, take to come and go. */
+/** How long a tile's ring, and the face inside it, take to come and go. */
 export const TILE_RING_MS = "400ms";
 
 /**
- * A tile pressed into its card, where the theme presses things in (0.170.0,
- * the user: "make the lights and thermostat cards embossed in embossed
- * mode"): a light's, a scene's, a thermostat's and a fan's — the tiles that
- * are buttons. As the dial, the recess is worn in two halves, and the tile
- * names no palette. This is the layer for the tile's `_before`, inside its
- * border — and inside its ring where it has one (`rim`, the ring's width
- * within the border): the shade (under a ring it would dirty the ring, and
- * past a ring's width little of it is left) on the recess's floor
- * (`emboss.floor`, the theme's wash over the tile's own colour, which by
- * night lifts it off the card's so the shade can be seen). The lip goes on
- * the tile's own box: RECESS_LIP, or RECESS_EDGE after a ring. The tile
- * isolates, so the layer lies over its fill and under everything it holds.
+ * The shadow a raised tile casts, for the tile's own box: alone, or listed
+ * after its ring (lib/hvac's tileRing) — so it is the theme's `raised.edge`,
+ * a shadow of nothing outside Embossed, where `raised.drop` is `none`, which
+ * a list can't hold. Through `--tile-drop`, and the face's bevel through
+ * `--tile-face` (tileFace), so that held down (TILE_HELD, for the tile's
+ * `pressable`) the tile is pushed in: the recess's shade inside it and its
+ * lip under it, where the bevel and the shadow were.
+ */
+export const TILE_DROP = "var(--tile-drop, var(--chakra-shadows-raised-edge))";
+export const TILE_HELD = {
+  "--tile-drop": "shadows.recess.edge",
+  "--tile-face": "shadows.recess.shade",
+};
+
+/**
+ * The face of a raised tile — a light's, a scene's, a thermostat's and a
+ * fan's, the tiles that are buttons — for the tile's `_before`: a layer of
+ * its own inside the tile's border, and inside its ring where it has one
+ * (`rim`, the ring's width within the border; under a ring the bevel would
+ * dirty it), carrying the bevel and the face's colour (`emboss.floor`, the
+ * theme's wash over the tile's own, which by night lifts it off the card's
+ * darker floor so it reads as standing on it). The tile isolates, so the
+ * layer lies over its fill and under everything it holds; the tile's own box
+ * casts the shadow (TILE_DROP). The tile names no palette.
  *
  * `radius` is the layer's corner: the tile's less what lies between them.
  */
-export function tileRecess(
+export function tileFace(
   rim = "0px",
   radius = "calc(var(--chakra-radii-sm) - 1px)",
 ) {
@@ -63,18 +84,18 @@ export function tileRecess(
     inset: rim,
     borderRadius: radius,
     bg: "emboss.floor",
-    boxShadow: RECESS_SHADE,
+    boxShadow: `var(--tile-face, {shadows.${RAISED_FACE}})`,
     zIndex: -1,
     pointerEvents: "none",
     transition: `inset ${TILE_RING_MS} ease, border-radius ${TILE_RING_MS} ease`,
   } as const;
 }
 
-/** The whole recess of a tile with no ring (a light's, a scene's), to spread on it. */
-export const TILE_RECESS = {
+/** The whole of a raised tile with no ring (a light's, a scene's), to spread on it. */
+export const TILE_RAISED = {
   isolation: "isolate",
-  boxShadow: RECESS_LIP,
-  _before: tileRecess(),
+  boxShadow: TILE_DROP,
+  _before: tileFace(),
 } as const;
 
 /**

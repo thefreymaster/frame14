@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.171.1
+
+- Changed: in the **Embossed** colour theme the buttons now stand up out of the pressed-in cards instead of being pressed in with them: the light, scene, thermostat and fan tiles, and every button with a face — the voice and screen buttons in the header, All off, a remote's Views. Each has a bevelled edge, lit along the top, and casts a small shadow on its card. **Press one and it goes from pushed out to pushed in**, like a real button, and comes back out when you let go. The cards, the navigation and the dial stay pressed in, and the other colour themes are as they were.
+- Changed: on Home, the **+4 more** and **More** buttons under a card that was cut short to fit the screen are now a full row across the card's foot — as tall as a finger needs on the wall (77 pixels on the frame, where it was 42 with small grey type), with larger type and an arrow. Each cut card gives that row its room, so it may show a row less of its own than before.
+
 ## 0.171.0
 
 - Changed: **Home fits the screen and no longer scrolls** on the wall frame, a tablet and a desktop or laptop — a phone's Home scrolls as before. Every card stays on the board. When they can't all be shown whole, a long list is trimmed first — the calendar shows the events there is room for and says **+4 more** along its foot —, then a card with two parts shows its first (the energy flow without the day's totals, the weather now without the next hours) with **More** under it, and only when nothing else will do is a card folded to its header line, which still says the essential (the weather's adds what it is out now). **Nothing is out of reach**: tap **+4 more**, **More** or a folded card and the whole card opens — a sheet on the frame, a dialog on a desktop —, scrolling inside itself if it is taller than the screen. Folding a card by hand gives its room to the others, and arranging (press and hold) shows every card whole, with the page scrolling, until **Done**. If a column runs short while another has room to spare, move a card across or make one half width: the board only ever cuts what its own column can't hold.

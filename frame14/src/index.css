@@ -83,37 +83,67 @@ body {
 }
 
 /* A card the board has cut short so that /home fits the screen
-   (hooks/usePackedGrid's fit, 0.171.0) has a button to the whole of it
-   (HomeCardSlot's, HomeCardDialog). Where the cut falls under a row of the
-   card's content it lies along the card's foot, inside its edge — the
-   card's own padding again, in the card's own colour, closing it over what
-   comes next — and says what is hidden ("+3 more"); over a card folded to
-   its header (`data-fit-cut="header"`) it is the whole card, unseen, under
-   the header's own buttons. Decided here because only the DOM knows where
-   the cut fell: the hook shows it and gives it its height and words. */
+   (hooks/usePackedGrid's fit, 0.171.0) has a foot over its end, holding the
+   button to the whole of it (HomeCardSlot's, HomeCardDialog). Where the cut
+   falls under a row of the card's content the foot lies along the card's
+   end, inside its edge, in the card's own colour, closing it over what
+   comes next: a little room under the row, then the button — a row across
+   the card, HOME_MORE_REM tall, a finger's target on the wall (0.171.1, of the
+   frame: "The show more buttons a pretty small on a touch screen"; the
+   card's padding with a caption in it before) — saying what is hidden
+   ("+3 more"). Over a card folded to its header (`data-fit-cut="header"`)
+   the foot and its button are the whole card, unseen, under the header's
+   own buttons. Decided here because only the DOM knows where the cut fell:
+   the hook shows the foot and gives it its height and the button its
+   words. */
 .home-card {
   position: relative;
 }
 
-.home-card-more {
+.home-card-foot {
   position: absolute;
   inset: auto 1px 1px;
   /* Over the card's content, under whatever it raises (a header's action). */
   z-index: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-end;
   background: var(--chakra-colors-bg-surface);
   border-radius: 0 0 calc(var(--chakra-radii-surface) - 1px)
     calc(var(--chakra-radii-surface) - 1px);
-  color: var(--chakra-colors-fg-muted);
-  font-size: var(--chakra-font-sizes-xs);
+}
+
+.home-card-foot[hidden] {
+  display: none;
+}
+
+.home-card-more {
+  flex: none;
+  /* HomeBoard's HOME_MORE_REM, which the board leaves room for. */
+  height: var(--home-more-height, 2.75rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  border-top: 1px solid var(--chakra-colors-border-surface);
+  border-radius: inherit;
+  color: var(--chakra-colors-fg);
+  font-size: var(--chakra-font-sizes-sm);
+  font-weight: var(--chakra-font-weights-medium);
   line-height: 1;
   cursor: pointer;
 }
 
-.home-card-more[hidden] {
-  display: none;
+/* A chevron after the words: there is more below. */
+.home-card-more:not(:empty)::after {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  margin-top: -0.25em;
+  border: solid currentColor;
+  border-width: 0 0.12em 0.12em 0;
+  transform: rotate(45deg);
+  opacity: 0.6;
 }
 
 .home-card-more:focus-visible {
@@ -121,21 +151,28 @@ body {
   outline-offset: -2px;
 }
 
+/* Under a pointer, or held down (lib/press): a well, as a tile is. */
 @media (hover: hover) {
   .home-card-more:hover {
-    color: var(--chakra-colors-fg);
+    background: var(--chakra-colors-bg-muted);
   }
 }
 
-/* Held down (lib/press). */
 .home-card-more[data-pressing] {
-  color: var(--chakra-colors-fg);
+  background: var(--chakra-colors-bg-muted);
 }
 
-.home-card[data-fit-cut="header"] > .home-card-more {
+.home-card[data-fit-cut="header"] > .home-card-foot {
   inset: 0;
   background: none;
   border-radius: var(--chakra-radii-surface);
+}
+
+.home-card[data-fit-cut="header"] > .home-card-foot > .home-card-more {
+  flex: 1;
+  height: auto;
+  border: 0;
+  background: none;
 }
 
 /* What a card says in its header only when it is folded to that header

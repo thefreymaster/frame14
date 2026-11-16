@@ -13,7 +13,7 @@ import { useEntity } from "../hooks/useEntity";
 import { useLightToggle } from "../hooks/useLightToggle";
 import { useLongPress } from "../hooks/useLongPress";
 import { callLightService } from "../lib/callService";
-import { TILE_RECESS } from "../lib/floatingSurface";
+import { TILE_HELD, TILE_RAISED } from "../lib/floatingSurface";
 import {
   brightnessPct,
   lightColor,
@@ -226,12 +226,13 @@ export function LightControl({
       minW="0"
       bg={color ? rgba(color, 0.12) : undefined}
       borderColor={color ? rgba(color, 0.45) : undefined}
-      // Pressed into its card where the theme presses things in (Embossed).
-      {...TILE_RECESS}
+      // Standing up out of its card where the theme presses the cards in
+      // (Embossed), and gone in while it is held.
+      {...TILE_RAISED}
       cursor="pointer"
       focusVisibleRing="outside"
       css={{
-        ...pressable("tile", { also: COLOUR_TWEENS }),
+        ...pressable("tile", { also: COLOUR_TWEENS, held: TILE_HELD }),
         // A dimmable tile takes sideways drags itself; up and down stay the
         // page's scroll.
         touchAction: features.brightness ? "pan-y" : "manipulation",

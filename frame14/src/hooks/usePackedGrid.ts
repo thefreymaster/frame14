@@ -15,10 +15,15 @@ export type GridFit = {
   frame: RefObject<HTMLElement | null>;
   box: (item: HTMLElement) => HTMLElement | null;
   /**
-   * The child's button that opens it out whole: shown over a cut box's foot
-   * with what is hidden ("+3 more"), or over all of one folded to its header.
+   * The child's foot: an element holding the one button that opens the child
+   * out whole. Shown over the end of a cut box — the box's content stops
+   * under a row, and the foot closes it with the button, a full row to tap,
+   * saying what is hidden ("+3 more") — or over all of one folded to its
+   * header.
    */
-  more: (item: HTMLElement) => HTMLElement | null;
+  foot: (item: HTMLElement) => HTMLElement | null;
+  /** How tall that button is along a cut box's end, in px. */
+  row: () => number;
 };
 
 /** Where a card can be cut: under one of these. Not counted in "+N more" when `="block"`. */
@@ -50,14 +55,19 @@ const CUT_OVERFLOW =
 /**
  * The heights a card can take, shortest first, the last its whole: its
  * header alone (as a collapsed card looks), then down to under each row of
- * its content — each with the card's own padding left under it, where the
- * button that says how much is hidden, and opens it out, goes (index.css's
- * `.home-card-more`).
+ * its content — each with room under it for the child's foot: half the
+ * card's padding, to stand off the row, and the button's row (`row`: a
+ * finger's height, 0.171.1 — the card's padding alone before, a caption's).
  */
-function stopsOf(box: HTMLElement): {
+function stopsOf(
+  box: HTMLElement,
+  row: number,
+): {
   stops: Stop[];
   rows: Row[];
-  pad: number;
+  /** How tall the foot is under a cut. */
+  foot: number;
+  /** What a stop's height holds besides the content down to its row. */
   under: number;
 } {
   const edges = box.offsetHeight - box.clientHeight;
@@ -65,6 +75,7 @@ function stopsOf(box: HTMLElement): {
   const whole = box.scrollHeight + edges;
   const body = box.querySelector<HTMLElement>(".chakra-card__body");
   const pad = body ? parseFloat(getComputedStyle(body).paddingBottom) || 0 : 0;
+  const closing = pad / 2 + row;
   const rows: Row[] = Array.from(box.querySelectorAll<HTMLElement>(FIT_ROW))
     .filter((row) => row.offsetHeight > 0)
     .map((row) => ({
@@ -84,7 +95,7 @@ function stopsOf(box: HTMLElement): {
     stops.push({ height: bottom + pad + edges, more: "", folded: true });
   }
   for (const bottom of new Set(rows.map((row) => row.bottom))) {
-    stops.push({ height: bottom + pad + edges, more: more(bottom) });
+    stops.push({ height: bottom + closing + edges, more: more(bottom) });
   }
   // Shortest first, a pixel or two apart counting as one, and none as tall
   // as the whole card.
@@ -95,26 +106,24 @@ function stopsOf(box: HTMLElement): {
   return {
     stops: [...sorted, { height: whole, more: "" }],
     rows,
-    // What a stop's height holds besides the content down to its row: the
-    // card's padding again, and its edges.
-    pad,
-    under: pad + edges,
+    foot: closing,
+    under: closing + edges,
   };
 }
 
 /**
  * Cuts a card to `stop`, or lets it be whole again. The rows under the cut
  * are made inert as well as unseen — not in the tab order, nor read out —
- * and the child's button to the whole card is shown: along the foot of a cut
- * box, saying what is hidden, or over all of a folded one.
+ * and the child's foot is shown, with its button to the whole card: over the
+ * end of a cut box, saying what is hidden, or over all of a folded one.
  */
 function cut(
   item: HTMLElement,
   box: HTMLElement,
-  more: HTMLElement | null,
+  foot: HTMLElement | null,
   stop: Stop | null,
   rows: Row[] = [],
-  pad = 0,
+  closing = 0,
   under = 0,
 ) {
   const max = stop ? `${stop.height}px` : "";
@@ -122,7 +131,8 @@ function cut(
   const overflow = stop ? CUT_OVERFLOW : "";
   if (box.style.overflow !== overflow) box.style.overflow = overflow;
   for (const row of rows) {
-    const hidden = stop != null && row.bottom > stop.height - under + 1;
+    const hidden =
+      stop != null && (stop.folded || row.bottom > stop.height - under + 1);
     if (row.el.inert !== hidden) row.el.inert = hidden;
   }
   if (stop) {
@@ -131,12 +141,13 @@ function cut(
   } else {
     delete item.dataset.fitCut;
   }
-  if (!more) return;
-  if (more.hidden !== (stop == null)) more.hidden = stop == null;
+  if (!foot) return;
+  if (foot.hidden !== (stop == null)) foot.hidden = stop == null;
+  const height = stop && !stop.folded ? `${closing}px` : "";
+  if (foot.style.height !== height) foot.style.height = height;
+  const button = foot.firstElementChild;
   const words = stop && !stop.folded ? stop.more : "";
-  if (more.textContent !== words) more.textContent = words;
-  const height = stop && !stop.folded ? `${pad}px` : "";
-  if (more.style.height !== height) more.style.height = height;
+  if (button && button.textContent !== words) button.textContent = words;
 }
 
 /**
@@ -161,8 +172,8 @@ function cut(
  * column runs past the frame, and the box is cut to it — a `max-height` and
  * no overflow, with `data-fit-cut` on the child (`="header"` when it is
  * folded to its header alone, which shows a card's `data-fit-folded` words),
- * the rows under the cut inert, and the child's `more` button shown with
- * what is hidden ("+3 more"), which opens the card out whole. Nothing React renders changes there either: a cut card
+ * the rows under the cut inert, and the child's foot shown, whose button
+ * says what is hidden ("+3 more") and opens the card out whole. Nothing React renders changes there either: a cut card
  * still holds all of its content, so what it would take whole can always be
  * measured (its scrollHeight), and a card that has room again gets it back.
  *
@@ -213,11 +224,11 @@ export function usePackedGrid(
           // What the child holds besides its box, which keeps its height.
           around: box ? height - box.offsetHeight : 0,
           ...(box
-            ? stopsOf(box)
+            ? stopsOf(box, fit?.row() ?? 0)
             : {
                 stops: [{ height, more: "" } satisfies Stop],
                 rows: [],
-                pad: 0,
+                foot: 0,
                 under: 0,
               }),
           shown: height > 0,
@@ -246,7 +257,7 @@ export function usePackedGrid(
       onPage.forEach((m, i) => {
         if (!m.box) return;
         const stop = at[i] < m.stops.length - 1 ? m.stops[at[i]] : null;
-        cut(m.el, m.box, fit?.more(m.el) ?? null, stop, m.rows, m.pad, m.under);
+        cut(m.el, m.box, fit?.foot(m.el) ?? null, stop, m.rows, m.foot, m.under);
       });
 
       const places = packCards(
@@ -279,7 +290,7 @@ export function usePackedGrid(
         cut(
           el,
           box,
-          fit?.more(el) ?? null,
+          fit?.foot(el) ?? null,
           null,
           rows.map((row) => ({ el: row, bottom: 0, counted: false })),
         );

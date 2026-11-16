@@ -16,6 +16,7 @@ import {
   TILE_RING_TWEENS,
   tileRing,
 } from "../lib/hvac";
+import { TILE_HELD } from "../lib/floatingSurface";
 import { pressable } from "../lib/press";
 
 /**
@@ -114,7 +115,7 @@ export function ClimateTile({
       {...tileRing(on, ring)}
       cursor="pointer"
       focusVisibleRing="outside"
-      css={pressable("tile", { also: TILE_RING_TWEENS })}
+      css={pressable("tile", { also: TILE_RING_TWEENS, held: TILE_HELD })}
       aspectRatio={square ? "1" : undefined}
     >
       <button

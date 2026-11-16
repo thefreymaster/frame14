@@ -1,7 +1,7 @@
 import { IoFlame, IoPowerOutline, IoSnow } from "react-icons/io5";
 import { PiFanFill } from "react-icons/pi";
 import type { HomeClimate } from "../hooks/useHomeData";
-import { RECESS_EDGE, TILE_RING_MS, tileRecess } from "./floatingSurface";
+import { TILE_DROP, TILE_RING_MS, tileFace } from "./floatingSurface";
 import type { Tween } from "./press";
 
 /** The thermostat model shared by the climate card and its modal. */
@@ -70,12 +70,13 @@ export const TILE_RING_WIDTH = "0.25rem";
  * round the inner corners too?" — on a `sm` corner the inner edge of a ring
  * as wide was square). Off, the plain `sm` outline card.
  *
- * Where the theme presses things in (Embossed, 0.170.0) the tile is pressed
- * into its card, on or off, with the ring as its rim, as the dial's is
- * (lib/floatingSurface's tileRecess): the shade on `_before`, from the ring's
- * inner edge in, and the lip after the ring in the tile's own shadow. Off,
- * the ring is still listed — no width, no colour — so the two states are one
- * list of shadows and one fades into the other.
+ * Where the theme presses the cards in (Embossed) the tile stands up out of
+ * its card, on or off (0.171.1; pressed in for a version before, 0.170.0),
+ * with the ring as its rim (lib/floatingSurface's tileFace): the bevelled
+ * face on `_before`, from the ring's inner edge in, and the shadow the tile
+ * casts after the ring in the tile's own shadow (TILE_DROP). Off, the ring
+ * is still listed — no width, no colour — so the two states are one list of
+ * shadows and one fades into the other.
  *
  * The tile animates all of it: hand TILE_RING_TWEENS to its `pressable`.
  */
@@ -83,12 +84,12 @@ export function tileRing(on: boolean, ring: string) {
   const rim = on ? `calc(${TILE_RING_WIDTH} - 1px)` : "0px";
   return {
     borderColor: on ? ring : undefined,
-    boxShadow: `inset 0 0 0 ${rim} ${on ? ring : "transparent"}, ${RECESS_EDGE}`,
+    boxShadow: `inset 0 0 0 ${rim} ${on ? ring : "transparent"}, ${TILE_DROP}`,
     borderRadius: on
       ? `calc(var(--chakra-radii-sm) + ${TILE_RING_WIDTH})`
       : "sm",
     isolation: "isolate",
-    _before: tileRecess(rim, on ? "sm" : undefined),
+    _before: tileFace(rim, on ? "sm" : undefined),
   } as const;
 }
 

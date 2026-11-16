@@ -43,6 +43,16 @@ const EMBOSSED_SHADE =
   "inset 0 0.1875rem 0.4375rem {colors.emboss.shade}, inset 0 0 0.0625rem {colors.emboss.shade}";
 const EMBOSSED_LIP = "0 0.0625rem 0 {colors.emboss.lip}";
 const EMBOSSED_SHADOW = `${EMBOSSED_SHADE}, ${EMBOSSED_LIP}`;
+// And its opposite, for what stands up out of a recess — a button, a tile
+// that is one (0.171.1, the user: "instead of having the buttons feel
+// indented, change them to feel like convexed popping out, so inverted of
+// the embossed feel"): the same two colours the other way up. A bevel inside
+// the button, the light now along its top edge and the shade along its lower
+// one, and the shadow it casts on the floor of the card under it.
+const RAISED_FACE =
+  "inset 0 0.0625rem 0 {colors.emboss.lip}, inset 0 -0.0625rem 0 {colors.emboss.under}";
+const RAISED_DROP =
+  "0 0.125rem 0.25rem {colors.emboss.cast}, 0 0 0.0625rem {colors.emboss.cast}";
 
 // A shadow of nothing: what `none` is, where `none` can't be written — as
 // one layer of a longer shadow.
@@ -73,8 +83,9 @@ const BUTTON_TWEENS: Tween[] = [
 ].map((property) => [property, "{durations.moderate}"] as const);
 
 // A button with no face of its own (ghost, plain) has no top edge to shade:
-// held down it goes in without the shadow.
-const UNSHADED = { _after: { display: "none" } };
+// held down it goes in without the shadow — and nothing to stand up, where
+// buttons do (Embossed).
+const UNSHADED = { _after: { display: "none" }, boxShadow: "none" };
 
 // A tab and a segment of a segmented control go in under a finger too: a
 // word, or an icon over one, with nothing round it to shade.
@@ -109,7 +120,10 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
  * back when let go. A ghost button, which has no fill until a pointer is over
  * it — and a touch never is — takes its hover fill while held instead of the
  * shade. Tabs (the navs' entries among them) and a segmented control's
- * segments go in the same way, unshaded.
+ * segments go in the same way, unshaded. In Embossed, where the cards are
+ * pressed into the page, a button with a face stands up out of its card
+ * (0.171.1, the `raised` shadow: a bevel and the shadow it casts) and, held,
+ * is pushed in — the cards' recess, in place of the `press` shade.
  * Progress bars stay pills (0.138.1, the user's ask): the `full` shape for
  * the track, and the range rounded with it, so the fill ends round rather
  * than cut square by the track's clip — and the logo's blue (0.139, "matching
@@ -196,6 +210,16 @@ const system = createSystem(
             lip: {
               value: { _light: "{colors.white}", _dark: "{colors.whiteAlpha.200}" },
             },
+            // A raised button's own shade, along the inside of its lower
+            // edge, and the shadow it casts: lighter than a recess's, which
+            // falls inside a card — these fall on the card's floor, and by
+            // day a white one shows every bit of them.
+            under: {
+              value: { _light: "{colors.blackAlpha.200}", _dark: "{colors.blackAlpha.600}" },
+            },
+            cast: {
+              value: { _light: "{colors.blackAlpha.300}", _dark: "{colors.blackAlpha.800}" },
+            },
             // The floor of a tile pressed into a card (lib/floatingSurface's
             // tileRecess): a wash of white over the tile's own colour, where
             // tiles are pressed in. By night it lifts the floor off the
@@ -279,18 +303,36 @@ const system = createSystem(
           // RECESS_SHADE / RECESS_LIP), for a box with a rim wider than a
           // card's edge — a dial's ring: the shade goes inside the rim, the
           // lip outside it. None where nothing is pressed in.
-          // `edge` is the lip again for a box that wears a ring too (a
-          // thermostat's tile, lib/hvac's tileRing): one layer to list after
-          // the ring, so a shadow of nothing where the others are `none`.
+          // The whole recess, and its lip as one layer of a longer shadow
+          // (`edge`: a shadow of nothing where the others are `none`), are
+          // what a raised button and tile wear while they are held down.
           recess: {
+            DEFAULT: embossedOnly(EMBOSSED_SHADOW),
             shade: embossedOnly(EMBOSSED_SHADE),
             lip: embossedOnly(EMBOSSED_LIP),
             edge: embossedOnly(EMBOSSED_LIP, NO_SHADOW),
           },
-          // The shade inside the top edge of anything held down (lib/press),
-          // in every palette: a recess's, a little shallower.
+          // What stands up out of a recess (lib/floatingSurface): `face`
+          // the bevel inside it and `drop` the shadow it casts, for a box
+          // that wears them apart — a tile with a ring, the face inside the
+          // ring; the two together for one that doesn't — the button recipe
+          // below. `edge` is the drop again as one layer of a longer shadow,
+          // after a tile's ring: a shadow of nothing where the others are
+          // `none`. None of it outside Embossed.
+          raised: {
+            DEFAULT: embossedOnly(`${RAISED_FACE}, ${RAISED_DROP}`),
+            face: embossedOnly(RAISED_FACE),
+            drop: embossedOnly(RAISED_DROP),
+            edge: embossedOnly(RAISED_DROP, NO_SHADOW),
+          },
+          // The shade inside the top edge of anything held down (lib/press):
+          // a recess's, a little shallower. Not where buttons stand up
+          // (Embossed): there a held button wears the recess itself.
           press: {
-            value: "inset 0 0.125rem 0.3125rem {colors.emboss.shade}",
+            value: {
+              base: "inset 0 0.125rem 0.3125rem {colors.emboss.shade}",
+              ...Object.fromEntries(EMBOSSED.map((p) => [`_${p}`, "none"])),
+            },
           },
         },
         spacing: {
@@ -301,7 +343,18 @@ const system = createSystem(
         button: {
           base: {
             borderRadius: "sm",
-            ...pressable("button", { also: BUTTON_TWEENS }),
+            // Standing up out of its card where the cards are pressed in
+            // (Embossed: the `raised` shadow, none elsewhere) — through a
+            // variable, so that held down it goes from pushed out to pushed
+            // in, as a real button does ("When pressed it would go from
+            // pushing out to pushing in like a real button"): the cards'
+            // own recess. A variant with a shadow of its own (surface, whose
+            // edge it is) keeps that.
+            boxShadow: "var(--button-shadow, {shadows.raised})",
+            ...pressable("button", {
+              also: BUTTON_TWEENS,
+              held: { "--button-shadow": "shadows.recess" },
+            }),
           },
           variants: {
             variant: {
@@ -310,6 +363,11 @@ const system = createSystem(
                 [`&[${PRESSING}]`]: { bg: "colorPalette.subtle" },
               },
               plain: UNSHADED,
+              // An outline button's face is its card's: where buttons stand
+              // up (Embossed) it takes the raised tiles' face, the wash that
+              // by night lifts it off the card's darker floor — clear in
+              // every other palette, as the recipe has it.
+              outline: { bg: "emboss.floor" },
             },
           },
         },

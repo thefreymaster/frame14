@@ -80,6 +80,14 @@ export const HOME_FOUR_COLUMN_QUERY =
 export const HOME_FIT_QUERY = "(min-width: 768px) and (min-height: 560px)";
 
 /**
+ * How tall the button along a cut card's foot is, in rem (0.171.1): a row to
+ * tap — 44px on a desktop, 77 on the frame, whose type is larger. The board
+ * leaves this much room for it (HomeBoard's fit) and hands it to the
+ * stylesheet as `--home-more-height` (index.css's `.home-card-more`).
+ */
+export const HOME_MORE_REM = 2.75;
+
+/**
  * A phone: the one-column screens. The theme's `phone` condition, which
  * narrows spacing.gutter (between and around cards) from md to sm.
  */

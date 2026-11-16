@@ -29,11 +29,11 @@ const board = (page: Page) =>
       .map((card) => {
         // (A hidden card's stand-in, while arranging, has no card of its own.)
         const box = card.querySelector<HTMLElement>(":scope > .home-card-body > .chakra-card__root") ?? card;
-        const more = card.querySelector<HTMLElement>(":scope > .home-card-more");
+        const foot = card.querySelector<HTMLElement>(":scope > .home-card-foot");
         return {
           id: card.dataset.card!,
           cut: card.dataset.fitCut ?? null,
-          more: more && !more.hidden ? more.textContent : null,
+          more: foot && !foot.hidden ? foot.querySelector(".home-card-more")!.textContent : null,
           // Its foot against the board's, in layout pixels.
           over: Math.max(0, Math.round(card.offsetTop + card.offsetHeight - floor)),
           rows: box.querySelectorAll("[data-fit-row]").length,
@@ -88,31 +88,40 @@ test.describe("the fitted Home", () => {
 
       const slot = page.locator('.home-card[data-card="calendar"]');
       const root = slot.locator(".chakra-card__root").first();
-      const more = slot.locator(":scope > .home-card-more");
+      const more = slot.locator(".home-card-more");
       await expect(more).toBeVisible();
-      // Along the card's foot, inside its edge: the card's padding again, in
-      // the card's own colour.
+      // The card's foot, inside its edge and in its colour, closes it over
+      // what comes next: a little room under the last row shown, then the
+      // button — a row across the card, a finger's height on the wall
+      // (0.171.1: it was the card's padding with a caption in it).
       const foot = await root.evaluate((el) => {
-        const button = el.closest(".home-card")!.querySelector(":scope > .home-card-more") as HTMLElement;
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const cover = el.closest(".home-card")!.querySelector(":scope > .home-card-foot") as HTMLElement;
+        const button = cover.querySelector(".home-card-more") as HTMLElement;
         const card = el.getBoundingClientRect();
-        const strip = button.getBoundingClientRect();
+        const strip = cover.getBoundingClientRect();
+        const tap = button.getBoundingClientRect();
+        const rows = [...el.querySelectorAll<HTMLElement>("[data-fit-row]")];
+        const shown = rows.filter((row) => !row.inert).at(-1)!.getBoundingClientRect();
+        const next = rows.find((row) => row.inert)!.getBoundingClientRect();
         return {
-          height: Math.round(strip.height),
-          pad: Math.round(parseFloat(getComputedStyle(el.querySelector(".chakra-card__body")!).paddingBottom)),
+          tall: tap.height / rem,
+          across: tap.width / card.width,
+          type: parseFloat(getComputedStyle(button).fontSize) / rem,
           inside: strip.left >= card.left && strip.right <= card.right && Math.abs(card.bottom - strip.bottom - 1) < 1,
-          sameColour: getComputedStyle(button).backgroundColor === getComputedStyle(el).backgroundColor,
-          // The cut falls in the gap under the last row shown: that row is
-          // whole above the button, and the next starts under it.
-          rows: (() => {
-            const rows = [...el.querySelectorAll<HTMLElement>("[data-fit-row]")];
-            const shown = rows.filter((row) => !row.inert).at(-1)!.getBoundingClientRect();
-            const next = rows.find((row) => row.inert)!.getBoundingClientRect();
-            return { lastEndsAbove: shown.bottom <= strip.top + 1, nextStartsBelow: next.top >= strip.top - 1 };
-          })(),
+          sameColour: getComputedStyle(cover).backgroundColor === getComputedStyle(el).backgroundColor,
+          // The cut falls under the last row shown: that row is whole above
+          // the foot, the button stands off it, and the next row is under.
+          lastEndsAbove: shown.bottom <= strip.top + 1,
+          standsOff: tap.top - shown.bottom,
+          nextStartsBelow: next.top >= strip.top - 1,
         };
       });
-      expect(foot.height).toBe(foot.pad);
-      expect(foot).toMatchObject({ inside: true, sameColour: true, rows: { lastEndsAbove: true, nextStartsBelow: true } });
+      expect(foot.tall).toBeCloseTo(2.75, 1);
+      expect(foot.across).toBeGreaterThan(0.98);
+      expect(foot.type).toBeGreaterThanOrEqual(0.875);
+      expect(foot.standsOff).toBeGreaterThan(4);
+      expect(foot).toMatchObject({ inside: true, sameColour: true, lastEndsAbove: true, nextStartsBelow: true });
       // It can't be scrolled to what it hides.
       expect(await root.evaluate((el) => ((el.scrollTop = 200), el.scrollTop))).toBe(0);
     });
@@ -121,7 +130,7 @@ test.describe("the fitted Home", () => {
       await page.goto("/home");
       await splashGone(page);
       const slot = page.locator('.home-card[data-card="calendar"]');
-      const more = slot.locator(":scope > .home-card-more");
+      const more = slot.locator(".home-card-more");
       await expect(more).toBeVisible();
       await expect(more).toHaveAccessibleName("Show all of Calendar");
       await more.click();
@@ -163,7 +172,7 @@ test.describe("the fitted Home", () => {
       // own buttons aside.
       const lights = page.locator('.home-card[data-card="lights"]');
       await expect.poll(async () => card(await board(page), "lights")?.cut).toBe("header");
-      const more = lights.locator(":scope > .home-card-more");
+      const more = lights.locator(".home-card-more");
       await expect(more).toBeVisible();
       await expect(more).toHaveText("");
       // The whole of the card, title and all, is under it…

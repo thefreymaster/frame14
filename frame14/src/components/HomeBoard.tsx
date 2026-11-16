@@ -39,6 +39,7 @@ import {
   defaultHomeLayout,
   homeGridFor,
   HOME_FIT_QUERY,
+  HOME_MORE_REM,
   loadHomeLayout,
   saveHomeLayout,
   type HomeCardId,
@@ -62,9 +63,13 @@ const noTransforms = () => null;
 // screen: the card itself (a Board), so its own edge and corners close it.
 const cardOf: GridFit["box"] = (slot) =>
   slot.querySelector<HTMLElement>(":scope > .home-card-body > .chakra-card__root");
-// And its button to the whole card (HomeCardSlot).
-const moreOf: GridFit["more"] = (slot) =>
-  slot.querySelector<HTMLElement>(":scope > .home-card-more");
+// And its foot, with the button to the whole card (HomeCardSlot) — a row
+// HOME_MORE_REM tall, in the pixels of this screen's type.
+const footOf: GridFit["foot"] = (slot) =>
+  slot.querySelector<HTMLElement>(":scope > .home-card-foot");
+const moreRow: GridFit["row"] = () =>
+  HOME_MORE_REM *
+  (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16);
 
 /**
  * The /home cards, rearrangeable. Press and hold any card to start arranging;
@@ -173,7 +178,9 @@ export function HomeBoard({
     gridRef,
     columns,
     [layoutKey, columns, editing, fits],
-    fits ? { frame: boardRef, box: cardOf, more: moreOf } : undefined,
+    fits
+      ? { frame: boardRef, box: cardOf, foot: footOf, row: moreRow }
+      : undefined,
   );
 
   useEffect(() => {
@@ -301,6 +308,7 @@ export function HomeBoard({
         // `--page-height`) and the grid is held to it; nothing is clipped
         // here, so a board that can't be made to fit still scrolls.
         height={fits ? "var(--page-height)" : undefined}
+        css={{ "--home-more-height": `${HOME_MORE_REM}rem` }}
         minHeight={fits ? undefined : "100%"}
         p="gutter"
         // Room to scroll the last card (and its width picker) clear of the

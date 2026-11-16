@@ -229,12 +229,23 @@ const SPRING = "cubic-bezier(0.3, 1.9, 0.5, 1)";
  * edge, on `::after`: for anything with a face to shade — not a bare icon or
  * a label with no box round it. It needs the element positioned.
  *
+ * `held` is anything else the element wears while it is down — a raised
+ * button losing the shadow it stands on (Embossed).
+ *
  * The scale is the `scale` property, not a transform, so it composes with
  * whatever transform the element already has (a card being dragged).
  */
 export function pressable(
   depth: PressDepth,
-  { shade = true, also = [] }: { shade?: boolean; also?: readonly Tween[] } = {},
+  {
+    shade = true,
+    also = [],
+    held: whileHeld,
+  }: {
+    shade?: boolean;
+    also?: readonly Tween[];
+    held?: SystemStyleObject;
+  } = {},
 ): SystemStyleObject {
   const tweens: Tween[] = [
     ["scale", `var(--press-ms, ${PRESS_OUT_MS}ms)`, `var(--press-ease, ${SPRING})`],
@@ -248,6 +259,7 @@ export function pressable(
       .map(([, , easing]) => easing ?? "ease")
       .join(", "),
     [held]: {
+      ...whileHeld,
       scale: String(PRESS_SCALE[depth]),
       "--press-ms": `${PRESS_IN_MS}ms`,
       "--press-ease": PUSH,

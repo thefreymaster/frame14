@@ -4,7 +4,7 @@ import { MdCheck, MdOutlinePlayCircle } from "react-icons/md";
 import { toaster } from "./ui/toaster";
 import { useEntity } from "../hooks/useEntity";
 import { runScene } from "../lib/callService";
-import { TILE_RECESS } from "../lib/floatingSurface";
+import { TILE_HELD, TILE_RAISED } from "../lib/floatingSurface";
 import { mdiIconName } from "../lib/lightModel";
 import { pressable } from "../lib/press";
 import { sceneAvailable, sceneName, type SceneAttrs } from "../lib/scenes";
@@ -68,12 +68,15 @@ export function SceneTile({ entityId }: { entityId: string }) {
       variant="outline"
       borderRadius="sm"
       minW="0"
-      // Pressed into its card where the theme presses things in (Embossed),
-      // as a light's tile is.
-      {...TILE_RECESS}
+      // Standing up out of its card where the theme presses the cards in
+      // (Embossed), as a light's tile does.
+      {...TILE_RAISED}
       cursor="pointer"
       focusVisibleRing="outside"
-      css={{ ...pressable("tile"), touchAction: "manipulation" }}
+      css={{
+        ...pressable("tile", { held: TILE_HELD }),
+        touchAction: "manipulation",
+      }}
     >
       <button
         type="button"

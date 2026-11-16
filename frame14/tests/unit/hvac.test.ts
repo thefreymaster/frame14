@@ -17,6 +17,7 @@ import {
   TILE_RING_WIDTH,
   tileRing,
 } from "../../src/lib/hvac";
+import { TILE_HELD } from "../../src/lib/floatingSurface";
 
 const unit = (over: Partial<HomeClimate> = {}): HomeClimate => ({
   entity_id: "climate.test",
@@ -282,17 +283,21 @@ describe("tileRing", () => {
     expect(off.slice(1)).toEqual(on.slice(1));
   });
 
-  it("lists the recess's lip after the ring, as the layer that is nothing outside Embossed", () => {
+  it("lists what the tile casts after the ring: the layer that is nothing outside Embossed, and the recess's lip while held", () => {
     for (const on of [true, false]) {
-      expect(layers(tileRing(on, "red").boxShadow)[1]).toBe("var(--chakra-shadows-recess-edge)");
+      // Through `--tile-drop`, which the tile's `pressable` sets while it is
+      // held (TILE_HELD): pushed in, where it stood up.
+      expect(tileRing(on, "red").boxShadow).toMatch(/ (red|transparent), var\(--tile-drop, var\(--chakra-shadows-raised-edge\)\)$/);
     }
+    expect(TILE_HELD).toEqual({ "--tile-drop": "shadows.recess.edge", "--tile-face": "shadows.recess.shade" });
   });
 
-  it("starts the recess's shade where the ring ends, under what the tile holds", () => {
+  it("starts the raised face where the ring ends, under what the tile holds", () => {
     const on = tileRing(true, "red");
     const off = tileRing(false, "red");
-    expect(on._before).toMatchObject({ inset: `calc(${TILE_RING_WIDTH} - 1px)`, borderRadius: "sm", boxShadow: "recess.shade", zIndex: -1 });
-    expect(off._before).toMatchObject({ inset: "0px", boxShadow: "recess.shade", zIndex: -1 });
+    const face = "var(--tile-face, {shadows.raised.face})";
+    expect(on._before).toMatchObject({ inset: `calc(${TILE_RING_WIDTH} - 1px)`, borderRadius: "sm", boxShadow: face, bg: "emboss.floor", zIndex: -1 });
+    expect(off._before).toMatchObject({ inset: "0px", boxShadow: face, zIndex: -1 });
     // A layer behind the content needs the tile to hold it.
     expect(on.isolation).toBe("isolate");
   });

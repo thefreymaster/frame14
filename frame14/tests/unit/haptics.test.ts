@@ -96,8 +96,9 @@ describe("watchHapticTriggers", () => {
   let haptics: Haptics;
   let stop: () => void = () => {};
 
-  const label = (button: Element) => button.querySelector(`:scope > [${haptics.HAPTIC_LABEL}]`);
-  const theSwitch = () => document.getElementById(haptics.HAPTIC_SWITCH_ID) as HTMLInputElement | null;
+  const label = (button: Element) => button.querySelector<HTMLLabelElement>(`:scope > label[${haptics.HAPTIC_LABEL}]`);
+  /** The hidden switch the library puts in a button's label. */
+  const switchOf = (button: Element) => label(button)?.querySelector<HTMLInputElement>("input[type=checkbox]") ?? null;
 
   beforeEach(async () => {
     haptics = await load();
@@ -117,8 +118,8 @@ describe("watchHapticTriggers", () => {
   it("does nothing where the browser doesn't tick through a switch", () => {
     device(PIXEL, { vibrate: () => true });
     stop = haptics.watchHapticTriggers();
-    expect(theSwitch()).toBeNull();
     expect(document.querySelector(`[${haptics.HAPTIC_LABEL}]`)).toBeNull();
+    expect(document.querySelector("input[switch]")).toBeNull();
   });
 
   describe("on an iPhone", () => {
@@ -127,58 +128,46 @@ describe("watchHapticTriggers", () => {
       stop = haptics.watchHapticTriggers();
     });
 
-    it("lays one hidden switch down, and a label for it over every positioned button", () => {
-      const input = theSwitch()!;
-      expect(input.type).toBe("checkbox");
-      expect(input.hasAttribute("switch")).toBe(true);
-      for (const id of ["go", "off", "inner"]) {
-        const over = label($(id)) as HTMLLabelElement;
+    it("has the library lay its label, with a hidden switch in it, over every button", () => {
+      for (const id of ["go", "static", "stretch", "off", "inner"]) {
+        const over = label($(id));
         expect(over, id).not.toBeNull();
-        expect(over.htmlFor).toBe(haptics.HAPTIC_SWITCH_ID);
-        expect(over.getAttribute("aria-hidden")).toBe("true");
+        expect(over!.getAttribute("aria-hidden")).toBe("true");
         // The last thing in the button: over everything else it holds.
         expect($(id).lastElementChild).toBe(over);
+        expect(switchOf($(id))?.hasAttribute("switch"), id).toBe(true);
       }
-    });
-
-    it("makes a static button the label's box, so the label covers it and nothing else", () => {
-      expect(label($("static"))).not.toBeNull();
-      expect($("static").style.position).toBe("relative");
-      // One that was positioned already is left as it was.
-      expect($("go").style.position).toBe("relative");
-      stop();
-      expect($("static").style.position).toBe("");
-      expect($("go").style.position).toBe("relative");
-    });
-
-    it("leaves static a button that stretches its tap target over an ancestor: the label stretches with it", () => {
-      expect(label($("stretch"))).not.toBeNull();
-      expect($("stretch").style.position).toBe("");
     });
 
     it("leaves alone a card that is a button, and a link", () => {
       // A label over the card would cover the card's own buttons.
       expect(label($("card"))).toBeNull();
-      // A link's navigation is the browser's handling of the click.
+      // Inside a link the label takes the click, and the link goes nowhere.
       expect(label($("link"))).toBeNull();
     });
 
-    it("a tap on the label is the button's click, once, and the switch's own", () => {
+    it("keeps the label on top of its button, and off a disabled one", () => {
+      expect(getComputedStyle(label($("go"))!).zIndex).toBe("1");
+      expect(getComputedStyle(label($("go"))!).display).not.toBe("none");
+      expect(getComputedStyle(label($("off"))!).display).toBe("none");
+    });
+
+    it("lets the library make a static button the label's box, but not one that stretches its tap target over an ancestor", () => {
+      expect($("static").style.position).toBe("relative");
+      // Its label stretches over the header as the tap target does.
+      expect($("stretch").style.position).toBe("");
+      expect(label($("stretch"))).not.toBeNull();
+    });
+
+    it("a tap on the label is the button's click, once, and toggles the switch", () => {
       const clicks = vi.fn();
       $("go").addEventListener("click", clicks);
-      const seen = vi.fn();
-      document.addEventListener("click", seen);
-      const input = theSwitch()!;
 
-      (label($("go")) as HTMLElement).click();
+      label($("go"))!.click();
 
       expect(clicks).toHaveBeenCalledTimes(1);
-      // The switch was toggled — what ticks, on the phone.
-      expect(input.checked).toBe(true);
-      // And its click went no further: the page heard the button's alone.
-      expect(seen).toHaveBeenCalledTimes(1);
-      expect(seen.mock.calls[0][0].target).toBe(label($("go")));
-      document.removeEventListener("click", seen);
+      // What ticks, on the phone.
+      expect(switchOf($("go"))!.checked).toBe(true);
     });
 
     it("gives a button its label as it arrives, and once only", async () => {
@@ -199,10 +188,10 @@ describe("watchHapticTriggers", () => {
       expect($("go").textContent).toBe("Stop");
     });
 
-    it("takes everything away again when undone", async () => {
+    it("takes the labels away again when undone, and stops watching", async () => {
       stop();
-      expect(theSwitch()).toBeNull();
       expect(document.querySelector(`[${haptics.HAPTIC_LABEL}]`)).toBeNull();
+      expect(document.querySelector("input[switch]")).toBeNull();
       document.body.append(Object.assign(document.createElement("button"), { style: "position: relative" }));
       await settled();
       expect(document.querySelector(`[${haptics.HAPTIC_LABEL}]`)).toBeNull();

@@ -47,6 +47,46 @@ test.describe("the Lights page", () => {
     await expect(board(page, "Switches").locator("[data-light-entry]")).toHaveCount(1);
   });
 
+  // 0.170.1, the user, of a laptop: "each light card should only max have two
+  // cards per row so the text does not wrap". A room's card is a third of a
+  // desktop's page, and held as many 8rem tiles as fitted: three across here,
+  // each name a word a line.
+  test("on a desktop a room's card holds two tiles a row, and their names keep to a line", async ({ page, isMobile }) => {
+    test.skip(isMobile, "a desktop's layout");
+    await page.goto("/lights");
+    const tiles = board(page, "Living Room").locator("[data-light-entry]");
+    await expect(tiles).toHaveCount(4);
+    // Layout's own figures: the page's entrance scales what a rect reports.
+    const rows = await tiles.evaluateAll((els) => {
+      const perRow = new Map<number, number>();
+      for (const el of els as HTMLElement[]) perRow.set(el.offsetTop, (perRow.get(el.offsetTop) ?? 0) + 1);
+      return [...perRow.values()];
+    });
+    expect(rows).toEqual([2, 2]);
+    const lines = await tiles.evaluateAll((els) =>
+      els.map((el) => {
+        const name = el.querySelector("p") as HTMLElement;
+        return Math.round(name.offsetHeight / parseFloat(getComputedStyle(name).lineHeight));
+      }),
+    );
+    expect(lines).toEqual([1, 1, 1, 1]);
+
+    // A smaller window, still a desktop's three columns of rooms: two tiles
+    // would be too narrow for their names, so each has the card's width.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect
+      .poll(() => tiles.evaluateAll((els) => new Set((els as HTMLElement[]).map((el) => el.offsetTop)).size))
+      .toBe(4);
+    expect(
+      await tiles.evaluateAll((els) =>
+        els.map((el) => {
+          const name = el.querySelector("p") as HTMLElement;
+          return Math.round(name.offsetHeight / parseFloat(getComputedStyle(name).lineHeight));
+        }),
+      ),
+    ).toEqual([1, 1, 1, 1]);
+  });
+
   test("a tap turns a light off, and on again", async ({ page }) => {
     await page.goto("/lights");
     const tile = lightTile(page, "Living Room");

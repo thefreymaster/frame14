@@ -25,11 +25,22 @@ export const LIGHT_TILE_COLUMNS = {
   _landscape: "repeat(4, minmax(0, 1fr))",
 };
 
+/** The narrowest a tile in a room's card is on a desktop: the bulb beside a
+ *  name of two words, on one line. */
+export const LIGHT_TILE_MIN_GROUP = "11rem";
+
 /** The tiles' columns where the group is a third of the screen (/lights on a
- *  desktop, 0.123): as many 8rem-or-wider tiles as the group's own width
- *  holds, sharing it — three in a 1920px window, two in a 1280px one —
- *  rather than the viewport's four, which cut the names short there. */
-export const LIGHT_TILE_COLUMNS_FLUID = "repeat(auto-fill, minmax(8rem, 1fr))";
+ *  desktop): two a row, never more (0.170.1, the user, of a laptop: "On a
+ *  big screen, each light card should only max have two cards per row so the
+ *  text does not wrap") — and one where two would each be under
+ *  LIGHT_TILE_MIN_GROUP (a 1280px window's card), for the same reason. A
+ *  tile is a row, the bulb beside the name, and a third of a third-width
+ *  card left the name a word a line: until then it was as many 8rem tiles as
+ *  the card held (0.123), three across from about 1500px. A track is half
+ *  the card (less half the tiles' gap) or the minimum, whichever is wider,
+ *  so three never fit and two only where they are wide enough. Not
+ *  LIGHT_TILE_COLUMNS, whose landscape four go by the viewport. */
+export const LIGHT_TILE_COLUMNS_GROUP = `repeat(auto-fill, minmax(max(${LIGHT_TILE_MIN_GROUP}, calc((100% - var(--chakra-spacing-3)) / 2)), 1fr))`;
 
 /** The tiles' columns on /home's Lights card (0.143) and /lights' Favorites
  *  (0.153.0): as many 10rem-or-wider tiles as the card's own width holds —

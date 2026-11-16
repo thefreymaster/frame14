@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildLightSections,
   LIGHT_TILE_COLUMNS_CARD,
-  LIGHT_TILE_COLUMNS_FLUID,
+  LIGHT_TILE_COLUMNS_GROUP,
+  LIGHT_TILE_MIN_GROUP,
   lightEntry,
   sortLightEntries,
   sortLightSections,
@@ -143,8 +144,17 @@ describe("sortLightSections", () => {
 });
 
 describe("the tile columns", () => {
-  it("a desktop's third-width group takes as many 8rem tiles as fit", () => {
-    expect(LIGHT_TILE_COLUMNS_FLUID).toBe("repeat(auto-fill, minmax(8rem, 1fr))");
+  // 0.170.1: as many 8rem tiles as fitted before — three across a laptop's
+  // card, each name a word a line.
+  it("a desktop's third-width group holds two tiles a row at most, and one where two would be too narrow for a name", () => {
+    // Each track is half the card or the minimum, whichever is wider: a third
+    // tile never fits, and a second only beside a first that is wide enough.
+    expect(LIGHT_TILE_COLUMNS_GROUP).toBe(
+      "repeat(auto-fill, minmax(max(11rem, calc((100% - var(--chakra-spacing-3)) / 2)), 1fr))",
+    );
+    expect(LIGHT_TILE_COLUMNS_GROUP).toContain(LIGHT_TILE_MIN_GROUP);
+    // Wider than the 8rem that let a name break.
+    expect(parseFloat(LIGHT_TILE_MIN_GROUP)).toBeGreaterThan(8);
   });
 
   // 0.139: the tiles drop the word "Lights" — it's the page's.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.170.1
+
+- Changed: on a desktop or laptop, a room's card on the Lights page holds two light tiles a row at most — it fitted as many as it could, three across on a wide window, and names like "Kitchen Cabinet" broke over two or three lines. In a narrower window, where even two would be too narrow for a name, each tile takes the card's full width. Favorites and Scenes, which span the page, are as they were.
+- Changed: the tick on an iPhone or iPad is now made by the `ios-haptics` library, which is maintained to keep up with iOS, rather than by Frame14's own code for the same trick. It should feel exactly as it did in 0.170.0.
+
 ## 0.170.0
 
 - Changed: **buttons and tiles feel like real buttons.** Whatever you touch goes in under your finger the moment you touch it — smaller, with a shadow along its top edge — and springs back when you let go: the light, scene, thermostat and fan tiles, every button, the navigation's entries, tabs and segmented controls, and the cards that open something. It goes further in than before (a tile shrank by 2%, which read as nothing on the wall), and even the quickest tap shows the whole press. Until now most buttons showed nothing at all on a touch screen, and a tile's press was slight and came late. On a page that scrolls, a touch waits a few hundredths of a second before it presses, so a swipe that starts on a tile just scrolls.

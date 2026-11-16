@@ -9,7 +9,7 @@ import { LightsSkeleton } from "../components/skeletons/LightsSkeleton";
 import {
   buildLightSections,
   LIGHT_TILE_COLUMNS_CARD,
-  LIGHT_TILE_COLUMNS_FLUID,
+  LIGHT_TILE_COLUMNS_GROUP,
   displayLightName,
   lightEntry,
   sortLightEntries,
@@ -51,10 +51,10 @@ export function Lights() {
   const { data: entities, isPending: configPending } = useEntitiesConfig();
   // The groups' columns (0.123): three on a desktop, two on a smaller screen
   // from Chakra's lg up (the frame, a tablet, a narrow desktop window), one
-  // on a phone. A desktop's third-width groups size their tiles to the group
-  // (LIGHT_TILE_COLUMNS_FLUID) rather than the viewport.
+  // on a phone. A desktop's third-width groups hold two tiles a row at most
+  // (LIGHT_TILE_COLUMNS_GROUP), by the group's own width, not the viewport's.
   const desktop = useDesktop();
-  const tileColumns = desktop ? LIGHT_TILE_COLUMNS_FLUID : undefined;
+  const tileColumns = desktop ? LIGHT_TILE_COLUMNS_GROUP : undefined;
   const ids = entities?.lights ?? EMPTY;
   const states = useEntities(ids);
   const favoriteIds = useLightFavorites();

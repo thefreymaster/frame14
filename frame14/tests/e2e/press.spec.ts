@@ -5,8 +5,8 @@ import { APP_URL } from "./ports";
 // A press that feels like a real button's (0.170.0, lib/press): whatever is
 // under the pointer goes in at contact — smaller, shaded along its top edge —
 // and springs back when let go; a tap ticks where there is a motor
-// (lib/haptics), and on an iPhone every button wears a label for the hidden
-// switch that ticks there.
+// (lib/haptics), and on an iPhone every button wears the ios-haptics
+// library's label, with the hidden switch that ticks there.
 
 const pressing = (el: Locator) => el.evaluate((e) => e.hasAttribute("data-pressing"));
 /** The element's scale as Chromium reports it: "none" at rest. */
@@ -267,10 +267,11 @@ test.describe("a touch", () => {
 
 test.describe("on an iPhone", () => {
   // Safari gives a page no call for the Taptic Engine: what ticks is a real
-  // switch under a real tap. The engine here is still Chromium, which ticks
-  // nothing — what is held is that every button wears its label, and that a
-  // tap is still the button's one click and reaches the switch as a trusted
-  // one.
+  // switch under a real tap, which the ios-haptics library lays over a
+  // button (0.170.1; Frame14's own code for it in 0.170.0). The engine here
+  // is still Chromium, which ticks nothing — what is held is that every
+  // button wears the label, and that a tap is still the button's one click
+  // and toggles the label's switch as a trusted one.
   test.skip(({ isMobile }) => !isMobile, "once is enough");
 
   test.beforeEach(async ({ request }) => {
@@ -289,29 +290,30 @@ test.describe("on an iPhone", () => {
     return { context, page };
   }
 
-  /** How often the hidden switch was toggled, and whether by trusted events. */
+  /** How often a label's hidden switch was toggled, and whether by trusted events. */
   async function watchSwitch(page: Page) {
     await page.evaluate(() => {
       const toggles: boolean[] = [];
       Object.assign(window, { __toggles: toggles });
-      document.getElementById("haptic-switch")!.addEventListener("change", (e) => toggles.push(e.isTrusted));
+      document.addEventListener("change", (e) => {
+        if ((e.target as Element).matches("label[data-haptic-trigger] > input[switch]")) toggles.push(e.isTrusted);
+      });
     });
     return () => page.evaluate(() => (window as unknown as { __toggles: boolean[] }).__toggles);
   }
 
-  test("every button wears a label for the one hidden switch, and a tap is its click and the switch's", async ({ browser }) => {
+  test("every button wears a label with a hidden switch, and a tap is its click and the switch's", async ({ browser }) => {
     const { context, page } = await iphone(browser);
     try {
       await page.goto("/lights");
       await splashGone(page);
-      await expect(page.locator("#haptic-switch")).toHaveCount(1);
-      await expect(page.locator("#haptic-switch")).toHaveAttribute("switch", "");
       const tile = lightTile(page, "Floor Lamp");
       await expect(tile).toBeVisible();
+      await expect(tile.locator("label[data-haptic-trigger] > input[type=checkbox][switch]")).toHaveCount(1);
       // Each button, one label, laid over the button and nothing else.
       const buttons = await page.locator("button").evaluateAll((els) =>
         els.map((el) => {
-          const labels = el.querySelectorAll(":scope > label[data-haptic]");
+          const labels = el.querySelectorAll(":scope > label[data-haptic-trigger]");
           const label = labels[0] as HTMLElement | undefined;
           const a = el.getBoundingClientRect();
           const b = label?.getBoundingClientRect();

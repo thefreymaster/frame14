@@ -1,3 +1,4 @@
+import { hapticTrigger } from "ios-haptics";
 import { deviceName } from "./deviceName";
 
 /**
@@ -15,12 +16,15 @@ import { deviceName } from "./deviceName";
  *   call for at all. The one thing a page has that ticks is a real switch —
  *   `<input type="checkbox" switch>` — toggled by a real tap; a scripted
  *   click on one stopped ticking in iOS 26.5. So every button gets an
- *   invisible `<label>` over it for one hidden switch (`watchHapticTriggers`):
- *   the tap lands on the label, bubbles to the button as its click, and the
- *   label hands the switch a trusted click of its own, which ticks. Nothing
- *   here is called at tap time. It rests on how Safari happens to work, not
- *   on anything Apple promises: if a release closes it, the taps go quiet and
- *   nothing else changes.
+ *   invisible `<label>` over it that holds a hidden switch: the tap lands on
+ *   the label, bubbles to the button as its click, and the label hands its
+ *   switch a trusted click, which ticks. That part is the `ios-haptics`
+ *   library's (`hapticTrigger`, since 0.170.1 — the user, of the first
+ *   version's own code, which worked on the phone: "I'd like to use a
+ *   maintained library"): how Safari can be made to tick is the library's to
+ *   keep up with, and it rests on how Safari happens to work, not on
+ *   anything Apple promises. What is here is which elements get it
+ *   (`watchHapticTriggers`).
  */
 
 /** How long the motor runs for a tick: enough to feel, too short to buzz. */
@@ -44,39 +48,36 @@ export function hapticTick() {
   }
 }
 
-/** The label over a button, and the switch they all answer to. */
-export const HAPTIC_LABEL = "data-haptic";
-export const HAPTIC_SWITCH_ID = "haptic-switch";
+/** The label the library lays over a button (its attribute, not ours to name). */
+export const HAPTIC_LABEL = "data-haptic-trigger";
 
 // What gets a label: a button, and nothing wider. A card that is one big
 // button holds buttons of its own, which a label over the whole card would
-// cover; a link's navigation and a form control's label are the browser's
-// own handling of the click, which a label inside would take over.
+// cover; inside a link the label takes the click over, and the link no
+// longer goes anywhere.
 const TRIGGERS = "button";
 
-// The label is the top of its button — over the button's own ::after too
-// (the stretch of a `data-stretched` one), which comes after it in the tree:
-// under that the tap lands on the button instead, and nothing ticks.
+/**
+ * On a static button that stretches its tap target over a positioned
+ * ancestor with a pseudo-element (Board's collapsible header, the one such):
+ * it says so, and is kept static — its label then covers that same ancestor,
+ * as the stretch does. The library makes any other static button the label's
+ * containing block, so the label covers the button and nothing else.
+ */
+export const STRETCHED = "data-stretched";
+
+// What the library's label needs of this app, beside its own inline styles.
+// On top of its button — over the button's own ::after too (the stretch of a
+// `data-stretched` one), which comes after it in the tree: under that the tap
+// lands on the button instead, and nothing ticks. And gone from a disabled
+// button, which would tick for a tap that does nothing.
 const STYLE = `
 [${HAPTIC_LABEL}] {
-  position: absolute;
-  inset: 0;
   z-index: 1;
-  border-radius: inherit;
-  -webkit-tap-highlight-color: transparent;
 }
 :disabled > [${HAPTIC_LABEL}],
 [aria-disabled="true"] > [${HAPTIC_LABEL}] {
   display: none;
-}
-#${HAPTIC_SWITCH_ID} {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  margin: 0;
-  visibility: hidden;
 }
 `;
 
@@ -87,35 +88,12 @@ export function ticksThroughSwitch(): boolean {
   return device === "iPhone" || device === "iPad";
 }
 
-// The buttons made `position: relative` here, to put back.
-const positioned = new Set<HTMLElement>();
-
-/**
- * On a static button that stretches its tap target over a positioned
- * ancestor with a pseudo-element (Board's collapsible header, the one such):
- * it says so, and is left static — its label then covers that same ancestor,
- * as the stretch does.
- */
-export const STRETCHED = "data-stretched";
-
 function decorate(button: Element) {
-  if (button.querySelector(`:scope > [${HAPTIC_LABEL}]`)) return;
-  // The label covers its containing block, which must be the button: under
-  // any other static button it would cover someone else's box and hand the
-  // button every tap there. So a static button is made the containing block.
-  if (
-    button instanceof HTMLElement &&
-    getComputedStyle(button).position === "static" &&
-    !button.hasAttribute(STRETCHED)
-  ) {
-    button.style.position = "relative";
-    positioned.add(button);
-  }
-  const label = document.createElement("label");
-  label.setAttribute(HAPTIC_LABEL, "");
-  label.setAttribute("aria-hidden", "true");
-  label.htmlFor = HAPTIC_SWITCH_ID;
-  button.append(label);
+  if (!(button instanceof HTMLElement)) return;
+  const position = button.style.position;
+  // Once only: the library leaves a button that has its label alone.
+  hapticTrigger(button);
+  if (button.hasAttribute(STRETCHED)) button.style.position = position;
 }
 
 function decorateWithin(root: Element) {
@@ -126,7 +104,7 @@ function decorateWithin(root: Element) {
 /**
  * Gives every button its label, now and as the page changes, on a browser
  * that ticks through a switch; does nothing on any other. Returns what undoes
- * it.
+ * it (the labels and the watching; a button the library positioned stays so).
  */
 export function watchHapticTriggers(): () => void {
   if (!ticksThroughSwitch()) return () => {};
@@ -134,22 +112,6 @@ export function watchHapticTriggers(): () => void {
   const style = document.createElement("style");
   style.textContent = STYLE;
   document.head.append(style);
-
-  // Hidden by `visibility`, so it is never under a finger (a switch that is
-  // takes the touch for its thumb, and the page stops scrolling), never
-  // focused and not in the accessibility tree.
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.id = HAPTIC_SWITCH_ID;
-  input.setAttribute("switch", "");
-  document.body.append(input);
-
-  // The click the label hands the switch is the switch's alone: no listener
-  // of the page's should take it for a click outside whatever is open.
-  const quiet = (e: Event) => {
-    if (e.target === input) e.stopImmediatePropagation();
-  };
-  window.addEventListener("click", quiet, true);
 
   const observer = new MutationObserver((records) => {
     for (const record of records) {
@@ -173,12 +135,8 @@ export function watchHapticTriggers(): () => void {
 
   return () => {
     observer.disconnect();
-    window.removeEventListener("click", quiet, true);
     for (const label of document.querySelectorAll(`[${HAPTIC_LABEL}]`))
       label.remove();
-    for (const button of positioned) button.style.position = "";
-    positioned.clear();
-    input.remove();
     style.remove();
   };
 }

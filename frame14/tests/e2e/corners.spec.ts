@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { cornersRounderThanConcentric, resetStub, squareInsideRings } from "./helpers";
+import { cornersRounderThanConcentric, PAGES, resetStub, squareInsideRings } from "./helpers";
 
 // No rounded box sits in a rounded box with a rounder corner than concentric
 // (0.145.4, the user: "In the same idea of a 3d print where the outer border
@@ -8,25 +8,6 @@ import { cornersRounderThanConcentric, resetStub, squareInsideRings } from "./he
 // fan tiles had the cards' own radius, and so did the remote's Views tiles.
 // And no ring leaves its inner corner square (0.149.0): a ring as wide as its
 // box's corner or wider — the lit thermostat and fan tiles' was.
-const PAGES = [
-  "/home",
-  "/lights",
-  "/climate",
-  "/energy",
-  "/energy/circuits",
-  "/weather",
-  "/weather/daily",
-  "/printer",
-  "/vacuum",
-  "/cameras",
-  "/unraid",
-  "/calendar",
-  "/speedtest",
-  "/control/views",
-  "/control/display",
-  "/control/device",
-];
-
 test.describe("nested corners", () => {
   test.beforeEach(async ({ request }) => {
     await resetStub(request);

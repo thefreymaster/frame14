@@ -1,5 +1,6 @@
 import { Text, VStack, chakra } from "@chakra-ui/react";
 import { rgba, type RGB } from "../lib/lightModel";
+import { pressable } from "../lib/press";
 
 /**
  * One of the light dialog's presets as a round swatch of its colour, ringed
@@ -34,6 +35,7 @@ export function LightSwatch({
         outlineColor="fg"
         outlineOffset="2px"
         focusVisibleRing="outside"
+        css={pressable("button", { shade: false })}
       />
       <Text textStyle="xs" color={selected ? "fg" : "fg.muted"}>
         {label}

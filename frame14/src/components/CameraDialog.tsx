@@ -86,7 +86,7 @@ export function CameraDialog({
                   ))}
                 </HStack>
               )}
-              <Modal.CloseTrigger asChild position="static">
+              <Modal.CloseTrigger asChild inRow>
                 <IconButton
                   aria-label="Close"
                   variant="subtle"

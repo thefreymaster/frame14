@@ -1,6 +1,8 @@
 import { IoFlame, IoPowerOutline, IoSnow } from "react-icons/io5";
 import { PiFanFill } from "react-icons/pi";
 import type { HomeClimate } from "../hooks/useHomeData";
+import { RECESS_EDGE, TILE_RING_MS, tileRecess } from "./floatingSurface";
+import type { Tween } from "./press";
 
 /** The thermostat model shared by the climate card and its modal. */
 export type ClimateVisualMode = "heat" | "cool" | "fan_only" | "off";
@@ -67,18 +69,35 @@ export const TILE_RING_WIDTH = "0.25rem";
  * keeps its width round the corner (0.149.0, the user: "Is it possible to
  * round the inner corners too?" — on a `sm` corner the inner edge of a ring
  * as wide was square). Off, the plain `sm` outline card.
+ *
+ * Where the theme presses things in (Embossed, 0.170.0) the tile is pressed
+ * into its card, on or off, with the ring as its rim, as the dial's is
+ * (lib/floatingSurface's tileRecess): the shade on `_before`, from the ring's
+ * inner edge in, and the lip after the ring in the tile's own shadow. Off,
+ * the ring is still listed — no width, no colour — so the two states are one
+ * list of shadows and one fades into the other.
+ *
+ * The tile animates all of it: hand TILE_RING_TWEENS to its `pressable`.
  */
 export function tileRing(on: boolean, ring: string) {
+  const rim = on ? `calc(${TILE_RING_WIDTH} - 1px)` : "0px";
   return {
     borderColor: on ? ring : undefined,
-    boxShadow: on ? `inset 0 0 0 calc(${TILE_RING_WIDTH} - 1px) ${ring}` : undefined,
+    boxShadow: `inset 0 0 0 ${rim} ${on ? ring : "transparent"}, ${RECESS_EDGE}`,
     borderRadius: on
       ? `calc(var(--chakra-radii-sm) + ${TILE_RING_WIDTH})`
       : "sm",
-    transition:
-      "box-shadow 400ms ease, border-color 400ms ease, border-radius 400ms ease",
-  };
+    isolation: "isolate",
+    _before: tileRecess(rim, on ? "sm" : undefined),
+  } as const;
 }
+
+/** What a ringed tile animates as its ring comes and goes. */
+export const TILE_RING_TWEENS: readonly Tween[] = [
+  ["box-shadow", TILE_RING_MS],
+  ["border-color", TILE_RING_MS],
+  ["border-radius", TILE_RING_MS],
+];
 
 const ACTIVE_HVAC_ACTION: Record<string, ClimateVisualMode> = {
   heating: "heat",

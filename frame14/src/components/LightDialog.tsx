@@ -68,7 +68,7 @@ export function LightDialog({
                 >
                   {favorite ? <IoStar /> : <IoStarOutline />}
                 </IconButton>
-                <Modal.CloseTrigger asChild position="static">
+                <Modal.CloseTrigger asChild inRow>
                   <IconButton
                     ref={closeRef}
                     aria-label="Close"

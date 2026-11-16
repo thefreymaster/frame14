@@ -20,6 +20,7 @@ import {
   fmtKwh,
   grid,
 } from "../lib/energy";
+import { pressable } from "../lib/press";
 import { Board } from "./Board";
 import { CoverageBadge } from "./CoverageBadge";
 import { EnergyDialog } from "./EnergyDialog";
@@ -112,6 +113,7 @@ export function EnergySection({
             aria-label="Show energy detail"
             onClick={() => setOpen(true)}
             cursor="pointer"
+            css={pressable("card", { shade: false })}
           >
             <PowerFlow energy={energy} size="sm" />
 

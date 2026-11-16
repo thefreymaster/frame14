@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Badge, Box, Grid } from "@chakra-ui/react";
 import { IoTvOutline } from "react-icons/io5";
 import type { ImmichAsset } from "../hooks/useAlbumPhotos";
+import { pressable } from "../lib/press";
 import { showPhoto, usePhotosShown } from "../lib/slideshow";
 
 /**
@@ -56,6 +57,7 @@ export function PhotoGrid({
             bg="bg.muted"
             cursor="pointer"
             focusVisibleRing="outside"
+            css={pressable("tile")}
             outline={onFrame ? "3px solid" : undefined}
             outlineColor="blue.solid"
             outlineOffset="2px"

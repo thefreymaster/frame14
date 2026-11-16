@@ -13,8 +13,10 @@ import {
   MODE_ICON,
   SQUARE_TILE_READING,
   TILE_MIN_LG_REM,
+  TILE_RING_TWEENS,
   tileRing,
 } from "../lib/hvac";
+import { pressable } from "../lib/press";
 
 /**
  * How big a tile's type is: `lg` is /climate on the frame (0.120, a desktop's
@@ -110,7 +112,7 @@ export function ClimateTile({
       {...tileRing(on, ring)}
       cursor="pointer"
       focusVisibleRing="outside"
-      _active={{ bg: "bg.emphasized" }}
+      css={pressable("tile", { also: TILE_RING_TWEENS })}
       aspectRatio={square ? "1" : undefined}
     >
       <button

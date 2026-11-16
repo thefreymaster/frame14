@@ -10,10 +10,12 @@ import {
   cardAnatomy,
   progressAnatomy,
   segmentGroupAnatomy,
+  tabsAnatomy,
   toastAnatomy,
 } from "@chakra-ui/react/anatomy";
 import { ColorModeProvider } from "./color-mode";
 import { PHONE_MEDIA } from "../../lib/homeLayout";
+import { pressable, PRESSING, type Tween } from "../../lib/press";
 import {
   PALETTE_STEPS,
   PALETTES,
@@ -42,15 +44,41 @@ const EMBOSSED_SHADE =
 const EMBOSSED_LIP = "0 0.0625rem 0 {colors.emboss.lip}";
 const EMBOSSED_SHADOW = `${EMBOSSED_SHADE}, ${EMBOSSED_LIP}`;
 
+// A shadow of nothing: what `none` is, where `none` can't be written — as
+// one layer of a longer shadow.
+const NO_SHADOW = "0 0 0 0 transparent";
+
 /** A shadow only the palettes that press things in have. */
-function embossedOnly(shadow: string) {
+function embossedOnly(shadow: string, otherwise = "none") {
   return {
     value: {
-      base: "none",
+      base: otherwise,
       ...Object.fromEntries(EMBOSSED.map((p) => [`_${p}`, shadow])),
     },
   };
 }
+
+// What a button animates besides its press (lib/press): Chakra's `common`
+// transition, at its `moderate` pace, as the recipe had it.
+const BUTTON_TWEENS: Tween[] = [
+  "background-color",
+  "border-color",
+  "color",
+  "fill",
+  "stroke",
+  "opacity",
+  "box-shadow",
+  "translate",
+  "transform",
+].map((property) => [property, "{durations.moderate}"] as const);
+
+// A button with no face of its own (ghost, plain) has no top edge to shade:
+// held down it goes in without the shadow.
+const UNSHADED = { _after: { display: "none" } };
+
+// A tab and a segment of a segmented control go in under a finger too: a
+// word, or an icon over one, with nothing round it to shade.
+const UNFACED_PRESS = pressable("button", { shade: false });
 
 /**
  * One neutral as a token per palette: Chakra's value as the base, each tint's
@@ -76,6 +104,12 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
  * recipe, which also drives IconButton and CloseButton, and on a segmented
  * control's track and indicator. The value is Chakra's own for both (`l2`);
  * it is named here as the tiles name it, so the two are one.
+ * Buttons go in under a finger (0.170.0, lib/press's `pressable`): smaller
+ * while held, shaded along the top edge by the `press` shadow, and sprung
+ * back when let go. A ghost button, which has no fill until a pointer is over
+ * it — and a touch never is — takes its hover fill while held instead of the
+ * shade. Tabs (the navs' entries among them) and a segmented control's
+ * segments go in the same way, unshaded.
  * Progress bars stay pills (0.138.1, the user's ask): the `full` shape for
  * the track, and the range rounded with it, so the fill ends round rather
  * than cut square by the track's clip — and the logo's blue (0.139, "matching
@@ -162,6 +196,19 @@ const system = createSystem(
             lip: {
               value: { _light: "{colors.white}", _dark: "{colors.whiteAlpha.200}" },
             },
+            // The floor of a tile pressed into a card (lib/floatingSurface's
+            // tileRecess): a wash of white over the tile's own colour, where
+            // tiles are pressed in. By night it lifts the floor off the
+            // card's — on a floor as dark as the card the shade is lost, as
+            // on the dial's; by day, on a white tile, it is nothing.
+            floor: {
+              value: {
+                base: "transparent",
+                ...Object.fromEntries(
+                  EMBOSSED.map((p) => [`_${p}`, "{colors.whiteAlpha.100}"]),
+                ),
+              },
+            },
           },
           // The logo's blue as a palette: `colorPalette="brand"`.
           brand: {
@@ -232,9 +279,18 @@ const system = createSystem(
           // RECESS_SHADE / RECESS_LIP), for a box with a rim wider than a
           // card's edge — a dial's ring: the shade goes inside the rim, the
           // lip outside it. None where nothing is pressed in.
+          // `edge` is the lip again for a box that wears a ring too (a
+          // thermostat's tile, lib/hvac's tileRing): one layer to list after
+          // the ring, so a shadow of nothing where the others are `none`.
           recess: {
             shade: embossedOnly(EMBOSSED_SHADE),
             lip: embossedOnly(EMBOSSED_LIP),
+            edge: embossedOnly(EMBOSSED_LIP, NO_SHADOW),
+          },
+          // The shade inside the top edge of anything held down (lib/press),
+          // in every palette: a recess's, a little shallower.
+          press: {
+            value: "inset 0 0.125rem 0.3125rem {colors.emboss.shade}",
           },
         },
         spacing: {
@@ -242,7 +298,21 @@ const system = createSystem(
         },
       },
       recipes: {
-        button: { base: { borderRadius: "sm" } },
+        button: {
+          base: {
+            borderRadius: "sm",
+            ...pressable("button", { also: BUTTON_TWEENS }),
+          },
+          variants: {
+            variant: {
+              ghost: {
+                ...UNSHADED,
+                [`&[${PRESSING}]`]: { bg: "colorPalette.subtle" },
+              },
+              plain: UNSHADED,
+            },
+          },
+        },
       },
       slotRecipes: {
         card: {
@@ -251,7 +321,15 @@ const system = createSystem(
         },
         segmentGroup: {
           slots: segmentGroupAnatomy.keys(),
-          base: { root: { "--segment-radius": "radii.sm" } },
+          base: {
+            root: { "--segment-radius": "radii.sm" },
+            item: UNFACED_PRESS,
+          },
+        },
+        // Both navs' entries are tabs too.
+        tabs: {
+          slots: tabsAnatomy.keys(),
+          base: { trigger: UNFACED_PRESS },
         },
         progress: {
           slots: progressAnatomy.keys(),

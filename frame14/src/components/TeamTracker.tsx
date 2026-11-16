@@ -8,6 +8,7 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { Board } from "./Board";
 import { socket } from "../lib/socket";
 import { getDeviceMode } from "../lib/deviceMode";
+import { pressable } from "../lib/press";
 import {
   inWindow,
   matchupLabel,
@@ -430,8 +431,7 @@ export function TeamTracker() {
             textAlign="left"
             bg="transparent"
             cursor="pointer"
-            _active={{ opacity: 0.6 }}
-            transition="opacity 0.1s"
+            css={pressable("card", { shade: false })}
             aria-label={`Open ${game.attributes.team_name ?? "game"} full screen`}
           >
             <ScoreBug game={game} />

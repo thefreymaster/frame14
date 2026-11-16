@@ -385,11 +385,24 @@ export function Footer(props: Dialog.FooterProps) {
   );
 }
 
-export function CloseTrigger(props: Dialog.CloseTriggerProps) {
+// In the row it is written in, not the modal's corner — and still positioned:
+// a button's press shade (lib/press) and an iPhone's haptic label
+// (lib/haptics) are laid over it, and under a static one they'd lie over
+// whatever is positioned above it instead.
+const IN_ROW = { position: "relative", top: "auto", insetEnd: "auto" } as const;
+
+export function CloseTrigger({
+  inRow = false,
+  ...props
+}: Dialog.CloseTriggerProps & {
+  /** In the flow where it is written (the title's row) rather than the corner. */
+  inRow?: boolean;
+}) {
+  const place = inRow ? IN_ROW : undefined;
   return useDrawer() ? (
-    <Drawer.CloseTrigger {...props} />
+    <Drawer.CloseTrigger {...place} {...props} />
   ) : (
-    <Dialog.CloseTrigger {...props} />
+    <Dialog.CloseTrigger {...place} {...props} />
   );
 }
 

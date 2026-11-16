@@ -5,6 +5,7 @@ import { usePrinter } from "../hooks/usePrinter";
 import { fmtClock, fmtDuration } from "../lib/format";
 import { Printer3dOutlineIcon } from "../lib/printerIcons";
 import { printerStatus } from "../lib/printerStatus";
+import { pressable } from "../lib/press";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 
@@ -74,6 +75,7 @@ export function PrinterSection() {
         }}
         cursor="pointer"
         rounded="sm"
+        css={pressable("card", { shade: false })}
         _focusVisible={{
           outline: "2px solid",
           outlineColor: "colorPalette.focusRing",

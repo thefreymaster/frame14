@@ -13,6 +13,9 @@ import {
   isClimateOn,
   normalizeClimateMode,
   TILE_MIN_LG_REM,
+  TILE_RING_TWEENS,
+  TILE_RING_WIDTH,
+  tileRing,
 } from "../../src/lib/hvac";
 
 const unit = (over: Partial<HomeClimate> = {}): HomeClimate => ({
@@ -255,5 +258,46 @@ describe("displayClimateName", () => {
     expect(displayClimateName("Mac Room")).toBe("Mac Room");
     expect(displayClimateName("climate.samsung_ac")).toBe("climate.samsung_ac");
     expect(displayClimateName("AC")).toBe("AC");
+  });
+});
+
+describe("tileRing", () => {
+  const layers = (shadow: string) => shadow.split(/,(?![^(]*\))/).map((l) => l.trim());
+
+  it("on: the border in the ring's colour and the rest of its width inside it, on a corner that much rounder", () => {
+    const ring = tileRing(true, "red");
+    expect(ring.borderColor).toBe("red");
+    expect(layers(ring.boxShadow)[0]).toBe(`inset 0 0 0 calc(${TILE_RING_WIDTH} - 1px) red`);
+    expect(ring.borderRadius).toBe(`calc(var(--chakra-radii-sm) + ${TILE_RING_WIDTH})`);
+  });
+
+  it("off: the plain outline, with the ring still listed — no width, no colour — so one state fades into the other", () => {
+    const on = layers(tileRing(true, "red").boxShadow);
+    const off = layers(tileRing(false, "red").boxShadow);
+    expect(tileRing(false, "red").borderColor).toBeUndefined();
+    expect(tileRing(false, "red").borderRadius).toBe("sm");
+    expect(off[0]).toBe("inset 0 0 0 0px transparent");
+    // The same layers in the same order: a list of another shape would jump.
+    expect(off).toHaveLength(on.length);
+    expect(off.slice(1)).toEqual(on.slice(1));
+  });
+
+  it("lists the recess's lip after the ring, as the layer that is nothing outside Embossed", () => {
+    for (const on of [true, false]) {
+      expect(layers(tileRing(on, "red").boxShadow)[1]).toBe("var(--chakra-shadows-recess-edge)");
+    }
+  });
+
+  it("starts the recess's shade where the ring ends, under what the tile holds", () => {
+    const on = tileRing(true, "red");
+    const off = tileRing(false, "red");
+    expect(on._before).toMatchObject({ inset: `calc(${TILE_RING_WIDTH} - 1px)`, borderRadius: "sm", boxShadow: "recess.shade", zIndex: -1 });
+    expect(off._before).toMatchObject({ inset: "0px", boxShadow: "recess.shade", zIndex: -1 });
+    // A layer behind the content needs the tile to hold it.
+    expect(on.isolation).toBe("isolate");
+  });
+
+  it("names what the tile animates, for its transition list", () => {
+    expect(TILE_RING_TWEENS.map(([property]) => property)).toEqual(["box-shadow", "border-color", "border-radius"]);
   });
 });

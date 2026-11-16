@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.170.0
+
+- Changed: **buttons and tiles feel like real buttons.** Whatever you touch goes in under your finger the moment you touch it — smaller, with a shadow along its top edge — and springs back when you let go: the light, scene, thermostat and fan tiles, every button, the navigation's entries, tabs and segmented controls, and the cards that open something. It goes further in than before (a tile shrank by 2%, which read as nothing on the wall), and even the quickest tap shows the whole press. Until now most buttons showed nothing at all on a touch screen, and a tile's press was slight and came late. On a page that scrolls, a touch waits a few hundredths of a second before it presses, so a swipe that starts on a tile just scrolls.
+- Added: **a tick under your finger** as a tap lands, on devices that can give one. On Android — a phone, and the wall tablet if it has a vibration motor and its browser lets pages use it — it is a very short vibration. On an iPhone or iPad, Safari gives web pages no way to vibrate at all; Frame14 puts an invisible iOS switch behind every button instead, which ticks the way a switch in Settings does, and its own switches are real iOS switches now and tick too. That leans on how Safari happens to work, not on anything Apple promises: if an iOS update closes it, the ticks stop and nothing else changes. Nothing to configure.
+- Changed: in the **Embossed** colour theme the light, scene, thermostat and fan tiles are pressed into their cards, as the cards are into the page: shaded along the inside of the top edge, with a thin line of light under the lower edge, and by night on a floor a shade lighter than the card's so the recess shows. A thermostat or fan that is on keeps its coloured ring, as the rim. The other colour themes' tiles are as they were.
+- Fixed: a collapsed card — a room on the Lights page, a card on Home — opens again from a tap on its arrow. A tap exactly on the arrow of a collapsed card did nothing; anywhere else along the header worked.
+
 ## 0.169.3
 
 - Changed: in the **Embossed** colour theme the dial is pressed in too, like the cards — a thermostat's, a fan's and a light's, on their sheets. Its coloured ring is the rim: the face is shaded along the inside of the ring's top edge, with a thin line of light under the ring's lower edge. The other colour themes' dials are as they were.

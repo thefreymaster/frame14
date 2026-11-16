@@ -1,6 +1,9 @@
 import { Switch as ChakraSwitch } from "@chakra-ui/react";
 import * as React from "react";
 
+// Not in React's input attributes yet.
+const NATIVE_SWITCH = { switch: "" } as React.InputHTMLAttributes<HTMLInputElement>;
+
 export interface SwitchProps extends ChakraSwitch.RootProps {
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   rootRef?: React.RefObject<HTMLLabelElement | null>;
@@ -15,7 +18,10 @@ export const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
 
     return (
       <ChakraSwitch.Root ref={rootRef} {...rest}>
-        <ChakraSwitch.HiddenInput ref={ref} {...inputProps} />
+        {/* `switch` makes it a real switch to Safari, which ticks an iPhone's
+            Taptic Engine as a tap on its label toggles it (lib/haptics);
+            other browsers know no such attribute. */}
+        <ChakraSwitch.HiddenInput ref={ref} {...inputProps} {...NATIVE_SWITCH} />
         <ChakraSwitch.Control>
           <ChakraSwitch.Thumb>
             {thumbLabel && (

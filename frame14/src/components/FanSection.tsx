@@ -8,7 +8,13 @@ import { FanDialog } from "./FanDialog";
 import { FanIcon } from "./FanIcon";
 import { FanSkeleton } from "./skeletons/FanSkeleton";
 import { presetLabel } from "../lib/fan";
-import { climateGridCss, hvacPalette, tileRing } from "../lib/hvac";
+import {
+  climateGridCss,
+  hvacPalette,
+  TILE_RING_TWEENS,
+  tileRing,
+} from "../lib/hvac";
+import { pressable } from "../lib/press";
 
 /**
  * One fan as a Stat tile — the thermostat tiles' layout (ClimateSection's
@@ -46,7 +52,7 @@ function FanTile({ fan, onTap }: { fan: HomeFan; onTap: () => void }) {
       {...tileRing(on, ring)}
       cursor="pointer"
       focusVisibleRing="outside"
-      _active={{ bg: "bg.emphasized" }}
+      css={pressable("tile", { also: TILE_RING_TWEENS })}
     >
       <button
         type="button"

@@ -6,6 +6,8 @@ import { queryClient } from "./lib/queryClient";
 import { persistQueries, restoreQueries } from "./lib/persistedQueries";
 import "./index.css";
 import { blursModalBackdrop } from "./lib/deviceMode";
+import { watchHapticTriggers } from "./lib/haptics";
+import { watchPresses } from "./lib/press";
 // Applies the saved theme mode before the first paint.
 import "./lib/themeMode";
 // Watches for the add-on updating under this page.
@@ -49,6 +51,9 @@ if (
 // The modals' backdrop blur (components/Modal): everywhere but Android
 // (0.150.0; Safari's engine alone in 0.149.0), never the frame.
 if (blursModalBackdrop()) document.documentElement.dataset.backdropBlur = "";
+// A press shows under the finger and a tap ticks (lib/press, lib/haptics).
+watchPresses();
+watchHapticTriggers();
 updateAppHeight();
 requestAnimationFrame(updateAppHeight);
 window.addEventListener("resize", updateAppHeight);

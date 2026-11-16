@@ -27,6 +27,57 @@ export const RECESS_SHADE = "recess.shade";
 export const RECESS_LIP = "recess.lip";
 
 /**
+ * The lip once more, as one layer of a longer shadow: for a box that wears a
+ * ring as well (lib/hvac's tileRing), listed after it. The theme's
+ * `recess.edge` — a shadow of nothing outside Embossed, where the two above
+ * are `none`, which a list can't hold.
+ */
+export const RECESS_EDGE = "var(--chakra-shadows-recess-edge)";
+
+/** How long a tile's ring, and the recess inside it, take to come and go. */
+export const TILE_RING_MS = "400ms";
+
+/**
+ * A tile pressed into its card, where the theme presses things in (0.170.0,
+ * the user: "make the lights and thermostat cards embossed in embossed
+ * mode"): a light's, a scene's, a thermostat's and a fan's — the tiles that
+ * are buttons. As the dial, the recess is worn in two halves, and the tile
+ * names no palette. This is the layer for the tile's `_before`, inside its
+ * border — and inside its ring where it has one (`rim`, the ring's width
+ * within the border): the shade (under a ring it would dirty the ring, and
+ * past a ring's width little of it is left) on the recess's floor
+ * (`emboss.floor`, the theme's wash over the tile's own colour, which by
+ * night lifts it off the card's so the shade can be seen). The lip goes on
+ * the tile's own box: RECESS_LIP, or RECESS_EDGE after a ring. The tile
+ * isolates, so the layer lies over its fill and under everything it holds.
+ *
+ * `radius` is the layer's corner: the tile's less what lies between them.
+ */
+export function tileRecess(
+  rim = "0px",
+  radius = "calc(var(--chakra-radii-sm) - 1px)",
+) {
+  return {
+    content: '""',
+    position: "absolute",
+    inset: rim,
+    borderRadius: radius,
+    bg: "emboss.floor",
+    boxShadow: RECESS_SHADE,
+    zIndex: -1,
+    pointerEvents: "none",
+    transition: `inset ${TILE_RING_MS} ease, border-radius ${TILE_RING_MS} ease`,
+  } as const;
+}
+
+/** The whole recess of a tile with no ring (a light's, a scene's), to spread on it. */
+export const TILE_RECESS = {
+  isolation: "isolate",
+  boxShadow: RECESS_LIP,
+  _before: tileRecess(),
+} as const;
+
+/**
  * The cards' colour (the theme's `bg.surface`) and corners (the theme's
  * `surface` radius), set apart from a card passing beneath by a border and
  * shadow. Spread onto a Box; the caller places it.

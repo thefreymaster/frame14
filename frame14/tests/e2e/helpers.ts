@@ -11,6 +11,26 @@ export async function stub(request: APIRequestContext, path: string, body: unkno
 /** Every state, registry and service behaviour back as at the stub's start. */
 export const resetStub = (request: APIRequestContext) => stub(request, "/_stub/reset");
 
+/** Every page a sweep goes over (corners.spec, press.spec). */
+export const PAGES = [
+  "/home",
+  "/lights",
+  "/climate",
+  "/energy",
+  "/energy/circuits",
+  "/weather",
+  "/weather/daily",
+  "/printer",
+  "/vacuum",
+  "/cameras",
+  "/unraid",
+  "/calendar",
+  "/speedtest",
+  "/control/views",
+  "/control/display",
+  "/control/device",
+];
+
 /** Collects the page's uncaught errors, for a test to assert there were none. */
 export function pageErrors(page: Page): string[] {
   const errors: string[] = [];

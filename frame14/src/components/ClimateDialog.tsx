@@ -42,7 +42,7 @@ export function ClimateDialog({
               <Modal.Title>
                 {unit ? displayClimateName(unit.name) : "Thermostat"}
               </Modal.Title>
-              <Modal.CloseTrigger asChild position="static">
+              <Modal.CloseTrigger asChild inRow>
                 <IconButton
                   aria-label="Close"
                   variant="subtle"

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, Card, chakra, Collapsible } from "@chakra-ui/react";
 import { LuChevronDown } from "react-icons/lu";
 import { DARK_RAISED, SURFACE_SHADOW } from "../lib/floatingSurface";
+import { pressable } from "../lib/press";
 
 const STORAGE_PREFIX = "board-collapsed:";
 
@@ -144,6 +145,8 @@ export const Board = ({
       css={{
         _dark: bg ? undefined : DARK_RAISED,
         "--card-padding": { mdDown: "spacing.3" },
+        // One big button goes in as one (lib/press), a little: it is large.
+        ...(clickable && pressable("card", { shade: false })),
       }}
       minW="0"
       flex={fill ? "1" : undefined}
@@ -198,6 +201,9 @@ export const Board = ({
                 minW="0"
                 textAlign="start"
                 cursor="pointer"
+                // Stretched over the header — which an iPhone's haptic
+                // label must be too (lib/haptics's STRETCHED).
+                data-stretched=""
                 _after={{ content: '""', position: "absolute", inset: "0" }}
                 // The ring goes round the whole header, like the tap target.
                 _focusVisible={{
@@ -218,6 +224,10 @@ export const Board = ({
               color="fg.muted"
               transition="transform 0.2s"
               _closed={{ transform: "rotate(-90deg)" }}
+              // The header's tap, not its own: turned (collapsed) it paints
+              // over the trigger's stretch, and a tap on the arrow itself
+              // opened nothing (until 0.170.0).
+              pointerEvents="none"
             >
               <LuChevronDown />
             </Collapsible.Indicator>

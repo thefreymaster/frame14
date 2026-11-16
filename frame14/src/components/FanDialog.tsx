@@ -37,7 +37,7 @@ export function FanDialog({
           <Modal.Content>
             <Modal.Header alignItems="center" justifyContent="space-between">
               <Modal.Title>{fan?.name ?? "Fan"}</Modal.Title>
-              <Modal.CloseTrigger asChild position="static">
+              <Modal.CloseTrigger asChild inRow>
                 <IconButton
                   aria-label="Close"
                   variant="subtle"

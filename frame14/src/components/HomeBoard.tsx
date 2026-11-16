@@ -27,6 +27,7 @@ import { HomeLayoutToolbar } from "./HomeLayoutToolbar";
 import { toaster } from "./ui/toaster";
 import { useLongPress } from "../hooks/useLongPress";
 import { PACKED_ROW_PX, usePackedGrid } from "../hooks/usePackedGrid";
+import { hapticTick } from "../lib/haptics";
 import { setHomeArranging } from "../lib/homeArranging";
 import {
   clearHomeLayout,
@@ -105,7 +106,7 @@ export function HomeBoard({
 
   const longPress = useLongPress(
     () => {
-      navigator.vibrate?.(15);
+      hapticTick();
       setEditing(true);
     },
     // A hold on a part of a card with a hold of its own — a dimmable light's

@@ -13,6 +13,7 @@ import { useEntity } from "../hooks/useEntity";
 import { useLightToggle } from "../hooks/useLightToggle";
 import { useLongPress } from "../hooks/useLongPress";
 import { callLightService } from "../lib/callService";
+import { TILE_RECESS } from "../lib/floatingSurface";
 import {
   brightnessPct,
   lightColor,
@@ -23,6 +24,7 @@ import {
 } from "../lib/lightModel";
 import { MdiIcon } from "./MdiIcon";
 import { displayLightName, type LightEntry } from "../lib/lightsConfig";
+import { pressable, type Tween } from "../lib/press";
 
 type Props = LightEntry & {
   /** Press and hold opens its controls (a dimmable light's alone until 0.153.0). */
@@ -35,6 +37,11 @@ type Props = LightEntry & {
 // or down drag is the page's scroll, left to the browser (touch-action
 // pan-y). The slider's lowest is the swipe's too.
 const SWIPE_LOCK_PX = 8;
+// The tile takes the light's colour as it comes on, and gives it back.
+const COLOUR_TWEENS: Tween[] = [
+  ["background-color", "300ms"],
+  ["border-color", "300ms"],
+];
 const SWIPE_MIN_PCT = 1;
 
 type Drag = {
@@ -217,13 +224,16 @@ export function LightControl({
       minW="0"
       bg={color ? rgba(color, 0.12) : undefined}
       borderColor={color ? rgba(color, 0.45) : undefined}
-      transition="background-color 300ms ease, border-color 300ms ease"
+      // Pressed into its card where the theme presses things in (Embossed).
+      {...TILE_RECESS}
       cursor="pointer"
       focusVisibleRing="outside"
-      _active={{ transform: "scale(0.98)" }}
-      // A dimmable tile takes sideways drags itself; up and down stay the
-      // page's scroll.
-      css={{ touchAction: features.brightness ? "pan-y" : "manipulation" }}
+      css={{
+        ...pressable("tile", { also: COLOUR_TWEENS }),
+        // A dimmable tile takes sideways drags itself; up and down stay the
+        // page's scroll.
+        touchAction: features.brightness ? "pan-y" : "manipulation",
+      }}
     >
       <button
         type="button"

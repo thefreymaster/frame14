@@ -31,17 +31,30 @@ export const RECESS_LIP = "recess.lip";
  * (Embossed; 0.171.1, the user: "In embossed mode instead of having the
  * buttons feel indented, change them to feel like convexed popping out, so
  * inverted of the embossed feel" — the tiles were pressed in too for a
- * version, 0.170.0). The theme's `raised` shadows, none in every other
- * palette: `raised.face` is the bevel inside the button — light along its
- * top edge, shade along its lower one — and `raised.drop` the shadow it
- * casts on the card. `raised` is both, which the button recipe wears.
+ * version, 0.170.0). The theme's `raised` shadow, none in every other
+ * palette: what the button casts on the card, which the button recipe wears
+ * — and nothing inside the button (0.171.2: a bevel there, a line of light
+ * inside the top edge and of shade inside the lower one, was taken off at
+ * the user's word, "Can we get rid of the little top and bottom inside
+ * shadow"; don't put it back unasked).
  *
  * Held down it goes from pushed out to pushed in, as a real button does (the
  * user again: "When pressed it would go from pushing out to pushing in like
- * a real button"): the recess the cards have, in place of the bevel and the
- * shadow.
+ * a real button"): the recess the cards have, in place of the shadow.
+ *
+ * And everything that stands up is as the header's own buttons are (0.171.2:
+ * "Let's get rid of the borders actually in the buttons on the climate
+ * buttons. And the light buttons, as well as fan. All buttons should be the
+ * same style and color as the header buttons. I like those the best"): their
+ * colour and no outline. For a tile that is the theme's `emboss.tile` colour
+ * (the panel's in every other palette) and `edge` border width (1px in every
+ * other palette) — TILE_FACE and TILE_EDGE, which no tile need know mean
+ * Embossed.
  */
-export const RAISED_FACE = "raised.face";
+export const TILE_FACE = "emboss.tile";
+export const TILE_EDGE = "edge";
+/** That edge's width in a calc(): what a ring leaves for its inset shadow. */
+export const TILE_EDGE_WIDTH = "var(--chakra-border-widths-edge)";
 
 /** How long a tile's ring, and the face inside it, take to come and go. */
 export const TILE_RING_MS = "400ms";
@@ -49,11 +62,11 @@ export const TILE_RING_MS = "400ms";
 /**
  * The shadow a raised tile casts, for the tile's own box: alone, or listed
  * after its ring (lib/hvac's tileRing) — so it is the theme's `raised.edge`,
- * a shadow of nothing outside Embossed, where `raised.drop` is `none`, which
- * a list can't hold. Through `--tile-drop`, and the face's bevel through
- * `--tile-face` (tileFace), so that held down (TILE_HELD, for the tile's
- * `pressable`) the tile is pushed in: the recess's shade inside it and its
- * lip under it, where the bevel and the shadow were.
+ * a shadow of nothing outside Embossed, where `raised` is `none`, which a
+ * list can't hold. Through `--tile-drop`, and the face's shadow through
+ * `--tile-face` (tileFace: none at rest), so that held down (TILE_HELD, for
+ * the tile's `pressable`) the tile is pushed in: the recess's shade inside
+ * it and its lip under it, where the shadow was.
  */
 export const TILE_DROP = "var(--tile-drop, var(--chakra-shadows-raised-edge))";
 export const TILE_HELD = {
@@ -62,29 +75,27 @@ export const TILE_HELD = {
 };
 
 /**
- * The face of a raised tile — a light's, a scene's, a thermostat's and a
- * fan's, the tiles that are buttons — for the tile's `_before`: a layer of
- * its own inside the tile's border, and inside its ring where it has one
- * (`rim`, the ring's width within the border; under a ring the bevel would
- * dirty it), carrying the bevel and the face's colour (`emboss.floor`, the
- * theme's wash over the tile's own, which by night lifts it off the card's
- * darker floor so it reads as standing on it). The tile isolates, so the
- * layer lies over its fill and under everything it holds; the tile's own box
- * casts the shadow (TILE_DROP). The tile names no palette.
+ * The layer a raised tile — a light's, a scene's, a thermostat's and a
+ * fan's, the tiles that are buttons — is pushed in on, for the tile's
+ * `_before`: inside the tile's edge, and inside its ring where it has one
+ * (`rim`, the ring's width within the edge; under a ring the shade would
+ * dirty it), it wears nothing at rest and the recess's shade while the tile
+ * is held (`--tile-face`). The tile isolates, so the layer lies over its
+ * fill and under everything it holds; the tile's own box casts the shadow
+ * (TILE_DROP). The tile names no palette.
  *
  * `radius` is the layer's corner: the tile's less what lies between them.
  */
 export function tileFace(
   rim = "0px",
-  radius = "calc(var(--chakra-radii-sm) - 1px)",
+  radius = `calc(var(--chakra-radii-sm) - ${TILE_EDGE_WIDTH})`,
 ) {
   return {
     content: '""',
     position: "absolute",
     inset: rim,
     borderRadius: radius,
-    bg: "emboss.floor",
-    boxShadow: `var(--tile-face, {shadows.${RAISED_FACE}})`,
+    boxShadow: "var(--tile-face, none)",
     zIndex: -1,
     pointerEvents: "none",
     transition: `inset ${TILE_RING_MS} ease, border-radius ${TILE_RING_MS} ease`,
@@ -94,6 +105,8 @@ export function tileFace(
 /** The whole of a raised tile with no ring (a light's, a scene's), to spread on it. */
 export const TILE_RAISED = {
   isolation: "isolate",
+  bg: TILE_FACE,
+  borderWidth: TILE_EDGE,
   boxShadow: TILE_DROP,
   _before: tileFace(),
 } as const;

@@ -264,11 +264,14 @@ describe("displayClimateName", () => {
 
 describe("tileRing", () => {
   const layers = (shadow: string) => shadow.split(/,(?![^(]*\))/).map((l) => l.trim());
+  // The ring's shadow is what the tile's own edge leaves of its width: the
+  // theme's `edge`, 1px, or none where buttons stand up (Embossed, 0.171.2).
+  const rim = `calc(${TILE_RING_WIDTH} - var(--chakra-border-widths-edge))`;
 
   it("on: the border in the ring's colour and the rest of its width inside it, on a corner that much rounder", () => {
     const ring = tileRing(true, "red");
     expect(ring.borderColor).toBe("red");
-    expect(layers(ring.boxShadow)[0]).toBe(`inset 0 0 0 calc(${TILE_RING_WIDTH} - 1px) red`);
+    expect(layers(ring.boxShadow)[0]).toBe(`inset 0 0 0 ${rim} red`);
     expect(ring.borderRadius).toBe(`calc(var(--chakra-radii-sm) + ${TILE_RING_WIDTH})`);
   });
 
@@ -283,6 +286,12 @@ describe("tileRing", () => {
     expect(off.slice(1)).toEqual(on.slice(1));
   });
 
+  it("is the theme's tile either way: its face's colour and its edge's width", () => {
+    for (const on of [true, false]) {
+      expect(tileRing(on, "red")).toMatchObject({ bg: "emboss.tile", borderWidth: "edge" });
+    }
+  });
+
   it("lists what the tile casts after the ring: the layer that is nothing outside Embossed, and the recess's lip while held", () => {
     for (const on of [true, false]) {
       // Through `--tile-drop`, which the tile's `pressable` sets while it is
@@ -292,12 +301,14 @@ describe("tileRing", () => {
     expect(TILE_HELD).toEqual({ "--tile-drop": "shadows.recess.edge", "--tile-face": "shadows.recess.shade" });
   });
 
-  it("starts the raised face where the ring ends, under what the tile holds", () => {
+  it("starts the layer it is pushed in on where the ring ends, under what the tile holds", () => {
     const on = tileRing(true, "red");
     const off = tileRing(false, "red");
-    const face = "var(--tile-face, {shadows.raised.face})";
-    expect(on._before).toMatchObject({ inset: `calc(${TILE_RING_WIDTH} - 1px)`, borderRadius: "sm", boxShadow: face, bg: "emboss.floor", zIndex: -1 });
+    // Nothing on it at rest (no bevel, 0.171.2); the recess's shade while held.
+    const face = "var(--tile-face, none)";
+    expect(on._before).toMatchObject({ inset: rim, borderRadius: "sm", boxShadow: face, zIndex: -1 });
     expect(off._before).toMatchObject({ inset: "0px", boxShadow: face, zIndex: -1 });
+    expect(on._before).not.toHaveProperty("bg");
     // A layer behind the content needs the tile to hold it.
     expect(on.isolation).toBe("isolate");
   });

@@ -46,11 +46,11 @@ const EMBOSSED_SHADOW = `${EMBOSSED_SHADE}, ${EMBOSSED_LIP}`;
 // And its opposite, for what stands up out of a recess — a button, a tile
 // that is one (0.171.1, the user: "instead of having the buttons feel
 // indented, change them to feel like convexed popping out, so inverted of
-// the embossed feel"): the same two colours the other way up. A bevel inside
-// the button, the light now along its top edge and the shade along its lower
-// one, and the shadow it casts on the floor of the card under it.
-const RAISED_FACE =
-  "inset 0 0.0625rem 0 {colors.emboss.lip}, inset 0 -0.0625rem 0 {colors.emboss.under}";
+// the embossed feel"): the shadow it casts on the floor of the card under
+// it, and nothing inside it — it had a bevel too for a version, a line of
+// light inside its top edge and one of shade inside its lower one, which
+// the user had taken off (0.171.2, of the header's buttons: "Can we get rid
+// of the little top and bottom inside shadow").
 const RAISED_DROP =
   "0 0.125rem 0.25rem {colors.emboss.cast}, 0 0 0.0625rem {colors.emboss.cast}";
 
@@ -122,8 +122,8 @@ function paletteToken(pick: (colors: PaletteColors) => string) {
  * shade. Tabs (the navs' entries among them) and a segmented control's
  * segments go in the same way, unshaded. In Embossed, where the cards are
  * pressed into the page, a button with a face stands up out of its card
- * (0.171.1, the `raised` shadow: a bevel and the shadow it casts) and, held,
- * is pushed in — the cards' recess, in place of the `press` shade.
+ * (0.171.1, the `raised` shadow: what it casts on the card) and, held, is
+ * pushed in — the cards' recess, in place of the `press` shade.
  * Progress bars stay pills (0.138.1, the user's ask): the `full` shape for
  * the track, and the range rounded with it, so the fill ends round rather
  * than cut square by the track's clip — and the logo's blue (0.139, "matching
@@ -210,26 +210,32 @@ const system = createSystem(
             lip: {
               value: { _light: "{colors.white}", _dark: "{colors.whiteAlpha.200}" },
             },
-            // A raised button's own shade, along the inside of its lower
-            // edge, and the shadow it casts: lighter than a recess's, which
-            // falls inside a card — these fall on the card's floor, and by
-            // day a white one shows every bit of them.
-            under: {
-              value: { _light: "{colors.blackAlpha.200}", _dark: "{colors.blackAlpha.600}" },
-            },
+            // The shadow a raised button casts: lighter than a recess's,
+            // which falls inside a card — this falls on the card's floor,
+            // and by day a white one shows every bit of it.
             cast: {
               value: { _light: "{colors.blackAlpha.300}", _dark: "{colors.blackAlpha.800}" },
             },
-            // The floor of a tile pressed into a card (lib/floatingSurface's
-            // tileRecess): a wash of white over the tile's own colour, where
-            // tiles are pressed in. By night it lifts the floor off the
-            // card's — on a floor as dark as the card the shade is lost, as
-            // on the dial's; by day, on a white tile, it is nothing.
-            floor: {
+            // The face of whatever stands up where buttons do (Embossed):
+            // the header's own buttons' colour, the gray palette's `subtle`
+            // (0.171.2, the user: "All buttons should be the same style and
+            // color as the header buttons. I like those the best"). `tile`
+            // for a tile, whose face is the panel's in every other palette;
+            // `face` for what has none of its own there — an outline button,
+            // a lit light's tile under its colour.
+            tile: {
+              value: {
+                base: "{colors.bg.panel}",
+                ...Object.fromEntries(
+                  EMBOSSED.map((p) => [`_${p}`, "{colors.gray.subtle}"]),
+                ),
+              },
+            },
+            face: {
               value: {
                 base: "transparent",
                 ...Object.fromEntries(
-                  EMBOSSED.map((p) => [`_${p}`, "{colors.whiteAlpha.100}"]),
+                  EMBOSSED.map((p) => [`_${p}`, "{colors.gray.subtle}"]),
                 ),
               },
             },
@@ -312,17 +318,13 @@ const system = createSystem(
             lip: embossedOnly(EMBOSSED_LIP),
             edge: embossedOnly(EMBOSSED_LIP, NO_SHADOW),
           },
-          // What stands up out of a recess (lib/floatingSurface): `face`
-          // the bevel inside it and `drop` the shadow it casts, for a box
-          // that wears them apart — a tile with a ring, the face inside the
-          // ring; the two together for one that doesn't — the button recipe
-          // below. `edge` is the drop again as one layer of a longer shadow,
-          // after a tile's ring: a shadow of nothing where the others are
+          // What stands up out of a recess (lib/floatingSurface) casts a
+          // shadow on it: the button recipe below wears it, and a tile's
+          // own box. `edge` is the same as one layer of a longer shadow,
+          // after a tile's ring: a shadow of nothing where the other is
           // `none`. None of it outside Embossed.
           raised: {
-            DEFAULT: embossedOnly(`${RAISED_FACE}, ${RAISED_DROP}`),
-            face: embossedOnly(RAISED_FACE),
-            drop: embossedOnly(RAISED_DROP),
+            DEFAULT: embossedOnly(RAISED_DROP),
             edge: embossedOnly(RAISED_DROP, NO_SHADOW),
           },
           // The shade inside the top edge of anything held down (lib/press):
@@ -337,6 +339,17 @@ const system = createSystem(
         },
         spacing: {
           gutter: { value: { base: "{spacing.md}", _phone: "{spacing.sm}" } },
+        },
+        // The outline of a tile or an outline button: none where buttons
+        // stand up (Embossed), as the header's own have none — "Let's get
+        // rid of the borders actually" (0.171.2).
+        borderWidths: {
+          edge: {
+            value: {
+              base: "1px",
+              ...Object.fromEntries(EMBOSSED.map((p) => [`_${p}`, "0px"])),
+            },
+          },
         },
       },
       recipes: {
@@ -363,11 +376,11 @@ const system = createSystem(
                 [`&[${PRESSING}]`]: { bg: "colorPalette.subtle" },
               },
               plain: UNSHADED,
-              // An outline button's face is its card's: where buttons stand
-              // up (Embossed) it takes the raised tiles' face, the wash that
-              // by night lifts it off the card's darker floor — clear in
-              // every other palette, as the recipe has it.
-              outline: { bg: "emboss.floor" },
+              // An outline button is its outline on its card's colour: where
+              // buttons stand up (Embossed) it is as the header's are — their
+              // colour, and no outline — and as the recipe has it in every
+              // other palette.
+              outline: { bg: "emboss.face", borderWidth: "edge" },
             },
           },
         },

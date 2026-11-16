@@ -224,11 +224,18 @@ export function LightControl({
       position="relative"
       overflow="hidden"
       minW="0"
-      bg={color ? rgba(color, 0.12) : undefined}
-      borderColor={color ? rgba(color, 0.45) : undefined}
       // Standing up out of its card where the theme presses the cards in
-      // (Embossed), and gone in while it is held.
+      // (Embossed), and gone in while it is held — the header's buttons'
+      // colour there, and no outline. Lit, the light's colour over that
+      // face: over nothing in any other palette, where `emboss.face` is
+      // clear and this is the colour at 12% as it always was.
       {...TILE_RAISED}
+      bg={
+        color
+          ? `color-mix(in srgb, ${rgba(color, 1)} 12%, var(--chakra-colors-emboss-face))`
+          : TILE_RAISED.bg
+      }
+      borderColor={color ? rgba(color, 0.45) : undefined}
       cursor="pointer"
       focusVisibleRing="outside"
       css={{

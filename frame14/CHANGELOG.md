@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.171.2
+
+- Changed: in the **Embossed** colour theme every button now looks like the voice and screen buttons in the header: the light, scene, thermostat and fan tiles and the All off buttons have the same colour, no outline, and no thin line of light or shade inside their top and lower edges. They stand up by the shadow they cast on the card, and still go in when pressed. A thermostat or fan that is on keeps its coloured ring, and a light that is on keeps its colour. The other colour themes are as they were.
+
 ## 0.171.1
 
 - Changed: in the **Embossed** colour theme the buttons now stand up out of the pressed-in cards instead of being pressed in with them: the light, scene, thermostat and fan tiles, and every button with a face — the voice and screen buttons in the header, All off, a remote's Views. Each has a bevelled edge, lit along the top, and casts a small shadow on its card. **Press one and it goes from pushed out to pushed in**, like a real button, and comes back out when you let go. The cards, the navigation and the dial stay pressed in, and the other colour themes are as they were.

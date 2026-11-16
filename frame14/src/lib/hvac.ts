@@ -1,7 +1,14 @@
 import { IoFlame, IoPowerOutline, IoSnow } from "react-icons/io5";
 import { PiFanFill } from "react-icons/pi";
 import type { HomeClimate } from "../hooks/useHomeData";
-import { TILE_DROP, TILE_RING_MS, tileFace } from "./floatingSurface";
+import {
+  TILE_DROP,
+  TILE_EDGE,
+  TILE_EDGE_WIDTH,
+  TILE_FACE,
+  TILE_RING_MS,
+  tileFace,
+} from "./floatingSurface";
 import type { Tween } from "./press";
 
 /** The thermostat model shared by the climate card and its modal. */
@@ -62,8 +69,9 @@ export function displayClimateName(name: string): string {
 export const TILE_RING_WIDTH = "0.25rem";
 
 /**
- * A tile's ring while it's on (ClimateTiles, FanSection): the 1px outline
- * border plus an inset shadow, TILE_RING_WIDTH in all, so a lit tile is
+ * A tile's ring while it's on (ClimateTiles, FanSection): the outline's
+ * border (1px, or none where buttons stand up: Embossed, TILE_EDGE) plus an
+ * inset shadow, TILE_RING_WIDTH in all, so a lit tile is
  * exactly the size of an off one — and its corner the ring's width rounder
  * than an off tile's `sm`, so the ring's inner edge is `sm` too and the ring
  * keeps its width round the corner (0.149.0, the user: "Is it possible to
@@ -81,8 +89,10 @@ export const TILE_RING_WIDTH = "0.25rem";
  * The tile animates all of it: hand TILE_RING_TWEENS to its `pressable`.
  */
 export function tileRing(on: boolean, ring: string) {
-  const rim = on ? `calc(${TILE_RING_WIDTH} - 1px)` : "0px";
+  const rim = on ? `calc(${TILE_RING_WIDTH} - ${TILE_EDGE_WIDTH})` : "0px";
   return {
+    bg: TILE_FACE,
+    borderWidth: TILE_EDGE,
     borderColor: on ? ring : undefined,
     boxShadow: `inset 0 0 0 ${rim} ${on ? ring : "transparent"}, ${TILE_DROP}`,
     borderRadius: on

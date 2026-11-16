@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, type BoxProps } from "@chakra-ui/react";
+import { RECESS_LIP, RECESS_SHADE } from "../lib/floatingSurface";
 import {
   arcPath,
   buildTicks,
@@ -21,6 +22,9 @@ type ArcControl = {
   onDragEnd: () => void;
 };
 
+/** How wide the ring round the face is. */
+const RING_WIDTH = "0.25rem";
+
 /**
  * The thermostat face: a black disc with a ring in the mode's colour, a
  * 120° tick arc marking the value, and whatever readout is passed as
@@ -39,6 +43,14 @@ type ArcControl = {
  * (0.149.0, the user: "when you click the plus minus buttons the tick above
  * should animate when it moves"); under a finger it follows at once, and
  * under reduced motion it never slides.
+ *
+ * In the Embossed palette the face is pressed in as the cards are (0.169.3,
+ * the user: "make the dial component be embossed too in embossed theme"),
+ * with the ring as its rim: the recess's shade falls inside the ring — on a
+ * layer of its own that starts at the ring's inner edge, so the ring keeps
+ * its colour, a standby's translucent one too — and the light on its lip
+ * lies outside it. Both are the theme's (`recess.shade` / `recess.lip`),
+ * none in the other palettes, so nothing here knows which is worn.
  */
 export function ThermostatDial({
   ring,
@@ -123,7 +135,15 @@ export function ThermostatDial({
   const ticks = value != null ? buildTicks(null, scale) : null;
 
   return (
-    <Box position="relative" aspectRatio="1" {...rest}>
+    <Box
+      position="relative"
+      aspectRatio="1"
+      // The lip's light, outside the ring: the face below clips what it holds.
+      borderRadius="full"
+      boxShadow={RECESS_LIP}
+      data-dial
+      {...rest}
+    >
       <Box
         position="relative"
         width="100%"
@@ -134,8 +154,18 @@ export function ThermostatDial({
         justifyContent="center"
         overflow="hidden"
         bg="bg"
-        boxShadow={`inset 0 0 0 0.25rem ${ring}`}
+        boxShadow={`inset 0 0 0 ${RING_WIDTH} ${ring}`}
         transition="box-shadow 400ms ease"
+        data-dial-face
+        // The recess's shade, from the ring's inner edge in.
+        _before={{
+          content: '""',
+          position: "absolute",
+          inset: RING_WIDTH,
+          borderRadius: "full",
+          boxShadow: RECESS_SHADE,
+          pointerEvents: "none",
+        }}
       >
         {live && (
           <Box
@@ -143,7 +173,7 @@ export function ThermostatDial({
             inset="0"
             borderRadius="full"
             pointerEvents="none"
-            boxShadow={`inset 0 0 0 0.25rem ${accent}`}
+            boxShadow={`inset 0 0 0 ${RING_WIDTH} ${accent}`}
             animation="pulse 2.6s ease-in-out infinite"
           />
         )}

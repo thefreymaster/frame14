@@ -15,6 +15,18 @@ export const NAV_PAD = "0.375rem";
 export const SURFACE_SHADOW = "surface";
 
 /**
+ * A recess's two halves as shadows of their own (0.169.3): the shade its top
+ * edge throws inside it, and the light on its lower lip, just outside. The
+ * theme's `recess.shade` / `recess.lip`: what Embossed's `surface` shadow is
+ * made of, and none in every other palette. For a box whose rim is wider
+ * than a card's 1px edge — a dial's ring (ThermostatDial) — where the shade
+ * belongs inside the rim and the lip outside it, so neither can ride on the
+ * one box as a card's do.
+ */
+export const RECESS_SHADE = "recess.shade";
+export const RECESS_LIP = "recess.lip";
+
+/**
  * The cards' colour (the theme's `bg.surface`) and corners (the theme's
  * `surface` radius), set apart from a card passing beneath by a border and
  * shadow. Spread onto a Box; the caller places it.

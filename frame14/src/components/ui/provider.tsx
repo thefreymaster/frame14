@@ -34,9 +34,23 @@ const EMBOSSED = THEME_PALETTES.filter((p) => PALETTES[p].embossed);
 // light on its lower lip, just outside. In rem, so it is as deep on the
 // frame's larger type as on a phone. Its two colours are tokens of their own
 // (`emboss.shade` / `emboss.lip`) because they differ by mode, and a palette's
-// token value can't nest one (see lib/themePalettes).
-const EMBOSSED_SHADOW =
-  "inset 0 0.1875rem 0.4375rem {colors.emboss.shade}, inset 0 0 0.0625rem {colors.emboss.shade}, 0 0.0625rem 0 {colors.emboss.lip}";
+// token value can't nest one (see lib/themePalettes). A card wears the two
+// halves as one shadow; a dial wears them apart, either side of its ring
+// (the `recess.shade` / `recess.lip` shadows below).
+const EMBOSSED_SHADE =
+  "inset 0 0.1875rem 0.4375rem {colors.emboss.shade}, inset 0 0 0.0625rem {colors.emboss.shade}";
+const EMBOSSED_LIP = "0 0.0625rem 0 {colors.emboss.lip}";
+const EMBOSSED_SHADOW = `${EMBOSSED_SHADE}, ${EMBOSSED_LIP}`;
+
+/** A shadow only the palettes that press things in have. */
+function embossedOnly(shadow: string) {
+  return {
+    value: {
+      base: "none",
+      ...Object.fromEntries(EMBOSSED.map((p) => [`_${p}`, shadow])),
+    },
+  };
+}
 
 /**
  * One neutral as a token per palette: Chakra's value as the base, each tint's
@@ -213,6 +227,14 @@ const system = createSystem(
                 EMBOSSED.map((p) => [`_${p}`, EMBOSSED_SHADOW]),
               ),
             },
+          },
+          // That recess's halves on their own (lib/floatingSurface's
+          // RECESS_SHADE / RECESS_LIP), for a box with a rim wider than a
+          // card's edge — a dial's ring: the shade goes inside the rim, the
+          // lip outside it. None where nothing is pressed in.
+          recess: {
+            shade: embossedOnly(EMBOSSED_SHADE),
+            lip: embossedOnly(EMBOSSED_LIP),
           },
         },
         spacing: {

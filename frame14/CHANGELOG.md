@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.169.3
+
+- Changed: in the **Embossed** colour theme the dial is pressed in too, like the cards — a thermostat's, a fan's and a light's, on their sheets. Its coloured ring is the rim: the face is shaded along the inside of the ring's top edge, with a thin line of light under the ring's lower edge. The other colour themes' dials are as they were.
+
 ## 0.169.2
 
 - Changed: a thermostat's name is shown without the word AC — "1st Floor AC" is "1st Floor", "Main Bedroom AC" "Main Bedroom" — on the Home card, the Climate page and the thermostat's own sheet, whether the name comes from `climate_names` or from Home Assistant. Nothing needs changing in the configuration.

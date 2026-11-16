@@ -49,6 +49,64 @@ test.describe("the Climate page", () => {
     await expect.poll(() => dialReading(dialog)).toBe("71°");
   });
 
+  test("in Embossed the dial is pressed in as the cards are: the shade inside its ring, the light on its lip outside (0.169.3)", async ({ page }) => {
+    const html = page.locator("html");
+    const dialog = page.getByRole("dialog");
+    // The dial's shadows, layer by layer as Chromium writes them, beside the
+    // page's first card's: its lip (cast outside the ring), its ring (the
+    // face's own, with its width), the recess (the layer inside the ring, and
+    // how far in it starts).
+    const dial = () =>
+      dialog.locator("[data-dial]").evaluate((el) => {
+        const layers = (shadow: string) => (shadow === "none" ? [] : shadow.split(/,(?![^(]*\))/).map((l) => l.trim()));
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const face = el.querySelector("[data-dial-face]") as HTMLElement;
+        const ring = layers(getComputedStyle(face).boxShadow);
+        const recess = getComputedStyle(face, "::before");
+        const card = layers(getComputedStyle(document.querySelector(".chakra-card__root") as Element).boxShadow);
+        return {
+          lip: layers(getComputedStyle(el).boxShadow),
+          ring: ring.length,
+          ringWidth: parseFloat(/(-?[\d.]+)px inset/.exec(ring[0])?.[1] ?? "0") / rem,
+          shade: layers(recess.boxShadow),
+          shadeFrom: parseFloat(recess.top) / rem,
+          card: { inside: card.filter((l) => l.includes("inset")), outside: card.filter((l) => !l.includes("inset")) },
+        };
+      });
+    const open = async () => {
+      await page.getByRole("button", { name: /^1st Floor:/ }).click();
+      await expect.poll(() => dialReading(dialog)).toBe("70°");
+    };
+
+    // Gray: the face and its ring, and nothing pressed in.
+    await page.goto("/climate");
+    await expect(html).toHaveAttribute("data-palette", "gray");
+    await open();
+    expect(await dial()).toMatchObject({ lip: [], ring: 1, ringWidth: 0.25, shade: [] });
+
+    // Embossed, as a remote wearing its own colours (nothing is sent to the
+    // server, so the frames' theme is left alone).
+    await page.evaluate(() => {
+      localStorage.setItem("device-mode", "controller");
+      localStorage.setItem("local-theme-palette", "embossed");
+    });
+    await page.reload();
+    await expect(html).toHaveAttribute("data-palette", "embossed");
+    await open();
+    const pressed = await dial();
+    // A card's recess, in its two halves: the shade inside its top edge and
+    // the hairline of light under it.
+    expect(pressed.card.inside).toHaveLength(2);
+    expect(pressed.card.outside).toHaveLength(1);
+    // The dial's are the same: the shade on a layer that starts where the
+    // ring ends, so the ring is the rim and keeps its colour — still the
+    // face's one shadow — and the lip outside the ring.
+    expect(pressed.shade).toEqual(pressed.card.inside);
+    expect(pressed.shadeFrom).toBeCloseTo(0.25, 2);
+    expect(pressed.lip).toEqual(pressed.card.outside);
+    expect(pressed).toMatchObject({ ring: 1, ringWidth: 0.25 });
+  });
+
   test("a tile opens the dialog, and a new mode reaches Home Assistant", async ({ page }) => {
     await page.goto("/climate");
     await page.getByRole("button", { name: /^2nd Floor:/ }).click();

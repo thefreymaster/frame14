@@ -10,7 +10,8 @@ export const NAV_PAD = "0.375rem";
  * to have the same shade as the side navigation. The theme's `surface`
  * shadow: Chakra's `lg`, none in the Outlines palette, whose cards and
  * navs are their outline alone, and an inner one in Embossed, whose cards
- * and navs are pressed into the page.
+ * are pressed into the page — the navs' own is NAV_SHADOW, the same but
+ * there, where they stand up.
  */
 export const SURFACE_SHADOW = "surface";
 
@@ -155,13 +156,27 @@ export const FROST = {
 } as const;
 
 /**
+ * The navs' own colour and shadow: the cards' in every palette but Embossed,
+ * where the cards are pressed into the page and the navigation stands up
+ * out of it, as the buttons do out of the cards (0.171.3, the user: "The
+ * Navigationbar should be convex sticking out and depress when button
+ * pressing" — it was pressed in with the cards since 0.168.0). The theme's
+ * `emboss.bar` (the buttons' colour there) and `nav` shadow (a cast shadow
+ * there, no inner one); an entry held down is pushed into the bar
+ * (LandscapeNav's entryCss: the cards' recess).
+ */
+export const NAV_FACE = "emboss.bar";
+export const NAV_SHADOW = "nav";
+
+/**
  * The navs' surface: FLOATING_SURFACE made frosted — the cards' colour at
  * NAV_SURFACE_TINT over FROST, so the page scrolling beneath shows through
  * and the colour stays the cards'. The lights strip keeps the opaque surface.
  */
 export const NAV_SURFACE = {
   ...FLOATING_SURFACE,
-  bg: `bg.surface/${NAV_SURFACE_TINT}`,
+  bg: `${NAV_FACE}/${NAV_SURFACE_TINT}`,
+  shadow: NAV_SHADOW,
   ...FROST,
 } as const;
 

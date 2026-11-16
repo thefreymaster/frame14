@@ -248,4 +248,63 @@ test.describe("the Embossed theme's buttons", () => {
       expect(await face(views)).toEqual([await headerFace(page), "0px"]);
     }
   });
+  // 0.171.3, the user: "The Navigationbar should be convex sticking out and
+  // depress when button pressing". It was pressed into the page with the
+  // cards.
+  test("the navigation stands up too, in the buttons' colour, and an entry held down is pushed into it", async ({ page, isMobile }) => {
+    const nav = page.locator(`[data-nav="${isMobile ? "bar" : "rail"}"]`);
+    const entry = nav.getByRole("tab", { name: "Climate" });
+    const shadows = (el: Locator) =>
+      el.evaluate((node) => {
+        const all = getComputedStyle(node).boxShadow;
+        const layers = all === "none" ? [] : all.split(/,(?![^(]*\))/).map((l) => l.trim());
+        return { inside: layers.filter((l) => l.includes("inset")), outside: layers.filter((l) => !l.includes("inset")) };
+      });
+    // A colour's red, green and blue, however Chromium writes it.
+    const rgb = (colour: string) =>
+      colour.startsWith("color(")
+        ? colour.match(/[\d.]+/g)!.slice(0, 3).map((v) => Math.round(parseFloat(v) * 255))
+        : colour.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    const hold = async (el: Locator) => {
+      const box = (await el.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+    };
+    const letGo = async () => {
+      await page.mouse.move(1, 1);
+      await page.mouse.up();
+    };
+
+    await page.goto("/lights");
+    await wear(page, "gray");
+    await expect(entry).toBeVisible();
+    // Gray: the nav floats over the page in the cards' colour, and an entry
+    // held down only goes in.
+    const card = page.locator(".chakra-card__root").first();
+    expect(rgb(await nav.evaluate((el) => getComputedStyle(el).backgroundColor))).toEqual(
+      rgb(await card.evaluate((el) => getComputedStyle(el).backgroundColor)),
+    );
+    await hold(entry);
+    await expect.poll(() => entry.evaluate((el) => el.hasAttribute("data-pressing"))).toBe(true);
+    expect(await shadows(entry)).toEqual({ inside: [], outside: [] });
+    await letGo();
+
+    await wear(page, "embossed");
+    await expect(entry).toBeVisible();
+    // Nothing inside its edge, a shadow cast under it, and the header
+    // buttons' colour (frosted, so not all of it).
+    const raised = await shadows(nav);
+    expect(raised.inside).toEqual([]);
+    expect(raised.outside.length).toBeGreaterThan(0);
+    expect(rgb(await nav.evaluate((el) => getComputedStyle(el).backgroundColor))).toEqual(rgb(await headerFace(page)));
+    // Held, the entry wears the cards' recess; let go, nothing.
+    const recess = await shadows(card);
+    expect(recess.inside).toHaveLength(2);
+    expect(await shadows(entry)).toEqual({ inside: [], outside: [] });
+    await hold(entry);
+    await expect.poll(() => shadows(entry)).toEqual(recess);
+    await letGo();
+    await expect.poll(() => shadows(entry)).toEqual({ inside: [], outside: [] });
+    await expect(page).toHaveURL(/\/lights$/);
+  });
 });

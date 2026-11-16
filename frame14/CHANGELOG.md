@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.171.3
+
+- Changed: in the **Embossed** colour theme the navigation — the bar along the bottom, and the rail down the side on a desktop — now stands up out of the page instead of being pressed into it: the buttons' colour, with a shadow under it. Press one of its entries and that entry is pushed into the bar, and comes back out when you let go.
+
 ## 0.171.2
 
 - Changed: in the **Embossed** colour theme every button now looks like the voice and screen buttons in the header: the light, scene, thermostat and fan tiles and the All off buttons have the same colour, no outline, and no thin line of light or shade inside their top and lower edges. They stand up by the shadow they cast on the card, and still go in when pressed. A thermostat or fan that is on keeps its coloured ring, and a light that is on keeps its colour. The other colour themes are as they were.

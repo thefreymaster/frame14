@@ -181,7 +181,7 @@ test.describe("the Settings page", () => {
     }
   });
 
-  test("Embossed presses the cards and the nav into the page: an inner shadow, the cards the page's floor by night (0.168.0)", async ({ page, isMobile }) => {
+  test("Embossed presses the cards into the page — an inner shadow, the cards the page's floor by night (0.168.0) — and the nav stands up out of it (0.171.3)", async ({ page, isMobile }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto(isMobile ? "/control/device" : "/control/display");
     const html = page.locator("html");
@@ -231,10 +231,12 @@ test.describe("the Settings page", () => {
       await expect.poll(pageColour).toBe("rgb(31, 31, 35)");
       await expect(board).toHaveCSS("background-color", "rgb(17, 17, 19)");
       // Shaded inside its edge, and no shade cast under it: all there is
-      // outside is the hairline of light on its lower lip. The nav is pressed
-      // in with it.
+      // outside is the hairline of light on its lower lip. The nav was
+      // pressed in with it until 0.171.3 ("The Navigationbar should be convex
+      // sticking out"): it stands up now, as the buttons do — nothing inside
+      // its edge, and a shade cast under it.
       await expect.poll(() => shadow(board)).toEqual({ inset: 2, shade: 0, hairline: 1 });
-      await expect.poll(() => shadow(nav)).toEqual({ inset: 2, shade: 0, hairline: 1 });
+      await expect.poll(() => shadow(nav)).toEqual({ inset: 0, shade: 2, hairline: 0 });
 
       // By day: the cards keep their white, in a page a step deeper than
       // gray's, and are pressed in the same.

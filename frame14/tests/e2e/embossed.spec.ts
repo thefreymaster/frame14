@@ -385,6 +385,52 @@ test.describe("the Embossed theme's buttons", () => {
         }
       });
 
+      // 0.174.0, the user, circling the conditions and the hours' chart in
+      // the Weather sheet: "These two should be concave also like the
+      // forecast. Add another concave area that has the current moon phase
+      // with an icon". Three more wells, each the forecast's own: its floor,
+      // no outline, and the recess where the theme presses the cards in.
+      test(`the weather's conditions, its moon and the hours' chart are wells as the forecast's hours are (${scheme})`, async ({ page, request }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        const NAMES = ["conditions", "moon", "chart"];
+        const wellsIn = (scope: Page | Locator) => NAMES.map((name) => scope.locator(`[data-weather-well="${name}"]`));
+        const hours = page.locator('[data-forecast="hourly"]');
+
+        // The page: the Now card's two over the Hourly tab's (a desktop has
+        // them all on its one page).
+        await page.goto("/weather/hourly");
+        await wear(page, "gray");
+        await expect(hours).toBeVisible();
+        const flat = await drawn(hours);
+        expect(flat).toMatchObject({ edge: 0, inside: [], outside: [] });
+        for (const well of wellsIn(page)) {
+          await expect(well).toBeVisible();
+          expect(await drawn(well)).toEqual(flat);
+        }
+        await wear(page, "embossed");
+        await expect(hours).toBeVisible();
+        const pressed = await pressedIn(hours);
+        expect(pressed.floor).toBe(flat.floor);
+        for (const well of wellsIn(page)) {
+          await expect(well).toBeVisible();
+          expect(await pressedIn(well)).toEqual(pressed);
+        }
+
+        // And the sheet Home's weather card opens, which is where the user
+        // circled them: the same parts, each as the strip of hours under
+        // them is.
+        await quietHouse(request);
+        await page.goto("/home");
+        await page.getByRole("button", { name: "Show the weather" }).click({ position: { x: 60, y: 40 } });
+        const sheet = page.getByRole("dialog", { name: "Weather" });
+        await expect(sheet.locator('[data-forecast="hourly"]')).toBeVisible();
+        expect(await drawn(sheet.locator('[data-forecast="hourly"]'))).toEqual(pressed);
+        for (const well of wellsIn(sheet)) {
+          await expect(well).toBeVisible();
+          expect(await drawn(well)).toEqual(pressed);
+        }
+      });
+
       // 0.173.0, the user: "Make all badges like 1 on and 13% be concave
       // in embossed mode. Edit the theme so it applies to all badges app
       // wide" — the badge recipe, so no badge names it.

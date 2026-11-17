@@ -1,7 +1,8 @@
-import { Box, HStack, Text } from "@chakra-ui/react";
+import { Box, Card, HStack, Text } from "@chakra-ui/react";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
 import { RAIN_SHOWN_FROM, roundTemp } from "../lib/forecast";
 import { smoothLineAt, smoothLinePath } from "../lib/smoothLine";
+import { Well } from "./Well";
 
 /** The plot's own units: the hours across, the scale's span up. */
 const VIEW_W = 1000;
@@ -27,7 +28,8 @@ const isNumber = (n: number | null | undefined): n is number => n != null;
  * the baseline — a sure thing reaching halfway up. The scale is the hours'
  * range a couple of degrees either side. Hour marks every six hours under it.
  * Stretched SVG, non-scaling strokes; the labels are HTML over it. The legend
- * row carries the extremes; the plot is aria-hidden.
+ * row carries the extremes; the plot is aria-hidden. All of it in a well, as
+ * the strip of hours under it is (0.174.0; `data-weather-well="chart"`).
  */
 export function HourlyChart({
   hours,
@@ -80,129 +82,131 @@ export function HourlyChart({
   const anyRain = bars.length > 0;
 
   return (
-    <Box>
-      <HStack
-        justify="space-between"
-        gap="3"
-        wrap="wrap"
-        textStyle="xs"
-        color="fg.muted"
-        mb="2"
-      >
-        <Text>
-          {`Next ${hours.length} hours · high ${roundTemp(temps[hiAt])}° ${hourOf(hiAt)} · low ${roundTemp(temps[loAt])}° ${hourOf(loAt)}`}
-        </Text>
-        <HStack gap="3" aria-hidden>
-          <HStack gap="1.5">
-            <Box w="4" borderTopWidth="2px" borderColor="fg" />
-            <Text>Temperature</Text>
-          </HStack>
-          {anyRain && (
-            <HStack gap="1.5">
-              <Box w="3" h="3" rounded="xs" bg="blue.solid" opacity={0.4} />
-              <Text>Rain chance</Text>
-            </HStack>
-          )}
-        </HStack>
-      </HStack>
-
-      <Box
-        position="relative"
-        height={height}
-        borderBottomWidth="1px"
-        borderColor="border"
-        aria-hidden
-      >
-        <svg
-          viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-          preserveAspectRatio="none"
-          width="100%"
-          height="100%"
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        >
-          {bars.map((b) => {
-            const h = (b.rain / 100) * RAIN_MAX_SHARE * VIEW_H;
-            return (
-              <rect
-                key={b.i}
-                x={xOf(b.i) - slot * 0.3}
-                y={VIEW_H - h}
-                width={slot * 0.6}
-                height={h}
-                fill="var(--chakra-colors-blue-solid)"
-                fillOpacity={0.3}
-              />
-            );
-          })}
-          <path
-            d={line}
-            fill="none"
-            stroke="var(--chakra-colors-fg)"
-            strokeWidth={2}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-        <Text
-          position="absolute"
-          left={pctClamped(hiAt)}
-          top={hiY}
-          transform="translate(-50%, -135%)"
+    <Well data-weather-well="chart">
+      <Card.Body>
+        <HStack
+          justify="space-between"
+          gap="3"
+          wrap="wrap"
           textStyle="xs"
-          fontWeight="medium"
-          whiteSpace="nowrap"
+          color="fg.muted"
+          mb="2"
         >
-          {roundTemp(temps[hiAt])}°
-        </Text>
-        {loAt !== hiAt && (
+          <Text>
+            {`Next ${hours.length} hours · high ${roundTemp(temps[hiAt])}° ${hourOf(hiAt)} · low ${roundTemp(temps[loAt])}° ${hourOf(loAt)}`}
+          </Text>
+          <HStack gap="3" aria-hidden>
+            <HStack gap="1.5">
+              <Box w="4" borderTopWidth="2px" borderColor="fg" />
+              <Text>Temperature</Text>
+            </HStack>
+            {anyRain && (
+              <HStack gap="1.5">
+                <Box w="3" h="3" rounded="xs" bg="blue.solid" opacity={0.4} />
+                <Text>Rain chance</Text>
+              </HStack>
+            )}
+          </HStack>
+        </HStack>
+
+        <Box
+          position="relative"
+          height={height}
+          borderBottomWidth="1px"
+          borderColor="border"
+          aria-hidden
+        >
+          <svg
+            viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+            preserveAspectRatio="none"
+            width="100%"
+            height="100%"
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+          >
+            {bars.map((b) => {
+              const h = (b.rain / 100) * RAIN_MAX_SHARE * VIEW_H;
+              return (
+                <rect
+                  key={b.i}
+                  x={xOf(b.i) - slot * 0.3}
+                  y={VIEW_H - h}
+                  width={slot * 0.6}
+                  height={h}
+                  fill="var(--chakra-colors-blue-solid)"
+                  fillOpacity={0.3}
+                />
+              );
+            })}
+            <path
+              d={line}
+              fill="none"
+              stroke="var(--chakra-colors-fg)"
+              strokeWidth={2}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
           <Text
             position="absolute"
-            left={pctClamped(loAt)}
-            top={loY}
-            transform="translate(-50%, 35%)"
+            left={pctClamped(hiAt)}
+            top={hiY}
+            transform="translate(-50%, -135%)"
             textStyle="xs"
-            color="fg.muted"
+            fontWeight="medium"
             whiteSpace="nowrap"
           >
-            {roundTemp(temps[loAt])}°
+            {roundTemp(temps[hiAt])}°
           </Text>
-        )}
-        {/* The dot at the first hour: the forecast starts here, now. */}
-        {isNumber(temps[0]) && (
-          <Box
-            position="absolute"
-            left={pct(0)}
-            top={pctY(temps[0])}
-            transform="translate(-50%, -50%)"
-            boxSize="3"
-            rounded="full"
-            bg="fg"
-            borderWidth="2px"
-            borderColor="bg.surface"
-            pointerEvents="none"
-          />
-        )}
-      </Box>
-
-      <Box position="relative" height="4" aria-hidden>
-        {hours.map((h, i) =>
-          i % MARK_EVERY === 0 && i < last ? (
+          {loAt !== hiAt && (
             <Text
-              key={h.datetime}
               position="absolute"
-              left={pct(i)}
-              top="1"
-              transform={i === 0 ? undefined : "translateX(-50%)"}
-              textStyle="2xs"
-              color="fg.subtle"
+              left={pctClamped(loAt)}
+              top={loY}
+              transform="translate(-50%, 35%)"
+              textStyle="xs"
+              color="fg.muted"
               whiteSpace="nowrap"
             >
-              {i === 0 ? "Now" : hourOf(i)}
+              {roundTemp(temps[loAt])}°
             </Text>
-          ) : null,
-        )}
-      </Box>
-    </Box>
+          )}
+          {/* The dot at the first hour: the forecast starts here, now. */}
+          {isNumber(temps[0]) && (
+            <Box
+              position="absolute"
+              left={pct(0)}
+              top={pctY(temps[0])}
+              transform="translate(-50%, -50%)"
+              boxSize="3"
+              rounded="full"
+              bg="fg"
+              borderWidth="2px"
+              borderColor="bg.muted"
+              pointerEvents="none"
+            />
+          )}
+        </Box>
+
+        <Box position="relative" height="4" aria-hidden>
+          {hours.map((h, i) =>
+            i % MARK_EVERY === 0 && i < last ? (
+              <Text
+                key={h.datetime}
+                position="absolute"
+                left={pct(i)}
+                top="1"
+                transform={i === 0 ? undefined : "translateX(-50%)"}
+                textStyle="2xs"
+                color="fg.subtle"
+                whiteSpace="nowrap"
+              >
+                {i === 0 ? "Now" : hourOf(i)}
+              </Text>
+            ) : null,
+          )}
+        </Box>
+      </Card.Body>
+    </Well>
   );
 }

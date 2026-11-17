@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.174.0
+
+- Added: the moon, in the Weather page's Now card and in the Weather sheet that Home's weather card opens — drawn as it stands tonight, with the phase's name, how much of it is lit and the day of the next full moon (or, once it is waning, of the next new one). It is worked out from the date: Apple Weather, as Home Assistant passes it on, reports nothing about the moon, so there is no entity for it and nothing to set up.
+- Changed: the weather's conditions (feels like, humidity, wind, pressure, visibility, UV index) and the chart of the next hours each sit in a panel of their own, as the forecast's hours and days do — pressed into the card in the Embossed theme, a flat grey panel in the others. On a desktop's Weather page the moon sits under the temperature, with the conditions beside the two.
+
 ## 0.173.2
 
 - Fixed: on the Energy card and the Energy page, the AC waves no longer stop short of the circles, cut off square with a gap either side. Each wave now comes out from behind one circle and goes in behind the next. A line with nothing on it reaches both circles too.

@@ -30,6 +30,10 @@ export function AccountBoard() {
 
   return (
     <Board
+      // Folds to its header, as every card of Settings' Display and Device
+      // tabs does (0.172.0).
+      collapsible
+      storageKey="settings-account"
       title={<SectionTitle icon={<IoPersonCircleOutline />}>Account</SectionTitle>}
     >
       <Stack gap="4">

@@ -67,9 +67,11 @@ function entryCss(placement: "bar" | "rail"): SystemStyleObject {
     textStyle: inBar ? { base: "xs", md: "sm" } : undefined,
     _icon: { boxSize: { base: "5", md: "1.375rem" } },
     _selected: { bg: "transparent", color: "fg" },
-    // Held, an entry is pushed into the bar, where the bar stands up
-    // (Embossed, 0.171.3: the cards' recess; the shadow is none elsewhere,
-    // where an entry only goes in — the tabs recipe's press).
+    // Held, an entry is pushed into the bar's floor, where things are
+    // pressed in (Embossed, 0.171.3: the cards' recess — "depress when
+    // button pressing", asked of a bar that stood up then and kept now it is
+    // pressed in itself, 0.172.0; the shadow is none elsewhere, where an
+    // entry only goes in — the tabs recipe's press).
     "&[data-pressing]": { boxShadow: "recess" },
   };
 }

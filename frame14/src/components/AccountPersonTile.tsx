@@ -7,6 +7,7 @@ import {
   IoTabletPortraitOutline,
 } from "react-icons/io5";
 import type { Person } from "../hooks/useAccount";
+import { TILE_WELL } from "../lib/floatingSurface";
 import { fmtWhen } from "../lib/format";
 import { Status } from "./ui/status";
 
@@ -33,6 +34,10 @@ const lastHere = (at: string) =>
  * it now — a green "Here now" — or when the last one closed. The row of the
  * device in hand says "This device" there instead: it is here by definition,
  * and a badge beside the address squeezed both lines on a phone.
+ *
+ * Nothing to press, so in Embossed it is a well in its card, as an Unraid
+ * tile is (TILE_WELL, 0.172.0, the user: "The signed in devices should also
+ * be concave on embossed mode"); an outlined card in every other theme.
  */
 export function AccountPersonTile({
   person,
@@ -47,6 +52,7 @@ export function AccountPersonTile({
       variant="outline"
       // Concentric with the card's corners, as every tile is.
       borderRadius="sm"
+      {...TILE_WELL}
       role="listitem"
       data-person={person.email}
       data-device={person.device}

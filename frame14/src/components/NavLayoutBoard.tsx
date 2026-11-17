@@ -42,8 +42,19 @@ import {
 } from "../lib/navLayout";
 import { IoCompassOutline } from "react-icons/io5";
 
-// The rows only move up and down.
-const verticalOnly: Modifier = ({ transform }) => ({ ...transform, x: 0 });
+// The rows only move up and down, and no further than their list: the card
+// folds (0.172.0), and what folds clips what it holds — a row dragged out
+// past the card's edge was cut off there, gone from under the finger.
+const withinList: Modifier = ({
+  transform,
+  draggingNodeRect,
+  containerNodeRect,
+}) => {
+  if (!draggingNodeRect || !containerNodeRect) return { ...transform, x: 0 };
+  const up = containerNodeRect.top - draggingNodeRect.top;
+  const down = containerNodeRect.bottom - draggingNodeRect.bottom;
+  return { ...transform, x: 0, y: Math.min(Math.max(transform.y, up), down) };
+};
 
 const NOTES: Record<string, string> = {
   [HOME_PATH]: "Always first",
@@ -118,6 +129,10 @@ export function NavLayoutBoard() {
 
   return (
     <Board
+      // Folds to its header, as every card of Settings' Display and Device
+      // tabs does (0.172.0).
+      collapsible
+      storageKey="settings-navigation"
       title={<SectionTitle icon={<IoCompassOutline />}>Navigation</SectionTitle>}
       action={
         customized && (
@@ -143,7 +158,7 @@ export function NavLayoutBoard() {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          modifiers={[verticalOnly]}
+          modifiers={[withinList]}
           onDragEnd={onDragEnd}
         >
           <SortableContext

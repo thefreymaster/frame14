@@ -70,7 +70,6 @@ import { SectionTitle } from "../components/SectionTitle/SectionTitle";
 import { VoiceStatusBoard } from "../components/VoiceStatusBoard";
 import { AlbumSelect } from "../components/AlbumSelect";
 import { NavLayoutBoard } from "../components/NavLayoutBoard";
-import { UpdatesBoard } from "../components/UpdatesBoard";
 import { NotificationsBoard } from "../components/NotificationsBoard";
 import { SoftwareBoard } from "../components/SoftwareBoard";
 import { ScreenBoard } from "../components/ScreenBoard";
@@ -320,8 +319,14 @@ export function Control() {
     </Board>
   );
 
+  // The Display and Device tabs' cards fold to their headers (0.172.0, the
+  // user: "Make the cards on both of these routes to be collapsible"), each
+  // kept folded on this device under its own `settings-…` key, here and in
+  // the cards' own files. The Views card, a remote's whole tab, doesn't.
   const displayBoard = (
     <Board
+      collapsible
+      storageKey="settings-display"
       title={
         <HStack justify="space-between" width="100%">
           <SectionTitle icon={<IoTabletPortraitOutline />}>
@@ -372,6 +377,8 @@ export function Control() {
 
   const albumBoard = (
     <Board
+      collapsible
+      storageKey="settings-album"
       title={<SectionTitle icon={<IoImagesOutline />}>Album</SectionTitle>}
     >
       <AlbumSelect />
@@ -478,7 +485,6 @@ export function Control() {
                     push, and the frame is never the one to tell. */}
                 {window.fully == null && <NotificationsBoard />}
                 <SoftwareBoard />
-                <UpdatesBoard />
               </>
             }
             end={

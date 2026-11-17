@@ -84,7 +84,7 @@ function releaseLink(repoUrl: string | null, version: string) {
  * release notes (useSoftware's `releaseNotes`; the user: "put the change log
  * in the confirm drawer") — Home Assistant installs it
  * (installSoftware) and the add-on restarts — every screen loses Frame14 for
- * a minute, and this device refreshes to the new version, or asks to, as
+ * a minute, and this device refreshes to the new version, as
  * lib/appVersion does on the reconnect. While it installs — asked from here,
  * or from Home Assistant's own add-on page, since the entity's `in_progress`
  * says so either way (0.136) — an indeterminate Progress bar (0.138: it
@@ -194,6 +194,10 @@ export function SoftwareBoard() {
 
   return (
     <Board
+      // Folds to its header, as every card of Settings' Display and Device
+      // tabs does (0.172.0).
+      collapsible
+      storageKey="settings-software"
       title={<SectionTitle icon={<IoCubeOutline />}>Software</SectionTitle>}
       action={
         busy ? (

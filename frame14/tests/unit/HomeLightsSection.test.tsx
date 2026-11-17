@@ -139,6 +139,24 @@ describe("HomeLightsSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(container).toBeEmptyDOMElement());
   });
+  // 0.172.0: the title's bulb glows while one of the card's lights is on
+  // (SectionTitle's `glow`: a blurred copy of the icon behind it).
+  it("gives the title's bulb a halo while one of its lights is on, and none while its favourites are all off", () => {
+    const first = renderWithProviders(<HomeLightsSection />);
+    const halos = () => document.querySelectorAll("[data-glow-halo]");
+    expect(halos()).toHaveLength(1);
+    // Nothing a screen reader need hear of, and behind the icon itself.
+    expect(halos()[0]).toHaveAttribute("aria-hidden", "true");
+    expect(halos()[0].parentElement?.querySelectorAll("svg")).toHaveLength(2);
+    first.unmount();
+
+    setLightFavorite("light.backyard", true);
+    renderWithProviders(<HomeLightsSection />);
+    expect(screen.getByRole("heading", { name: "Lights" })).toBeInTheDocument();
+    expect(tiles()).toEqual(["Backyard: Off"]);
+    expect(halos()).toHaveLength(0);
+  });
+
   // 0.153.0: the favourites, the star in a light's drawer, in place of the
   // lights that are on.
   it("shows this device's favourites, on or off, in place of the lights that are on, with their count and All off", async () => {

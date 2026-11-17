@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { Box, Card, Grid, Text } from "@chakra-ui/react";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
 import { RAIN_SHOWN_FROM, roundTemp } from "../lib/forecast";
+import { WELL_SHADOW } from "../lib/floatingSurface";
 import { weatherIcon } from "../lib/weatherIcons";
 
 const isNumber = (n: number | null): n is number => n != null;
@@ -30,7 +31,8 @@ function middayOf(datetime: string): string {
  * its blue-to-orange fill; today's carries a dot at the temperature now.
  * /weather's; with `fill` (the desktop weather page, where the card is
  * stretched to the column beside it) the well takes the card's height and
- * spreads its rows over it.
+ * spreads its rows over it. Where the theme presses the cards in (Embossed)
+ * the well is pressed into its card (WELL_SHADOW, 0.172.0).
  */
 export function DailyForecast({
   days,
@@ -59,7 +61,9 @@ export function DailyForecast({
       size="sm"
       variant="subtle"
       borderRadius="sm"
+      boxShadow={WELL_SHADOW}
       flex={fill ? "1" : undefined}
+      data-forecast="daily"
     >
       <Card.Body>
         {/* One grid for every row, so the columns line up down the list. */}

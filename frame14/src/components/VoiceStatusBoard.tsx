@@ -38,7 +38,13 @@ export function VoiceStatusBoard() {
   const hasMic = micAvailable();
 
   return (
-    <Board title={<SectionTitle icon={<IoMicOutline />}>Voice</SectionTitle>}>
+    <Board
+      // Folds to its header, as every card of Settings' Display and Device
+      // tabs does (0.172.0).
+      collapsible
+      storageKey="settings-voice"
+      title={<SectionTitle icon={<IoMicOutline />}>Voice</SectionTitle>}
+    >
       <VStack align="stretch" gap="4">
         {isPending && <Text color="fg.muted">Checking…</Text>}
 

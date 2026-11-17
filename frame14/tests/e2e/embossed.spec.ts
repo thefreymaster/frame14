@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { lightTile, resetStub } from "./helpers";
+import { lightTile, quietHouse, resetStub } from "./helpers";
 
 // In the Embossed colour theme the cards are pressed into the page — and
 // the buttons stand up out of the cards (0.171.1, the user: "instead of
@@ -248,10 +248,12 @@ test.describe("the Embossed theme's buttons", () => {
       expect(await face(views)).toEqual([await headerFace(page), "0px"]);
     }
   });
-  // 0.171.3, the user: "The Navigationbar should be convex sticking out and
-  // depress when button pressing". It was pressed into the page with the
-  // cards.
-  test("the navigation stands up too, in the buttons' colour, and an entry held down is pushed into it", async ({ page, isMobile }) => {
+  // 0.172.0, the user: "Make the navigation concave also. It is currently
+  // convex" — it had stood up out of the page for a version (0.171.3: "The
+  // Navigationbar should be convex sticking out and depress when button
+  // pressing"), in the buttons' colour with a shadow under it. Pressed into
+  // the page with the cards again, and an entry still goes in when pressed.
+  test("the navigation is pressed into the page as the cards are, in their colour, and an entry held down is pushed into it", async ({ page, isMobile }) => {
     const nav = page.locator(`[data-nav="${isMobile ? "bar" : "rail"}"]`);
     const entry = nav.getByRole("tab", { name: "Climate" });
     const shadows = (el: Locator) =>
@@ -291,20 +293,128 @@ test.describe("the Embossed theme's buttons", () => {
 
     await wear(page, "embossed");
     await expect(entry).toBeVisible();
-    // Nothing inside its edge, a shadow cast under it, and the header
-    // buttons' colour (frosted, so not all of it).
-    const raised = await shadows(nav);
-    expect(raised.inside).toEqual([]);
-    expect(raised.outside.length).toBeGreaterThan(0);
-    expect(rgb(await nav.evaluate((el) => getComputedStyle(el).backgroundColor))).toEqual(rgb(await headerFace(page)));
-    // Held, the entry wears the cards' recess; let go, nothing.
+    // The cards' own recess, layer for layer — the shade inside its edge,
+    // the lip's light under it, and no shadow cast — and the cards' colour
+    // (frosted, so not all of it), not the header buttons'.
     const recess = await shadows(card);
     expect(recess.inside).toHaveLength(2);
+    expect(recess.outside).toHaveLength(1);
+    expect(await shadows(nav)).toEqual(recess);
+    const face = rgb(await nav.evaluate((el) => getComputedStyle(el).backgroundColor));
+    expect(face).toEqual(rgb(await card.evaluate((el) => getComputedStyle(el).backgroundColor)));
+    expect(face).not.toEqual(rgb(await headerFace(page)));
+    // Held, the entry wears the recess too, in the bar's floor; let go,
+    // nothing.
     expect(await shadows(entry)).toEqual({ inside: [], outside: [] });
     await hold(entry);
     await expect.poll(() => shadows(entry)).toEqual(recess);
     await letGo();
     await expect.poll(() => shadows(entry)).toEqual({ inside: [], outside: [] });
     await expect(page).toHaveURL(/\/lights$/);
+  });
+
+  // 0.172.0, the user: "The forcast on the home page and both forecasts on
+  // the weather route should be concave in embossed theme. The VM and
+  // Container chips should also be concave in embossed mode on the unraid
+  // route". What is read rather than pressed is a well in its card: it wears
+  // the recess its card has in the page, where the buttons stand up.
+  test.describe("its wells", () => {
+    /** A box as Chromium draws it: its floor, its outline, and its shadow's layers inside and outside its edge. */
+    const drawn = (el: Locator) =>
+      el.evaluate((node) => {
+        const cs = getComputedStyle(node);
+        const layers = cs.boxShadow === "none" ? [] : cs.boxShadow.split(/,(?![^(]*\))/).map((l) => l.trim());
+        return {
+          floor: cs.backgroundColor,
+          edge: parseFloat(cs.borderTopWidth),
+          inside: layers.filter((l) => l.includes("inset")),
+          outside: layers.filter((l) => !l.includes("inset")),
+        };
+      });
+    /** The card a well is in. */
+    const cardOf = (well: Locator) => well.locator("xpath=ancestor::*[contains(@class, 'chakra-card__root')][1]");
+    /** A well pressed into its card: the card's own recess — the shade inside, the lip's light under — on a floor that isn't the card's. */
+    async function pressedIn(well: Locator) {
+      const card = await drawn(cardOf(well));
+      const own = await drawn(well);
+      expect(card.inside).toHaveLength(2);
+      expect(card.outside).toHaveLength(1);
+      expect({ inside: own.inside, outside: own.outside }).toEqual({ inside: card.inside, outside: card.outside });
+      expect(own.edge).toBe(0);
+      expect(own.floor).not.toBe(card.floor);
+      expect(own.floor).not.toBe(CLEAR);
+      return own;
+    }
+
+    for (const scheme of ["light", "dark"] as const) {
+      test(`the forecasts' hours and days are pressed into their cards, and flat in any other theme (${scheme})`, async ({ page, request, isMobile }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        // The hours' strip, then the days' list: a tab each where the page
+        // has tabs, both on a desktop's one page.
+        const hours = page.locator('[data-forecast="hourly"]');
+        const days = page.locator('[data-forecast="daily"]');
+        await page.goto("/weather/hourly");
+        await wear(page, "gray");
+        await expect(hours).toBeVisible();
+        const flat = await drawn(hours);
+        expect(flat).toMatchObject({ edge: 0, inside: [], outside: [] });
+
+        await wear(page, "embossed");
+        await expect(hours).toBeVisible();
+        const floor = (await pressedIn(hours)).floor;
+        // The well keeps its own colour: only the shade is new.
+        expect(floor).toBe(flat.floor);
+
+        await page.goto("/weather/daily");
+        await expect(days).toBeVisible();
+        expect((await pressedIn(days)).floor).toBe(floor);
+        await wear(page, "gray");
+        await expect(days).toBeVisible();
+        expect(await drawn(days)).toMatchObject({ edge: 0, inside: [], outside: [] });
+
+        // Home's weather card has the next hours on a desktop (a phone's has
+        // the weather now alone).
+        if (!isMobile) {
+          await quietHouse(request);
+          await page.goto("/home");
+          await expect(hours).toBeAttached();
+          expect(await drawn(hours)).toMatchObject({ inside: [], outside: [] });
+          await wear(page, "embossed");
+          await expect(hours).toBeAttached();
+          expect((await pressedIn(hours)).floor).toBe(floor);
+        }
+      });
+
+      test(`an Unraid container's and VM's tiles are pressed into their cards, and outlined cards in any other theme (${scheme})`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        const tiles = [page.locator('[data-kind="container"][data-guest="Plex"]'), page.locator('[data-kind="vm"][data-guest="Windows 11"]')];
+        await page.goto("/unraid");
+        await wear(page, "gray");
+        const outlined: string[] = [];
+        for (const tile of tiles) {
+          await expect(tile).toBeVisible();
+          const flat = await drawn(tile);
+          expect(flat).toMatchObject({ edge: 1, inside: [], outside: [] });
+          outlined.push(flat.floor);
+        }
+
+        await wear(page, "embossed");
+        for (const [i, tile] of tiles.entries()) {
+          await expect(tile).toBeVisible();
+          // No outline: the recess's own edge in its place — and the wells'
+          // colour, where an outlined card's is its card's own by night.
+          const floor = (await pressedIn(tile)).floor;
+          expect(floor).not.toBe(outlined[i]);
+        }
+        // Not a button: nothing under a pointer changes it.
+        const box = (await tiles[0].boundingBox())!;
+        const atRest = await drawn(tiles[0]);
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        expect(await tiles[0].evaluate((el) => el.hasAttribute("data-pressing"))).toBe(false);
+        expect(await drawn(tiles[0])).toEqual(atRest);
+        await page.mouse.up();
+      });
+    }
   });
 });

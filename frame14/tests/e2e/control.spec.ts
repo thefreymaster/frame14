@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetStub, stub } from "./helpers";
+import { resetStub, splashGone, stub } from "./helpers";
 import { APP_URL } from "./ports";
 
 test.describe("the Settings page", () => {
@@ -181,7 +181,7 @@ test.describe("the Settings page", () => {
     }
   });
 
-  test("Embossed presses the cards into the page — an inner shadow, the cards the page's floor by night (0.168.0) — and the nav stands up out of it (0.171.3)", async ({ page, isMobile }) => {
+  test("Embossed presses the cards and the nav into the page — an inner shadow, the cards the page's floor by night (0.168.0; the nav again since 0.172.0)", async ({ page, isMobile }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto(isMobile ? "/control/device" : "/control/display");
     const html = page.locator("html");
@@ -231,12 +231,12 @@ test.describe("the Settings page", () => {
       await expect.poll(pageColour).toBe("rgb(31, 31, 35)");
       await expect(board).toHaveCSS("background-color", "rgb(17, 17, 19)");
       // Shaded inside its edge, and no shade cast under it: all there is
-      // outside is the hairline of light on its lower lip. The nav was
-      // pressed in with it until 0.171.3 ("The Navigationbar should be convex
-      // sticking out"): it stands up now, as the buttons do — nothing inside
-      // its edge, and a shade cast under it.
+      // outside is the hairline of light on its lower lip. The nav is
+      // pressed in with it (0.172.0, "Make the navigation concave also. It
+      // is currently convex" — it stood up for one version, 0.171.3, with
+      // nothing inside its edge and a shade cast under it).
       await expect.poll(() => shadow(board)).toEqual({ inset: 2, shade: 0, hairline: 1 });
-      await expect.poll(() => shadow(nav)).toEqual({ inset: 0, shade: 2, hairline: 0 });
+      await expect.poll(() => shadow(nav)).toEqual({ inset: 2, shade: 0, hairline: 1 });
 
       // By day: the cards keep their white, in a page a step deeper than
       // gray's, and are pressed in the same.
@@ -380,6 +380,121 @@ test.describe("the Settings page", () => {
       await expect.poll(async () => (await apart()).tops).toBe(0);
       expect((await apart()).across).toBeGreaterThan(0);
     }
+  });
+
+  // 0.172.0, the user, of the Display and Device tabs: "Make the cards on
+  // both of these routes to be collapsible".
+  test("every card of the Display and Device tabs folds to its header, and stays folded on this device through a reload (0.172.0)", async ({ page, isMobile }) => {
+    const card = (title: string) => page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: title, exact: true }) });
+    // A card's fold: its title, stretched over the whole header (Board).
+    const header = (title: string) => card(title).locator("button[data-stretched]");
+    const body = (title: string) => card(title).locator(".chakra-card__body").first();
+    // A frame — a desktop, by default — wears the frames' theme and has no
+    // Appearance card of its own; the Account card is Cloudflare Access's
+    // (account.spec folds it).
+    const tabs = {
+      display: ["Display", "Screen", "Album"],
+      device: [...(isMobile ? ["Appearance"] : []), "Notifications", "Software", "Navigation", "Voice"],
+    };
+    for (const [tab, titles] of Object.entries(tabs)) {
+      await page.goto(`/control/${tab}`);
+      for (const title of titles) {
+        // Open until it is folded.
+        await expect(body(title)).toBeVisible();
+        await expect(header(title)).toHaveAttribute("aria-expanded", "true");
+        await header(title).click();
+        await expect(header(title)).toHaveAttribute("aria-expanded", "false");
+        await expect(body(title)).toBeHidden();
+        // The header is all there is, and still says what the card is.
+        await expect(card(title).getByRole("heading", { name: title, exact: true })).toBeVisible();
+      }
+      await page.reload();
+      for (const title of titles) {
+        await expect(header(title)).toHaveAttribute("aria-expanded", "false");
+        await expect(body(title)).toBeHidden();
+      }
+      // One opened again; the rest stay as they were left.
+      await header(titles[0]).click();
+      await expect(header(titles[0])).toHaveAttribute("aria-expanded", "true");
+      await expect(body(titles[0])).toBeVisible();
+      await expect(body(titles[1])).toBeHidden();
+    }
+    // What a header holds besides its title is still its own: the Software
+    // card's badge shows on the folded card.
+    await expect(card("Software").getByText("Up to date")).toBeVisible();
+    // The Views card — a remote's whole tab — doesn't fold.
+    if (isMobile) {
+      await page.goto("/control/views");
+      await expect(card("Views")).toBeVisible();
+      await expect(card("Views").locator("button[data-stretched]")).toHaveCount(0);
+    }
+  });
+
+  // 0.172.0, the user: "remove the auto refresh toggle, just make it default
+  // to always refresh a device on a new install". Until then a device asked
+  // first — a toast with a Refresh button — unless its Updates card's switch
+  // was on.
+  test.describe("a new version", () => {
+    // Without the service worker: a page it controls makes its requests
+    // through it, where a route can't answer them.
+    test.use({ serviceWorkers: "block" });
+
+    test("a page older than the installed add-on reloads itself, once and without asking, and Settings has no switch for it (0.172.0)", async ({ page }) => {
+      // The add-on says it is a version this page isn't.
+      await page.route("**/api", async (route) => {
+        const response = await route.fetch();
+        await route.fulfill({ response, json: { ...(await response.json()), version: "9.9.9" } });
+      });
+      let loads = 0;
+      page.on("load", () => loads++);
+      await page.goto("/control/device");
+      // It reloads itself: the page has loaded twice.
+      await expect.poll(() => loads).toBe(2);
+      // Still the old page after that — here the add-on only says it is newer
+      // — it asks, rather than reloading for ever.
+      await expect(page.getByText("New version available")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Update to v9.9.9" })).toBeVisible();
+      expect(loads).toBe(2);
+      // Nothing to choose: no Updates card, no switch.
+      await expect(page.getByRole("heading", { name: "Software", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Updates", exact: true })).toHaveCount(0);
+      await expect(page.getByText("Refresh automatically")).toHaveCount(0);
+      await expect(page.getByRole("switch", { name: /refresh/i })).toHaveCount(0);
+    });
+  });
+
+  // A card that folds clips what it holds, so a row can't be let out of it.
+  test("a Navigation row dragged past its card's edge stays in its list, and still lands where it was taken (0.172.0)", async ({ page, isMobile }) => {
+    test.skip(isMobile, "a mouse's drag; a touch's goes through the same sensor");
+    await page.goto("/control/device");
+    const card = page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: "Navigation", exact: true }) });
+    const moves = () => card.getByRole("button", { name: /^Move / }).evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")!));
+    await expect(card.getByRole("button", { name: /^Move / }).first()).toBeVisible();
+    await splashGone(page);
+    const before = await moves();
+    expect(before.length).toBeGreaterThan(2);
+    // The second row that moves, by its handle: the row is the handle's
+    // parent, and the list the rows' own.
+    const handle = card.getByRole("button", { name: before[1], exact: true });
+    const row = handle.locator("xpath=..");
+    const list = row.locator("xpath=..");
+    const grip = (await handle.boundingBox())!;
+    const edge = (await card.boundingBox())!;
+    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(grip.x + grip.width / 2, grip.y - 20, { steps: 4 });
+    // Far above the card: over the tabs.
+    await page.mouse.move(grip.x + grip.width / 2, edge.y - 80, { steps: 8 });
+    // The row has gone as far as the list's head and no further, whole.
+    await expect
+      .poll(async () => Math.round((await row.boundingBox())!.y - (await list.boundingBox())!.y))
+      .toBe(0);
+    await page.mouse.up();
+    // Dropped there, it is the first of the rows that move.
+    await expect.poll(moves).toEqual([before[1], before[0], ...before.slice(2)]);
+    // And back, for this device's nav is kept (localStorage, cleared with the context).
+    await card.getByRole("button", { name: "Reset" }).click();
+    await expect.poll(moves).toEqual(before);
   });
 
   test("the device mode switches the navigation between frame and remote", async ({ page, isMobile }) => {

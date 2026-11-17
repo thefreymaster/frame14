@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from "react";
-import { getAutoRefresh } from "./autoRefresh";
 import { socket } from "./socket";
 import { toaster } from "../components/ui/toaster";
 
@@ -9,11 +8,14 @@ import { toaster } from "../components/ui/toaster";
  * (/api). They differ once the add-on updates under an open page: the server
  * restarts, the socket reconnects, and the page is still the old one. A
  * phone's home-screen app keeps that old page until it's closed out, so the
- * page offers a reload instead: a toast once per new version, and an Update
- * button beside the version on /control. A device with /control's auto
- * refresh on (lib/autoRefresh) reloads itself instead of asking — once per
- * version, so a reload that somehow still comes up old falls back to the
- * toast rather than reloading forever.
+ * page reloads itself into the new one — every device, without asking
+ * (0.172.0, the user: "remove the auto refresh toggle, just make it default
+ * to always refresh a device on a new install"; until then a switch on
+ * /control's Updates card, off unless turned on, chose between that and
+ * being asked). Once per version: a reload that somehow still comes up old
+ * falls back to asking — a toast with a Refresh button, once per version,
+ * and an Update button beside the status on /control — rather than
+ * reloading forever.
  *
  * It checks on every socket connect (the first, and each one after a
  * restart) and when the page comes back into view.
@@ -47,7 +49,7 @@ function refreshedFor(): string {
 
 /** Reload for `version` now, unless this tab already did. */
 function autoRefresh(version: string): boolean {
-  if (!getAutoRefresh() || refreshedFor() === version) return false;
+  if (refreshedFor() === version) return false;
   try {
     sessionStorage.setItem(REFRESHED_KEY, version);
   } catch {

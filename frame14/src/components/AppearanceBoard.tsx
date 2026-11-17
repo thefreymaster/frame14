@@ -18,6 +18,10 @@ export function AppearanceBoard() {
     useThemeMode();
   return (
     <Board
+      // Folds to its header, as every card of Settings' Display and Device
+      // tabs does (0.172.0).
+      collapsible
+      storageKey="settings-appearance"
       title={
         <HStack justify="space-between" width="100%">
           <SectionTitle icon={<IoColorPaletteOutline />}>

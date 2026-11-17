@@ -1,6 +1,7 @@
 import { Box, Card, Grid, Text, VStack } from "@chakra-ui/react";
 import type { HomeForecastPeriod } from "../hooks/useHomeData";
 import { RAIN_SHOWN_FROM, roundTemp } from "../lib/forecast";
+import { WELL_SHADOW } from "../lib/floatingSurface";
 import { weatherIcon } from "../lib/weatherIcons";
 
 function hourLabel(datetime: string, now: Date): string {
@@ -20,6 +21,8 @@ function hourLabel(datetime: string, now: Date): string {
  * reaches RAIN_SHOWN_FROM) and the temperature. The desktop weather card's;
  * with `scroll` (/weather's full day of hours) the columns keep a readable
  * width and the well scrolls sideways instead of dropping the later hours.
+ * Where the theme presses the cards in (Embossed) the well is pressed into
+ * its card (WELL_SHADOW, 0.172.0).
  */
 export function HourlyForecast({
   hours,
@@ -34,7 +37,13 @@ export function HourlyForecast({
   );
 
   return (
-    <Card.Root size="sm" variant="subtle" borderRadius="sm">
+    <Card.Root
+      size="sm"
+      variant="subtle"
+      borderRadius="sm"
+      boxShadow={WELL_SHADOW}
+      data-forecast="hourly"
+    >
       <Card.Body
         px="2"
         css={{ containerType: "inline-size" }}

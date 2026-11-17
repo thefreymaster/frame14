@@ -10,12 +10,15 @@ import { SectionTitle } from "./SectionTitle/SectionTitle";
 export function PageHeader({
   icon,
   iconColor,
+  iconGlow,
   title,
   actions,
   children,
 }: {
   icon?: React.ReactNode;
   iconColor?: string;
+  /** The icon glows (SectionTitle's `glow`): the Lights page's, while a light is on. */
+  iconGlow?: boolean;
   title: string;
   actions?: React.ReactNode;
   children?: React.ReactNode;
@@ -24,7 +27,7 @@ export function PageHeader({
     <Board
       title={
         <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
-          <SectionTitle icon={icon} iconColor={iconColor}>
+          <SectionTitle icon={icon} iconColor={iconColor} glow={iconGlow}>
             {title}
           </SectionTitle>
           {actions && (

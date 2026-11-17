@@ -90,10 +90,12 @@ export function HomeLightsSection() {
         // The count wraps under the title when the card is too narrow for
         // both, like the Climate card's range.
         <Flex align="center" gap="3" rowGap="1" wrap="wrap" width="100%">
-          {/* Lit while one of its lights is on, as /lights' groups (0.154.0). */}
+          {/* Lit while one of its lights is on, as /lights' groups (0.154.0),
+              and glowing with them (0.172.0). */}
           <SectionTitle
             icon={onIds.length > 0 ? <MdLightbulb /> : <MdOutlineLightbulb />}
             iconColor={onIds.length > 0 ? "yellow.500" : undefined}
+            glow={onIds.length > 0}
           >
             Lights
           </SectionTitle>

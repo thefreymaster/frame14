@@ -276,6 +276,86 @@ test.describe("the Lights page", () => {
     await expect(page.getByText("4 on")).toBeVisible();
   });
 
+  // 0.172.0, the user, of the lit bulbs in the rooms' headers: "When a light
+  // is on, add a glowing animation outlining the light icon, like a
+  // feathered fading slow pulsing animation".
+  test("a lit header icon glows — the icon's own shape feathered outwards, fading in and out slowly — and an unlit one doesn't", async ({ page }) => {
+    await page.goto("/lights");
+    const LIT = "rgb(234, 179, 8)";
+    const halo = (title: string) => board(page, title).locator(".chakra-card__header [data-glow-halo]");
+    const icon = (title: string) => board(page, title).locator(".chakra-card__header svg:not([data-glow-halo])").first();
+    await expect(board(page, "Kitchen").getByRole("button", { name: "Kitchen Cabinet: 35%" })).toBeVisible();
+    // The page's own header, a room with a light on, and the kid's room.
+    for (const title of ["Lights", "Kitchen", "Aiden's Room"]) {
+      await expect(halo(title)).toHaveCount(1);
+      const drawn = await halo(title).evaluate((el) => {
+        const cs = getComputedStyle(el);
+        const [animation] = el.getAnimations();
+        const frames = (animation.effect as KeyframeEffect).getKeyframes();
+        return {
+          colour: cs.color,
+          feather: parseFloat(/blur\(([\d.]+)px\)/.exec(cs.filter)?.[1] ?? "0"),
+          repeats: cs.animationIterationCount,
+          direction: cs.animationDirection,
+          seconds: parseFloat(cs.animationDuration),
+          // What the pulse changes, and between what.
+          changes: [...new Set(frames.flatMap((f) => Object.keys(f)))].filter((k) => !["offset", "computedOffset", "easing", "composite"].includes(k)).sort(),
+          opacities: frames.map((f) => Number(f.opacity)),
+          running: animation.playState,
+          hidden: el.getAttribute("aria-hidden"),
+          tappable: cs.pointerEvents,
+        };
+      });
+      // The icon's colour, blurred: a feathered copy of its outline.
+      expect(drawn.colour).toBe(LIT);
+      expect(drawn.feather).toBeGreaterThan(2);
+      // Fading in and out for good, slowly: two seconds and more each way.
+      expect(drawn).toMatchObject({ repeats: "infinite", direction: "alternate", running: "running", hidden: "true", tappable: "none" });
+      expect(drawn.seconds).toBeGreaterThanOrEqual(2);
+      // Opacity and transform alone — the blur itself never changes, so the
+      // frame's browser repaints nothing — from faint to full.
+      expect(drawn.changes).toEqual(["opacity", "transform"]);
+      expect(Math.min(...drawn.opacities)).toBeLessThan(0.5);
+      expect(Math.max(...drawn.opacities)).toBe(1);
+      // It lies behind the icon, about the same middle (read in one go: the
+      // page is still scaling in, and the halo swelling), and comes first,
+      // so the icon is drawn over it.
+      const apart = await halo(title).evaluate((el) => {
+        const bulb = el.parentElement!.querySelector("svg:not([data-glow-halo])")!;
+        const [a, b] = [el.getBoundingClientRect(), bulb.getBoundingClientRect()];
+        return {
+          x: Math.abs(a.x + a.width / 2 - (b.x + b.width / 2)),
+          y: Math.abs(a.y + a.height / 2 - (b.y + b.height / 2)),
+          behind: !!(el.compareDocumentPosition(bulb) & Node.DOCUMENT_POSITION_FOLLOWING),
+        };
+      });
+      expect(apart.x).toBeLessThan(0.5);
+      expect(apart.y).toBeLessThan(0.5);
+      expect(apart.behind).toBe(true);
+      await expect(icon(title)).toHaveCSS("color", LIT);
+    }
+    // The halo takes no room: a lit room's title starts where an unlit one's does.
+    const titleLeft = async (title: string) =>
+      (await board(page, title).getByRole("heading", { name: title, exact: true }).boundingBox())!.x - (await board(page, title).boundingBox())!.x;
+    expect(await titleLeft("Kitchen")).toBeCloseTo(await titleLeft("Outside"), 0);
+    // A room with nothing on: no glow. And a room's goes out with its lights.
+    await expect(halo("Outside")).toHaveCount(0);
+    await board(page, "Kitchen").getByRole("button", { name: "Turn off Kitchen" }).click();
+    await expect(board(page, "Kitchen").getByRole("button", { name: "Kitchen Cabinet: Off" })).toBeVisible();
+    await expect(halo("Kitchen")).toHaveCount(0);
+    await expect(halo("Lights")).toHaveCount(1);
+  });
+
+  test("with reduced motion the glow is a steady halo", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/lights");
+    const halo = board(page, "Kitchen").locator(".chakra-card__header [data-glow-halo]");
+    await expect(halo).toHaveCount(1);
+    await expect(halo).toHaveCSS("animation-name", "none");
+    await expect(halo).toHaveCSS("opacity", "0.6");
+    expect(await halo.evaluate((el) => el.getAnimations().length)).toBe(0);
+  });
+
   // 0.153.0: the star in a light's drawer makes it one of this device's
   // favourites, in a card across the top of the page.
   test("a light starred from its drawer joins the Favorites card at the top, through a reload, and leaves it unstarred", async ({ page }) => {

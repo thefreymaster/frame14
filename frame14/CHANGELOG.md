@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.172.0
+
+- Changed: in the **Embossed** colour theme the forecasts are now pressed into their cards, as the cards are into the page: the **Next hours** strip on Home's weather card, and the hours and the days ahead on the Weather page and in the weather dialog. The container and VM tiles on the Unraid page, and the people signed in on Settings' Account card, are pressed in the same way, and lose their outline for it. The buttons still stand up, and the other colour themes are as they were.
+- Changed: in the **Embossed** colour theme the navigation — the bar along the bottom, and the rail down the side on a desktop — is pressed into the page again, as the cards are and in their colour. It had stood up out of the page since 0.171.3. An entry still goes in when you press it.
+- Added: every card on Settings' **Display** and **Device** tabs now folds to its header: tap a card's header to fold it away, and again to open it. Each card stays as you left it on that device. While you drag a row of the Navigation card, it now stops at the ends of its list.
+- Changed: every device now refreshes itself as soon as a new version of Frame14 is installed, without asking. The **Refresh automatically** switch, and the Updates card that held it, are gone from Settings. Should a refresh still come up as the old version, the **New version available** message with its Refresh button asks, as before.
+- Added: the lit icon in a header now glows while one of its lights is on — each room's bulb on the Lights page, the page's own, the Favorites card's star, and the Lights card on Home: a soft halo round the icon that fades in and out slowly. It is a steady halo where the device asks for reduced motion.
+
 ## 0.171.3
 
 - Changed: in the **Embossed** colour theme the navigation — the bar along the bottom, and the rail down the side on a desktop — now stands up out of the page instead of being pressed into it: the buttons' colour, with a shadow under it. Press one of its entries and that entry is pushed into the bar, and comes back out when you let go.

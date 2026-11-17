@@ -32,7 +32,9 @@ const EMPTY: string[] = [];
 const DEFAULT_SKELETON_TILES = 6;
 
 // A group's header icon while one of its lights is on: the page header's
-// yellow (0.154.0).
+// yellow (0.154.0) — and glowing, a soft halo that fades in and out slowly
+// (0.172.0, SectionTitle's `glow`: the page's, the Favorites' and each
+// group's alike).
 const LIT = "yellow.500";
 
 /** A group's header icon, lit (filled) while one of its lights is on. */
@@ -108,6 +110,7 @@ export function Lights() {
         // an outline in yellow always before).
         icon={onIds.length > 0 ? <MdLightbulb /> : <MdOutlineLightbulb />}
         iconColor={onIds.length > 0 ? LIT : undefined}
+        iconGlow={onIds.length > 0}
         title="Lights"
         actions={
           onIds.length > 0 && (
@@ -152,6 +155,7 @@ export function Lights() {
                   <SectionTitle
                     icon={<IoStar />}
                     iconColor={favoritesOn.length > 0 ? LIT : undefined}
+                    glow={favoritesOn.length > 0}
                   >
                     Favorites
                   </SectionTitle>
@@ -196,6 +200,7 @@ export function Lights() {
                       <SectionTitle
                         icon={groupIcon(section.title, on.length > 0)}
                         iconColor={on.length > 0 ? LIT : undefined}
+                        glow={on.length > 0}
                       >
                         {section.title}
                       </SectionTitle>

@@ -10,8 +10,7 @@ export const NAV_PAD = "0.375rem";
  * to have the same shade as the side navigation. The theme's `surface`
  * shadow: Chakra's `lg`, none in the Outlines palette, whose cards and
  * navs are their outline alone, and an inner one in Embossed, whose cards
- * are pressed into the page — the navs' own is NAV_SHADOW, the same but
- * there, where they stand up.
+ * and navs are pressed into the page.
  */
 export const SURFACE_SHADOW = "surface";
 
@@ -56,6 +55,33 @@ export const TILE_FACE = "emboss.tile";
 export const TILE_EDGE = "edge";
 /** That edge's width in a calc(): what a ring leaves for its inset shadow. */
 export const TILE_EDGE_WIDTH = "var(--chakra-border-widths-edge)";
+
+/**
+ * A well pressed into its card, where the theme presses the cards in
+ * (Embossed; 0.172.0, the user: "The forcast on the home page and both
+ * forecasts on the weather route should be concave in embossed theme. The VM
+ * and Container chips should also be concave in embossed mode on the unraid
+ * route"): what holds something to read — the hours and the days of a
+ * forecast, an Unraid container or VM — is a recess in the card, as the
+ * card is one in the page, while what is pressed (a button, a tile that is
+ * one) stands up. The theme's whole `recess` shadow — the shade inside the
+ * top edge, the light under the lower lip — and none in every other
+ * palette, so the well names none.
+ *
+ * A well that is filled already (a `subtle` card: the forecasts') wears the
+ * shadow alone: its `bg.muted` is a step off the card's by day and by night,
+ * and the shade shows on it. One that is an outlined card (an Unraid tile)
+ * is the card's own colour, where the shade is lost by night — so it takes
+ * the whole of TILE_WELL: the wells' colour where things are pressed in (the
+ * theme's `emboss.well`, the panel's elsewhere) and no outline there
+ * (TILE_EDGE), the recess's own edge in its place.
+ */
+export const WELL_SHADOW = "recess";
+export const TILE_WELL = {
+  bg: "emboss.well",
+  borderWidth: TILE_EDGE,
+  boxShadow: WELL_SHADOW,
+} as const;
 
 /** How long a tile's ring, and the face inside it, take to come and go. */
 export const TILE_RING_MS = "400ms";
@@ -156,27 +182,21 @@ export const FROST = {
 } as const;
 
 /**
- * The navs' own colour and shadow: the cards' in every palette but Embossed,
- * where the cards are pressed into the page and the navigation stands up
- * out of it, as the buttons do out of the cards (0.171.3, the user: "The
- * Navigationbar should be convex sticking out and depress when button
- * pressing" — it was pressed in with the cards since 0.168.0). The theme's
- * `emboss.bar` (the buttons' colour there) and `nav` shadow (a cast shadow
- * there, no inner one); an entry held down is pushed into the bar
- * (LandscapeNav's entryCss: the cards' recess).
- */
-export const NAV_FACE = "emboss.bar";
-export const NAV_SHADOW = "nav";
-
-/**
  * The navs' surface: FLOATING_SURFACE made frosted — the cards' colour at
  * NAV_SURFACE_TINT over FROST, so the page scrolling beneath shows through
  * and the colour stays the cards'. The lights strip keeps the opaque surface.
+ *
+ * The cards' shadow with it, in every palette: in Embossed the navigation is
+ * pressed into the page as the cards are (0.172.0, the user: "Make the
+ * navigation concave also. It is currently convex" — as it was from 0.168.0,
+ * but for one version, 0.171.3, when it stood up out of the page in the
+ * buttons' colour with a shadow under it, at the user's word then; don't
+ * stand it up again unasked). An entry held down is still pushed in
+ * (LandscapeNav's entryCss: the cards' recess, in the bar's floor).
  */
 export const NAV_SURFACE = {
   ...FLOATING_SURFACE,
-  bg: `${NAV_FACE}/${NAV_SURFACE_TINT}`,
-  shadow: NAV_SHADOW,
+  bg: `bg.surface/${NAV_SURFACE_TINT}`,
   ...FROST,
 } as const;
 

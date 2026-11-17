@@ -47,6 +47,43 @@ test.describe("who is signed in", () => {
     expect(account.enabled).toBe(true);
     expect(account.user).toEqual({ email: evan });
     expect(account.people.find((p) => p.email === evan)?.online).toBe(true);
+    // The card folds to its header, as the tab's others do (0.172.0), and
+    // opens again.
+    const fold = card.locator("button[data-stretched]");
+    await fold.click();
+    await expect(fold).toHaveAttribute("aria-expanded", "false");
+    await expect(card.locator("[data-account-user]")).toBeHidden();
+    await expect(card.getByRole("heading", { name: "Account" })).toBeVisible();
+    await fold.click();
+    await expect(card.locator("[data-account-user]")).toBeVisible();
+
+    // In the Embossed theme the row is a well pressed into its card — the
+    // card's own recess, and no outline — and an outlined card in any other
+    // (0.172.0, the user: "The signed in devices should also be concave on
+    // embossed mode").
+    const drawn = (el: typeof row) =>
+      el.evaluate((node) => {
+        const cs = getComputedStyle(node);
+        return { shadow: cs.boxShadow, edge: parseFloat(cs.borderTopWidth), floor: cs.backgroundColor };
+      });
+    // This browser as a remote wearing its own colours: nothing is sent to the server.
+    const wear = async (palette: "gray" | "embossed") => {
+      await page.evaluate((palette) => {
+        localStorage.setItem("device-mode", "controller");
+        localStorage.setItem("local-theme-palette", palette);
+      }, palette);
+      await page.reload();
+      await expect(page.locator("html")).toHaveAttribute("data-palette", palette);
+      await expect(row).toBeVisible();
+    };
+    await wear("gray");
+    expect(await drawn(row)).toMatchObject({ shadow: "none", edge: 1 });
+    await wear("embossed");
+    const [pressed, around] = [await drawn(row), await drawn(card)];
+    expect(around.shadow).toContain("inset");
+    expect(pressed.shadow).toBe(around.shadow);
+    expect(pressed.edge).toBe(0);
+    expect(pressed.floor).not.toBe(around.floor);
     expect(errors).toEqual([]);
   });
 

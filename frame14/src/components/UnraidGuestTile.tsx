@@ -13,6 +13,7 @@ import {
   type UnraidContainer,
   type UnraidVm,
 } from "../lib/unraid";
+import { TILE_WELL } from "../lib/floatingSurface";
 import { Status } from "./ui/status";
 
 /**
@@ -23,6 +24,12 @@ import { Status } from "./ui/status";
  * Paused, Restarting, Stopped — and, for a container running with its CPU and
  * memory sensors enabled in Home Assistant, what it uses on a line under
  * that (beside the status, it ran out of room on the frame).
+ *
+ * Nothing to press, so where the theme presses the cards in (Embossed) it
+ * doesn't stand up as the button tiles do: it is a well in its card
+ * (TILE_WELL, 0.172.0, the user: "The VM and Container chips should also be
+ * concave in embossed mode on the unraid route"). An outlined card in every
+ * other theme.
  */
 export function UnraidGuestTile({
   kind,
@@ -52,6 +59,7 @@ export function UnraidGuestTile({
       variant="outline"
       // Concentric with the card's corners, as every tile is.
       borderRadius="sm"
+      {...TILE_WELL}
       data-guest={guest.name}
       data-kind={kind}
     >

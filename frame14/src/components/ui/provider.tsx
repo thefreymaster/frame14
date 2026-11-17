@@ -53,10 +53,6 @@ const EMBOSSED_SHADOW = `${EMBOSSED_SHADE}, ${EMBOSSED_LIP}`;
 // of the little top and bottom inside shadow").
 const RAISED_DROP =
   "0 0.125rem 0.25rem {colors.emboss.cast}, 0 0 0.0625rem {colors.emboss.cast}";
-// The same for the navigation, which stands up too (0.171.3): a bar, not a
-// button, so it stands a little higher and its shadow falls further.
-const RAISED_BAR =
-  "0 0.25rem 0.75rem {colors.emboss.cast}, 0 0 0.0625rem {colors.emboss.cast}";
 
 // A shadow of nothing: what `none` is, where `none` can't be written — as
 // one layer of a longer shadow.
@@ -243,13 +239,18 @@ const system = createSystem(
                 ),
               },
             },
-            // The navigation's colour: the cards' in every other palette,
-            // and the buttons' where it stands up with them (0.171.3).
-            bar: {
+            // The floor of a tile pressed into its card (lib/floatingSurface's
+            // TILE_WELL: an Unraid container's or VM's, which is no button):
+            // the wells' own colour where things are pressed in (Embossed) —
+            // a step off the card's in both modes, since on a floor of the
+            // card's own colour the shade is lost, as on the dial's — and
+            // the panel's in every other palette, where such a tile is an
+            // outlined card.
+            well: {
               value: {
-                base: "{colors.bg.surface}",
+                base: "{colors.bg.panel}",
                 ...Object.fromEntries(
-                  EMBOSSED.map((p) => [`_${p}`, "{colors.gray.subtle}"]),
+                  EMBOSSED.map((p) => [`_${p}`, "{colors.bg.muted}"]),
                 ),
               },
             },
@@ -325,7 +326,10 @@ const system = createSystem(
           // lip outside it. None where nothing is pressed in.
           // The whole recess, and its lip as one layer of a longer shadow
           // (`edge`: a shadow of nothing where the others are `none`), are
-          // what a raised button and tile wear while they are held down.
+          // what a raised button and tile wear while they are held down —
+          // and the whole is what a well in a card wears always (0.172.0,
+          // lib/floatingSurface's WELL_SHADOW: the forecasts' wells, an
+          // Unraid container's or VM's tile).
           recess: {
             DEFAULT: embossedOnly(EMBOSSED_SHADOW),
             shade: embossedOnly(EMBOSSED_SHADE),
@@ -340,19 +344,6 @@ const system = createSystem(
           raised: {
             DEFAULT: embossedOnly(RAISED_DROP),
             edge: embossedOnly(RAISED_DROP, NO_SHADOW),
-          },
-          // The shade under both navs (lib/floatingSurface's NAV_SHADOW):
-          // the cards' — Chakra's `lg`, none where things are drawn by their
-          // outline alone — except where the cards are pressed in
-          // (Embossed), where the navigation stands up out of the page as
-          // the buttons do out of the cards (0.171.3, the user: "The
-          // Navigationbar should be convex sticking out").
-          nav: {
-            value: {
-              base: "{shadows.lg}",
-              ...Object.fromEntries(OUTLINED.map((p) => [`_${p}`, "none"])),
-              ...Object.fromEntries(EMBOSSED.map((p) => [`_${p}`, RAISED_BAR])),
-            },
           },
           // The shade inside the top edge of anything held down (lib/press):
           // a recess's, a little shallower. Not where buttons stand up

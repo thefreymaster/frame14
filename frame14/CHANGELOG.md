@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.173.2
+
+- Fixed: on the Energy card and the Energy page, the AC waves no longer stop short of the circles, cut off square with a gap either side. Each wave now comes out from behind one circle and goes in behind the next. A line with nothing on it reaches both circles too.
+
 ## 0.173.1
 
 - Changed: the AC waves on the Energy card and the Energy page are taller and longer — twice as high, more than half the height of the circles they run between — so the two read as waves swinging apart rather than winding round each other like a double helix. The second wave of each pair is a little fainter.

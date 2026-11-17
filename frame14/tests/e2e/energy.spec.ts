@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetStub, stub } from "./helpers";
+import { resetStub, splashGone, stub } from "./helpers";
 
 test.beforeEach(async ({ request }) => {
   await resetStub(request);
@@ -195,7 +195,8 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
       const late = left();
       animation.currentTime = was.time;
       if (was.state === "running") animation.play();
-      const wireBox = el.parentElement!.getBoundingClientRect();
+      const wire = el.closest<HTMLElement>("[data-flow-wire]")!;
+      const wireBox = wire.getBoundingClientRect();
       const picture = decodeURIComponent(cs.maskImage || cs.webkitMaskImage);
       return {
         root: parseFloat(getComputedStyle(document.documentElement).fontSize),
@@ -211,7 +212,7 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
         longer: el.getBoundingClientRect().width - wireBox.width,
         height: wireBox.height,
         node: el.closest("[data-card]")!.querySelector("[data-flow-node]")!.getBoundingClientRect().height,
-        clipped: getComputedStyle(el.parentElement!).overflow,
+        clipped: getComputedStyle(wire).overflow,
         still: cs.animationName === "none",
       };
     });
@@ -312,5 +313,135 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   await expect(wires.nth(0).locator("[data-flow-wave]")).toHaveCount(0);
   expect((await wires.nth(0).boundingBox())!.height).toBeLessThan(2);
   await expect(wires.nth(1)).toHaveAttribute("data-flow-wire", "left");
+});
+
+// 0.173.2, the user, with a screenshot of the waves cut off square a gap
+// short of each circle: "The animation is currently clipped behind paddi g
+// it looks like. It should go behind the circles".
+test("a wire's waves come out from behind one circle and go in behind the next, with no gap and nothing showing through", async ({ page, request }) => {
+  await page.goto("/home");
+  const flow = page.locator('[data-card="energy"] [data-flow]');
+  await expect(flow.locator("[data-flow-wave]")).toHaveCount(2);
+  // Once the page is all there — the launch splash off it, on the screen
+  // (a phone's Home scrolls), its scale-in over and nothing moving — and
+  // standing still, so a picture of them can be read where they were measured.
+  await splashGone(page);
+  await flow.scrollIntoViewIfNeeded();
+  for (let last = ""; ; ) {
+    const now = JSON.stringify(await flow.boundingBox());
+    if (now === last) break;
+    last = now;
+    await page.waitForTimeout(250);
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(flow.locator("[data-flow-wave]").first()).toHaveCSS("animation-name", "none");
+
+  const drawn = await flow.evaluate((grid) => {
+    const box = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, middle: r.left + r.width / 2, level: r.top + r.height / 2, across: r.width };
+    };
+    const mask = (el: Element) => {
+      const cs = getComputedStyle(el);
+      return cs.maskImage || cs.webkitMaskImage;
+    };
+    const nodes = [...grid.querySelectorAll("[data-flow-node]")];
+    const wires = [...grid.querySelectorAll("[data-flow-wire]")];
+    return {
+      apart: getComputedStyle(grid).isolation,
+      nodes: nodes.map((node) => ({ ...box(node), over: getComputedStyle(node).zIndex })),
+      wires: wires.map((wire) => ({
+        ...box(wire),
+        // The circle cut out of each end: one on the wire's box, one on the box inside it.
+        cuts: [mask(wire), mask(wire.firstElementChild!)],
+        colour: getComputedStyle(wire.querySelector("[data-flow-wave]")!).backgroundColor,
+      })),
+      // What the diagram is drawn on: its card.
+      ground: getComputedStyle(grid.closest(".chakra-card__root")!).backgroundColor,
+    };
+  });
+
+  // The nodes lie over the wires' ends, among themselves alone.
+  expect(drawn.apart).toBe("isolate");
+  expect(drawn.nodes.map((node) => node.over)).toEqual(["1", "1", "1"]);
+  for (const [i, wire] of drawn.wires.entries()) {
+    const [from, to] = [drawn.nodes[i], drawn.nodes[i + 1]];
+    // A wire's box runs from the middle of one node to the middle of the
+    // next, level with them — not from a gap past one to a gap short of the other.
+    expect(wire.left).toBeCloseTo(from.middle, 0);
+    expect(wire.right).toBeCloseTo(to.middle, 0);
+    expect(wire.level).toBeCloseTo(from.level, 0);
+    // And each node's circle is cut out of its end: nothing inside the
+    // circle, the cut under the node's 2px edge.
+    const radius = from.across / 2;
+    const cut = (gradient: string) => {
+      const [, at, clear, full] = /^radial-gradient\(circle at (\d+%) 50%, rgba\(0, 0, 0, 0\) ([\d.]+)px, rgb\(0, 0, 0\) ([\d.]+)px\)$/.exec(gradient)!;
+      return { at, clear: Number(clear), full: Number(full) };
+    };
+    const [left, right] = wire.cuts.map(cut);
+    expect([left.at, right.at]).toEqual(["0%", "100%"]);
+    for (const end of [left, right]) {
+      expect(end.clear).toBeGreaterThan(radius - 2);
+      expect(end.full).toBeLessThan(radius);
+      expect(end.full).toBeGreaterThan(end.clear);
+    }
+  }
+
+  // What is painted. How many pixels of a strip are a wave's colour — more
+  // than half way from the card's to the wave's, on the line between the
+  // two: a thin line's pixels are a blend of both.
+  /** `[r, g, b]` of "rgb(r, g, b)". */
+  const rgb = (colour: string) => colour.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+  async function painted(clip: { x: number; y: number; width: number; height: number }, colour: string) {
+    const png = (await page.screenshot({ clip })).toString("base64");
+    return page.evaluate(
+      async ({ png, wave, ground }) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${png}`;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const g = canvas.getContext("2d")!;
+        g.drawImage(image, 0, 0);
+        const { data } = g.getImageData(0, 0, image.width, image.height);
+        const way = wave.map((c, i) => c - ground[i]);
+        const whole = way.reduce((sum, c) => sum + c * c, 0);
+        let count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const from = [0, 1, 2].map((c) => data[i + c] - ground[c]);
+          // How far along from the card's colour to the wave's, and how far off that line.
+          const along = from.reduce((sum, c, k) => sum + c * way[k], 0) / whole;
+          const off = Math.hypot(...from.map((c, k) => c - along * way[k]));
+          if (along > 0.5 && off < 30) count += 1;
+        }
+        return count;
+      },
+      { png, wave: rgb(colour), ground: rgb(drawn.ground) },
+    );
+  }
+  const [solar, home] = drawn.nodes;
+  const [first] = drawn.wires;
+  const tall = { y: first.top, height: first.bottom - first.top };
+  // Right beside a circle — bare card until now, for the gap and more
+  // between it and where the wave began — the wave is drawn: at both ends
+  // of the wire.
+  const beside = 4;
+  expect(await painted({ x: solar.right + 1, width: beside, ...tall }, first.colour)).toBeGreaterThan(0);
+  expect(await painted({ x: home.left - 1 - beside, width: beside, ...tall }, first.colour)).toBeGreaterThan(0);
+  // Inside the circle it runs in behind, none of it: a node's fill is a
+  // tint, and a wave under it would show through. (The house's circle: its
+  // own edge and glyph are grey, where the panels' are the wave's yellow.)
+  expect(await painted({ x: home.left + 4, width: 5, y: home.level - 4, height: 8 }, first.colour)).toBe(0);
+
+  // A wire with nothing on it — the panels' at night — is a hairline from
+  // the one circle's edge to the other's: it stopped short of both, too.
+  await stub(request, "/_stub/state", { entity_id: "sensor.envoy_482518016321_current_power_production", state: "0" });
+  const idle = flow.locator('[data-flow-wire="idle"]');
+  await expect(idle).toHaveCount(1);
+  const line = (await idle.boundingBox())!;
+  expect(line.x).toBeCloseTo(solar.right, 0);
+  expect(line.x + line.width).toBeCloseTo(home.left, 0);
+  expect(line.y + line.height / 2).toBeCloseTo(solar.level, 0);
 });
 

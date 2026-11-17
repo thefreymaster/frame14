@@ -135,19 +135,31 @@ export function PowerFlow({
 
   return (
     <Grid
-      templateColumns="auto minmax(1rem, 1fr) auto minmax(1rem, 1fr) auto"
-      columnGap={s.gap}
+      templateColumns={COLUMNS}
       rowGap="1"
+      // A wire runs on under the nodes either side of it (Wire), which lie
+      // over its ends — among themselves: nothing outside the diagram is
+      // put under or over by it.
+      isolation="isolate"
+      css={{ "--flow-node": `{sizes.${s.node}}`, "--flow-gap": flowGap(s.gap) }}
+      data-flow=""
       alignItems="center"
       justifyItems="center"
     >
-      <Node icon={<PiSolarRoof />} color={producing ? "solar" : null} size={size} />
+      <Node
+        at={AT.solar}
+        icon={<PiSolarRoof />}
+        color={producing ? "solar" : null}
+        size={size}
+      />
       <Wire
+        at={AT.solarWire}
         color={producing ? "solar" : null}
         direction="right"
         watts={energy.currentProduction}
       />
       <Node
+        at={AT.home}
         // The nav's own house (lib/navItems).
         icon={<HomeIcon />}
         color="home"
@@ -155,37 +167,86 @@ export function PowerFlow({
         ring={coverage(energy)}
       />
       <Wire
+        at={AT.gridWire}
         color={gridColor}
         direction={exporting ? "right" : "left"}
         watts={abs}
       />
-      <Node icon={<IoFlash />} color={gridColor} size={size} />
+      <Node at={AT.grid} icon={<IoFlash />} color={gridColor} size={size} />
 
-      <Value size={size}>{fmtW(energy.currentProduction)}</Value>
-      <span />
-      <Value size={size}>{fmtW(energy.currentConsumption)}</Value>
-      <span />
-      <Value size={size}>{active ? fmtW(abs) : "—"}</Value>
+      <Value at={AT.solar} size={size}>
+        {fmtW(energy.currentProduction)}
+      </Value>
+      <Value at={AT.home} size={size}>
+        {fmtW(energy.currentConsumption)}
+      </Value>
+      <Value at={AT.grid} size={size}>
+        {active ? fmtW(abs) : "—"}
+      </Value>
 
-      <Label size={size}>Solar</Label>
-      <span />
-      <Label size={size}>Home</Label>
-      <span />
-      <Label size={size}>
+      <Label at={AT.solar} size={size}>
+        Solar
+      </Label>
+      <Label at={AT.home} size={size}>
+        Home
+      </Label>
+      <Label at={AT.grid} size={size}>
         {active ? (exporting ? "To grid" : "From grid") : "Grid idle"}
       </Label>
     </Grid>
   );
 }
 
+/**
+ * The diagram's columns. Each node's is two halves, which everything of the
+ * node's — its circle, its figure, its word — lies across, so the two are
+ * equal and the line between them is the node's middle; between two nodes,
+ * a column that takes the room left, a wire's length and the gap either
+ * side of it at the least. A wire lies across the half after one node, that
+ * column and the half before the next (AT): **from the middle of one circle
+ * to the middle of the other**, whatever the widths of the figures under
+ * them — a node's column is as wide as its widest line, "From grid" or
+ * "12.4 kW", wider than the circle, so a wire kept to the column between
+ * two of them stopped short of both circles by more than the gap.
+ */
+const WIRE_COLUMN = "minmax(calc(1rem + 2 * var(--flow-gap)), 1fr)";
+const COLUMNS = `auto auto ${WIRE_COLUMN} auto auto ${WIRE_COLUMN} auto auto`;
+
+/** Where each of the diagram's parts lies: its grid columns. */
+const AT = {
+  solar: "1 / span 2",
+  solarWire: "2 / span 3",
+  home: "4 / span 2",
+  gridWire: "5 / span 3",
+  grid: "7 / span 2",
+} as const;
+
 type Flow = keyof typeof ENERGY_COLORS;
 
+/** The diagram's column gap as a variable's value: the spacing tokens, at each width they are set for. */
+const flowGap = (gap: string | Record<string, string>) =>
+  typeof gap === "string"
+    ? `{spacing.${gap}}`
+    : Object.fromEntries(
+        Object.entries(gap).map(([at, step]) => [at, `{spacing.${step}}`]),
+      );
+
+/**
+ * A node's circle cut out of a wire's end: nothing inside the circle, all
+ * of the wire outside it, the cut lying under the node's own edge (which is
+ * EDGE wide, and drawn over the wire).
+ */
+const behindNode = (end: "0%" | "100%") =>
+  `radial-gradient(circle at ${end} 50%, transparent calc(var(--flow-node) / 2 - ${EDGE * 0.75}px), black calc(var(--flow-node) / 2 - ${EDGE * 0.25}px))`;
+
 function Node({
+  at,
   icon,
   color,
   size,
   ring,
 }: {
+  at: string;
   icon: React.ReactNode;
   color: Flow | null;
   size: FlowSize;
@@ -195,7 +256,11 @@ function Node({
   const c = color ? ENERGY_COLORS[color] : "border";
   return (
     <Center
+      gridColumn={at}
+      gridRow="1"
       position="relative"
+      // Over the wires' ends, which run in under it (Wire).
+      zIndex="1"
       boxSize={SIZES[size].node}
       rounded="full"
       borderWidth={ring == null ? `${EDGE}px` : "0"}
@@ -282,18 +347,34 @@ function Ring({ pct, track }: { pct: number; track: Flow }) {
  * A line between two nodes: a hairline with no power on it, else a wave
  * travelling in `direction` at the pace of `watts` (wirePace). The wave is
  * a strip a wave's length longer than the wire, in the flow's colour and
- * masked to the sines (WAVE_PICTURE), slid along by that length inside a box that
- * clips it. The pace is the running CSS animation's playback rate, set
- * through getAnimations: a change of animation-duration keeps the start time
- * and so jumps the wave to another phase at every reading, where a rate
+ * masked to the sines (WAVE_PICTURE), slid along by that length inside a
+ * box that clips it. The pace is the running CSS animation's playback rate,
+ * set through getAnimations: a change of animation-duration keeps the start
+ * time and so jumps the wave to another phase at every reading, where a rate
  * change carries on from where it is. Under reduced motion there is no
  * animation to pace: the wave stands.
+ *
+ * **The wave comes out from behind one circle and goes in behind the next**
+ * (0.173.2, the user, of a wave cut off square at each end of its column, a
+ * gap short of the circles: "The animation is currently clipped behind
+ * paddi g it looks like. It should go behind the circles"). The box runs
+ * from the middle of one node to the middle of the other (the grid's
+ * columns: COLUMNS, AT), and each node's circle is cut out of its end
+ * (behindNode: one mask on the box, one on a box inside it — two masks on
+ * one element would need mask-composite, which an older WebView names
+ * differently). The nodes are drawn over the wire, their edges on the cuts.
+ * A cut and not a wave drawn under an opaque node: a node's fill is a tint
+ * of its colour over whatever card or well the diagram is in, and the wave
+ * would show through it. A hairline runs from one circle's edge to the
+ * other's.
  */
 function Wire({
+  at,
   color,
   direction,
   watts,
 }: {
+  at: string;
   color: Flow | null;
   direction: "left" | "right";
   watts: number;
@@ -312,8 +393,12 @@ function Wire({
   if (!color) {
     return (
       <Box
+        gridColumn={at}
+        gridRow="1"
         alignSelf="center"
-        width="100%"
+        // From one node's middle to the other's, less half a circle at
+        // each end: from edge to edge.
+        width="calc(100% - var(--flow-node))"
         height="1px"
         bg="border"
         aria-hidden
@@ -323,37 +408,46 @@ function Wire({
   }
   return (
     <Box
+      gridColumn={at}
+      gridRow="1"
       width="100%"
       height={WAVE_HEIGHT}
       overflow="hidden"
+      maskImage={behindNode("0%")}
       aria-hidden
       data-flow-wire={direction}
     >
-      <Box
-        ref={ref}
-        width={`calc(100% + ${WAVE_LENGTH})`}
-        height="100%"
-        bg={ENERGY_COLORS[color]}
-        maskImage={WAVE_PICTURE}
-        maskSize={`${WAVE_LENGTH} 100%`}
-        maskRepeat="repeat-x"
-        animation={`${direction === "right" ? waveRight : waveLeft} ${FLOW_BASE_SECONDS}s linear infinite`}
-        _motionReduce={{ animation: "none" }}
-        data-flow-wave=""
-      />
+      <Box width="100%" height="100%" maskImage={behindNode("100%")}>
+        <Box
+          ref={ref}
+          width={`calc(100% + ${WAVE_LENGTH})`}
+          height="100%"
+          bg={ENERGY_COLORS[color]}
+          maskImage={WAVE_PICTURE}
+          maskSize={`${WAVE_LENGTH} 100%`}
+          maskRepeat="repeat-x"
+          animation={`${direction === "right" ? waveRight : waveLeft} ${FLOW_BASE_SECONDS}s linear infinite`}
+          _motionReduce={{ animation: "none" }}
+          data-flow-wave=""
+        />
+      </Box>
     </Box>
   );
 }
 
 function Value({
+  at,
   children,
   size,
 }: {
+  at: string;
   children: React.ReactNode;
   size: FlowSize;
 }) {
   return (
     <Text
+      gridColumn={at}
+      gridRow="2"
       textStyle={SIZES[size].value}
       fontWeight="semibold"
       whiteSpace="nowrap"
@@ -365,14 +459,22 @@ function Value({
 }
 
 function Label({
+  at,
   children,
   size,
 }: {
+  at: string;
   children: React.ReactNode;
   size: FlowSize;
 }) {
   return (
-    <Text textStyle={SIZES[size].label} color="fg.muted" whiteSpace="nowrap">
+    <Text
+      gridColumn={at}
+      gridRow="3"
+      textStyle={SIZES[size].label}
+      color="fg.muted"
+      whiteSpace="nowrap"
+    >
       {children}
     </Text>
   );

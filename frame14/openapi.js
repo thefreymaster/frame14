@@ -142,6 +142,60 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/account/alias": {
+      put: {
+        tags: ["Account"],
+        operationId: "setDeviceAlias",
+        summary: "Give a signed-in device an alias",
+        description:
+          "For the edit button on each row of Settings' Account card. A row of `people` — a person on a kind of device — can be called something of your own (\"Office MacBook\" where the page could only say Mac). The alias is kept by the server, not by the device that set it, and the list goes out again to every signed-in device at once, so they all read the same one. An empty alias, or null, takes it away. It is its row's: one person's two Macs are one row and share one alias; and it outlives the row, so a device dropped after thirty days away comes back under it. Anyone Cloudflare Access signed in may alias any row of the list; a caller Access didn't name can't, and is told of no rows.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email", "device", "alias"],
+                properties: {
+                  email: { type: "string", description: "The row's person, as `people` gives it.", example: "someone@example.com" },
+                  device: {
+                    type: "string",
+                    description: "The row's kind of device, as `people` gives it.",
+                    enum: ["iPhone", "iPad", "Mac", "Windows PC", "Android phone", "Android tablet", "Chromebook", "Linux PC", "Frame", "Browser"],
+                  },
+                  alias: {
+                    type: "string",
+                    nullable: true,
+                    maxLength: 40,
+                    description: "What to call it: trimmed, its runs of white space made one space each. Empty or null for none.",
+                    example: "Office MacBook",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "The alias was saved; the caller and the people signed in, as they are now.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Account" },
+              },
+            },
+          },
+          400: {
+            description: "Not `{ email, device, alias }`: `device` must be one of the kinds, and `alias` text of at most 40 characters with no control characters.",
+          },
+          403: {
+            description: "The caller isn't someone Cloudflare Access signed in.",
+          },
+          404: {
+            description: "Nobody is listed as that person on that device, or `cloudflare_access_team` isn't set and nobody is named at all.",
+          },
+        },
+      },
+    },
     "/api/speedtest/ping": {
       get: {
         tags: ["Speed test"],
@@ -1476,6 +1530,7 @@ export const openApiDocument = {
                   description: "The kind of device, as its page said of itself.",
                   enum: ["iPhone", "iPad", "Mac", "Windows PC", "Android phone", "Android tablet", "Chromebook", "Linux PC", "Frame", "Browser"],
                 },
+                alias: { type: "string", description: "What the row was called through `PUT /api/account/alias`; absent on a row with no alias.", example: "Office MacBook" },
                 online: { type: "boolean", description: "A page of theirs is open on that device now." },
                 lastSeen: { type: "string", format: "date-time", description: "When it arrived, or — once gone — when it left." },
               },

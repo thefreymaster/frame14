@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { resetStub, splashGone, stub } from "./helpers";
 import { APP_URL } from "./ports";
+import { FRESH_DEVICE } from "./settingsCards";
 
 test.describe("the Settings page", () => {
   test.describe("with a newer version in the store", () => {
@@ -428,6 +429,61 @@ test.describe("the Settings page", () => {
       await expect(card("Views")).toBeVisible();
       await expect(card("Views").locator("button[data-stretched]")).toHaveCount(0);
     }
+  });
+
+  // 0.173.0, the user, of both tabs with every card folded by hand: "All
+  // settings should be collapsed by default".
+  test.describe("on a device that has opened none of them", () => {
+    test.use({ storageState: FRESH_DEVICE });
+
+    test("every card of the Display and Device tabs starts out folded, and one opened stays open (0.173.0)", async ({ page, isMobile }) => {
+      const card = (title: string) => page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: title, exact: true }) });
+      const header = (title: string) => card(title).locator("button[data-stretched]");
+      const body = (title: string) => card(title).locator(".chakra-card__body").first();
+      const tabs = {
+        display: ["Display", "Screen", "Album"],
+        device: [...(isMobile ? ["Appearance"] : []), "Notifications", "Software", "Navigation", "Voice"],
+      };
+      for (const [tab, titles] of Object.entries(tabs)) {
+        await page.goto(`/control/${tab}`);
+        await splashGone(page);
+        for (const title of titles) {
+          await expect(header(title)).toHaveAttribute("aria-expanded", "false");
+          await expect(body(title)).toBeHidden();
+          await expect(card(title).getByRole("heading", { name: title, exact: true })).toBeVisible();
+        }
+        // So the tab is a list of its cards: each a header's height, one
+        // under the next (or beside it, in a desktop's two columns), and
+        // all of them on the screen at once.
+        const boxes = await Promise.all(titles.map(async (title) => (await card(title).boundingBox())!));
+        const [first] = boxes;
+        for (const box of boxes) {
+          expect(Math.abs(box.height - first.height)).toBeLessThan(first.height / 2);
+          expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+        }
+        // A header's own badge shows on the folded card.
+        if (tab === "device") await expect(card("Software").getByText("Up to date")).toBeVisible();
+        // A tap on one opens it, and it alone.
+        await header(titles[1]).click();
+        await expect(header(titles[1])).toHaveAttribute("aria-expanded", "true");
+        await expect(body(titles[1])).toBeVisible();
+        await expect(body(titles[0])).toBeHidden();
+        // Which the device keeps: open through a reload, the rest folded still.
+        await page.reload();
+        await expect(header(titles[1])).toHaveAttribute("aria-expanded", "true");
+        await expect(body(titles[1])).toBeVisible();
+        for (const title of titles.filter((t) => t !== titles[1])) {
+          await expect(header(title)).toHaveAttribute("aria-expanded", "false");
+          await expect(body(title)).toBeHidden();
+        }
+      }
+      // The Views card, a remote's whole tab, doesn't fold: it is all there.
+      if (isMobile) {
+        await page.goto("/control/views");
+        await expect(card("Views").locator("button[data-stretched]")).toHaveCount(0);
+        await expect(card("Views").getByRole("button").first()).toBeVisible();
+      }
+    });
   });
 
   // 0.172.0, the user: "remove the auto refresh toggle, just make it default

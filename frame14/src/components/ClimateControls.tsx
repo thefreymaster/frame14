@@ -16,6 +16,7 @@ import {
   type ClimateVisualMode,
 } from "../lib/hvac";
 import { ARC_MAX_TEMP, ARC_MIN_TEMP } from "../lib/thermostatArc";
+import { ClimateModeIcon } from "./ClimateModeIcon";
 import { FanIcon } from "./FanIcon";
 import { FanSpeedSlider } from "./FanSpeedSlider";
 import { ThermostatDial } from "./ThermostatDial";
@@ -172,7 +173,7 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
               : mode === "fan_only"
                 ? "Fan standby"
                 : "System off";
-  const AccentIcon = MODE_ICON[activeAction ?? mode];
+  const shownMode = activeAction ?? mode;
 
   function refreshSoon() {
     setTimeout(
@@ -297,7 +298,15 @@ export function ClimateControls({ unit }: { unit: HomeClimate }) {
                 color="inherit"
               />
             ) : (
-              <AccentIcon />
+              // As on its tile: heat rises off the flame, cold sinks from
+              // the flake (0.173.0).
+              <ClimateModeIcon
+                mode={shownMode}
+                on={shownMode !== "off"}
+                running={activeAction != null}
+                color="inherit"
+                boxSize="1em"
+              />
             )}
             <Text as="span">{statusLabel}</Text>
           </HStack>

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { dialReading, resetStub } from "./helpers";
+import { dialReading, resetStub, stub } from "./helpers";
 
 test.describe("the Climate page", () => {
   test.beforeEach(async ({ request }) => {
@@ -299,6 +299,101 @@ test.describe("the Climate page", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("Fan running")).toBeVisible();
     await expect(dialog.locator("[data-fan-icon]")).toHaveCSS("animation-name", "spin");
+  });
+
+  // 0.173.0, the user, of the fan's wind: "add some little animations in
+  // the same style for the heat and cool icons on the thermostat cards. Use
+  // their respective colors".
+  test("heat rises off a thermostat's flame and cold sinks from its flake, feathered and in the mode's colour, faster while it runs", async ({ page, request }) => {
+    await page.goto("/climate");
+    const heat = page.getByRole("button", { name: /^1st Floor:/ });
+    const cool = page.getByRole("button", { name: /^3rd Floor:/ });
+    const off = page.getByRole("button", { name: /^2nd Floor:/ });
+    await expect(heat).toHaveAccessibleName(/Heating to 70°/);
+    await expect(cool).toHaveAccessibleName(/Cooling to 72°/);
+
+    /** A wisp as it is drawn, and where it is at the start and near the end of its way. */
+    const wispOf = (icon: ReturnType<typeof heat.locator>) =>
+      icon.evaluate((el) => {
+        const wisp = el.querySelector("[data-mode-wisp]")!;
+        const glyph = el.querySelector("svg:not([data-mode-wisp])")!;
+        const cs = getComputedStyle(wisp);
+        const [animation] = wisp.getAnimations();
+        const frames = (animation.effect as KeyframeEffect).getKeyframes();
+        const duration = Number(animation.effect!.getComputedTiming().duration);
+        const middle = (node: Element) => {
+          const r = node.getBoundingClientRect();
+          return r.top + r.height / 2;
+        };
+        animation.pause();
+        animation.currentTime = duration * 0.02;
+        const start = middle(wisp) - middle(glyph);
+        animation.currentTime = duration * 0.95;
+        const end = middle(wisp) - middle(glyph);
+        animation.play();
+        return {
+          moved: [...new Set(frames.flatMap((f) => Object.keys(f)))].filter((k) => !["offset", "easing", "composite", "computedOffset"].includes(k)).sort(),
+          ends: [frames[0].opacity, frames.at(-1)!.opacity],
+          blur: cs.filter,
+          colour: cs.color,
+          own: getComputedStyle(glyph).color,
+          taps: cs.pointerEvents,
+          // The icon again, shape for shape.
+          same: wisp.innerHTML === glyph.innerHTML,
+          drift: end - start,
+          seconds: duration / 1000,
+          // Over the icon's own box: the tile is laid out as it was.
+          room: [el.getBoundingClientRect().width, glyph.getBoundingClientRect().width],
+        };
+      });
+
+    const flame = await wispOf(heat.locator('[data-mode-icon="heat"]'));
+    const flake = await wispOf(cool.locator('[data-mode-icon="cool"]'));
+    for (const wisp of [flame, flake]) {
+      // Moved by the compositor alone, from nothing to nothing; the blur never changes.
+      expect(wisp.moved).toEqual(["opacity", "transform"]);
+      expect(wisp.ends).toEqual(["0", "0"]);
+      expect(wisp.blur).toMatch(/^blur\([\d.]+px\)$/);
+      expect(wisp.same).toBe(true);
+      expect(wisp.colour).toBe(wisp.own);
+      expect(wisp.taps).toBe("none");
+      expect(wisp.room[0]).toBeCloseTo(wisp.room[1], 1);
+    }
+    // Heat goes up and cold comes down — each a good part of the icon's height.
+    expect(flame.drift).toBeLessThan(-flame.room[1] * 0.3);
+    expect(flake.drift).toBeGreaterThan(flake.room[1] * 0.3);
+    // Their own colours: each tile's status line's, orange and blue.
+    expect(flame.colour).not.toBe(flake.colour);
+    expect(flame.colour).toBe(await heat.getByText("Heating to 70°").evaluate((el) => getComputedStyle(el).color));
+    expect(flake.colour).toBe(await cool.getByText("Cooling to 72°").evaluate((el) => getComputedStyle(el).color));
+    // Two of each on their way, the second half a wisp behind the first.
+    for (const [tile, mode] of [[heat, "heat"], [cool, "cool"]] as const) {
+      await expect(tile.locator(`[data-mode-icon="${mode}"] [data-mode-wisp]`)).toHaveCount(2);
+    }
+    await expect(heat.locator("[data-mode-wisp]").last()).toHaveCSS("animation-delay", `${-flame.seconds / 2}s`);
+    // Running, a wisp is quicker than one of a thermostat waiting at its
+    // set point, and the cold is the slower of the two.
+    expect(flame.seconds).toBe(1.6);
+    expect(flake.seconds).toBe(2.2);
+    await stub(request, "/_stub/state", { entity_id: "climate.samsung_airconditioner_1", state: "heat", attributes: { hvac_action: "idle" } });
+    await expect(heat).toHaveAccessibleName(/Heat, set to 70°/);
+    await expect(heat.locator("[data-mode-wisp]").first()).toHaveCSS("animation-duration", "2.8s");
+
+    // Nothing off a thermostat that is off: its icon alone.
+    await expect(off.locator("svg")).toHaveCount(1);
+    await expect(off.locator("[data-mode-wisp], [data-mode-icon]")).toHaveCount(0);
+
+    // None under reduced motion.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(heat.locator("[data-mode-wisp]").first()).toBeHidden();
+    await expect(cool.locator("[data-mode-wisp]").first()).toBeHidden();
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+
+    // The dialog's readout wears its mode's icon the same way.
+    await cool.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Cooling now")).toBeVisible();
+    await expect(dialog.locator('[data-mode-icon="cool"] [data-mode-wisp]')).toHaveCount(2);
   });
 
   test("a live change from Home Assistant updates the tile", async ({ page, request }) => {

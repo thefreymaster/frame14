@@ -385,6 +385,85 @@ test.describe("the Embossed theme's buttons", () => {
         }
       });
 
+      // 0.173.0, the user: "Make all badges like 1 on and 13% be concave
+      // in embossed mode. Edit the theme so it applies to all badges app
+      // wide" — the badge recipe, so no badge names it.
+      test(`every badge is pressed in, a shallower well than a card's, and flat in any other theme (${scheme})`, async ({ page, request, isMobile }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        await quietHouse(request);
+        await page.goto("/home");
+        await wear(page, "gray");
+        const badges = {
+          // The two the user named: the Fans card's count and the Energy card's coverage.
+          "1 on": page.locator('[data-card="fan"] .chakra-card__header .chakra-badge'),
+          coverage: page.locator('[data-card="energy"] .chakra-card__header .chakra-badge').first(),
+          // And one on a tile that stands up: a fan's Off.
+          Off: page.getByRole("button", { name: "Guest Room Fan: off" }).locator(".chakra-badge"),
+        };
+        await expect(badges["1 on"]).toHaveText("1 on");
+        const flat: Record<string, string> = {};
+        for (const [name, badge] of Object.entries(badges)) {
+          await expect(badge, name).toBeAttached();
+          const look = await drawn(badge);
+          expect(look, name).toMatchObject({ edge: 0, inside: [], outside: [] });
+          flat[name] = look.floor;
+        }
+
+        await wear(page, "embossed");
+        // "rgba(…) 0px 3px 7px 0px inset": how far down the shade falls, and how soft.
+        const depth = (layer: string) => layer.replace(/^.*\)\s*/, "").split(" ").slice(1, 3).map(parseFloat);
+        const colour = (layer: string) => /^rgba?\([^)]*\)/.exec(layer)![0];
+        for (const [name, badge] of Object.entries(badges)) {
+          await expect(badge, name).toBeAttached();
+          // The card of the board it is on: the outermost, where a tile is a card too.
+          const card = await drawn(badge.locator("xpath=ancestor::*[contains(@class, 'chakra-card__root')][last()]"));
+          const own = await drawn(badge);
+          // A recess as its card's is — the shade inside its top edge, a
+          // hairline of it all round, the light on its lip under it — in
+          // the card's own shade and light.
+          expect(own.inside, name).toHaveLength(2);
+          expect(own.outside, name).toHaveLength(1);
+          expect(own.inside.map(colour)).toEqual(card.inside.map(colour));
+          expect(own.outside).toEqual(card.outside);
+          // But at a badge's size: its shade falls half as far, or it
+          // would fill the badge.
+          const [down, soft] = depth(own.inside[0]);
+          const [cardDown, cardSoft] = depth(card.inside[0]);
+          expect(down).toBeGreaterThan(0);
+          expect(down).toBeLessThan(cardDown);
+          expect(soft).toBeLessThan(cardSoft);
+          expect(down).toBeLessThan((await badge.boundingBox())!.height / 4);
+          // Its colour is its own still: only the shade is new.
+          expect(own.floor, name).toBe(flat[name]);
+          expect(own.edge).toBe(0);
+        }
+
+        // A badge that is only an outline — a Navigation row's More — keeps
+        // that outline in any other theme; pressed in, the recess's edge is
+        // the outline, on the wells' floor.
+        // A phone's bar holds five entries: a sixth, and two go under More
+        // (a desktop's rail holds them all, and has no such row).
+        if (!isMobile) return;
+        await page.goto("/control/device");
+        const sixth = page.getByRole("checkbox", { name: "Show Speed test in the nav" });
+        await page.locator("label", { has: sixth }).click();
+        await expect(sixth).toBeChecked();
+        const more = page.locator(".chakra-badge", { hasText: "More" }).first();
+        await expect(more).toBeVisible();
+        const pressed = await drawn(more);
+        expect(pressed.inside).toHaveLength(2);
+        expect(pressed.outside).toHaveLength(1);
+        expect(pressed.floor).not.toBe(CLEAR);
+        await wear(page, "gray");
+        await expect(more).toBeVisible();
+        const outlined = await drawn(more);
+        expect(outlined.floor).toBe(CLEAR);
+        expect(outlined.outside).toEqual([]);
+        // One layer inside its edge, with no blur: the 1px ring that is its outline.
+        expect(outlined.inside).toHaveLength(1);
+        expect(outlined.inside[0]).toMatch(/ 0px 0px 0px 1px inset$/);
+      });
+
       test(`an Unraid container's and VM's tiles are pressed into their cards, and outlined cards in any other theme (${scheme})`, async ({ page }) => {
         await page.emulateMedia({ colorScheme: scheme });
         const tiles = [page.locator('[data-kind="container"][data-guest="Plex"]'), page.locator('[data-kind="vm"][data-guest="Windows 11"]')];

@@ -67,6 +67,15 @@ export const HOME_PATH = "/home";
 export const SETTINGS_PATH = "/control";
 
 /**
+ * The house, as the nav's Home draws it when it is the page in hand — and
+ * wherever else a house is drawn: the energy flow's home node and the
+ * card's "Home used" (0.173.0, the user: "Use the same home icon for the
+ * solar card as the home icon in the navigation"; they had Ionicons' house,
+ * another shape beside the bar's).
+ */
+export const HomeIcon: IconType = RiHome5Fill;
+
+/**
  * Every nav entry, in the default order (since 0.109: Home, Clock, Lights,
  * Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Unraid (0.151.0),
  * Calendar, Football, Halloween (0.128: Oct 30 and 31), Speed test (0.167.0),
@@ -80,7 +89,7 @@ export const NAV_ITEMS: NavItem[] = [
     path: HOME_PATH,
     label: "Home",
     icon: RiHome5Line,
-    activeIcon: RiHome5Fill,
+    activeIcon: HomeIcon,
   },
   {
     path: "/clock",

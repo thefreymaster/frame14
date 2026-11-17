@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Badge, Box, Card, Grid, HStack, Icon, Stat } from "@chakra-ui/react";
+import { Badge, Box, Card, Grid, HStack, Stat } from "@chakra-ui/react";
 import type { HomeClimate } from "../hooks/useHomeData";
 import { ClimateDialog } from "./ClimateDialog";
+import { ClimateModeIcon } from "./ClimateModeIcon";
 import { FanIcon } from "./FanIcon";
 import {
   climateGridCss,
@@ -10,7 +11,6 @@ import {
   fanModePercentage,
   fmtClimateTemp,
   hvacPalette,
-  MODE_ICON,
   SQUARE_TILE_READING,
   TILE_MIN_LG_REM,
   TILE_RING_TWEENS,
@@ -64,7 +64,6 @@ export function ClimateTile({
   // Without the word AC (lib/hvac): the card says Climate.
   const name = displayClimateName(unit.name);
   const { accent, ring, palette } = hvacPalette(shown);
-  const ModeIcon = MODE_ICON[shown];
   const currentTemp = fmtClimateTemp(unit.currentTemp);
   const reading = currentTemp != null ? `${currentTemp}°` : "—";
 
@@ -164,15 +163,15 @@ export function ClimateTile({
                   color={accent}
                 />
               ) : (
-                <Icon
+                // Heat rises off the flame and cold sinks from the flake
+                // (0.173.0, ClimateModeIcon).
+                <ClimateModeIcon
+                  mode={shown}
+                  on={on}
+                  running={running}
                   color={on ? accent : "fg.subtle"}
                   boxSize={lg ? "7" : "5"}
-                  animation={
-                    running ? "pulse 2s ease-in-out infinite" : undefined
-                  }
-                >
-                  <ModeIcon />
-                </Icon>
+                />
               )}
             </HStack>
             {square ? (

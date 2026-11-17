@@ -130,9 +130,10 @@ export function NavLayoutBoard() {
   return (
     <Board
       // Folds to its header, as every card of Settings' Display and Device
-      // tabs does (0.172.0).
+      // tabs does (0.172.0), and starts out folded (0.173.0).
       collapsible
       storageKey="settings-navigation"
+      defaultOpen={false}
       title={<SectionTitle icon={<IoCompassOutline />}>Navigation</SectionTitle>}
       action={
         customized && (

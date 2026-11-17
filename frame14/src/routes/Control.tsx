@@ -323,10 +323,14 @@ export function Control() {
   // user: "Make the cards on both of these routes to be collapsible"), each
   // kept folded on this device under its own `settings-…` key, here and in
   // the cards' own files. The Views card, a remote's whole tab, doesn't.
+  // They start out folded (0.173.0, "All settings should be collapsed by
+  // default": `defaultOpen={false}`): a tab opens as a list of its cards,
+  // and a card opened stays open on that device.
   const displayBoard = (
     <Board
       collapsible
       storageKey="settings-display"
+      defaultOpen={false}
       title={
         <HStack justify="space-between" width="100%">
           <SectionTitle icon={<IoTabletPortraitOutline />}>
@@ -379,6 +383,7 @@ export function Control() {
     <Board
       collapsible
       storageKey="settings-album"
+      defaultOpen={false}
       title={<SectionTitle icon={<IoImagesOutline />}>Album</SectionTitle>}
     >
       <AlbumSelect />

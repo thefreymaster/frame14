@@ -16,6 +16,14 @@ import { DATA_DIR } from "./screen.js";
  * a device not seen in PEOPLE_MAX_AGE_MS is dropped, and never more than
  * MAX_PEOPLE are kept.
  *
+ * A row may be given an alias (0.173.0, the user: "let us set an alias") —
+ * "Office MacBook" where the page could only say Mac. It is kept here, not
+ * on the device that set it ("It should propagate across all devices so not
+ * just saved to that local device"), so everyone signed in reads the same
+ * one. An alias is its row's, a person on a kind of device — two Macs of one
+ * person's are one row and wear one alias — and it outlives the row: a
+ * device forgotten after a month away comes back under the alias it had.
+ *
  * A device Access didn't name (the house's own network, the frame) is never
  * in the list.
  */
@@ -37,8 +45,30 @@ export const DEVICES = Object.freeze([
 ]);
 export const MAX_PEOPLE = 50;
 export const PEOPLE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+/** An alias is at most this long (the page's field too: lib/deviceAlias). */
+export const ALIAS_MAX = 40;
+/** Aliases kept at most: beyond it those of devices no longer listed go, the oldest first. */
+export const MAX_ALIASES = 200;
 
 export const deviceOf = (v) => (DEVICES.includes(v) ? v : "Browser");
+
+// What an alias may not hold: a control character, or one that turns the
+// text's direction round (it would turn the rest of its row round too).
+const NOT_ALIAS = /[\p{Cc}\u202A-\u202E\u2066-\u2069]/u;
+
+/**
+ * An alias as it is kept: trimmed, each run of white space one space. ""
+ * for none — null or nothing but spaces, which takes a row's alias away —
+ * and null for what is no alias: not text, a control character in it, or
+ * longer than ALIAS_MAX.
+ */
+export function aliasOf(value) {
+  if (value === null) return "";
+  if (typeof value !== "string") return null;
+  const alias = value.replace(/\s+/g, " ").trim();
+  if (NOT_ALIAS.test(alias) || [...alias].length > ALIAS_MAX) return null;
+  return alias;
+}
 
 /**
  * Who asked, for a log line: `["by <email>"]`, or nothing when the caller
@@ -57,6 +87,14 @@ function load() {
     // Nobody yet.
   }
   const seen = new Map();
+  const aliases = new Map();
+  for (const a of Array.isArray(saved?.aliases) ? saved.aliases : []) {
+    if (typeof a?.email !== "string" || !a.email || !DEVICES.includes(a.device)) {
+      continue;
+    }
+    const alias = aliasOf(a.alias);
+    if (alias) aliases.set(keyOf(a.email, a.device), alias);
+  }
   for (const p of Array.isArray(saved?.people) ? saved.people : []) {
     if (
       typeof p?.email !== "string" ||
@@ -72,7 +110,7 @@ function load() {
       lastSeen: p.lastSeen,
     });
   }
-  return seen;
+  return { seen, aliases };
 }
 
 /**
@@ -80,10 +118,13 @@ function load() {
  * connects and `leave(id)` when it closes (a socket that never arrived is
  * ignored); `list()` is `[{ email, device, online, lastSeen }]` — those here
  * now first, by name, then the rest, the latest first; `lastSeen` an ISO
- * time. `onChange()` is called after each arrival and departure.
+ * time, and `alias` on a row that has one. `setAlias(email, device, alias)`
+ * gives a listed row its alias — one `aliasOf` passed; "" takes it away —
+ * and is false for a row nobody is in. `onChange()` is called after each
+ * arrival and departure, and each alias that changes.
  */
 export function startPeople({ now = Date.now, onChange } = {}) {
-  const seen = load();
+  const { seen, aliases } = load();
   /** socket id → the person-and-device it is. */
   const live = new Map();
 
@@ -95,21 +136,41 @@ export function startPeople({ now = Date.now, onChange } = {}) {
     for (const [key, p] of seen) {
       if (p.lastSeen < oldest && !here.has(key)) seen.delete(key);
     }
-    if (seen.size <= MAX_PEOPLE) return;
-    const keep = [...seen.entries()]
-      .sort(
-        ([ka, a], [kb, b]) =>
-          Number(here.has(kb)) - Number(here.has(ka)) || b.lastSeen - a.lastSeen,
-      )
-      .slice(0, MAX_PEOPLE);
-    seen.clear();
-    for (const [key, p] of keep) seen.set(key, p);
+    if (seen.size > MAX_PEOPLE) {
+      const keep = [...seen.entries()]
+        .sort(
+          ([ka, a], [kb, b]) =>
+            Number(here.has(kb)) - Number(here.has(ka)) || b.lastSeen - a.lastSeen,
+        )
+        .slice(0, MAX_PEOPLE);
+      seen.clear();
+      for (const [key, p] of keep) seen.set(key, p);
+    }
+    // An alias outlives its row, but not without end: past the limit, those
+    // of devices no longer listed go, the longest kept first (the listed are
+    // MAX_PEOPLE at most, so that is always enough).
+    for (const key of aliases.keys()) {
+      if (aliases.size <= MAX_ALIASES) break;
+      if (!seen.has(key)) aliases.delete(key);
+    }
+  }
+
+  /** The aliases as they are saved: `[{ email, device, alias }]`, the oldest first. */
+  function savedAliases() {
+    return [...aliases.entries()].map(([key, alias]) => {
+      // A device's name has no "|" in it, whatever an address has.
+      const at = key.lastIndexOf("|");
+      return { email: key.slice(0, at), device: key.slice(at + 1), alias };
+    });
   }
 
   function save() {
     try {
       fs.mkdirSync(DATA_DIR, { recursive: true });
-      fs.writeFileSync(FILE, JSON.stringify({ people: [...seen.values()] }));
+      fs.writeFileSync(
+        FILE,
+        JSON.stringify({ people: [...seen.values()], aliases: savedAliases() }),
+      );
     } catch (err) {
       console.error(`[people] couldn't save ${FILE}:`, err.message);
     }
@@ -138,6 +199,17 @@ export function startPeople({ now = Date.now, onChange } = {}) {
       if (person) person.lastSeen = now();
       changed();
     },
+    setAlias(email, device, alias) {
+      prune();
+      const key = keyOf(email, device);
+      if (!seen.has(key)) return false;
+      if ((aliases.get(key) ?? "") === alias) return true;
+      // Set again, it is the newest: the last to go past the limit.
+      aliases.delete(key);
+      if (alias) aliases.set(key, alias);
+      changed();
+      return true;
+    },
     list() {
       prune();
       const here = online();
@@ -145,6 +217,7 @@ export function startPeople({ now = Date.now, onChange } = {}) {
         .map(([key, p]) => ({
           email: p.email,
           device: p.device,
+          ...(aliases.has(key) && { alias: aliases.get(key) }),
           online: here.has(key),
           lastSeen: new Date(p.lastSeen).toISOString(),
         }))

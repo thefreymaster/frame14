@@ -8,7 +8,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { IoFlash, IoHome } from "react-icons/io5";
+import { IoFlash } from "react-icons/io5";
 import { PiSolarRoof } from "react-icons/pi";
 import type { HomeEnergy } from "../hooks/useHomeData";
 import { useEnergyToday } from "../hooks/useEnergyToday";
@@ -20,6 +20,7 @@ import {
   fmtKwh,
   grid,
 } from "../lib/energy";
+import { HomeIcon } from "../lib/navItems";
 import { pressable } from "../lib/press";
 import { Board } from "./Board";
 import { CoverageBadge } from "./CoverageBadge";
@@ -147,7 +148,8 @@ export function EnergySection({
                     label="Solar produced"
                   />
                   <Total
-                    icon={<IoHome />}
+                    // The nav's own house, as the flow's node above.
+                    icon={<HomeIcon />}
                     color="home"
                     kwh={consumptionToday}
                     label="Home used"

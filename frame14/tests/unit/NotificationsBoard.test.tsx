@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "./helpers/render";
+import { openSettingsCard } from "./helpers/settingsCard";
 
 // 0.160.0: Settings' Notifications card, over lib/push (mocked here: jsdom
 // has no service worker or push service; notifications.spec drives the real
@@ -32,6 +33,7 @@ const control = () => allow().closest("label")!.querySelector('[data-part="contr
 const toggle = () => fireEvent.click(screen.getByText("Allow notifications"));
 
 beforeEach(() => {
+  openSettingsCard("notifications");
   push.support = "available";
   push.subscription = null;
   for (const fn of [push.enablePush, push.disablePush, push.sendTestPush, push.remindServer, push.toast]) fn.mockReset();

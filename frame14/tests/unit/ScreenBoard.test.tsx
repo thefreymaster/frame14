@@ -1,6 +1,7 @@
 import { act, fireEvent, screen as dom, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "./helpers/render";
+import { openSettingsCard } from "./helpers/settingsCard";
 
 // The socket (its handlers kept, so a test can play the server's
 // screen_state), the toaster, and whether this is a desktop.
@@ -41,6 +42,7 @@ describe("the Screen card", () => {
       .map((c) => JSON.parse(String((c[1] as RequestInit).body)) as Record<string, unknown>);
 
   beforeEach(() => {
+    openSettingsCard("screen");
     mocks.desktop = false;
     fetchMock.mockReset();
     // The server: a state or brightness command is taken; a pair of hours

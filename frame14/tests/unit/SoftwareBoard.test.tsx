@@ -2,6 +2,7 @@ import { act, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SoftwareUpdate } from "../../src/hooks/useSoftware";
 import { renderWithProviders } from "./helpers/render";
+import { openSettingsCard } from "./helpers/settingsCard";
 
 const state = vi.hoisted(() => ({
   update: null as SoftwareUpdate | null,
@@ -51,6 +52,7 @@ function update(overrides: Partial<SoftwareUpdate> = {}): SoftwareUpdate {
 const tryAgain = () => screen.queryByRole("button", { name: "Try again" });
 
 beforeEach(() => {
+  openSettingsCard("software");
   state.repoUrl = null;
   state.reloadApp.mockReset();
   state.check.mockReset();

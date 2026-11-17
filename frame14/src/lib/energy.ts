@@ -56,20 +56,21 @@ export function grid(energy: HomeEnergy) {
 }
 
 /**
- * Seconds a dot on one of PowerFlow's wires takes to move one dot pitch at
- * the base pace, which is the pace at 1 kW (and was every wire's pace until
- * 0.87).
+ * Seconds the wave on one of PowerFlow's wires takes to travel its own
+ * length at the base pace, which is the pace at 1 kW (and was every wire's
+ * pace until 0.87). As fast across the wire as the dots it replaced in
+ * 0.173.0, which ran their pitch — half a wave's length — in half the time.
  */
-export const FLOW_BASE_SECONDS = 0.6;
+export const FLOW_BASE_SECONDS = 1.2;
 
-/** The slowest a wire runs: a crawl, a dot pitch in 2.4s, at 62 W and under. */
+/** The slowest a wire runs: a crawl, a wave's length in 4.8s, at 62 W and under. */
 const FLOW_PACE_MIN = 0.25;
 
-/** The fastest: a dot pitch in 0.2s, at 9 kW and over. */
+/** The fastest: a wave's length in 0.4s, at 9 kW and over. */
 const FLOW_PACE_MAX = 3;
 
 /**
- * How fast a wire's dots run for the power on it, as a multiple of the base
+ * How fast a wire's wave runs for the power on it, as a multiple of the base
  * pace: the square root of the kilowatts, so 1 kW is the base pace, 4 kW
  * twice it and 250 W half. A pace in proportion to the watts would stand
  * still under a few hundred watts and blur over a few thousand; the root

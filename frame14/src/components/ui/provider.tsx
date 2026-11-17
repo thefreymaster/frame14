@@ -43,6 +43,13 @@ const EMBOSSED_SHADE =
   "inset 0 0.1875rem 0.4375rem {colors.emboss.shade}, inset 0 0 0.0625rem {colors.emboss.shade}";
 const EMBOSSED_LIP = "0 0.0625rem 0 {colors.emboss.lip}";
 const EMBOSSED_SHADOW = `${EMBOSSED_SHADE}, ${EMBOSSED_LIP}`;
+// The same recess at a badge's size (0.173.0): half as deep, since the
+// card's shade alone is as tall as a small badge.
+const BADGE_RECESS = `inset 0 0.09375rem 0.1875rem {colors.emboss.shade}, inset 0 0 0.0625rem {colors.emboss.shade}, ${EMBOSSED_LIP}`;
+// A badge whose own shadow is its outline, where things are pressed in.
+const BADGE_PRESSED = Object.fromEntries(
+  EMBOSSED.map((p) => [`_${p}`, { boxShadow: "dip" }]),
+);
 // And its opposite, for what stands up out of a recess — a button, a tile
 // that is one (0.171.1, the user: "instead of having the buttons feel
 // indented, change them to feel like convexed popping out, so inverted of
@@ -254,6 +261,17 @@ const system = createSystem(
                 ),
               },
             },
+            // And the floor of a well that has no colour of its own to be
+            // pressed into — an outline badge's: the wells' colour where
+            // things are pressed in, clear in every other palette.
+            hollow: {
+              value: {
+                base: "transparent",
+                ...Object.fromEntries(
+                  EMBOSSED.map((p) => [`_${p}`, "{colors.bg.muted}"]),
+                ),
+              },
+            },
           },
           // The logo's blue as a palette: `colorPalette="brand"`.
           brand: {
@@ -336,6 +354,10 @@ const system = createSystem(
             lip: embossedOnly(EMBOSSED_LIP),
             edge: embossedOnly(EMBOSSED_LIP, NO_SHADOW),
           },
+          // A badge's recess (the badge recipe below): the cards' own, at
+          // a badge's size — a card's shade is as deep as a small badge is
+          // tall, and would fill it.
+          dip: embossedOnly(BADGE_RECESS),
           // What stands up out of a recess (lib/floatingSurface) casts a
           // shadow on it: the button recipe below wears it, and a tile's
           // own box. `edge` is the same as one layer of a longer shadow,
@@ -399,6 +421,28 @@ const system = createSystem(
               // colour, and no outline — and as the recipe has it in every
               // other palette.
               outline: { bg: "emboss.face", borderWidth: "edge" },
+            },
+          },
+        },
+        // Every badge is a well where things are pressed in (0.173.0, the
+        // user: "Make all badges like 1 on and 13% be concave in embossed
+        // mode. Edit the theme so it applies to all badges app wide"): read,
+        // not pressed, so it goes in with the cards and the forecasts while
+        // the buttons stand up. The `dip` shadow is none in every other
+        // palette, so a badge there is as Chakra draws it. The variants
+        // whose shadow is their outline (outline, surface) keep that
+        // outline everywhere else and wear the recess in its place here —
+        // by the palette's own condition: the outline is drawn in a colour
+        // the variant sets on the badge (`--shadow-color`), which a token,
+        // resolved at the root, can't read. And an outline badge, which
+        // has no colour of its own, takes the wells' for a floor: on the
+        // card's own the shade is lost by night, as on the dial's.
+        badge: {
+          base: { boxShadow: "dip" },
+          variants: {
+            variant: {
+              outline: { bg: "emboss.hollow", ...BADGE_PRESSED },
+              surface: BADGE_PRESSED,
             },
           },
         },

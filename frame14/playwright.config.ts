@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
 import { APP_PORT, APP_URL, STUB_PORT, STUB_URL } from "./tests/e2e/ports";
+import { SETTINGS_OPEN } from "./tests/e2e/settingsCards";
 
 // End-to-end: the real server (index.js, the built client in dist/) against
 // the stub Home Assistant (tests/stub/stub-ha.mjs), both started here on the
@@ -22,6 +23,10 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL: APP_URL,
+    // Settings' cards start out folded (0.173.0); the suite's browsers are
+    // devices that have opened them, as they all were until then. A test
+    // of the default uses FRESH_DEVICE (tests/e2e/settingsCards.ts).
+    storageState: SETTINGS_OPEN,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },

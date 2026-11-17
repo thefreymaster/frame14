@@ -323,6 +323,129 @@ describe("who is signed in", () => {
     for (const other of ["Toaster", "", undefined, null, 4, {}]) expect(deviceOf(other)).toBe("Browser");
   });
 
+  // 0.173.0, the user: "Allow for the customization of the name of a device
+  // found here. It should propagate across all devices so not just saved to
+  // that local device", then "let us set an alias".
+  it("gives a row an alias, which the list carries and a restart keeps", async () => {
+    const onChange = vi.fn();
+    const people = (await load()).startPeople({ now: () => Date.parse("2026-11-17T15:00:00Z"), onChange });
+    people.arrive("s1", "evan@example.com", "Mac");
+    people.arrive("s2", "evan@example.com", "iPhone");
+    onChange.mockClear();
+    expect(people.setAlias("evan@example.com", "Mac", "Office MacBook")).toBe(true);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    // The row it was given to, and that one alone; what the device is stays.
+    expect(people.list()).toEqual([
+      { email: "evan@example.com", device: "iPhone", online: true, lastSeen: "2026-11-17T15:00:00.000Z" },
+      { email: "evan@example.com", device: "Mac", alias: "Office MacBook", online: true, lastSeen: "2026-11-17T15:00:00.000Z" },
+    ]);
+    expect(people.list()[0]).not.toHaveProperty("alias");
+    // The same alias again changes nothing, and tells nobody.
+    expect(people.setAlias("evan@example.com", "Mac", "Office MacBook")).toBe(true);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    // A row nobody is in has no alias to take: not the person, not the device.
+    expect(people.setAlias("liz@example.com", "Mac", "Hers")).toBe(false);
+    expect(people.setAlias("evan@example.com", "iPad", "His")).toBe(false);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    const again = (await load()).startPeople({ now: () => Date.parse("2026-11-17T16:00:00Z"), onChange });
+    const mac = () => again.list().find((p) => p.device === "Mac");
+    expect(again.list().map((p) => `${p.device} ${p.alias}`).sort()).toEqual(["Mac Office MacBook", "iPhone undefined"]);
+    // Changed, and then taken away: the row is what it was.
+    expect(again.setAlias("evan@example.com", "Mac", "Evan's Mac")).toBe(true);
+    expect(mac().alias).toBe("Evan's Mac");
+    expect(again.setAlias("evan@example.com", "Mac", "")).toBe(true);
+    expect(mac()).toEqual({ email: "evan@example.com", device: "Mac", online: false, lastSeen: "2026-11-17T15:00:00.000Z" });
+    expect((await load()).startPeople().list().every((p) => !("alias" in p))).toBe(true);
+  });
+
+  it("keeps an alias for a device forgotten after a month away, till it comes back", async () => {
+    const { startPeople, PEOPLE_MAX_AGE_MS } = await load();
+    let now = Date.parse("2026-10-01T12:00:00Z");
+    const people = startPeople({ now: () => now });
+    people.arrive("s1", "evan@example.com", "Windows PC");
+    people.setAlias("evan@example.com", "Windows PC", "Gaming PC");
+    people.leave("s1");
+    now += PEOPLE_MAX_AGE_MS + 60_000;
+    expect(people.list()).toEqual([]);
+    // Gone from the list, it can't be given another.
+    expect(people.setAlias("evan@example.com", "Windows PC", "Other")).toBe(false);
+    people.arrive("s2", "evan@example.com", "Windows PC");
+    expect(people.list()[0]).toMatchObject({ device: "Windows PC", alias: "Gaming PC", online: true });
+    // After a restart in between, too.
+    people.leave("s2");
+    now += PEOPLE_MAX_AGE_MS + 60_000;
+    const later = (await load()).startPeople({ now: () => now });
+    expect(later.list()).toEqual([]);
+    later.arrive("s3", "evan@example.com", "Windows PC");
+    expect(later.list()[0].alias).toBe("Gaming PC");
+  });
+
+  it("keeps no more aliases than its limit, and drops those of devices no longer listed first", async () => {
+    const { startPeople, MAX_ALIASES, MAX_PEOPLE } = await load();
+    let now = Date.parse("2026-11-17T12:00:00Z");
+    const people = startPeople({ now: () => now });
+    const total = MAX_ALIASES + 10;
+    for (let i = 0; i < total; i += 1) {
+      now += 1000;
+      people.arrive(`s${i}`, `p${i}@example.com`, "iPhone");
+      expect(people.setAlias(`p${i}@example.com`, "iPhone", `Phone ${i}`)).toBe(true);
+      people.leave(`s${i}`);
+    }
+    const saved = JSON.parse(fs.readFileSync(path.join(dir, "people.json"), "utf-8"));
+    expect(saved.aliases).toHaveLength(MAX_ALIASES);
+    // The first ten set are the ten that went; the last set is the last kept.
+    expect(saved.aliases[0]).toEqual({ email: "p10@example.com", device: "iPhone", alias: "Phone 10" });
+    expect(saved.aliases.at(-1)).toEqual({ email: `p${total - 1}@example.com`, device: "iPhone", alias: `Phone ${total - 1}` });
+    // Every row still listed wears its own.
+    const list = people.list();
+    expect(list).toHaveLength(MAX_PEOPLE);
+    for (const p of list) expect(p.alias).toBe(`Phone ${p.email.slice(1, p.email.indexOf("@"))}`);
+  });
+
+  it("takes an alias as tidy text of a line's length, and nothing else", async () => {
+    const { aliasOf, ALIAS_MAX } = await load();
+    const { DEVICE_ALIAS_MAX } = await import("../../src/lib/deviceAlias");
+    // The page's field holds to the same length.
+    expect(DEVICE_ALIAS_MAX).toBe(ALIAS_MAX);
+    expect(aliasOf("Office MacBook")).toBe("Office MacBook");
+    expect(aliasOf("  Evan's \t Mac\n")).toBe("Evan's Mac");
+    expect(aliasOf("Küche 📱")).toBe("Küche 📱");
+    expect(aliasOf("<b>Mac</b>")).toBe("<b>Mac</b>"); // Text: the page draws it as text.
+    // None: which takes a row's alias away.
+    for (const none of ["", "   ", "\n", null]) expect(aliasOf(none), JSON.stringify(none)).toBe("");
+    expect(aliasOf("a".repeat(ALIAS_MAX))).toHaveLength(ALIAS_MAX);
+    // Its length is in characters as they are read: an emoji is one.
+    expect(aliasOf("📱".repeat(ALIAS_MAX))).not.toBeNull();
+    for (const not of ["a".repeat(ALIAS_MAX + 1), "bell\u0007", "nul\u0000l", "turned \u202Eround", "\u2066isolated", undefined, 4, true, {}, ["Mac"]]) {
+      expect(aliasOf(not), JSON.stringify(not)).toBeNull();
+    }
+  });
+
+  it("reads only the aliases in its file that are aliases", async () => {
+    const seen = Date.now();
+    fs.writeFileSync(
+      path.join(dir, "people.json"),
+      JSON.stringify({
+        people: [{ email: "a@example.com", device: "Mac", lastSeen: seen }, { email: "b@example.com", device: "iPad", lastSeen: seen }],
+        aliases: [
+          { email: "a@example.com", device: "Mac", alias: "  Study  Mac " },
+          { email: "b@example.com", device: "iPad", alias: "x".repeat(400) },
+          { email: "b@example.com", device: "Fridge", alias: "Cold" },
+          { email: 4, device: "Mac", alias: "Nobody's" },
+          { email: "b@example.com", device: "iPad", alias: 7 },
+          null,
+        ],
+      }),
+    );
+    expect((await load()).startPeople().list().map((p) => `${p.email} ${p.alias}`).sort()).toEqual(["a@example.com Study Mac", "b@example.com undefined"]);
+    // A file from before there were aliases, and one whose aliases aren't a list.
+    for (const aliases of [undefined, "Mac", { a: 1 }]) {
+      fs.writeFileSync(path.join(dir, "people.json"), JSON.stringify({ people: [{ email: "a@example.com", device: "Mac", lastSeen: seen }], aliases }));
+      expect((await load()).startPeople().list()).toEqual([{ email: "a@example.com", device: "Mac", online: false, lastSeen: new Date(seen).toISOString() }]);
+    }
+  });
+
   it("puts a named caller's email on a log line, and nothing for anyone else", async () => {
     const { calledBy } = await load();
     expect(calledBy({ email: "evan@example.com" })).toEqual(["by evan@example.com"]);
@@ -372,6 +495,105 @@ describe("GET /api/account", () => {
     const res = await request(a).get("/api/account").set("Cf-Access-Jwt-Assertion", token(team));
     expect(res.body).toEqual({ enabled: false, user: null, people: [] });
     expect(fetches).toBe(0);
+  });
+});
+
+describe("PUT /api/account/alias", () => {
+  async function app({ team = "e2e" } = {}) {
+    const { startAccess, startPeople } = await load();
+    const { default: accountRouter } = await import("../../routes/account.js");
+    const a = express();
+    a.use(express.json());
+    a.locals.access = startAccess({ team, certsUrl });
+    a.locals.changed = vi.fn();
+    a.locals.people = startPeople({ onChange: a.locals.changed });
+    a.use("/api/account", accountRouter);
+    a.locals.people.arrive("s1", "liz@example.com", "iPad");
+    a.locals.changed.mockClear();
+    return a;
+  }
+  const put = (a, body, as = token(team)) => {
+    const req = request(a).put("/api/account/alias");
+    return (as ? req.set("Cf-Access-Jwt-Assertion", as) : req).send(body);
+  };
+
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  it("gives any row of the list its alias, for anyone Access signed in, and answers with the list", async () => {
+    const a = await app();
+    // Evan names Liz's iPad: every row has the button.
+    const res = await put(a, { email: "liz@example.com", device: "iPad", alias: "  Kitchen   iPad " });
+    expect(res.status).toBe(200);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(res.body).toEqual({
+      enabled: true,
+      user: { email: "evan@example.com" },
+      people: [{ email: "liz@example.com", device: "iPad", alias: "Kitchen iPad", online: true, lastSeen: expect.any(String) }],
+    });
+    // The list went out again, which is how the other devices hear of it.
+    expect(a.locals.changed).toHaveBeenCalledTimes(1);
+    // And the log says who.
+    expect(console.log).toHaveBeenCalledWith("[account:alias]", { email: "liz@example.com", device: "iPad", alias: "Kitchen iPad" }, "by evan@example.com");
+    const read = await request(a).get("/api/account").set("Cf-Access-Jwt-Assertion", token(team, { email: "liz@example.com" }));
+    expect(read.body.people[0].alias).toBe("Kitchen iPad");
+    // An empty one, or null, takes it away.
+    for (const none of ["", null]) {
+      await put(a, { email: "liz@example.com", device: "iPad", alias: "Hers" });
+      const cleared = await put(a, { email: "liz@example.com", device: "iPad", alias: none });
+      expect(cleared.status).toBe(200);
+      expect(cleared.body.people).toEqual([{ email: "liz@example.com", device: "iPad", online: true, lastSeen: expect.any(String) }]);
+    }
+  });
+
+  it("refuses what is no alias, or no row", async () => {
+    const a = await app();
+    const row = { email: "liz@example.com", device: "iPad" };
+    const wrong = {
+      "no alias at all": row,
+      "an alias that isn't text": { ...row, alias: 7 },
+      "one too long": { ...row, alias: "a".repeat(41) },
+      "a control character": { ...row, alias: "bell\u0007" },
+      "no device": { email: row.email, alias: "x" },
+      "a kind of device there isn't": { ...row, device: "Fridge", alias: "x" },
+      "no person": { device: "iPad", alias: "x" },
+      "a person who isn't text": { email: ["liz@example.com"], device: "iPad", alias: "x" },
+      "nothing": undefined,
+    };
+    for (const [what, body] of Object.entries(wrong)) {
+      const res = await put(a, body);
+      expect(res.status, what).toBe(400);
+      expect(res.body.error, what).toContain("alias");
+    }
+    // A row nobody is in: 404, each way round.
+    for (const body of [{ email: "liz@example.com", device: "Mac", alias: "x" }, { email: "zoe@example.com", device: "iPad", alias: "x" }]) {
+      expect((await put(a, body)).status).toBe(404);
+    }
+    expect(a.locals.changed).not.toHaveBeenCalled();
+    expect(a.locals.people.list()[0]).not.toHaveProperty("alias");
+  });
+
+  it("is not for a caller Access didn't sign in, who learns nothing of the rows", async () => {
+    const a = await app();
+    for (const as of [null, token(stranger), "hello"]) {
+      // A row there is and one there isn't answer alike.
+      for (const email of ["liz@example.com", "nobody@example.com"]) {
+        const res = await put(a, { email, device: "iPad", alias: "Mine now" }, as);
+        expect(res.status).toBe(403);
+        expect(res.body).toEqual({ error: expect.stringContaining("Cloudflare Access") });
+      }
+    }
+    expect(a.locals.changed).not.toHaveBeenCalled();
+    expect(a.locals.people.list()[0]).not.toHaveProperty("alias");
+  });
+
+  it("is not there on an install that names nobody", async () => {
+    const a = await app({ team: "" });
+    const res = await put(a, { email: "liz@example.com", device: "iPad", alias: "x" });
+    expect(res.status).toBe(404);
+    expect(fetches).toBe(0);
+    expect(a.locals.people.list()[0]).not.toHaveProperty("alias");
   });
 });
 

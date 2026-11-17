@@ -4,7 +4,7 @@ import { keyframes } from "@emotion/react";
 import { flowPace } from "../lib/energy";
 
 // A highlight gliding along the filled bar, left to right (0.138, the user's
-// ask: a circuit pulling power shows it moving), as PowerFlow's dots run
+// ask: a circuit pulling power shows it moving), as PowerFlow's waves run
 // along its wires: a soft band a third of the bar wide, through in FLOW_MS at
 // 1 kW — and at the pace of the draw (0.138.1, "scale with usage"), lib
 // energy's flowPace as PowerFlow has it: the root of the kilowatts, from a

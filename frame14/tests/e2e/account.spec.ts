@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Browser, type BrowserContext } from "@playwright/test";
+import { devices, expect, test, type APIRequestContext, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from "@playwright/test";
 import { lightTile, pageErrors, splashGone, stub } from "./helpers";
 import { APP_URL } from "./ports";
 
@@ -21,11 +21,14 @@ async function signIn(context: BrowserContext, request: APIRequestContext, email
 }
 
 /** A second browser, signed in as `email`. */
-async function another(browser: Browser, request: APIRequestContext, email: string) {
-  const context = await browser.newContext();
+async function another(browser: Browser, request: APIRequestContext, email: string, options: BrowserContextOptions = {}) {
+  const context = await browser.newContext(options);
   await signIn(context, request, email);
   return context;
 }
+
+/** A laptop running Linux: a kind of device neither project's own browser is. */
+const LINUX = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
 
 test.describe("who is signed in", () => {
   test("Settings names the person Cloudflare Access signed in, on the device in hand", async ({ page, context, request, isMobile }, testInfo) => {
@@ -204,5 +207,156 @@ test.describe("who is signed in", () => {
     await expect(lightTile(page, "Kitchen Main").first()).toBeVisible();
     expect(asked).toEqual([]);
     expect(errors).toEqual([]);
+  });
+
+  // 0.173.0, the user: "Allow for the customization of the name of a device
+  // found here. It should propagate across all devices so not just saved to
+  // that local device", then "Just add an edit icon button to the far right
+  // of each that allows the editing of the name. Maybe let us set an alias
+  // instead actually."
+  test("a device's alias is set from the edit button on its row, kept by the server, and read by every signed-in device at once (0.173.0)", async ({ page, context, browser, request, isMobile }, testInfo) => {
+    const errors = pageErrors(page);
+    const evan = `alias-evan-${testInfo.project.name}@example.com`;
+    const liz = `alias-liz-${testInfo.project.name}@example.com`;
+    const mine = isMobile ? "Android phone" : "Windows PC";
+    const rowOf = (on: Page, email: string, device: string) => on.locator(`[data-person="${email}"][data-device="${device}"]`);
+    await signIn(context, request, evan);
+    // The same person's laptop, and someone else.
+    const laptop = await another(browser, request, evan, { userAgent: LINUX });
+    const hers = await another(browser, request, liz);
+    try {
+      const laptopPage = await laptop.newPage();
+      await laptopPage.goto("/control/device");
+      const lizPage = await hers.newPage();
+      await lizPage.goto("/control/device");
+      await page.goto("/control/device");
+      const row = rowOf(page, evan, "Linux PC");
+      await expect(row).toContainText("Linux PC · Here now");
+
+      // Every row has the button, at its far end: this device's, the same
+      // person's other one, someone else's.
+      for (const each of [rowOf(page, evan, mine), row, rowOf(page, liz, mine)]) {
+        const edit = each.locator("[data-alias-edit]");
+        await expect(edit).toBeVisible();
+        await expect(edit).toHaveAccessibleName(/^Set an alias for /);
+        const [box, button, words] = [(await each.boundingBox())!, (await edit.boundingBox())!, (await each.getByText("@example.com").boundingBox())!];
+        expect(box.x + box.width - (button.x + button.width)).toBeLessThan(button.width);
+        expect(button.x).toBeGreaterThanOrEqual(words.x + words.width);
+      }
+
+      // A tap on it puts a field where the row's words were, in the same height.
+      const before = (await row.boundingBox())!;
+      await row.locator("[data-alias-edit]").click();
+      const field = row.getByRole("textbox");
+      await expect(field).toBeFocused();
+      await expect(field).toHaveValue("");
+      await expect(field).toHaveAttribute("placeholder", "Linux PC");
+      expect(Math.abs((await row.boundingBox())!.height - before.height)).toBeLessThan(1);
+      // Type of 16px at least: under it an iPhone zooms the page in on a field.
+      expect(await field.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+      await field.fill("  Office   laptop ");
+      await field.press("Enter");
+      await expect(row).toContainText("Office laptop · Here now");
+      await expect(row).toHaveAttribute("data-alias", "Office laptop");
+      await expect(row.getByRole("textbox")).toHaveCount(0);
+      // What kind of device it is stays its own, and so does its glyph.
+      await expect(row).toHaveAttribute("data-device", "Linux PC");
+
+      // The laptop itself and Liz's device read it at once, with no reload.
+      await expect(rowOf(laptopPage, evan, "Linux PC")).toContainText("Office laptop · This device");
+      await expect(rowOf(lizPage, evan, "Linux PC")).toContainText("Office laptop · Here now");
+      // It is the server's: there in its answer, and after a reload.
+      const account = (await (await page.request.get("/api/account")).json()) as { people: { email: string; device: string; alias?: string }[] };
+      expect(account.people.find((p) => p.email === evan && p.device === "Linux PC")?.alias).toBe("Office laptop");
+      expect(account.people.find((p) => p.email === evan && p.device === mine)).not.toHaveProperty("alias");
+      await page.reload();
+      await expect(row).toContainText("Office laptop · Here now");
+
+      // Anyone signed in may change it: Liz, from hers.
+      const theirs = rowOf(lizPage, evan, "Linux PC");
+      await theirs.locator("[data-alias-edit]").click();
+      await expect(theirs.getByRole("textbox")).toHaveValue("Office laptop");
+      await theirs.getByRole("textbox").fill("Evan's laptop");
+      await theirs.getByRole("button", { name: "Save alias" }).click();
+      await expect(row).toContainText("Evan's laptop · Here now");
+      await expect(rowOf(laptopPage, evan, "Linux PC")).toContainText("Evan's laptop · This device");
+
+      // A device Access didn't sign in can't, and is told of no row.
+      const stranger = await browser.newContext();
+      try {
+        const refused = await stranger.request.put("/api/account/alias", { data: { email: evan, device: "Linux PC", alias: "Mine now" } });
+        expect(refused.status()).toBe(403);
+      } finally {
+        await stranger.close();
+      }
+      await expect(row).toContainText("Evan's laptop · Here now");
+
+      // Escape leaves it as it was — and where the pointer is a mouse's, the
+      // focus goes back to the button.
+      await row.locator("[data-alias-edit]").click();
+      await row.getByRole("textbox").fill("Something else");
+      await row.getByRole("textbox").press("Escape");
+      await expect(row.getByRole("textbox")).toHaveCount(0);
+      await expect(row).toContainText("Evan's laptop · Here now");
+      if (!isMobile) await expect(row.locator("[data-alias-edit]")).toBeFocused();
+
+      // Saved empty, the alias is gone and the row goes by its kind again — everywhere.
+      await row.locator("[data-alias-edit]").click();
+      await row.getByRole("textbox").fill("");
+      await row.getByRole("button", { name: "Save alias" }).click();
+      await expect(row).toContainText("Linux PC · Here now");
+      await expect(row).not.toHaveAttribute("data-alias");
+      await expect(rowOf(lizPage, evan, "Linux PC")).toContainText("Linux PC · Here now");
+      await expect(rowOf(laptopPage, evan, "Linux PC")).toContainText("Linux PC · This device");
+    } finally {
+      await laptop.close();
+      await hers.close();
+      // The server keeps an alias past the test: none is left behind.
+      const { token } = (await stub(request, "/_stub/access/token", { email: evan })) as { token: string };
+      await request.put(`${APP_URL}/api/account/alias`, { headers: { "Cf-Access-Jwt-Assertion": token }, data: { email: evan, device: "Linux PC", alias: "" } });
+    }
+    expect(errors).toEqual([]);
+  });
+
+  // An iPhone ticks through a label lib/haptics lays over every button
+  // (0.170.1): a tap on the pencil, the tick or the cross lands on that
+  // label, not the button. The tick is its form's submit button, with no
+  // click handler of its own: the form must be submitted all the same.
+  test("on an iPhone, where a tap lands on the label over each button, the edit button and the tick still do their work (0.173.0)", async ({ browser, request, isMobile }, testInfo) => {
+    test.skip(!isMobile, "once is enough");
+    const evan = `alias-iphone-${testInfo.project.name}@example.com`;
+    // An iPhone's size, touch and name; the engine stays this project's.
+    const { userAgent, viewport, deviceScaleFactor, hasTouch } = devices["iPhone 15"];
+    const context = await another(browser, request, evan, { userAgent, viewport, deviceScaleFactor, isMobile: true, hasTouch });
+    await context.addInitScript(() => {
+      // Safari has no Vibration API.
+      Reflect.deleteProperty(Navigator.prototype, "vibrate");
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto("/control/device");
+      await splashGone(page);
+      const row = page.locator(`[data-person="${evan}"][data-device="iPhone"]`);
+      await expect(row).toContainText("iPhone · This device");
+      const edit = row.locator("[data-alias-edit]");
+      await expect(edit.locator("label[data-haptic-trigger]")).toHaveCount(1);
+      await edit.tap();
+      await row.getByRole("textbox").fill("Evan's iPhone");
+      const save = row.getByRole("button", { name: "Save alias" });
+      await expect(save.locator("label[data-haptic-trigger]")).toHaveCount(1);
+      await save.tap();
+      await expect(row).toContainText("Evan's iPhone · This device");
+      await expect(row.getByRole("textbox")).toHaveCount(0);
+      // And the cross, the same way.
+      await row.locator("[data-alias-edit]").tap();
+      await row.getByRole("textbox").fill("Something else");
+      await row.getByRole("button", { name: "Cancel" }).tap();
+      await expect(row.getByRole("textbox")).toHaveCount(0);
+      await expect(row).toContainText("Evan's iPhone · This device");
+    } finally {
+      await context.close();
+      const { token } = (await stub(request, "/_stub/access/token", { email: evan })) as { token: string };
+      await request.put(`${APP_URL}/api/account/alias`, { headers: { "Cf-Access-Jwt-Assertion": token }, data: { email: evan, device: "iPhone", alias: "" } });
+    }
   });
 });

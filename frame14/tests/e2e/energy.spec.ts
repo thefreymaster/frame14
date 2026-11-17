@@ -210,6 +210,7 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
         colour: cs.backgroundColor,
         longer: el.getBoundingClientRect().width - wireBox.width,
         height: wireBox.height,
+        node: el.closest("[data-card]")!.querySelector("[data-flow-node]")!.getBoundingClientRect().height,
         clipped: getComputedStyle(el.parentElement!).overflow,
         still: cs.animationName === "none",
       };
@@ -239,32 +240,37 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
     expect(faint).toHaveLength(full.length);
     for (const [i, [x, y]] of full.entries()) {
       expect(faint[i][0]).toBe(x);
-      expect(faint[i][1] + y).toBeCloseTo(12, 5);
+      expect(faint[i][1] + y).toBeCloseTo(24, 5);
     }
-    // And a sine: level at the ends of a wave's length and at its middle,
-    // at its crest a quarter in and its trough three quarters in.
+    // And a sine, drawn 40 long and 24 high: level at the ends of a wave's
+    // length and at its middle, at its crest a quarter in and its trough
+    // three quarters in — the line's own width inside the box's edges.
     const at = (x: number) => full.find(([px]) => px === x)![1];
-    expect([at(0), at(12), at(24)]).toEqual([6, 6, 6]);
-    expect(at(6)).toBe(2.5);
-    expect(at(18)).toBe(9.5);
-    // A wave is 1.5rem long and half as high.
-    expect(wave.length).toBeCloseTo(wave.root * 1.5, 1);
-    expect(wave.height).toBeCloseTo(wave.root * 0.75, 1);
+    expect([at(0), at(20), at(40)]).toEqual([12, 12, 12]);
+    expect(at(10)).toBe(1.5);
+    expect(at(30)).toBe(22.5);
+    // A wave is 2.5rem long and 1.5rem from crest to trough: more than
+    // half a node's height (0.173.1, "Maybe make the waves taller. It feels
+    // like DNA double helix at the current height" — it was 0.75rem high).
+    expect(wave.length).toBeCloseTo(wave.root * 2.5, 1);
+    expect(wave.height).toBeCloseTo(wave.root * 1.5, 1);
+    expect(wave.height).toBeGreaterThan(wave.node / 2);
+    expect(wave.height).toBeLessThan(wave.node);
     // The strip is a wave longer than its wire, which clips it: the loop has no join.
     expect(wave.longer).toBeCloseTo(wave.length, 0);
     expect(wave.clipped).toBe("hidden");
     // Moved by the compositor alone, its own length a loop.
     expect(wave.moved).toEqual(["transform"]);
     expect(Math.abs(wave.halfLoop)).toBeCloseTo(wave.length / 2, 0);
-    // As fast across the wire as the dots were: 12px in 0.6s at the base
-    // type, a wave's 24px in 1.2s.
-    expect(wave.seconds).toBe(1.2);
+    // As fast across the wire at 1 kW as the dots were: 12px in 0.6s at
+    // the base type, a wave's 40px in 2s.
+    expect(wave.seconds).toBe(2);
     expect(wave.length / wave.root / wave.seconds).toBeCloseTo(12 / 16 / 0.6, 2);
   }
   // The way the power goes: out of the panels towards the house, and in from the grid towards it.
   expect(solar.halfLoop).toBeGreaterThan(0);
   expect(grid.halfLoop).toBeLessThan(0);
-  // At the power's pace, the root of its kilowatts: 0.903 kW, and 0.281 kW.
+  // At the power's pace — under a kilowatt, the root of it: 0.903 kW, and 0.281 kW.
   expect(solar.rate).toBe(0.95);
   expect(grid.rate).toBe(0.53);
   // In the flow's colour: each node's own.
@@ -272,9 +278,12 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   expect(grid.colour).toBe(await edge(2));
   expect(solar.colour).not.toBe(grid.colour);
 
-  // The sun comes out: 4 kW. The solar wave runs twice the base pace — the
-  // same animation, carrying on from where it was, not a new one — and the
-  // grid's turns round, out to the grid, in the export's green.
+  // The sun comes out: 4 kW. From a kilowatt up the pace is in proportion
+  // to the power (0.173.1, "Make the speeds faster fir the lines for higher
+  // wattage"; the root of it until then, twice the base pace here): the
+  // solar waves run four times the base pace — the same animation, carrying
+  // on from where it was, not a new one — and the grid's turn round, out to
+  // the grid, in the export's green.
   const mark = (wire: ReturnType<typeof wires.nth>) =>
     wire.locator("[data-flow-wave]").evaluate((el) => Object.assign(el.getAnimations()[0], { marked: true }) && null);
   const marked = (wire: ReturnType<typeof wires.nth>) =>
@@ -282,12 +291,12 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   await mark(wires.nth(0));
   await stub(request, "/_stub/state", { entity_id: "sensor.envoy_482518016321_current_power_production", state: "4.0" });
   await expect(wires.nth(1)).toHaveAttribute("data-flow-wire", "right");
-  await expect.poll(async () => (await read(wires.nth(0))).rate).toBe(2);
+  await expect.poll(async () => (await read(wires.nth(0))).rate).toBe(4);
   expect(await marked(wires.nth(0))).toBe(true);
   const out = await read(wires.nth(1));
   expect(out.halfLoop).toBeGreaterThan(0);
-  // 4 − 1.184 = 2.816 kW out.
-  expect(out.rate).toBe(1.68);
+  // 4 − 1.184 = 2.816 kW out: the slower of the two, by as much as it is less.
+  expect(out.rate).toBe(2.82);
   expect(out.colour).toBe(await edge(2));
   expect(out.colour).not.toBe(grid.colour);
 

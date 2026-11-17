@@ -56,29 +56,53 @@ export function grid(energy: HomeEnergy) {
 }
 
 /**
- * Seconds the wave on one of PowerFlow's wires takes to travel its own
+ * Seconds the waves on one of PowerFlow's wires take to travel their own
  * length at the base pace, which is the pace at 1 kW (and was every wire's
- * pace until 0.87). As fast across the wire as the dots it replaced in
- * 0.173.0, which ran their pitch — half a wave's length — in half the time.
+ * pace until 0.87). As fast across the wire as the dots they replaced in
+ * 0.173.0: a wave is 2.5rem long, and the dots ran 1.25rem a second.
  */
-export const FLOW_BASE_SECONDS = 1.2;
+export const FLOW_BASE_SECONDS = 2;
 
-/** The slowest a wire runs: a crawl, a wave's length in 4.8s, at 62 W and under. */
+/** The slowest anything flows: a crawl, a quarter of the base pace, at 62 W and under. */
 const FLOW_PACE_MIN = 0.25;
 
-/** The fastest: a wave's length in 0.4s, at 9 kW and over. */
+/** The fastest a circuit's bar flows: three times the base pace, at 9 kW and over. */
 const FLOW_PACE_MAX = 3;
 
+/** The fastest a wire's waves run: eight times the base pace, at 8 kW and over. */
+const WIRE_PACE_MAX = 8;
+
+const kilowatts = (watts: number) =>
+  Number.isFinite(watts) ? Math.max(0, watts) / 1000 : 0;
+
 /**
- * How fast a wire's wave runs for the power on it, as a multiple of the base
- * pace: the square root of the kilowatts, so 1 kW is the base pace, 4 kW
- * twice it and 250 W half. A pace in proportion to the watts would stand
+ * How fast a wire's waves run for the power on it (PowerFlow), as a multiple
+ * of the base pace. **In proportion to the power from 1 kW up** — 2 kW twice
+ * the base pace, 5.7 kW 5.7 times — so the line with more on it is plainly
+ * the faster (0.173.1, the user: "Make the speeds faster fir the lines for
+ * higher wattage"; it was the root of the kilowatts all the way, flowPace
+ * below, which had 5.7 kW only half as fast again as 2.5). Under 1 kW it is
+ * still the root, which keeps a few hundred watts moving where a pace in
+ * proportion would stand still. Held between FLOW_PACE_MIN and WIRE_PACE_MAX,
+ * and rounded so a reading a watt off doesn't touch the animation's rate.
+ */
+export function wirePace(watts: number): number {
+  const kw = kilowatts(watts);
+  const pace = Math.min(WIRE_PACE_MAX, Math.max(FLOW_PACE_MIN, kw < 1 ? Math.sqrt(kw) : kw));
+  return Math.round(pace * 100) / 100;
+}
+
+/**
+ * How fast a circuit's bar flows for its draw (CircuitBar), as a multiple of
+ * the base pace: the square root of the kilowatts, so 1 kW is the base pace,
+ * 4 kW twice it and 250 W half. A pace in proportion to the watts would stand
  * still under a few hundred watts and blur over a few thousand; the root
  * keeps both ends readable. Held between FLOW_PACE_MIN and FLOW_PACE_MAX,
  * and rounded so a reading a watt off doesn't reset the animation's rate.
+ * PowerFlow's wires went by it too until 0.173.1 (wirePace).
  */
 export function flowPace(watts: number): number {
-  const kw = Number.isFinite(watts) ? Math.max(0, watts) / 1000 : 0;
+  const kw = kilowatts(watts);
   const pace = Math.min(FLOW_PACE_MAX, Math.max(FLOW_PACE_MIN, Math.sqrt(kw)));
   return Math.round(pace * 100) / 100;
 }

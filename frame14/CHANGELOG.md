@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.173.1
+
+- Changed: the AC waves on the Energy card and the Energy page are taller and longer — twice as high, more than half the height of the circles they run between — so the two read as waves swinging apart rather than winding round each other like a double helix. The second wave of each pair is a little fainter.
+- Changed: a line carrying more power now runs plainly faster. From 1 kW up the waves' speed is in proportion to the power — 2 kW twice as fast as 1 kW, 5.7 kW 5.7 times — up to eight times at 8 kW and over; before, 5.7 kW was only half as fast again as 2.5 kW. Under 1 kW a line eases off more gently, as it did, so a few hundred watts still moves. The bars on the Circuits tab move as before.
+
 ## 0.173.0
 
 - Added: a signed-in device can be given an **alias**. On Settings' **Account** card every row now has an edit button at its far end: tap it, type what to call that device — "Office MacBook" where the row could only say Mac — and save with the tick or Enter (the cross or Escape leaves it as it was). The alias is kept by the add-on, not by the device you set it on, so every signed-in device shows it at once and it is still there after a restart or an update. Anyone Cloudflare Access signed in can set or change the alias of any row. Save the field empty to go back to the kind of device. An alias belongs to a person on a kind of device, as a row does: two Macs of yours are one row and share one alias. A device dropped from the list after a month away comes back under the alias it had.

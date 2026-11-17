@@ -7,7 +7,7 @@ import { flowPace } from "../lib/energy";
 // ask: a circuit pulling power shows it moving), as PowerFlow's waves run
 // along its wires: a soft band a third of the bar wide, through in FLOW_MS at
 // 1 kW — and at the pace of the draw (0.138.1, "scale with usage"), lib
-// energy's flowPace as PowerFlow has it: the root of the kilowatts, from a
+// energy's flowPace (PowerFlow's wires went by it too, until 0.173.1): the root of the kilowatts, from a
 // quarter of that pace at 62 W and under (9.6s a pass) to three times it at
 // 9 kW (0.8s), set as the running animation's playback rate so a new reading
 // doesn't jump the band.

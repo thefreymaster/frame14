@@ -10,9 +10,9 @@ import {
   FLOW_BASE_SECONDS,
   GRID_ACTIVE_THRESHOLD,
   coverage,
-  flowPace,
   fmtW,
   grid,
+  wirePace,
 } from "../lib/energy";
 import { HomeIcon } from "../lib/navItems";
 
@@ -23,29 +23,38 @@ const EDGE = 2;
  * A wire's waves: one swing up and one down in WAVE_LENGTH, WAVE_HEIGHT from
  * crest to trough with the line's own width. In rem, so the wave keeps its
  * size beside the nodes on the frame's larger type; the line is EDGE wide at
- * any size, as the nodes' borders are.
+ * any size, as the nodes' borders are. **Tall and long enough to read as
+ * waves** (0.173.1, the user, of a wave half as high and three fifths as
+ * long: "Maybe make the waves taller. It feels like DNA double helix at the
+ * current height"): well over half a node's height, and long for it, so two
+ * mirrored lines swing apart as waves do instead of winding round each other.
  */
-const WAVE_LENGTH = "1.5rem";
-const WAVE_HEIGHT = "0.75rem";
+const WAVE = { length: 2.5, height: 1.5 };
+const WAVE_LENGTH = `${WAVE.length}rem`;
+const WAVE_HEIGHT = `${WAVE.height}rem`;
 
 /**
  * One wave's length of the wire as a picture, to be repeated along it: a
- * sine drawn in a box of 24 by 12, stretched to WAVE_LENGTH by WAVE_HEIGHT
- * with its line left EDGE wide (`non-scaling-stroke`). **Two waves, one the
- * other turned over** (the user, of the first drawing's one: "Doesn't AC
- * have two waves?"): a North American house is fed by two legs half a turn
- * apart, each the other's mirror, and so is drawn — the second at LEG_FAINT
- * of the first's strength, so the pair reads as two lines that cross rather
- * than a chain of loops. They run on a little past both ends of their box,
- * so one copy meets the next with no seam. A mask, not a background: the
- * wire's colour is a token, which a picture can't read.
+ * sine drawn in a box of the wave's own proportions (its size at a 16px
+ * root), stretched to WAVE_LENGTH by WAVE_HEIGHT with its line left EDGE
+ * wide (`non-scaling-stroke`), a crest's line just inside the box's edge.
+ * **Two waves, one the other turned over** (the user, of the first
+ * drawing's one: "Doesn't AC have two waves?"): a North American house is
+ * fed by two legs half a turn apart, each the other's mirror, and so is
+ * drawn — the second at LEG_FAINT of the first's strength, so the pair
+ * reads as a wave and its mirror rather than a chain of loops. They run on
+ * a little past both ends of their box, so one copy meets the next with no
+ * seam. A mask, not a background: the wire's colour is a token, which a
+ * picture can't read.
  */
-const LEG_FAINT = 0.45;
-const WAVE = (() => {
-  const [length, height, swing] = [24, 12, 3.5];
+const LEG_FAINT = 0.35;
+const WAVE_PICTURE = (() => {
+  const [length, height] = [WAVE.length * 16, WAVE.height * 16];
+  // Half the line's width, and half a pixel for its soft edge.
+  const swing = height / 2 - EDGE / 2 - 0.5;
   const leg = (turn: 1 | -1) => {
     const points: string[] = [];
-    for (let x = -3; x <= length + 3; x += 0.5) {
+    for (let x = -4; x <= length + 4; x += 0.5) {
       const y = height / 2 - turn * swing * Math.sin((2 * Math.PI * x) / length);
       points.push(`${x} ${Math.round(y * 100) / 100}`);
     }
@@ -104,7 +113,7 @@ const SIZES = {
  * and usage be AC waves. Maintain flow direction and speed of consumption",
  * then "Doesn't AC have two waves?"; dots until then) — travelling the way
  * the power flows, in the flow's colour, at a pace set by the power
- * on it (`flowPace`: the solar wire by what the panels make, the grid wire by
+ * on it (`wirePace`: the solar wire by what the panels make, the grid wire by
  * the net flow); an idle line is a hairline.
  * The house's edge is a ring of today's coverage (`coverage`, the card's big
  * figure): how much of the day's use the solar has made, in solar yellow from
@@ -271,9 +280,9 @@ function Ring({ pct, track }: { pct: number; track: Flow }) {
 
 /**
  * A line between two nodes: a hairline with no power on it, else a wave
- * travelling in `direction` at the pace of `watts` (flowPace). The wave is
+ * travelling in `direction` at the pace of `watts` (wirePace). The wave is
  * a strip a wave's length longer than the wire, in the flow's colour and
- * masked to the sine (WAVE), slid along by that length inside a box that
+ * masked to the sines (WAVE_PICTURE), slid along by that length inside a box that
  * clips it. The pace is the running CSS animation's playback rate, set
  * through getAnimations: a change of animation-duration keeps the start time
  * and so jumps the wave to another phase at every reading, where a rate
@@ -290,7 +299,7 @@ function Wire({
   watts: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const pace = flowPace(watts);
+  const pace = wirePace(watts);
   // A new direction is another keyframe name, and a colour after none the
   // wave in place of the hairline: both start a fresh animation at the base
   // rate, so each is a dependency.
@@ -325,7 +334,7 @@ function Wire({
         width={`calc(100% + ${WAVE_LENGTH})`}
         height="100%"
         bg={ENERGY_COLORS[color]}
-        maskImage={WAVE}
+        maskImage={WAVE_PICTURE}
         maskSize={`${WAVE_LENGTH} 100%`}
         maskRepeat="repeat-x"
         animation={`${direction === "right" ? waveRight : waveLeft} ${FLOW_BASE_SECONDS}s linear infinite`}

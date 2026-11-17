@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   coverage,
   flowPace,
+  wirePace,
   fmtKwh,
   fmtW,
   grid,
@@ -55,6 +56,49 @@ describe("grid", () => {
   it("ignores a flow inside the deadband", () => {
     const g = grid(energy({ currentConsumption: 1000, currentProduction: 1000 - GRID_ACTIVE_THRESHOLD }));
     expect(g.active).toBe(false);
+  });
+});
+
+// 0.173.1, the user, of the energy flow's lines: "Make the speeds faster
+// fir the lines for higher wattage". A wire went by flowPace until then:
+// the root all the way, three times the base pace at most.
+describe("wirePace", () => {
+  it("is in proportion to the power from a kilowatt up", () => {
+    expect(wirePace(1000)).toBe(1);
+    expect(wirePace(2000)).toBe(2);
+    expect(wirePace(2500)).toBe(2.5);
+    expect(wirePace(5700)).toBe(5.7);
+    // More than twice the power is more than twice as fast, where the root had it half as fast again.
+    expect(wirePace(5700) / wirePace(2500)).toBeCloseTo(5700 / 2500, 5);
+    expect(flowPace(5700) / flowPace(2500)).toBeLessThan(1.6);
+  });
+
+  it("is faster than the root gave from a kilowatt up, and the same under it", () => {
+    for (const watts of [1500, 2500, 4000, 5700, 9000, 12000]) expect(wirePace(watts), `${watts} W`).toBeGreaterThan(flowPace(watts));
+    for (const watts of [0, 62, 250, 500, 999, 1000]) expect(wirePace(watts), `${watts} W`).toBe(flowPace(watts));
+    expect(wirePace(250)).toBe(0.5);
+  });
+
+  it("crawls at a quarter pace under 62 W and tops out at eight times from 8 kW", () => {
+    expect(wirePace(0)).toBe(0.25);
+    expect(wirePace(62)).toBe(0.25);
+    expect(wirePace(8000)).toBe(8);
+    expect(wirePace(20000)).toBe(8);
+  });
+
+  it("never slows as the power grows, across the kilowatt where the two rules meet", () => {
+    let last = 0;
+    for (let watts = 0; watts <= 10000; watts += 10) {
+      const pace = wirePace(watts);
+      expect(pace, `${watts} W`).toBeGreaterThanOrEqual(last);
+      last = pace;
+    }
+  });
+
+  it("rounds to hundredths, and treats nothing as nothing", () => {
+    expect(wirePace(1001)).toBe(1);
+    expect(wirePace(2816)).toBe(2.82);
+    for (const nothing of [NaN, -500, Infinity * 0]) expect(wirePace(nothing)).toBe(0.25);
   });
 });
 

@@ -18,9 +18,22 @@ beforeEach(() => fs.rmSync(file, { force: true }));
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
 describe("the panels' theme (0.146.0)", () => {
-  it("is Dark and Gray until one is picked", async () => {
-    const { startTheme } = await load();
-    expect(startTheme().state()).toEqual({ mode: "dark", palette: "gray" });
+  // 0.176.0, the user: "Make embossed theme the default theme going
+  // forward" (Gray until then).
+  it("is Dark and Embossed until one is picked", async () => {
+    const { startTheme, DEFAULT_THEME } = await load();
+    expect(DEFAULT_THEME).toEqual({ mode: "dark", palette: "embossed" });
+    expect(startTheme().state()).toEqual({ mode: "dark", palette: "embossed" });
+    // Nothing is written by starting: an install that picks nothing follows
+    // the default, whatever it comes to be.
+    expect(fs.existsSync(file)).toBe(false);
+  });
+
+  it("keeps a theme that was picked before, Gray among them", async () => {
+    fs.writeFileSync(file, JSON.stringify({ mode: "auto", palette: "gray" }));
+    expect((await load()).startTheme().state()).toEqual({ mode: "auto", palette: "gray" });
+    fs.writeFileSync(file, JSON.stringify({ mode: "dark", palette: "slate" }));
+    expect((await load()).startTheme().state()).toEqual({ mode: "dark", palette: "slate" });
   });
 
   it("takes a mode and a palette it knows, and refuses others", async () => {
@@ -54,10 +67,15 @@ describe("the panels' theme (0.146.0)", () => {
   it("falls back on what a damaged file doesn't say", async () => {
     fs.writeFileSync(file, JSON.stringify({ mode: "sepia", palette: "slate" }));
     expect((await load()).startTheme().state()).toEqual({ mode: "dark", palette: "slate" });
-    // The frames that wore Sand, a palette until 0.169.0: Gray, their mode kept.
+    // The frames that wore Sand, a palette until 0.169.0: Gray, their mode
+    // kept — as they have been since, not the default of an install that
+    // saved nothing.
     fs.writeFileSync(file, JSON.stringify({ mode: "bright", palette: "sand" }));
     expect((await load()).startTheme().state()).toEqual({ mode: "bright", palette: "gray" });
+    // A file with a mode alone says nothing of the colours: the default.
+    fs.writeFileSync(file, JSON.stringify({ mode: "bright" }));
+    expect((await load()).startTheme().state()).toEqual({ mode: "bright", palette: "embossed" });
     fs.writeFileSync(file, "{not json");
-    expect((await load()).startTheme().state()).toEqual({ mode: "dark", palette: "gray" });
+    expect((await load()).startTheme().state()).toEqual({ mode: "dark", palette: "embossed" });
   });
 });

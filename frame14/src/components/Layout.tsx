@@ -12,6 +12,7 @@ import { VoiceAssistButton } from "./VoiceAssistButton";
 import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
 import { ScreenOffButton } from "./ScreenOffButton";
 import { RefreshFramesButton } from "./RefreshFramesButton";
+import { ThemeToggleButton } from "./ThemeToggleButton";
 import { useReady } from "../hooks/useReady";
 import { useVoiceAssist } from "../hooks/useVoiceAssist";
 import { useAssistConfig } from "../hooks/useAssistConfig";
@@ -126,6 +127,9 @@ export function Layout() {
         // Both decide for themselves what the device gets. A remote alone
         // has the button that reloads the frames (0.175.0).
         refresh={<RefreshFramesButton />}
+        // Bright or dark, at a tap (0.176.0): this device's theme on a
+        // remote, the frames' on a frame.
+        theme={<ThemeToggleButton />}
         // The power button decides for itself: a frame's turns the screen
         // off (0.130), a remote's switches the frames' screen (0.161).
         screen={<ScreenOffButton />}

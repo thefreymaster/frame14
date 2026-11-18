@@ -67,7 +67,7 @@ function Total({
  * (TodaySparkline) with the two totals over it. The header carries that
  * coverage as a tag (CoverageBadge) beside the grid flow (GridBadge), so
  * both read with the card collapsed. A tap on the body opens EnergyDialog,
- * which has the full chart and the split totals.
+ * the Energy page's own views in a drawer.
  */
 export function EnergySection({
   energy,
@@ -84,12 +84,7 @@ export function EnergySection({
 
   return (
     <>
-      <EnergyDialog
-        energy={energy}
-        today={today}
-        open={open}
-        onClose={() => setOpen(false)}
-      />
+      <EnergyDialog open={open} onClose={() => setOpen(false)} />
       <Board
         collapsible
         storageKey="energy"

@@ -436,6 +436,35 @@ test.describe("the Settings page", () => {
   test.describe("on a device that has opened none of them", () => {
     test.use({ storageState: FRESH_DEVICE });
 
+    // 0.176.0, the user: "Make embossed theme the default theme going
+    // forward". A device that has kept nothing: a remote wears Embossed,
+    // and says so on its Appearance card; a frame wears what the add-on has
+    // kept for the frames — Gray, in the suite (seed.mjs), as on any install
+    // that picked it before.
+    test("a remote that has picked no colours wears Embossed, and a frame what the add-on has kept (0.176.0)", async ({ page, isMobile }) => {
+      await page.goto("/control/device");
+      await splashGone(page);
+      const html = page.locator("html");
+      if (!isMobile) {
+        // A desktop is a frame by default: the frames' theme, the add-on's word.
+        await expect(html).toHaveAttribute("data-palette", "gray");
+        return;
+      }
+      await expect(html).toHaveAttribute("data-palette", "embossed");
+      // Kept at once, so it is the device's own from here on.
+      expect(await page.evaluate(() => localStorage.getItem("local-theme-palette"))).toBe("embossed");
+      const card = page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: "Appearance", exact: true }) });
+      await card.locator("button[data-stretched]").click();
+      const colors = card.getByRole("radiogroup", { name: "Colors" });
+      await expect(colors.getByRole("radio", { name: "Embossed" })).toBeChecked();
+      await expect(colors.getByRole("radio", { name: "Gray" })).not.toBeChecked();
+      // Gray is still there to be picked, and kept.
+      await colors.getByText("Gray", { exact: true }).click();
+      await expect(html).toHaveAttribute("data-palette", "gray");
+      await page.reload();
+      await expect(html).toHaveAttribute("data-palette", "gray");
+    });
+
     test("every card of the Display and Device tabs starts out folded, and one opened stays open (0.173.0)", async ({ page, isMobile }) => {
       const card = (title: string) => page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: title, exact: true }) });
       const header = (title: string) => card(title).locator("button[data-stretched]");

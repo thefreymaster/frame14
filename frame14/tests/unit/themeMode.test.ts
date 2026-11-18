@@ -81,7 +81,9 @@ describe("the frames' theme", () => {
   it("is a frame's: saved, worn and sent to the other panels", async () => {
     stubSystem(false);
     const { getTheme, setThemePreference, setThemePalette } = await load("frame");
-    expect(getTheme()).toMatchObject({ own: false, frames: { preference: "dark", palette: "gray" } });
+    // Until one is picked: Dark, and Embossed (0.176.0; Gray before).
+    expect(getTheme()).toMatchObject({ own: false, frames: { preference: "dark", palette: "embossed" } });
+    expect(html.dataset.palette).toBe("embossed");
     setThemePreference("bright");
     setThemePalette("slate");
     expect(localStorage.getItem("theme-mode-preference")).toBe("bright");
@@ -131,6 +133,28 @@ describe("the frames' theme", () => {
     expect(html.dataset.palette).toBe("embossed");
   });
 
+  // 0.176.0, the user: "Make embossed theme the default theme going
+  // forward". Going forward: what was picked before is kept, Gray too.
+  it("is Embossed until a palette is picked, and a Gray that was picked stays Gray", async () => {
+    stubSystem(false);
+    const fresh = await load("frame");
+    expect(fresh.getTheme().frames.palette).toBe("embossed");
+    // The add-on's word for the frames wins, whatever the default: it kept Gray.
+    sock.handlers.get("current_theme_palette")?.("gray");
+    expect(html.dataset.palette).toBe("gray");
+    expect(localStorage.getItem("theme-palette")).toBe("gray");
+    // And that is what the frame opens in next time, before the add-on answers.
+    const again = await load("frame");
+    expect(again.getTheme().frames.palette).toBe("gray");
+    expect(html.dataset.palette).toBe("gray");
+    // A remote that picked Gray keeps it too.
+    localStorage.clear();
+    localStorage.setItem("local-theme-palette", "gray");
+    const remote = await load("controller");
+    expect(remote.getTheme().local.palette).toBe("gray");
+    expect(html.dataset.palette).toBe("gray");
+  });
+
   it("puts a device that wore Sand, a palette until 0.169.0, back in Gray", async () => {
     stubSystem(false);
     // A frame: the frames' stored palette, and one the server still sends.
@@ -147,6 +171,8 @@ describe("the frames' theme", () => {
     const remote = await load("controller");
     expect(remote.getTheme().local.palette).toBe("gray");
     expect(html.dataset.palette).toBe("gray");
+    // Not the default, which is for a device that kept nothing: a device
+    // that wore Sand has been in Gray since, and a new default doesn't move it.
   });
 
   it("ignores what isn't a mode or a palette, stored or sent", async () => {
@@ -197,11 +223,13 @@ describe("a remote's own theme (0.148.0)", () => {
 
     localStorage.clear();
     const fresh = await load("controller");
-    expect(fresh.getTheme().local).toEqual({ preference: "device", palette: "gray" });
+    // A new device: its system's mode, in the default palette (Embossed, 0.176.0).
+    expect(fresh.getTheme().local).toEqual({ preference: "device", palette: "embossed" });
     expect(fresh.getTheme().effectiveMode).toBe("dark");
+    expect(localStorage.getItem("local-theme-palette")).toBe("embossed");
     // Saved, so the frames' theme arriving later doesn't become it.
-    sock.handlers.get("current_theme_palette")?.("embossed");
-    expect(fresh.getTheme().local.palette).toBe("gray");
+    sock.handlers.get("current_theme_palette")?.("slate");
+    expect(fresh.getTheme().local.palette).toBe("embossed");
   });
 
   it("is worn from the moment the device becomes a remote, and the frames' when it's a frame again", async () => {

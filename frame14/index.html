@@ -46,7 +46,9 @@
         // (the daylight window for auto, the system's setting for device);
         // it takes over (and syncs with the server) once the bundle runs.
         var mode = "dark";
-        var palette = "gray";
+        // lib/themePalettes' DEFAULT_PALETTE, for a device that has kept
+        // nothing (its test holds this copy to it).
+        var palette = "embossed";
         try {
           var ls = localStorage;
           var deviceMode = ls.getItem("device-mode");
@@ -71,11 +73,16 @@
             mode = "bright";
           }
           if (
+            saved === "gray" ||
             saved === "slate" ||
             saved === "outlines" ||
             saved === "embossed"
           ) {
             palette = saved;
+          } else if (saved) {
+            // A palette no more (Sand): Gray, as lib/themePalettes'
+            // paletteOf has it.
+            palette = "gray";
           }
         } catch (e) {}
         var root = document.documentElement;

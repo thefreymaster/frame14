@@ -16,6 +16,7 @@ import { Board } from "./Board";
 import { EnergyHistoryChart, type HistoryPoint } from "./EnergyHistoryChart";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { SegmentedControl } from "./ui/segmented-control";
+import { useBoardFrame, useBoardSurface } from "../lib/boardFrame";
 import { fmtKwh } from "../lib/energy";
 import { IoStatsChartOutline } from "react-icons/io5";
 
@@ -33,6 +34,13 @@ const MONTHS = [
   "November",
   "December",
 ];
+
+/**
+ * The chart's height where nothing gives it one: in the Home card's drawer
+ * (lib/boardFrame's `"panel"`), whose sections are as tall as their
+ * contents. On the page the card fills what the page has left.
+ */
+const PANEL_HEIGHT = { base: "17rem", md: "20rem" };
 
 type View = "month" | "year";
 type ChartMode = "total" | "daily";
@@ -83,6 +91,8 @@ function slotsOf(view: View, cursor: Cursor) {
  * arrows, then Total / Daily and Month / Year.
  */
 export function SolarHistoryCard() {
+  const panel = useBoardFrame() === "panel";
+  const surface = useBoardSurface();
   const now = new Date();
   const [view, setView] = useState<View>("month");
   const [chartMode, setChartMode] = useState<ChartMode>("total");
@@ -258,27 +268,29 @@ export function SolarHistoryCard() {
         </Flex>
       }
     >
-      {isPending ? (
-        <Center height="100%">
-          <Spinner size="lg" aria-label="Loading" />
-        </Center>
-      ) : isError || !data ? (
-        <Center height="100%">
-          <Text color="fg.muted">unavailable</Text>
-        </Center>
-      ) : (
-        <EnergyHistoryChart
-          // A new period or mode starts with the readout idle.
-          key={`${view}-${chartMode}-${period}`}
-          points={points}
-          ticks={ticks}
-          totals={{ production: prodTotal, consumption: consTotal }}
-          note={note}
-          lead={lead}
-          ring="bg.surface"
-          label={`${periodName}, ${chartMode === "total" ? "running totals" : view === "month" ? "by day" : "by month"}`}
-        />
-      )}
+      <Box height={panel ? PANEL_HEIGHT : "100%"} minH="0">
+        {isPending ? (
+          <Center height="100%">
+            <Spinner size="lg" aria-label="Loading" />
+          </Center>
+        ) : isError || !data ? (
+          <Center height="100%">
+            <Text color="fg.muted">unavailable</Text>
+          </Center>
+        ) : (
+          <EnergyHistoryChart
+            // A new period or mode starts with the readout idle.
+            key={`${view}-${chartMode}-${period}`}
+            points={points}
+            ticks={ticks}
+            totals={{ production: prodTotal, consumption: consTotal }}
+            note={note}
+            lead={lead}
+            ring={surface}
+            label={`${periodName}, ${chartMode === "total" ? "running totals" : view === "month" ? "by day" : "by month"}`}
+          />
+        )}
+      </Box>
     </Board>
   );
 }

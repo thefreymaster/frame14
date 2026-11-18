@@ -431,6 +431,57 @@ test.describe("the Embossed theme's buttons", () => {
         }
       });
 
+      // 0.176.0, the user: "Calendar event sould be concave in embossed
+      // theme" — the rows of Home's Calendar card and of the Calendar
+      // page's days, each read and not pressed. And the Home card's energy
+      // drawer, which since then is the Energy page's parts: each a section
+      // of the drawer whose well is pressed in as the page's card is.
+      test(`the calendar's events are wells too, and so are the sections of the energy drawer (${scheme})`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: scheme });
+        const events = page.locator("[data-calendar-event]");
+        await page.goto("/calendar");
+        await wear(page, "gray");
+        await expect(events.first()).toBeVisible();
+        const flat = await drawn(events.first());
+        // The flat grey panel they always were.
+        expect(flat).toMatchObject({ edge: 0, inside: [], outside: [] });
+        expect(flat.floor).not.toBe(CLEAR);
+
+        await wear(page, "embossed");
+        await expect(events.first()).toBeVisible();
+        const pressed = await pressedIn(events.first());
+        // Its own colour still: only the shade is new.
+        expect(pressed.floor).toBe(flat.floor);
+        // Every event of every day, one that has ended among them.
+        const all = await events.evaluateAll((rows) => rows.map((row) => getComputedStyle(row).boxShadow));
+        expect(all.length).toBeGreaterThan(3);
+        expect(new Set(all).size).toBe(1);
+
+        // Home's Calendar card: the same rows.
+        await page.goto("/home");
+        const home = page.locator('[data-card="calendar"] [data-calendar-event]');
+        await expect(home.first()).toBeAttached();
+        expect(await pressedIn(home.first())).toEqual(pressed);
+        await wear(page, "gray");
+        await expect(home.first()).toBeAttached();
+        expect(await drawn(home.first())).toEqual(flat);
+
+        // The energy drawer's sections: flat in Gray…
+        const open = async () => {
+          await page.getByRole("button", { name: "Show energy detail" }).click({ position: { x: 60, y: 30 } });
+          const wells = page.getByRole("dialog").locator("[data-board-panel] > .chakra-card__root");
+          await expect(wells).toHaveCount(3);
+          await expect(page.getByRole("dialog").getByText("Solar covered today")).toBeVisible();
+          return wells;
+        };
+        for (const well of await (await open()).all()) expect(await drawn(well)).toEqual(flat);
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("dialog")).toBeHidden();
+        // …and in Embossed pressed into the drawer, as a calendar's event is into its card.
+        await wear(page, "embossed");
+        for (const well of await (await open()).all()) expect(await drawn(well)).toEqual(pressed);
+      });
+
       // 0.173.0, the user: "Make all badges like 1 on and 13% be concave
       // in embossed mode. Edit the theme so it applies to all badges app
       // wide" — the badge recipe, so no badge names it.

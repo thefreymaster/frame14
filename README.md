@@ -27,13 +27,13 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 - **Home** — weather, thermostats, energy, the calendar, the lights that are on, fans, the 3D printer and the robot vacuums as cards you can rearrange, resize and hide per device (press and hold).
 - **Clock and Photos** — an analog or digital clock, and an Immich album as a slideshow, through Home Assistant's Immich integration; a remote picks the photo the frames show.
 - **Lights and Climate** — lights and switches grouped by room, under a card of scenes a tap runs; thermostats with a dial, mode and fan controls.
-- **Energy** — the power flow now, today's solar curve, month and year history, and the draw per circuit.
+- **Energy** — the power flow now, today's solar curve, month and year history, and the draw per circuit; Home's Energy card opens the same views in a drawer.
 - **Weather** — conditions and advisories, the moon's phase, hourly and daily forecasts, the radar.
 - **Printer, Vacuum, Cameras, Calendar** — a Bambu Lab printer with its camera and job, Roborock vacuums with their maps, every camera live — and full screen, with its room's lights at hand — and a two-week agenda.
 - **Unraid** — with Home Assistant's Unraid integration, the server's CPU, memory and temperature, and the status of every Docker container and VM. Read only. Found in Home Assistant; nothing to configure.
 - **Speed test** — how fast the device in your hand, or on the wall, reaches the add-on: ping, download and upload over the Wi-Fi and LAN (or the tunnel from outside), measured on demand. Nothing to configure.
 - **And more** — a Plex movie takes over the frames as its poster; a tracked team's game day gets a scoreboard; a doorbell card pops up when someone is at the door; the mic runs an Assist pipeline.
-- **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. A remote's header has a button that refreshes the frames and a switch for their screen. Installable as a PWA.
+- **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. A remote's header has a button that refreshes the frames and a switch for their screen; every header has a switch between bright and dark. Installable as a PWA.
 
 ## Installation
 
@@ -203,11 +203,11 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | Path | Description |
 |---|---|
 | `/` | Redirects to `/home` |
-| `/home` | Overview: weather, climate, energy, calendar, the lights that are on, printer, vacuum, fans; cards rearrange per device (press and hold) |
+| `/home` | Overview: weather (with the moon's phase), climate, energy (a tap opens the Energy page's views in a drawer), calendar, the lights that are on, printer, vacuum, fans; cards rearrange per device (press and hold) |
 | `/clock` | Analog or digital clock (tap to switch); frame-only nav item |
 | `/lights` | Light and switch controls, grouped by room |
 | `/climate` | The thermostats: dial, mode and fan controls |
-| `/energy` | Power flow now, with Solar (today, month and year history) and Circuits (per-circuit draw) as tabs; `/solar` and `/power` redirect here |
+| `/energy` | Power flow now — whether the house is importing or exporting in the card's header — with Solar (today, month and year history) and Circuits (per-circuit draw) as tabs; `/solar` and `/power` redirect here |
 | `/printer` | The 3D printer: camera, job progress and controls, temperatures; off by default in a remote's nav |
 | `/vacuum` | The robot vacuums: state, controls, map, wear parts; off by default in a remote's nav |
 | `/cameras` | Every camera live (stills when the stream won't start) — each goes full screen, with the lights of its room as buttons in the header — the printer's camera (full screen with its chamber light) and the vacuum maps; off by default in a remote's nav |
@@ -241,7 +241,7 @@ rest_command:
 
 The brightness command takes a `level` from 0 to 255 (`action: rest_command.frame14_screen_brightness` with `data: { level: 120 }`).
 
-A remote (a phone) and any browser outside Fully ignore the command. The Settings page's **Screen** card does the same by hand — a switch — and the power button at the header's right turns the screen off with a tap — on a frame, and on a remote, where it is a switch that turns the frames' screen back on too (dimmed while they're dark) and leaves the remote's own screen alone; the card also keeps a schedule, the hours the screen is on, which the add-on runs itself: the screen goes off and on at those times whether or not a remote is open, and the switch works in between. On a phone and on the frame itself (not on a desktop) the card also has a brightness slider, **Adjust to the room** — the frames set their brightness from the tablet's light sensor, between the dimmest and brightest levels of a range slider, the room's light as the frame last read it shown under the switch; the dark hours win while they last, and moving the brightness slider turns it off — and the dark hours, a range during which the screen is at its darkest, the slider's level back at its end; the add-on runs those too, and a screen woken during the dark hours comes up dark. `GET /api/screen` answers the state, the brightness, both pairs of hours, the room-light setting and the last reading; `PUT /api/screen/schedule` and `PUT /api/screen/dark` set the hours, `PUT /api/screen/auto` the room-light setting (`{ "enabled": true, "min": 25, "max": 255 }`).
+A remote (a phone) and any browser outside Fully ignore the command. The Settings page's **Screen** card does the same by hand — a switch — and the power button, the last of the header's buttons, turns the screen off with a tap — on a frame, and on a remote, where it is a switch that turns the frames' screen back on too (dimmed while they're dark) and leaves the remote's own screen alone; the card also keeps a schedule, the hours the screen is on, which the add-on runs itself: the screen goes off and on at those times whether or not a remote is open, and the switch works in between. On a phone and on the frame itself (not on a desktop) the card also has a brightness slider, **Adjust to the room** — the frames set their brightness from the tablet's light sensor, between the dimmest and brightest levels of a range slider, the room's light as the frame last read it shown under the switch; the dark hours win while they last, and moving the brightness slider turns it off — and the dark hours, a range during which the screen is at its darkest, the slider's level back at its end; the add-on runs those too, and a screen woken during the dark hours comes up dark. `GET /api/screen` answers the state, the brightness, both pairs of hours, the room-light setting and the last reading; `PUT /api/screen/schedule` and `PUT /api/screen/dark` set the hours, `PUT /api/screen/auto` the room-light setting (`{ "enabled": true, "min": 25, "max": 255 }`).
 
 ## Notifications
 

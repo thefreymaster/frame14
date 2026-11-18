@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
 import { APP_PORT, APP_URL, STUB_PORT, STUB_URL } from "./tests/e2e/ports";
-import { SETTINGS_OPEN } from "./tests/e2e/settingsCards";
+import { SUITE_DEVICE } from "./tests/e2e/settingsCards";
 
 // End-to-end: the real server (index.js, the built client in dist/) against
 // the stub Home Assistant (tests/stub/stub-ha.mjs), both started here on the
@@ -23,10 +23,12 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL: APP_URL,
-    // Settings' cards start out folded (0.173.0); the suite's browsers are
-    // devices that have opened them, as they all were until then. A test
-    // of the default uses FRESH_DEVICE (tests/e2e/settingsCards.ts).
-    storageState: SETTINGS_OPEN,
+    // Settings' cards start out folded (0.173.0) and a device that has
+    // picked no colours wears Embossed (0.176.0); the suite's browsers are
+    // devices that have opened the cards and picked Gray, as they all were
+    // until then. A test of a default uses FRESH_DEVICE
+    // (tests/e2e/settingsCards.ts).
+    storageState: SUITE_DEVICE,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -51,7 +53,9 @@ export default defineConfig({
       timeout: 15_000,
     },
     {
-      command: "node index.js",
+      // The frames' theme saved as Gray first (tests/e2e/seed.mjs): the
+      // suite's pages are Gray's, which was the default until 0.176.0.
+      command: "node tests/e2e/seed.mjs && node index.js",
       url: `${APP_URL}/api`,
       env: {
         PORT: String(APP_PORT),

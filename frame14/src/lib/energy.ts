@@ -7,13 +7,28 @@ export const GRID_ACTIVE_THRESHOLD = 5;
  * The energy marks' colours, one per flow, the same in both modes: solar
  * yellow, sent to the grid green, taken from it orange, the house's own use
  * the muted ink. Yellow is the lightest, so it is always labelled in text too.
+ * And the grid itself blue (0.176.0, the user, of the flow's last node: "Make
+ * the far right grid bolt and circle be blue"): the meter is neither what is
+ * sent nor what is taken, which stay the wires' and the tags' colours. The
+ * 500 step: the dataviz validator has it clear of the other three and 3:1
+ * off the cards by day and by night, as it has the 600 — which, as a thin
+ * glyph on a dark card (the grid's icon is a pylon, lib/energyIcons), was
+ * the hardest of the flow's marks to make out.
  */
 export const ENERGY_COLORS = {
   solar: "yellow.500",
   export: "green.600",
   import: "orange.600",
   home: "fg.muted",
+  grid: "blue.500",
 } as const;
+
+/**
+ * The sparks round the grid's icon (GridSparks): the grid's blue at the step
+ * that stands out from the node's blue-tinted disc — lighter than the icon
+ * by night, darker by day.
+ */
+export const GRID_SPARK_COLOR = { base: "blue.700", _dark: "blue.300" } as const;
 
 /** The same colours as CSS variables, for SVG paints. */
 export const ENERGY_VARS = {
@@ -21,6 +36,7 @@ export const ENERGY_VARS = {
   export: "var(--chakra-colors-green-600)",
   import: "var(--chakra-colors-orange-600)",
   home: "var(--chakra-colors-fg-muted)",
+  grid: "var(--chakra-colors-blue-500)",
 } as const;
 
 /**
@@ -46,6 +62,17 @@ export function fmtW(watts: number): string {
 export function coverage(energy: HomeEnergy) {
   const { productionToday, consumptionToday } = energy;
   return consumptionToday > 0 ? (productionToday / consumptionToday) * 100 : 0;
+}
+
+/**
+ * The colour of the day's coverage: the solar's yellow until the panels have
+ * made the whole of the day's use, green from there — the card's big figure
+ * turns green at the same moment, and the house in the flow wears it
+ * (0.176.0, the user: "make the house icon yellow when below 100% and green
+ * when over 100%").
+ */
+export function coverageColor(pct: number): "solar" | "export" {
+  return pct >= 100 ? "export" : "solar";
 }
 
 /** The net grid flow now: how much, which way, and whether it counts. */

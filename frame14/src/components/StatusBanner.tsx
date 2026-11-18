@@ -1,5 +1,7 @@
-import { Center, HStack, Image, Spacer, Text } from "@chakra-ui/react";
+import { useLayoutEffect, useRef } from "react";
+import { Box, Center, Grid, HStack, Image, Text } from "@chakra-ui/react";
 import { FROST, NAV_SURFACE_TINT } from "../lib/floatingSurface";
+import { watchHeaderFit } from "../lib/headerFit";
 import {
   HEADER_CLEARANCE,
   HEADER_ICON_SIZE,
@@ -17,18 +19,37 @@ import { useDesktop } from "../hooks/useDesktop";
 const NAME_ROW = "1.75rem";
 
 /**
+ * What the row gives up as it runs out of room (lib/headerFit writes the
+ * level on it): the name, then the theme's toggle.
+ */
+const FIT_CSS = {
+  '&:is([data-header-fit="icon"], [data-header-fit="tight"]) [data-header-word]':
+    { display: "none" },
+  '&[data-header-fit="tight"] [data-header-theme]': { display: "none" },
+} as const;
+
+/**
  * The header across the top of every view: the app's icon and name at the
- * left; running appliances, the connection, the mic, a remote's button to
- * refresh the frames, the frames' power button and (on a desktop) the date
- * and time at the right. (The version is on the Settings page.) The appliance
- * and connection icons each open a small menu on a tap (HeaderMenu). Those
- * icons, the mic, the refresh and the power button sit `xs` apart, one group;
- * the clock keeps the header's wider gap from them. On a phone on a busy day
- * — a washer, a dryer, a dishwasher, a print and a vacuum, each an icon —
- * the group is wider than what the name leaves it, and the name goes
- * (0.175.0, when a remote's refresh button made that four appliances on a
- * 390px iPhone, the power button off the screen): the icon alone at the
- * left, every button on the screen.
+ * left; in the middle the buttons — running appliances, the connection, the
+ * mic, a remote's button to refresh the frames, the theme's toggle and the
+ * frames' power button; and (on a desktop) the date and time at the right.
+ * (The version is on the Settings page.) The appliance and connection icons
+ * each open a small menu on a tap (HeaderMenu). The buttons sit `xs` apart,
+ * one group.
+ *
+ * **The buttons are in the middle of the header** (0.176.0, the user: "Move
+ * all the actions buttons in the header to be in the center of the header";
+ * at its right end until then). The row is three columns, the outer two
+ * sharing what the buttons leave — so the group's middle is the header's —
+ * and neither narrower than what it holds: on a phone, where the name is
+ * wider than half of what is left, the buttons sit as near the middle as
+ * the name lets them rather than over it. When even that is too wide — a
+ * phone on a busy day: a washer, a dryer, a dishwasher, a print and a
+ * vacuum, each an icon — the name goes (0.175.0, when a remote's refresh
+ * button made that four appliances on a 390px iPhone, the power button off
+ * the screen): the icon alone at the left, every button on the screen; and
+ * with no room even then, the theme's toggle goes as well. lib/headerFit
+ * finds which, from the layout itself.
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -54,6 +75,7 @@ export function StatusBanner({
   scrolled = false,
   voice,
   refresh,
+  theme,
   screen,
 }: {
   hidden?: boolean;
@@ -61,19 +83,29 @@ export function StatusBanner({
   veiled?: boolean;
   /** The page has scrolled under the header: show its bottom edge. */
   scrolled?: boolean;
-  /** The mic, after the status icons (before the clock on a desktop). */
+  /** The mic, after the status icons. */
   voice?: React.ReactNode;
   /** A remote's button to refresh the frames (RefreshFramesButton), after the mic. */
   refresh?: React.ReactNode;
+  /** The switch between bright and dark (ThemeToggleButton), before the power button. */
+  theme?: React.ReactNode;
   /** The power button for the frames' screen (ScreenOffButton), the last. */
   screen?: React.ReactNode;
 }) {
   // The date and clock only on a desktop: a phone shows its own, and the
   // frame has the big ones on Home and /clock.
   const desktop = useDesktop();
+  const row = useRef<HTMLDivElement>(null);
+  const buttons = useRef<HTMLDivElement>(null);
+  // Before the first paint, and from then on as the row or its buttons change.
+  useLayoutEffect(() => {
+    if (!row.current || !buttons.current) return;
+    return watchHeaderFit(row.current, buttons.current);
+  }, []);
 
   return (
-    <HStack
+    <Grid
+      ref={row}
       position="fixed"
       top={0}
       left={0}
@@ -82,9 +114,12 @@ export function StatusBanner({
       pt={HEADER_TOP}
       pl={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
       pr={`calc(env(safe-area-inset-right, 0px) + ${PAGE_GUTTER})`}
-      gap="3"
+      // The buttons between two columns that share the rest: in the middle.
+      templateColumns="1fr auto 1fr"
+      alignItems="center"
       bg={`bg/${NAV_SURFACE_TINT}`}
-      {...FROST}
+      backdropFilter={FROST.backdropFilter}
+      css={{ ...FROST.css, ...FIT_CSS }}
       zIndex="sticky"
       inert={veiled || undefined}
       transform={hidden ? "translateY(-100%)" : "translateY(0)"}
@@ -101,23 +136,17 @@ export function StatusBanner({
         opacity: scrolled ? 1 : 0,
         transition: "opacity 0.2s",
       }}
+      data-header=""
     >
-      {/* The icon and the name. The name gives way to the buttons: this box
-          is the one thing in the row that shrinks, it is one line tall, and
-          it wraps — so a name with no room beside the icon drops to a second
-          line, out of sight, whole (never "Fra…"). The icon stays. */}
-      <HStack
-        gap="2"
-        flexWrap="wrap"
-        alignContent="flex-start"
-        height={NAME_ROW}
-        minW={HEADER_ICON_SIZE}
-        overflow="hidden"
-        data-header-name
-      >
+      {/* The icon and the name, the header's gap clear of the buttons. The
+          name is whole or gone (FIT_CSS), never "Fra…"; the icon stays. */}
+      <HStack gap="2" me="3" justifySelf="start" data-header-name>
         {/* The app icon, at the status icons' size, in a box as tall as the
-            line so the line is no shorter with the name gone. */}
-        <Center height={NAME_ROW} flexShrink={0}>
+            line so the line is no shorter with the name gone — and as wide
+            as the icon by its own word: an image the reset caps at 100% of
+            its box counts for nothing in the least width a column can be,
+            and the name ran on under the buttons by the icon's width. */}
+        <Center height={NAME_ROW} width={HEADER_ICON_SIZE} flexShrink={0}>
           <Image
             src="/favicon-96x96.png"
             alt=""
@@ -130,20 +159,24 @@ export function StatusBanner({
           lineHeight={NAME_ROW}
           fontWeight="semibold"
           whiteSpace="nowrap"
+          data-header-word
         >
           Frame14
         </Text>
       </HStack>
-      <Spacer />
-      <HStack gap="xs" data-header-buttons>
+      <HStack ref={buttons} gap="xs" data-header-buttons>
         <ApplianceIndicators />
         <ConnectionMenu />
         {voice}
         {refresh}
+        {theme}
         {screen}
       </HStack>
-      {desktop && <HeaderClock />}
+      {/* The third column is there with or without a clock in it. */}
+      <Box justifySelf="end" ms={desktop ? "3" : undefined} minW="0">
+        {desktop && <HeaderClock />}
+      </Box>
       <ArrangingVeil shown={veiled} />
-    </HStack>
+    </Grid>
   );
 }

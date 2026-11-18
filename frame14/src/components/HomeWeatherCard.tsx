@@ -5,6 +5,7 @@ import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { Board } from "./Board";
 import { roundTemp as round } from "../lib/forecast";
 import { conditionLabel, weatherIcon } from "../lib/weatherIcons";
+import { MoonLine } from "./MoonLine";
 import { WeatherDialog } from "./WeatherDialog";
 
 /**
@@ -13,7 +14,8 @@ import { WeatherDialog } from "./WeatherDialog";
  * temperature, today's high and low under both from the card's left edge
  * (0.159.1, the user's ask; from the daily forecast, as the desktop card's
  * header has them), and the condition and humidity on the right, centred on
- * the two rows. Same card id ("header"), so a saved layout keeps its place.
+ * the two rows; under them all the moon tonight (MoonLine, 0.176.0). Same
+ * card id ("header"), so a saved layout keeps its place.
  * A tap opens WeatherDialog (0.136; it went to /weather from 0.97).
  */
 export function HomeWeatherCard({
@@ -125,6 +127,10 @@ export function HomeWeatherCard({
                 H {high}° · L {low}°
               </Text>
             )
+          )}
+          {/* The moon tonight (0.176.0), a line across the card's foot. */}
+          {!loading && weather && (
+            <MoonLine gridColumn="1 / -1" mt="1.5" textStyle="sm" />
           )}
         </Grid>
 

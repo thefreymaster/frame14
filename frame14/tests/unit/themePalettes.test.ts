@@ -1,11 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_PALETTE,
+  FORMER_PALETTE,
   PALETTE_STEPS,
   PALETTES,
   LIGHT_CARD,
   THEME_PALETTES,
   isThemePalette,
+  paletteOf,
   type PaletteColors,
 } from "../../src/lib/themePalettes";
 
@@ -232,5 +235,23 @@ describe("the palettes", () => {
     // And nothing of a palette that is gone (Sand, 0.169.0): a device that
     // stored it launches in Gray.
     expect(html).not.toContain('"sand"');
+  });
+
+  // 0.176.0, the user: "Make embossed theme the default theme going forward".
+  it("has Embossed for a device that has kept nothing, from the first paint, and Gray still for one that kept it", () => {
+    expect(DEFAULT_PALETTE).toBe("embossed");
+    expect(paletteOf(null)).toBe("embossed");
+    expect(paletteOf(undefined)).toBe("embossed");
+    for (const name of THEME_PALETTES) expect(paletteOf(name), name).toBe(name);
+    // A name that is a palette no more is Gray, as it has been — not the default.
+    expect(FORMER_PALETTE).toBe("gray");
+    expect(paletteOf("sand")).toBe("gray");
+    expect(paletteOf("")).toBe("gray");
+    // index.html's early script: the same default, a stored Gray worn, and
+    // any other stored name Gray.
+    const html = readFileSync("index.html", "utf-8");
+    expect(html).toContain(`var palette = "${DEFAULT_PALETTE}";`);
+    expect(html).toContain('saved === "gray"');
+    expect(html).toMatch(/else if \(saved\) \{[^}]*palette = "gray";/);
   });
 });

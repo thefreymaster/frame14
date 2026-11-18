@@ -1,10 +1,6 @@
 import { socket } from "./socket";
 import { getDeviceMode, subscribeDeviceMode } from "./deviceMode";
-import {
-  DEFAULT_PALETTE,
-  isThemePalette,
-  type ThemePalette,
-} from "./themePalettes";
+import { isThemePalette, paletteOf, type ThemePalette } from "./themePalettes";
 
 export type ThemeModePreference = "auto" | "device" | "bright" | "dark";
 export type EffectiveThemeMode = "bright" | "dark";
@@ -142,14 +138,15 @@ function loadFrames(): ThemeChoice {
   const palette = read(PALETTE_KEY);
   return {
     preference: isThemePreference(preference) ? preference : "dark",
-    palette: isThemePalette(palette) ? palette : DEFAULT_PALETTE,
+    palette: paletteOf(palette),
   };
 }
 
 /**
  * This device's own theme. A device from before 0.148.0 keeps what it showed
  * — the frames' theme it had stored — and a new one follows its system in
- * Gray; either is saved at once, so a later change of the frames' doesn't move
+ * the default palette (Embossed since 0.176.0, Gray before); either is saved
+ * at once, so a later change of the frames', or of the default, doesn't move
  * it.
  */
 function loadLocal(): ThemeChoice {
@@ -165,9 +162,7 @@ function loadLocal(): ThemeChoice {
         : "device",
     palette: isThemePalette(palette)
       ? palette
-      : isThemePalette(beforePalette)
-        ? beforePalette
-        : DEFAULT_PALETTE,
+      : paletteOf(beforePalette ?? palette),
   };
   if (preference !== local.preference) store(LOCAL_KEY, local.preference);
   if (palette !== local.palette) store(LOCAL_PALETTE_KEY, local.palette);

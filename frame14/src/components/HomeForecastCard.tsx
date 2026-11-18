@@ -15,6 +15,7 @@ import { IoPartlySunnyOutline } from "react-icons/io5";
 import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { Board } from "./Board";
 import { HourlyForecast } from "./HourlyForecast";
+import { MoonLine } from "./MoonLine";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
 import { roundTemp as round } from "../lib/forecast";
 import { conditionLabel, weatherIcon } from "../lib/weatherIcons";
@@ -36,7 +37,8 @@ const NARROW_CSS = {
 /**
  * /home's first card on a desktop, in place of HomeHeader (the header has the
  * clock there): the weather now and the next 8 hours, from the WeatherKit
- * forecasts in useHomeData. Built from the board's own parts — a collapsible
+ * forecasts in useHomeData, with the moon tonight in a line between them
+ * (MoonLine, 0.176.0). Built from the board's own parts — a collapsible
  * Board with a SectionTitle, today's high and low as its summary, and a
  * subtle `sm` well like the calendar's rows (HourlyForecast). Same card id
  * ("header"), so a saved layout keeps its place. A tap on the body (the header
@@ -103,78 +105,75 @@ export function HomeForecastCard({
               : undefined
           }
         >
-          {/* Now: the condition's icon and the temperature, the words beside.
-              The card can be cut under it to fit the screen (usePackedGrid),
-              leaving the hours for the dialog. */}
-          <HStack
-            gap="4"
-            rowGap="2"
-            align="center"
-            minW="0"
-            wrap="wrap"
-            data-fit-row="block"
-          >
-            {loading ? (
-              <>
-                <Skeleton boxSize="4.5rem" rounded="full" />
-                <Skeleton height="4rem" width="7rem" />
-              </>
-            ) : (
-              weather && (
+          {/* Now: the condition's icon and the temperature, the words beside,
+              and under them the moon tonight (0.176.0). The card can be cut
+              under it to fit the screen (usePackedGrid), leaving the hours
+              for the dialog. */}
+          <Stack gap="3" minW="0" data-fit-row="block">
+            <HStack gap="4" rowGap="2" align="center" minW="0" wrap="wrap">
+              {loading ? (
                 <>
-                  <Box
-                    data-hero-icon=""
-                    fontSize="6rem"
-                    lineHeight="1"
-                    flexShrink={0}
-                    aria-hidden
-                  >
-                    {weatherIcon(weather.state, now.toISOString())}
-                  </Box>
-                  {current != null && (
-                    <Text
-                      data-hero-temp=""
-                      textStyle="7xl"
-                      fontWeight="semibold"
-                      lineHeight="1"
-                      whiteSpace="nowrap"
-                    >
-                      <NumberFlow value={current} />°
-                    </Text>
-                  )}
+                  <Skeleton boxSize="4.5rem" rounded="full" />
+                  <Skeleton height="4rem" width="7rem" />
                 </>
-              )
-            )}
-            <Spacer />
-            {loading ? (
-              <VStack align="end" gap="2">
-                <Skeleton height="1.5rem" width="6rem" />
-                <Skeleton height="1rem" width="7rem" />
-              </VStack>
-            ) : (
-              weather && (
-                <VStack
-                  data-hero-words=""
-                  align="end"
-                  gap="0.5"
-                  minW="0"
-                  textAlign="end"
-                >
-                  <Text
-                    textStyle="2xl"
-                    fontWeight="medium"
-                    truncate
-                    maxW="100%"
-                  >
-                    {conditionLabel(weather.state)}
-                  </Text>
-                  {weather.humidity != null && (
-                    <Text color="fg.muted">{weather.humidity}% humidity</Text>
-                  )}
+              ) : (
+                weather && (
+                  <>
+                    <Box
+                      data-hero-icon=""
+                      fontSize="6rem"
+                      lineHeight="1"
+                      flexShrink={0}
+                      aria-hidden
+                    >
+                      {weatherIcon(weather.state, now.toISOString())}
+                    </Box>
+                    {current != null && (
+                      <Text
+                        data-hero-temp=""
+                        textStyle="7xl"
+                        fontWeight="semibold"
+                        lineHeight="1"
+                        whiteSpace="nowrap"
+                      >
+                        <NumberFlow value={current} />°
+                      </Text>
+                    )}
+                  </>
+                )
+              )}
+              <Spacer />
+              {loading ? (
+                <VStack align="end" gap="2">
+                  <Skeleton height="1.5rem" width="6rem" />
+                  <Skeleton height="1rem" width="7rem" />
                 </VStack>
-              )
-            )}
-          </HStack>
+              ) : (
+                weather && (
+                  <VStack
+                    data-hero-words=""
+                    align="end"
+                    gap="0.5"
+                    minW="0"
+                    textAlign="end"
+                  >
+                    <Text
+                      textStyle="2xl"
+                      fontWeight="medium"
+                      truncate
+                      maxW="100%"
+                    >
+                      {conditionLabel(weather.state)}
+                    </Text>
+                    {weather.humidity != null && (
+                      <Text color="fg.muted">{weather.humidity}% humidity</Text>
+                    )}
+                  </VStack>
+                )
+              )}
+            </HStack>
+            {!loading && weather && <MoonLine textStyle="sm" />}
+          </Stack>
 
           {connected === false && (
             <Alert.Root status="error" mt="4" borderRadius="sm">

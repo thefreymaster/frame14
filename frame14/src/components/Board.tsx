@@ -1,11 +1,21 @@
 import { useContext, useState } from "react";
-import { Box, Card, chakra, Collapsible, IconButton } from "@chakra-ui/react";
+import {
+  Box,
+  Card,
+  chakra,
+  Collapsible,
+  Flex,
+  IconButton,
+  Stack,
+} from "@chakra-ui/react";
 import { IoClose } from "react-icons/io5";
 import { LuChevronDown } from "react-icons/lu";
 import { BoardFrame } from "../lib/boardFrame";
 import * as Modal from "./Modal";
 import { DARK_RAISED, SURFACE_SHADOW } from "../lib/floatingSurface";
 import { pressable } from "../lib/press";
+import { SectionTitle } from "./SectionTitle/SectionTitle";
+import { Well } from "./Well";
 
 const STORAGE_PREFIX = "board-collapsed:";
 
@@ -80,6 +90,13 @@ function writeOpen(key: string | undefined, open: boolean) {
  * not a card but that modal's parts: a header of its title and action, with
  * the close button, over a body of its contents — always whole, whatever its
  * collapse.
+ *
+ * And in a detail panel (lib/boardFrame's `"panel"`, 0.176.0: the Energy
+ * page's cards in the Home card's drawer) it is one of the panel's sections:
+ * its title and action in a row, over a `Well` holding its contents — what
+ * the Weather sheet's sections are, so a page's card and a sheet's section
+ * are one component. Whole too, whatever its collapse, and as tall as its
+ * contents: `fill` is a page's.
  */
 export const Board = ({
   children,
@@ -162,6 +179,30 @@ export const Board = ({
     );
 
   const hasBody = children != null && children !== false;
+
+  if (frame === "panel")
+    return (
+      <Stack gap="3" minW="0" data-board-panel="">
+        {title != null && (
+          <Flex align="center" gap="3">
+            <Box flex="1" minW="0">
+              {typeof title === "string" ? (
+                <SectionTitle>{title}</SectionTitle>
+              ) : (
+                title
+              )}
+            </Box>
+            {actionNode}
+          </Flex>
+        )}
+        {hasBody && (
+          <Well>
+            <Card.Body>{children}</Card.Body>
+          </Well>
+        )}
+      </Stack>
+    );
+
   const body = hasBody ? (
     <Card.Body flex={fill ? "1" : undefined} minH={fill ? "0" : undefined}>
       {children}

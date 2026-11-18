@@ -1,54 +1,25 @@
-import { Box, Flex, Skeleton, Tabs } from "@chakra-ui/react";
-import {
-  Navigate,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router";
-import type { IconType } from "react-icons";
-import { IoFlash, IoFlashOutline } from "react-icons/io5";
-import { MdElectricBolt } from "react-icons/md";
-import { PiSolarRoof } from "react-icons/pi";
-import { useFeatures } from "../hooks/useFeatures";
-import { useLiveEnergy } from "../hooks/useLiveEnergy";
-import { Board } from "../components/Board";
-import { CircuitsCard } from "../components/CircuitsCard";
-import { GridBadge } from "../components/GridBadge";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router";
+import { IoFlash } from "react-icons/io5";
+import { EnergyPanels } from "../components/EnergyPanels";
 import { PageHeader } from "../components/PageHeader";
 import { PageShell } from "../components/PageShell";
-import { PowerFlow } from "../components/PowerFlow";
-import { SectionTitle } from "../components/SectionTitle/SectionTitle";
-import { SolarHistoryCard } from "../components/SolarHistoryCard";
-import { SolarTodayCard } from "../components/SolarTodayCard";
-import { grid } from "../lib/energy";
-
-type EnergyTab = "solar" | "circuits";
-
-const TABS: { value: EnergyTab; label: string; icon: IconType }[] = [
-  { value: "solar", label: "Solar", icon: PiSolarRoof },
-  { value: "circuits", label: "Circuits", icon: MdElectricBolt },
-];
+import {
+  isEnergyTab,
+  useEnergyTabs,
+  type EnergyTab,
+} from "../hooks/useEnergyTabs";
 
 /**
- * The /energy page: where the power is going now (PowerFlow, as on the
- * energy card and in its dialog) in a collapsible Now card, then two tabs —
- * Solar, today's card (SolarTodayCard: the coverage figure and the day's
- * curve, as on the Home card) over the month or year chart
- * (SolarHistoryCard), and Circuits, the per-circuit draw (CircuitsCard). The
- * tab is the sub-route (0.138; the `tab` search param before): /energy/solar
- * and /energy/circuits, so the old /power path can land on its tab. The page
- * alone, a tab it hasn't got, or the old `?tab=` lands on the right one.
- * Only what the install has set up (lib/features, 0.159.0): Now and Solar
- * with the solar sensors, Circuits with circuits — the page itself needs
- * one of them (RequireFeature).
+ * The /energy page: its header over the energy views (EnergyPanels — the Now
+ * card, then the Solar and Circuits tabs; the Home card's drawer shows the
+ * same parts). The tab is the sub-route (0.138; the `tab` search param
+ * before): /energy/solar and /energy/circuits, so the old /power path can
+ * land on its tab. The page alone, a tab it hasn't got, or the old `?tab=`
+ * lands on the right one. The page itself needs the solar sensors or the
+ * circuits (RequireFeature).
  */
-const isEnergyTab = (v: string | null | undefined): v is EnergyTab =>
-  v === "solar" || v === "circuits";
-
 export function Energy() {
-  const live = useLiveEnergy();
-  const features = useFeatures();
-  const tabs = TABS.filter((t) => features[t.value]);
+  const tabs = useEnergyTabs();
   const navigate = useNavigate();
   const { tab: raw } = useParams();
   const [params] = useSearchParams();
@@ -63,87 +34,15 @@ export function Energy() {
       />
     );
   }
-  const tab: EnergyTab = raw;
-
-  function setTab(next: string) {
-    void navigate(`/energy/${next}`, { replace: true });
-  }
 
   return (
     <PageShell fill>
       <PageHeader icon={<IoFlash />} title="Energy" />
-
-      {/* Now: the solar sensors' power flow. */}
-      {features.solar && (
-        <Board
-          collapsible
-          storageKey="energy-now"
-          title={
-            <Flex align="center" gap="3" rowGap="2" wrap="wrap" width="100%">
-              <SectionTitle icon={<IoFlashOutline />}>Now</SectionTitle>
-              {grid(live.energy).active && (
-                <Box ms="auto">
-                  <GridBadge energy={live.energy} />
-                </Box>
-              )}
-            </Flex>
-          }
-        >
-          {live.loading ? (
-            <Skeleton height="7.5rem" />
-          ) : (
-            <PowerFlow energy={live.energy} />
-          )}
-        </Board>
-      )}
-
-      {/* Solar | Circuits. A tab mounts when first opened (lazyMount) and
-          stays, so Solar keeps its period while Circuits is up. */}
-      <Tabs.Root
-        value={tab}
-        onValueChange={(e) => setTab(e.value)}
-        variant="line"
-        fitted
-        lazyMount
-        display="flex"
-        flexDirection="column"
-        gap="gutter"
-        flex="1"
-        minH="0"
-      >
-        <Tabs.List flexShrink={0}>
-          {tabs.map((t) => (
-            <Tabs.Trigger key={t.value} value={t.value}>
-              <t.icon />
-              {t.label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-        {tabs.map((t) => (
-          <Tabs.Content
-            key={t.value}
-            value={t.value}
-            p="0"
-            flex="1"
-            minH="0"
-            display="flex"
-            flexDirection="column"
-            // The cards' gap, as everywhere: Solar stacks two.
-            gap="gutter"
-            // The flex display would otherwise beat the hidden attribute.
-            css={{ "&[hidden]": { display: "none" } }}
-          >
-            {t.value === "solar" ? (
-              <>
-                <SolarTodayCard energy={live.energy} loading={live.loading} />
-                <SolarHistoryCard />
-              </>
-            ) : (
-              <CircuitsCard />
-            )}
-          </Tabs.Content>
-        ))}
-      </Tabs.Root>
+      <EnergyPanels
+        page
+        tab={raw}
+        onTab={(next) => void navigate(`/energy/${next}`, { replace: true })}
+      />
     </PageShell>
   );
 }

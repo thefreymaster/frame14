@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { pageErrors, resetStub } from "./helpers";
 
 // 0.174.0, the user, of the Weather sheet: "These two should be concave also
@@ -131,5 +131,90 @@ test.describe("the weather's Now card", () => {
     // The strip is no part of the chart's well, nor the chart of the strip's.
     await expect(chart.locator("[data-forecast]")).toHaveCount(0);
     await expect(hours.locator("[data-weather-well]")).toHaveCount(0);
+  });
+});
+
+// 0.176.0, the user: "Add the moon phase to the weather card on the home
+// page". Home's first card — a phone's weather row, a desktop's Weather
+// card, the frame's time and weather — has the moon in a line under the
+// weather now: what the Now card's well says, from the same date.
+test.describe("Home's weather card", () => {
+  test.beforeEach(async ({ request }) => {
+    await resetStub(request);
+  });
+
+  /** The card's moon line, and that it lies inside its card under the weather now. */
+  async function moonLine(page: Page) {
+    const card = page.locator('[data-card="header"]');
+    const line = card.locator("[data-moon-line]");
+    await expect(line).toBeVisible();
+    const [box, around] = [(await line.boundingBox())!, (await card.boundingBox())!];
+    expect(box.x).toBeGreaterThanOrEqual(around.x);
+    expect(box.x + box.width).toBeLessThanOrEqual(around.x + around.width);
+    expect(box.y + box.height).toBeLessThanOrEqual(around.y + around.height);
+    // One line: the icon, the name and the rest side by side — at any size
+    // of type (the frame's is 28px), a line of it and not two.
+    const root = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    expect(box.height).toBeLessThan(root * 2.2);
+    return line;
+  }
+
+  test("has the moon as it stands that day in a line, on a phone and on a desktop", async ({ page, isMobile }) => {
+    const errors = pageErrors(page);
+    await page.clock.setFixedTime(FIRST_QUARTER);
+    await page.goto("/home");
+    const line = await moonLine(page);
+    await expect(line).toHaveAttribute("data-moon-line", "first-quarter");
+    await expect(line.getByText("First quarter")).toBeVisible();
+    await expect(line.getByText("53% lit · Full moon Nov 24")).toBeVisible();
+    await expect(line).toHaveAccessibleName("Moon: First quarter, 53% lit · Full moon Nov 24");
+    // Drawn as it stands: lit at the right while it grows.
+    await expect(line.locator("[data-moon-icon]")).toHaveAttribute("data-lit-side", "right");
+    expect(await litAt(line)).toBeGreaterThan(0.5);
+    // Under the temperature, which is the card's first line.
+    const temperature = page.locator('[data-card="header"]').getByText(/^\d+°$/).first();
+    expect((await line.boundingBox())!.y).toBeGreaterThan((await temperature.boundingBox())!.y);
+
+    // A tap on the card still opens the Weather sheet, whose well says the same.
+    await page.getByRole("button", { name: "Show the weather" }).click({ position: { x: 60, y: 40 } });
+    const sheet = page.getByRole("dialog", { name: "Weather" });
+    await expect(well(sheet, "moon")).toHaveAttribute("data-moon", "first-quarter");
+    await expect(well(sheet, "moon").getByText("53% lit · Full moon Nov 24")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
+
+    // Days later it is on the wane: lit at the left, and looking to the new moon.
+    await page.clock.setFixedTime(WANING);
+    await page.reload();
+    const later = await moonLine(page);
+    await expect(later).toHaveAttribute("data-moon-line", "waning-gibbous");
+    await expect(later.getByText("80% lit · New moon Dec 8")).toBeVisible();
+    expect(await litAt(later)).toBeLessThan(0.5);
+    // A phone's card is the narrowest it is drawn in: the name whole, the rest on the line with it.
+    if (isMobile) await expect(later.getByText("Waning gibbous")).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test.describe("on the frame", () => {
+    test.use({
+      userAgent:
+        "Mozilla/5.0 (Linux; Android 13; NXTPAPER 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+      viewport: { width: 1600, height: 2400 },
+    });
+
+    test("has it under the clock and the temperature", async ({ page }) => {
+      test.skip(test.info().project.name !== "desktop", "one run is enough; the phone project is the phone");
+      await page.addInitScript(() => localStorage.setItem("device-mode", "frame"));
+      await page.clock.setFixedTime(FIRST_QUARTER);
+      await page.goto("/home");
+      const line = await moonLine(page);
+      await expect(line).toHaveAttribute("data-moon-line", "first-quarter");
+      await expect(line.getByText("53% lit · Full moon Nov 24")).toBeVisible();
+      // The frame's card: the date over the clock, the moon under both.
+      const card = page.locator('[data-card="header"]');
+      await expect(card).toContainText(/^\w+day, \w+ \d{1,2}/);
+      const clock = card.getByText("pm", { exact: true }).or(card.getByText("am", { exact: true }));
+      expect((await line.boundingBox())!.y).toBeGreaterThan((await clock.first().boundingBox())!.y);
+    });
   });
 });

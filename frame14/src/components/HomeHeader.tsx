@@ -5,6 +5,7 @@ import type { HomeInternet, HomeWeather } from "../hooks/useHomeData";
 import { Board } from "./Board";
 import { HERO_SUFFIX_SIZE, HERO_TEXT } from "../lib/hero";
 import { conditionLabel } from "../lib/weatherIcons";
+import { MoonLine } from "./MoonLine";
 import { WeatherDialog } from "./WeatherDialog";
 
 const DAYS = [
@@ -35,7 +36,9 @@ const MONTHS = [
 /**
  * The date, the clock and the weather now — the condition, humidity and
  * today's high and low (0.127) on the top line, the temperature beside the
- * clock. The clock is the device's own, so it shows at once; while the
+ * clock, and under both the moon tonight (MoonLine, 0.176.0: "Add the moon
+ * phase to the weather card on the home page"). The clock is the device's
+ * own, so it shows at once; while the
  * weather is loading its two figures are placeholders. Once it has landed, a
  * tap opens WeatherDialog (0.136; it went to /weather from 0.97).
  */
@@ -154,6 +157,11 @@ export function HomeHeader({
             </Text>
           )}
         </HStack>
+
+        {/* The moon tonight (0.176.0), with the weather it belongs to. */}
+        {weather && (
+          <MoonLine mt="2" textStyle={{ base: "sm", sm: "md", md: "xl" }} />
+        )}
       </Board>
       <WeatherDialog
         weather={weather}

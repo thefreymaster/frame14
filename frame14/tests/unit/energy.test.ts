@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   coverage,
+  coverageColor,
+  ENERGY_COLORS,
+  ENERGY_VARS,
   flowPace,
   wirePace,
   fmtKwh,
@@ -34,6 +37,18 @@ describe("coverage", () => {
   it("is production over consumption in percent, past 100 on a surplus", () => {
     expect(coverage(energy({ productionToday: 10, consumptionToday: 20 }))).toBe(50);
     expect(coverage(energy({ productionToday: 30, consumptionToday: 20 }))).toBe(150);
+  });
+
+  // 0.176.0, the user: "make the house icon yellow when below 100% and
+  // green when over 100%".
+  it("is the solar's yellow until the day is covered, and green from there", () => {
+    expect(coverageColor(0)).toBe("solar");
+    expect(coverageColor(69)).toBe("solar");
+    expect(coverageColor(99.9)).toBe("solar");
+    // Covered: the figure the card shows turns green at the same moment.
+    expect(coverageColor(100)).toBe("export");
+    expect(coverageColor(107)).toBe("export");
+    expect(coverageColor(240)).toBe("export");
   });
 
   it("is zero before anything was used", () => {
@@ -124,5 +139,19 @@ describe("flowPace", () => {
   it("treats nothing as nothing", () => {
     expect(flowPace(NaN)).toBe(0.25);
     expect(flowPace(-500)).toBe(0.25);
+  });
+});
+
+// 0.176.0, the user: "Make the far right grid bolt and circle be blue".
+describe("the flows' colours", () => {
+  it("have a blue for the grid itself, apart from what is sent and what is taken", () => {
+    expect(ENERGY_COLORS.grid).toBe("blue.500");
+    expect(ENERGY_VARS.grid).toBe("var(--chakra-colors-blue-500)");
+    const others = [ENERGY_COLORS.solar, ENERGY_COLORS.export, ENERGY_COLORS.import, ENERGY_COLORS.home];
+    expect(others).not.toContain(ENERGY_COLORS.grid);
+    // Each paint is its token, for an SVG to wear.
+    for (const flow of Object.keys(ENERGY_COLORS) as (keyof typeof ENERGY_COLORS)[]) {
+      expect(ENERGY_VARS[flow]).toBe(`var(--chakra-colors-${ENERGY_COLORS[flow].replace(".", "-")})`);
+    }
   });
 });

@@ -1,5 +1,6 @@
 import { Center, Spinner, Text } from "@chakra-ui/react";
 import { useCircuits } from "../hooks/useCircuits";
+import { useBoardFrame } from "../lib/boardFrame";
 import { Board } from "./Board";
 import { CircuitBreakdown } from "./CircuitBreakdown";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -13,6 +14,10 @@ import { IoGridOutline } from "react-icons/io5";
 export function CircuitsCard() {
   const { data, isPending, isError } = useCircuits();
   const totalWatts = data?.totalWatts ?? null;
+  // On the page the card fills what is left and its list scrolls in it; in
+  // the Home card's drawer it is as tall as the list, and holds a little
+  // room while there is none yet.
+  const waiting = useBoardFrame() === "panel" ? { minH: "12rem" } : { height: "100%" };
 
   return (
     <Board
@@ -25,12 +30,12 @@ export function CircuitsCard() {
       }
     >
       {isPending && (
-        <Center height="100%">
+        <Center {...waiting}>
           <Spinner size="lg" aria-label="Loading circuits" />
         </Center>
       )}
       {isError && (
-        <Center height="100%">
+        <Center {...waiting}>
           <Text color="fg.muted">unavailable</Text>
         </Center>
       )}

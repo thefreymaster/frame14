@@ -103,7 +103,7 @@ test.describe("modals", () => {
     const viewport = page.viewportSize()!;
 
     if (isMobile) {
-      await expect(modal.getByText("Solar produced")).toBeVisible();
+      await expect(modal.getByText("Solar covered today")).toBeVisible();
       await expectSheet(page, modal);
       await page.keyboard.press("Escape");
       await expect(modal).toBeHidden();
@@ -114,7 +114,7 @@ test.describe("modals", () => {
     // included, so no sliver of it shows as the slide starts…
     await expect(modal).toBeAttached();
     expect(await slideEdge(modal, "start")).toBeGreaterThanOrEqual(viewport.width - 1);
-    await expect(modal.getByText("Solar produced")).toBeVisible();
+    await expect(modal.getByText("Solar covered today")).toBeVisible();
     await expectSidePanel(page, modal);
     // …and leaves the same way.
     await page.keyboard.press("Escape");
@@ -163,7 +163,7 @@ test.describe("modals", () => {
     await page.goto("/home");
     await page.getByRole("button", { name: "Show energy detail" }).click();
     const modal = page.getByRole("dialog");
-    await expect(modal.getByText("Solar produced")).toBeVisible();
+    await expect(modal.getByText("Solar covered today")).toBeVisible();
     // Let it finish sliding in before taking its place.
     await modal.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     const title = (await modal.getByRole("heading", { name: "Energy" }).boundingBox())!;
@@ -171,7 +171,7 @@ test.describe("modals", () => {
     const top = Math.round((await modal.boundingBox())!.y);
     // Short of SWIPE_CLOSE_PX: it springs back to where it was.
     await swipeDown(page, from.x, from.y, 60);
-    await expect(modal.getByText("Solar produced")).toBeVisible();
+    await expect(modal.getByText("Solar covered today")).toBeVisible();
     await expect.poll(async () => Math.round((await modal.boundingBox())!.y)).toBe(top);
     // Past it: it leaves.
     await swipeDown(page, from.x, from.y, 200);

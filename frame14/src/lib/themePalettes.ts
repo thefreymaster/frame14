@@ -9,7 +9,7 @@
 // whisper of hue rather than a colour — the first Slate was a saturated navy.
 // A warm gray, Sand, stood beside it until 0.169.0 ("Get rid of the sand
 // theme"): a device that wore it wears Gray, as for any name that isn't a
-// palette's.
+// palette's (paletteOf).
 //
 // - The light half (50–400, 600) keeps Chakra gray's lightness step for step
 //   and changes only the hue, at a chroma that stays a gray's (TINT_CHROMA_MAX
@@ -49,7 +49,22 @@ export const THEME_PALETTES: readonly ThemePalette[] = [
   "embossed",
 ];
 
-export const DEFAULT_PALETTE: ThemePalette = "gray";
+/**
+ * What a device, or the frames, wear until someone picks: Embossed (0.176.0,
+ * the user: "Make embossed theme the default theme going forward"; Gray
+ * until then). Going forward: whoever has picked keeps what they picked —
+ * the add-on keeps the frames' (theme.js) and each remote its own
+ * (lib/themeMode), Gray among them.
+ */
+export const DEFAULT_PALETTE: ThemePalette = "embossed";
+
+/**
+ * What a kept name that is no palette's stands for — Sand, a palette until
+ * 0.169.0: Gray, as it has since then. Not the default, which is for a
+ * device that has kept nothing: one that wore Sand has been in Gray, and
+ * stays there.
+ */
+export const FORMER_PALETTE: ThemePalette = "gray";
 
 export const PALETTE_STEPS = [
   "50",
@@ -171,4 +186,13 @@ export function isThemePalette(value: unknown): value is ThemePalette {
     typeof value === "string" &&
     (THEME_PALETTES as readonly string[]).includes(value)
   );
+}
+
+/**
+ * The palette a kept value says: itself if it is one, the default if nothing
+ * was kept, and Gray for a name that is a palette no more.
+ */
+export function paletteOf(kept: unknown): ThemePalette {
+  if (kept == null) return DEFAULT_PALETTE;
+  return isThemePalette(kept) ? kept : FORMER_PALETTE;
 }

@@ -1,6 +1,7 @@
 import { Center, HStack, Skeleton, Stack, Text } from "@chakra-ui/react";
 import type { HomeEnergy } from "../hooks/useHomeData";
 import { useEnergyToday } from "../hooks/useEnergyToday";
+import { useBoardSurface } from "../lib/boardFrame";
 import { coverage } from "../lib/energy";
 import { Board } from "./Board";
 import { SectionTitle } from "./SectionTitle/SectionTitle";
@@ -17,7 +18,8 @@ const PLOT_HEIGHT = { base: "9rem", md: "11rem" };
  * (TodayPowerChart, the dialog's chart, with its readout), in the month
  * card's arrangement. The totals and the figure are /api/energy's (the Now
  * card's `useLiveEnergy`, handed in); the curve is /api/energy/today.
- * Collapsible, so the month chart can have the height back.
+ * Collapsible, so the month chart can have the height back. In the Home
+ * card's drawer too (EnergyPanels), a section there and always whole.
  */
 export function SolarTodayCard({
   energy,
@@ -28,6 +30,8 @@ export function SolarTodayCard({
   loading?: boolean;
 }) {
   const today = useEnergyToday();
+  // The card's colour, or the well's in the Home card's drawer.
+  const surface = useBoardSurface();
   const pct = coverage(energy);
 
   const lead = (
@@ -70,7 +74,7 @@ export function SolarTodayCard({
             consumption: energy.consumptionToday,
           }}
           lead={lead}
-          ring="bg.surface"
+          ring={surface}
         />
       ) : (
         <Center minH={PLOT_HEIGHT}>

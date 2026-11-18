@@ -61,10 +61,17 @@ test("a drawing circuit's bar flows at the pace of its draw, and the bars are pi
   await expect(ranges.first()).toHaveCSS("border-radius", "9999px");
 });
 
-// 0.142: the Home card's dialog has the page's tabs under its Now section —
-// Solar, today's curve and totals as before, and Circuits, the per-circuit
-// draw. It opens on Solar.
-test("the Home card's dialog has a Circuits tab with the per-circuit draw, under Now", async ({ page }) => {
+// 0.176.0, the user: "When clicking the energ card from the Home Screen it
+// should just show the same energy components as the energy route. Don't
+// actually route though still should be in drawer". The drawer had a today's
+// chart and split totals of its own from 0.142; now it is the page's parts —
+// Now, then Solar (today's card over the month's) and Circuits — each a
+// section of the drawer, and the address stays Home's.
+test("the Home card's drawer shows the Energy page's own parts, in a drawer, and goes nowhere", async ({ page }) => {
+  /** What an energy view is made of, wherever it is: its headings, in order. */
+  const parts = (scope: ReturnType<typeof page.locator>) =>
+    scope.getByRole("heading", { level: 2 }).evaluateAll((headings) => headings.map((h) => h.textContent?.trim() ?? "").filter((text) => text !== "Energy"));
+
   await page.goto("/home");
   // At the flow, the card's first half: on a desktop the board fits the
   // screen (0.171.0) and the second may be cut off, under the card's More.
@@ -76,10 +83,40 @@ test("the Home card's dialog has a Circuits tab with the per-circuit draw, under
   // dialog focused — the Solar tab, when it was the first tabbable thing.
   await expect(dialog).toBeFocused();
   await expect(dialog).toHaveCSS("outline-style", "none");
+  await expect(page).toHaveURL(/\/home$/);
+
+  // Now, with the flow, over the page's two tabs; it opens on Solar.
+  await expect(dialog.getByRole("heading", { name: "Now" })).toBeVisible();
+  await expect(dialog.locator("[data-flow]")).toBeVisible();
   const solar = dialog.getByRole("tab", { name: "Solar" });
   const circuits = dialog.getByRole("tab", { name: "Circuits" });
   await expect(solar).toHaveAttribute("aria-selected", "true");
-  await expect(dialog.getByText("Solar produced")).toBeVisible();
+  // Solar is the page's Today card — the coverage figure beside the day's
+  // totals, over the curve — and its month card, whose chart has a height
+  // to be drawn in though nothing here hands it one.
+  await expect(dialog.getByRole("heading", { name: "Today" })).toBeVisible();
+  await expect(dialog.getByText("Solar covered today")).toBeVisible();
+  const month = dialog.getByRole("img", { name: /running totals/ });
+  await month.scrollIntoViewIfNeeded();
+  await expect(month).toBeVisible();
+  expect((await month.boundingBox())!.height).toBeGreaterThanOrEqual(120);
+  await expect(dialog.getByText(/^Solar covered in /)).toBeVisible();
+  // With its controls: a month back, and by day.
+  const title = dialog.getByRole("heading", { name: /^\w+ \d{4}$/ });
+  const before = await title.textContent();
+  await dialog.getByRole("button", { name: "Previous month" }).click();
+  await expect(title).not.toHaveText(before!);
+  await dialog.getByRole("button", { name: "Next month" }).click();
+  await expect(title).toHaveText(before!);
+  // Not the split totals it had to itself, which the page never had.
+  await expect(dialog.getByText("Solar produced")).toHaveCount(0);
+  // Each part is a section of the drawer — its title over a well — not a card in it.
+  await expect(dialog.locator("[data-board-panel]")).toHaveCount(3);
+  for (const section of await dialog.locator("[data-board-panel]").all()) {
+    await expect(section.locator(":scope > .chakra-card__root")).toHaveCount(1);
+    await expect(section.locator(":scope > .chakra-card__root").getByRole("heading")).toHaveCount(0);
+  }
+  const inDrawer = await parts(dialog);
 
   await circuits.click();
   await expect(circuits).toHaveAttribute("aria-selected", "true");
@@ -89,14 +126,278 @@ test("the Home card's dialog has a Circuits tab with the per-circuit draw, under
   await expect(dialog.getByText("Heat Pump 1")).toBeVisible();
   await expect(dialog.getByText("Other", { exact: true })).toBeVisible();
   await expect(dialog.locator("[data-part=range][data-flowing]").first()).toBeVisible();
-  await expect(dialog.getByText("Solar produced")).toBeHidden();
+  await expect(dialog.getByText("Solar covered today")).toBeHidden();
   // Now stays above the tabs.
   await expect(dialog.getByRole("heading", { name: "Now" })).toBeVisible();
+  const circuitsInDrawer = await parts(dialog);
 
   await solar.click();
-  await expect(dialog.getByText("Solar produced")).toBeVisible();
+  await expect(dialog.getByText("Solar covered today")).toBeVisible();
+  // A tab is the drawer's own: the page behind is still Home.
+  await expect(page).toHaveURL(/\/home$/);
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/home$/);
+  // And it opens on Solar again.
+  await page.getByRole("button", { name: "Show energy detail" }).click({ position: { x: 60, y: 30 } });
+  await expect(dialog.getByRole("tab", { name: "Solar" })).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+
+  // The page itself: the same parts under the same names, tab for tab.
+  await page.goto("/energy/solar");
+  const main = page.locator("[data-page-shell]");
+  await expect(main.getByText("Solar covered today")).toBeVisible();
+  await expect(main.getByRole("img", { name: /running totals/ })).toBeVisible();
+  expect(await parts(main)).toEqual(inDrawer);
+  // There they are cards, not sections.
+  await expect(main.locator("[data-board-panel]")).toHaveCount(0);
+  await page.goto("/energy/circuits");
+  await expect(main.getByRole("heading", { name: "Circuits · 1.2 kW" })).toBeVisible();
+  expect(await parts(main)).toEqual(circuitsInDrawer);
+});
+
+// 0.176.0, the user, of the Now card: "add a tag to the header of the card
+// says Importing or Exporting depending on what is happenjng".
+test("the Now card's header says which way the power is going through the meter, on the page and in the drawer", async ({ page, request }) => {
+  const E = "sensor.envoy_482518016321";
+  await page.goto("/energy");
+  const now = page.locator(".chakra-card__root", { has: page.getByRole("heading", { name: "Now", exact: true }) });
+  const tag = now.locator("[data-grid-direction]");
+  const colour = () => tag.evaluate((el) => getComputedStyle(el).color);
+  // The stub's house: 0.903 kW from the panels, 1.184 kW in use — the rest comes in.
+  await expect(tag).toHaveText("Importing");
+  await expect(tag).toHaveAttribute("data-grid-direction", "importing");
+  // Beside the figure it had, in its colour, before it.
+  const figure = now.getByLabel("Importing 0.3 kW");
+  await expect(figure).toHaveText("↓ 0.3 kW");
+  expect(await colour()).toBe(await figure.evaluate((el) => getComputedStyle(el).color));
+  expect((await tag.boundingBox())!.x).toBeLessThan((await figure.boundingBox())!.x);
+  const importing = await colour();
+
+  // The sun comes out: 4 kW, 2.8 of it out to the grid.
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "4.0" });
+  await expect(tag).toHaveText("Exporting");
+  await expect(tag).toHaveAttribute("data-grid-direction", "exporting");
+  await expect(now.getByLabel("Exporting 2.8 kW")).toHaveText("↑ 2.8 kW");
+  expect(await colour()).not.toBe(importing);
+
+  // The panels cover the house to the watt: nothing through the meter, no tag.
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "1.184" });
+  await expect(tag).toHaveCount(0);
+  await expect(now.getByText("Grid idle")).toBeVisible();
+
+  // The drawer's Now is the same card: the same tag. Home's own Energy card
+  // keeps the figure alone — its header has the day's coverage to hold too.
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "4.0" });
+  await page.goto("/home");
+  await expect(page.locator('[data-card="energy"]').getByLabel("Exporting 2.8 kW")).toBeAttached();
+  await expect(page.locator('[data-card="energy"] [data-grid-direction]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Show energy detail" }).click({ position: { x: 60, y: 30 } });
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator("[data-grid-direction]")).toHaveText("Exporting");
+});
+
+// 0.176.0, the user, of the flow: "Add small rays of light hitting the solar
+// panels on the solar icon, make the house icon yellow when below 100% and
+// green when over 100%, add electric animation around the far right
+// lightning bolt. Make the far right grid bolt and circle be blue" — and, of
+// that bolt, "Is there a better icon to represent the grid? Like high
+// voltage power lines": a transmission tower.
+test("the flow's nodes say what they are: light falls on the panels, the house is the colour of the day's coverage, and the grid is a blue pylon with electricity round it", async ({ page, request }) => {
+  const E = "sensor.envoy_482518016321";
+  await page.goto("/energy");
+  const flow = page.locator("[data-page-shell] [data-flow]");
+  const node = (name: string) => flow.locator(`[data-flow-part="${name}"]`);
+  const edge = (name: string) => node(name).evaluate((el) => getComputedStyle(el).borderTopColor);
+  const glyph = (name: string) => node(name).locator("[data-flow-icon] > svg").evaluate((el) => getComputedStyle(el).color);
+  /** What an element's animation changes, whether it runs, and how long a turn is. */
+  const moving = (el: ReturnType<typeof page.locator>) =>
+    el.evaluate((box) => {
+      const [animation] = box.getAnimations();
+      if (!animation) return null;
+      const frames = (animation.effect as KeyframeEffect).getKeyframes();
+      return {
+        changes: [...new Set(frames.flatMap((f) => Object.keys(f)))].filter((k) => !["offset", "easing", "composite", "computedOffset"].includes(k)).sort(),
+        state: animation.playState,
+        seconds: Number(animation.effect!.getComputedTiming().duration) / 1000,
+        endless: animation.effect!.getComputedTiming().iterations === Infinity,
+      };
+    });
+  await expect(flow.locator("[data-flow-node]")).toHaveCount(3);
+  const root = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+
+  // The panels are making power: three rays over the roof, each falling
+  // and fading — opacity and transform, nothing a frame has to repaint.
+  const rays = node("solar").locator("[data-flow-ray]");
+  await expect(rays).toHaveCount(3);
+  const solarYellow = await edge("solar");
+  expect(await glyph("solar")).toBe(solarYellow);
+  const icon = (await node("solar").locator("[data-flow-icon] > svg").boundingBox())!;
+  const disc = (await node("solar").boundingBox())!;
+  for (const ray of await rays.all()) {
+    expect(await moving(ray)).toMatchObject({ changes: ["opacity", "transform"], state: "running", endless: true });
+    await expect(ray).toHaveCSS("background-color", solarYellow);
+    // Small: a fifth of the icon long, as thin as its own lines.
+    const { width, height } = await ray.evaluate((el) => ({ width: (el as HTMLElement).offsetWidth, height: (el as HTMLElement).offsetHeight }));
+    expect(height).toBeCloseTo(icon.width * 0.2, 0);
+    expect(width).toBeLessThanOrEqual(2);
+  }
+  // One after another, not together: each a third of a fall behind the last.
+  const starts = await rays.evaluateAll((els) => els.map((el) => Number(el.getAnimations()[0].effect!.getComputedTiming().progress)));
+  const behind = (a: number, b: number) => Math.round((((a - b) % 1) + 1) * 3) % 3;
+  expect([behind(starts[0], starts[1]), behind(starts[1], starts[2])]).toEqual([2, 2]);
+  // Where a ray is as it sets out and as it lands: above the roof, coming
+  // down onto it from the right, inside the node's circle all the way.
+  const fall = await rays.first().evaluate((el) => {
+    const [animation] = el.getAnimations();
+    const duration = Number(animation.effect!.getComputedTiming().duration);
+    const delay = Number(animation.effect!.getComputedTiming().delay);
+    const at = (share: number) => {
+      animation.currentTime = duration * share + delay;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, top: r.top, shown: Number(getComputedStyle(el).opacity) };
+    };
+    const was = animation.currentTime;
+    animation.pause();
+    const read = [at(0.02), at(0.5), at(0.98)];
+    animation.currentTime = was;
+    animation.play();
+    return read;
+  });
+  expect(fall[2].y).toBeGreaterThan(fall[0].y + icon.height * 0.15);
+  expect(fall[2].x).toBeLessThan(fall[0].x);
+  expect(fall[0].top).toBeGreaterThan(disc.y);
+  expect(fall[2].y).toBeLessThan(icon.y + icon.height * 0.3);
+  // It comes in out of nothing, is brightest on its way and is gone as it lands.
+  expect(fall[0].shown).toBeLessThan(0.2);
+  expect(fall[1].shown).toBe(1);
+  expect(fall[2].shown).toBeLessThan(0.2);
+
+  // The house: 15 of the day's 22 kWh from the panels, so the solar's
+  // yellow — the glyph alone, in the grey disc it had, the ring its coverage.
+  await expect(node("home").locator("[data-flow-icon]")).toHaveAttribute("data-flow-icon", "solar");
+  expect(await glyph("home")).toBe(solarYellow);
+  expect(await node("home").evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(await node("solar").evaluate((el) => getComputedStyle(el).backgroundColor));
+
+  // The grid: blue, icon and circle, while power comes in…
+  const blue = await edge("grid");
+  expect(blue).toBe("rgb(59, 130, 246)");
+  expect(await glyph("grid")).toBe(blue);
+  const wire = () => flow.locator("[data-flow-wire] [data-flow-wave]").nth(1).evaluate((el) => getComputedStyle(el).backgroundColor);
+  const taken = await wire();
+  expect(taken).not.toBe(blue);
+  // …with electricity round its tower: the tower's own glow, crackling —
+  // opacity alone, the blur it is drawn with never changing — and six sparks.
+  const glow = node("grid").locator("[data-flow-glow]");
+  expect(await moving(glow)).toMatchObject({ changes: ["opacity"], state: "running", endless: true });
+  expect(await glow.evaluate((el) => getComputedStyle(el).filter)).toMatch(/^blur\(/);
+  const sparks = node("grid").locator("[data-flow-spark]");
+  await expect(sparks).toHaveCount(6);
+  const turns = [];
+  for (const spark of await sparks.all()) {
+    const motion = (await moving(spark))!;
+    expect(motion).toMatchObject({ changes: ["opacity", "transform"], state: "running", endless: true });
+    turns.push(motion.seconds);
+  }
+  // Each on a turn of its own length, so they never fall into step.
+  expect(new Set(turns).size).toBe(6);
+  // A spark is nothing for most of its turn, then there, out from the tower
+  // and inside the circle; and round the tower, not all to one side.
+  const gridDisc = (await node("grid").boundingBox())!;
+  const middle = { x: gridDisc.x + gridDisc.width / 2, y: gridDisc.y + gridDisc.height / 2 };
+  const where = await sparks.evaluateAll((els) =>
+    els.map((el) => {
+      const [animation] = el.getAnimations();
+      const timing = animation.effect!.getComputedTiming();
+      const duration = Number(timing.duration);
+      // A share of its own turn: it set out part-way through one (a negative
+      // delay), so that share comes round a turn or two into the page's time.
+      const at = (share: number) => {
+        let time = duration * share + Number(timing.delay);
+        while (time < 0) time += duration;
+        animation.currentTime = time;
+      };
+      const was = animation.currentTime;
+      animation.pause();
+      at(0.5);
+      const resting = Number(getComputedStyle(el).opacity);
+      at(0.11);
+      const lit = Number(getComputedStyle(el).opacity);
+      const r = el.getBoundingClientRect();
+      animation.currentTime = was;
+      animation.play();
+      return { resting, lit, x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }),
+  );
+  for (const spark of where) {
+    expect(spark.resting).toBe(0);
+    expect(spark.lit).toBe(1);
+    const out = Math.hypot(spark.x - middle.x, spark.y - middle.y);
+    expect(out).toBeGreaterThan(root * 0.5);
+    expect(out).toBeLessThan(gridDisc.width / 2 - 2);
+  }
+  expect(where.some((s) => s.x < middle.x) && where.some((s) => s.x > middle.x)).toBe(true);
+  expect(where.some((s) => s.y < middle.y) && where.some((s) => s.y > middle.y)).toBe(true);
+
+  // …and while it goes out: the same blue, the wire in the export's own colour.
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "4.0" });
+  await expect(flow.locator("[data-flow-wire]").nth(1)).toHaveAttribute("data-flow-wire", "right");
+  expect(await edge("grid")).toBe(blue);
+  expect(await glyph("grid")).toBe(blue);
+  await expect(sparks).toHaveCount(6);
+  const sent = await wire();
+  expect(sent).not.toBe(blue);
+  expect(sent).not.toBe(taken);
+
+  // Under reduced motion the rays stand on the roof, the glow is steady and there are no sparks.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const ray of await rays.all()) {
+    await expect(ray).toHaveCSS("animation-name", "none");
+    await expect(ray).toBeVisible();
+  }
+  await expect(glow).toHaveCSS("animation-name", "none");
+  await expect(glow).toBeVisible();
+  for (const spark of await sparks.all()) await expect(spark).toBeHidden();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  // Nothing through the meter: the grid is grey and still, as the panels are at night.
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "1.184" });
+  await expect(node("grid").locator("[data-flow-sparks]")).toHaveCount(0);
+  expect(await edge("grid")).not.toBe(blue);
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "0" });
+  await expect(node("solar").locator("[data-flow-rays]")).toHaveCount(0);
+  expect(await edge("solar")).not.toBe(solarYellow);
+  // The same on Home's card, at its smaller size.
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "0.903" });
+  await page.goto("/home");
+  const card = page.locator('[data-card="energy"]');
+  await expect(card.locator("[data-flow-ray]")).toHaveCount(3);
+  await expect(card.locator("[data-flow-spark]")).toHaveCount(6);
+  expect(await card.locator('[data-flow-part="grid"]').evaluate((el) => getComputedStyle(el).borderTopColor)).toBe(blue);
+});
+
+test.describe("on a day the panels have covered", () => {
+  // The test answers /api/energy itself, which a page the service worker
+  // controls would ask through it, unseen.
+  test.use({ serviceWorkers: "block" });
+
+  test("the flow's house is green", async ({ page }) => {
+    await page.route("**/api/energy", async (route) => {
+      const response = await route.fetch();
+      const day = (await response.json()) as { production: number; consumption: number };
+      await route.fulfill({ response, json: { ...day, production: day.consumption * 1.07 } });
+    });
+    await page.goto("/energy");
+    const flow = page.locator("[data-page-shell] [data-flow]");
+    const house = flow.locator('[data-flow-part="home"] [data-flow-icon]');
+    await expect(house).toHaveAttribute("data-flow-icon", "export");
+    // The green the ring's second lap is, and the card's figure turns.
+    const green = await house.locator("svg").evaluate((el) => getComputedStyle(el).color);
+    expect(green).toBe("rgb(22, 163, 74)");
+    expect(green).not.toBe(await flow.locator('[data-flow-part="solar"]').evaluate((el) => getComputedStyle(el).borderTopColor));
+    await expect(page.getByLabel("Solar covered 107% of today's use").first()).toBeAttached();
+  });
 });
 
 // 0.173.0, the user, of the Energy card's flow: "The center circle border
@@ -274,9 +575,12 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   // At the power's pace — under a kilowatt, the root of it: 0.903 kW, and 0.281 kW.
   expect(solar.rate).toBe(0.95);
   expect(grid.rate).toBe(0.53);
-  // In the flow's colour: each node's own.
+  // In the flow's colour: the panels' wire their node's yellow, and the
+  // grid's wire what is taken from it — not the grid's own blue (0.176.0),
+  // which is the same whichever way the power goes.
   expect(solar.colour).toBe(await edge(0));
-  expect(grid.colour).toBe(await edge(2));
+  const blue = await edge(2);
+  expect(grid.colour).not.toBe(blue);
   expect(solar.colour).not.toBe(grid.colour);
 
   // The sun comes out: 4 kW. From a kilowatt up the pace is in proportion
@@ -298,7 +602,8 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   expect(out.halfLoop).toBeGreaterThan(0);
   // 4 − 1.184 = 2.816 kW out: the slower of the two, by as much as it is less.
   expect(out.rate).toBe(2.82);
-  expect(out.colour).toBe(await edge(2));
+  expect(await edge(2)).toBe(blue);
+  expect(out.colour).not.toBe(blue);
   expect(out.colour).not.toBe(grid.colour);
 
   // Under reduced motion the wave stands: drawn, and still.
@@ -326,7 +631,10 @@ test("a wire's waves come out from behind one circle and go in behind the next, 
   // (a phone's Home scrolls), its scale-in over and nothing moving — and
   // standing still, so a picture of them can be read where they were measured.
   await splashGone(page);
-  await flow.scrollIntoViewIfNeeded();
+  // The screen's middle: in view alone can be under a phone's bottom bar,
+  // which is drawn over the page (as it was once the weather card above
+  // grew a line, 0.176.0), and a picture of the wire is then of the bar.
+  await flow.evaluate((el) => el.scrollIntoView({ block: "center" }));
   for (let last = ""; ; ) {
     const now = JSON.stringify(await flow.boundingBox());
     if (now === last) break;
@@ -430,8 +738,9 @@ test("a wire's waves come out from behind one circle and go in behind the next, 
   expect(await painted({ x: solar.right + 1, width: beside, ...tall }, first.colour)).toBeGreaterThan(0);
   expect(await painted({ x: home.left - 1 - beside, width: beside, ...tall }, first.colour)).toBeGreaterThan(0);
   // Inside the circle it runs in behind, none of it: a node's fill is a
-  // tint, and a wave under it would show through. (The house's circle: its
-  // own edge and glyph are grey, where the panels' are the wave's yellow.)
+  // tint, and a wave under it would show through. (The house's circle,
+  // inside its ring and clear of its glyph — both the wave's yellow on a
+  // day the panels haven't covered — where the disc itself is grey.)
   expect(await painted({ x: home.left + 4, width: 5, y: home.level - 4, height: 8 }, first.colour)).toBe(0);
 
   // A wire with nothing on it — the panels' at night — is a hairline from

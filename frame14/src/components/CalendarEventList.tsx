@@ -1,5 +1,6 @@
 import { Badge, Card, HStack, Stack, Text } from "@chakra-ui/react";
 import type { HomeCalendarEvent } from "../hooks/useHomeData";
+import { Well } from "./Well";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -23,11 +24,16 @@ function isPast(event: HomeCalendarEvent): boolean {
 }
 
 /**
- * Events as rows in subtle `sm` wells: the summary and, at the right, the
- * start time or "all day"; an event that has ended is dimmed and struck
- * through. With `palettes` (a Chakra palette per calendar name, the page's
- * with several calendars) each row leads with its calendar as a Badge. The
- * Home calendar card's (the first `max`) and /calendar's day cards'.
+ * Events as rows, each a `Well`: the summary and, at the right, the start
+ * time or "all day"; an event that has ended is dimmed and struck through.
+ * With `palettes` (a Chakra palette per calendar name, the page's with
+ * several calendars) each row leads with its calendar as a Badge. The Home
+ * calendar card's (the first `max`) and /calendar's day cards'.
+ *
+ * A row is read, not pressed, so in Embossed it is pressed into its card as
+ * the forecast's hours are (0.176.0, the user: "Calendar event sould be
+ * concave in embossed theme"; flat there until then) — and the flat grey
+ * panel it always was in every other theme. `data-calendar-event`.
  */
 export function CalendarEventList({
   events,
@@ -45,13 +51,11 @@ export function CalendarEventList({
         const past = isPast(event);
         const palette = palettes?.get(event.calendar);
         return (
-          <Card.Root
+          <Well
             key={i}
             // Where /home's card can be cut to fit the screen (usePackedGrid).
             data-fit-row=""
-            size="sm"
-            variant="subtle"
-            borderRadius="sm"
+            data-calendar-event=""
             opacity={past ? 0.6 : 1}
           >
             <Card.Body
@@ -83,7 +87,7 @@ export function CalendarEventList({
                 {event.allDay ? "all day" : formatEventTime(event.start)}
               </Text>
             </Card.Body>
-          </Card.Root>
+          </Well>
         );
       })}
     </Stack>

@@ -11,6 +11,7 @@ import { StatusBanner } from "./StatusBanner";
 import { VoiceAssistButton } from "./VoiceAssistButton";
 import { VoiceAssistOverlay } from "./VoiceAssistOverlay";
 import { ScreenOffButton } from "./ScreenOffButton";
+import { RefreshFramesButton } from "./RefreshFramesButton";
 import { useReady } from "../hooks/useReady";
 import { useVoiceAssist } from "../hooks/useVoiceAssist";
 import { useAssistConfig } from "../hooks/useAssistConfig";
@@ -122,6 +123,9 @@ export function Layout() {
             <VoiceAssistButton onTap={voiceTap} state={voice.state} />
           )
         }
+        // Both decide for themselves what the device gets. A remote alone
+        // has the button that reloads the frames (0.175.0).
+        refresh={<RefreshFramesButton />}
         // The power button decides for itself: a frame's turns the screen
         // off (0.130), a remote's switches the frames' screen (0.161).
         screen={<ScreenOffButton />}

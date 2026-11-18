@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.175.0
+
+- Added: a remote's header has a button that refreshes the frames, between the mic and the power button. A tap reloads the frames' pages from wherever the remote is, and a short message says it went — what **Refresh displays** on Settings' Display card does, without opening Settings. Like that button it reaches every other device with Frame14 open that isn't on its Settings page, and leaves the remote you tapped it on as it is. A frame's own header doesn't have the button: its reload is in the connection menu.
+- Changed: on a phone, when the header's buttons need the room — a busy day, with a washer, a dryer, a dishwasher, a print and a vacuum each showing its icon — the name Frame14 steps aside and the app's icon stays alone at the left, so every button is on the screen. Before, the last buttons ran off the screen's edge. The name is back as soon as there is room for it.
+
 ## 0.174.0
 
 - Added: the moon, in the Weather page's Now card and in the Weather sheet that Home's weather card opens — drawn as it stands tonight, with the phase's name, how much of it is lit and the day of the next full moon (or, once it is waning, of the next new one). It is worked out from the date: Apple Weather, as Home Assistant passes it on, reports nothing about the moon, so there is no entity for it and nothing to set up.

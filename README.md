@@ -33,7 +33,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 - **Unraid** — with Home Assistant's Unraid integration, the server's CPU, memory and temperature, and the status of every Docker container and VM. Read only. Found in Home Assistant; nothing to configure.
 - **Speed test** — how fast the device in your hand, or on the wall, reaches the add-on: ping, download and upload over the Wi-Fi and LAN (or the tunnel from outside), measured on demand. Nothing to configure.
 - **And more** — a Plex movie takes over the frames as its poster; a tracked team's game day gets a scoreboard; a doorbell card pops up when someone is at the door; the mic runs an Assist pipeline.
-- **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. Installable as a PWA.
+- **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. A remote's header has a button that refreshes the frames and a switch for their screen. Installable as a PWA.
 
 ## Installation
 

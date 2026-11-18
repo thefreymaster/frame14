@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.175.1
+
+- Changed: on the Unraid page, the dot beside a stopped container or VM is red. It was grey — white on the dark theme, where it read as a light that was on. Running stays green, paused orange and restarting blue.
+
 ## 0.175.0
 
 - Added: a remote's header has a button that refreshes the frames, between the mic and the power button. A tap reloads the frames' pages from wherever the remote is, and a short message says it went — what **Refresh displays** on Settings' Display card does, without opening Settings. Like that button it reaches every other device with Frame14 open that isn't on its Settings page, and leaves the remote you tapped it on as it is. A frame's own header doesn't have the button: its reload is in the connection menu.

@@ -21,6 +21,18 @@ const entered = (page: Page) =>
 const names = (page: Page, kind: Kind) =>
   page.locator(`[data-kind="${kind}"]`).evaluateAll((els) => els.map((el) => el.getAttribute("data-guest")));
 
+/** The colour of a tile's status dot, as painted. */
+const dot = (l: Locator) => l.locator(".chakra-status__indicator").evaluate((el) => getComputedStyle(el).backgroundColor);
+/** A palette's solid colour (`red`, `green`), as the page resolves it. */
+const solid = (page: Page, palette: string) =>
+  page.evaluate((name) => {
+    const probe = document.body.appendChild(document.createElement("i"));
+    probe.style.backgroundColor = `var(--chakra-colors-${name}-solid)`;
+    const colour = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return colour;
+  }, palette);
+
 /** The stub's state of an entity: what Home Assistant would say now. */
 async function stubState(page: Page, id: string) {
   const res = await page.request.get(`${STUB_URL}/api/states`);
@@ -62,6 +74,11 @@ test("the server's CPU, memory and figures, and its containers in name order", a
     .toEqual(["AdGuard-Home", "binhex-filebrowser", "Immich-Server", "Plex", "radarr", "Valheim2026"]);
   await expect(tile(page, "Immich-Server")).toContainText("Paused");
   await expect(tile(page, "Valheim2026")).toContainText("Stopped");
+  // A stopped one's dot is red (0.175.1: gray's was white on the dark
+  // theme), a running one's green.
+  expect(await dot(tile(page, "Valheim2026"))).toBe(await solid(page, "red"));
+  expect(await dot(tile(page, "Plex"))).toBe(await solid(page, "green"));
+  expect(await solid(page, "red")).not.toBe(await solid(page, "green"));
   // Plex's CPU and memory sensors are enabled; radarr's CPU sensor isn't.
   await expect(tile(page, "Plex")).toContainText("2.1% CPU · 512 MB");
   await expect(tile(page, "radarr")).not.toContainText("CPU");
@@ -156,6 +173,9 @@ test("the VMs, read from libvirt's state", async ({ page }) => {
   await expect.poll(() => names(page, "vm")).toEqual(["Home Assistant", "Windows 11"]);
   await expect(tile(page, "Home Assistant", "vm")).toContainText("Running");
   await expect(tile(page, "Windows 11", "vm")).toContainText("Stopped");
+  // Red for a VM that is shut off, as for a stopped container.
+  expect(await dot(tile(page, "Windows 11", "vm"))).toBe(await solid(page, "red"));
+  expect(await dot(tile(page, "Home Assistant", "vm"))).toBe(await solid(page, "green"));
 });
 
 test("read only: no switch on the page, and the server won't switch a container or a VM if asked", async ({ page }) => {

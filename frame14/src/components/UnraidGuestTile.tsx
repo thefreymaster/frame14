@@ -21,7 +21,8 @@ import { Status } from "./ui/status";
  * switch (the user: "I only want read data"): its icon (a container's
  * Unraid template's, Docker's whale without one or when it won't load, a
  * screen for a VM; faded while stopped), its name, its status — Running,
- * Paused, Restarting, Stopped — and, for a container running with its CPU and
+ * Paused, Restarting, Stopped, the dot green, orange, blue and red (0.175.1;
+ * lib/unraid's guestStatus) — and, for a container running with its CPU and
  * memory sensors enabled in Home Assistant, what it uses on a line under
  * that (beside the status, it ran out of room on the frame).
  *

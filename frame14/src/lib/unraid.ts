@@ -54,14 +54,17 @@ export interface GuestAttrs {
 
 export type ContainerStatus = {
   label: string;
-  palette: "green" | "orange" | "blue" | "gray";
+  palette: "green" | "orange" | "blue" | "red" | "gray";
   running: boolean;
 };
 
 /**
  * How a container or VM reads: the switch is on while it runs (paused counts
  * — it still holds its memory), and Docker's status (a container's
- * `status`) or libvirt's (a VM's `state`) says the rest.
+ * `status`) or libvirt's (a VM's `state`) says the rest. A stopped one's dot
+ * is red (0.175.1, the user: "A stopped docker and VM should be red, not
+ * white" — it was gray, whose solid is white on the dark theme and read as
+ * a light that is on); one Home Assistant has no state for stays gray.
  */
 export function guestStatus(
   kind: GuestKind,
@@ -72,7 +75,7 @@ export function guestStatus(
   const raw = kind === "vm" ? state.attributes.state : state.attributes.status;
   const status = String(raw ?? "").toUpperCase();
   if (state.state !== "on")
-    return { label: "Stopped", palette: "gray", running: false };
+    return { label: "Stopped", palette: "red", running: false };
   if (status === "PAUSED")
     return { label: "Paused", palette: "orange", running: true };
   if (status === "PMSUSPENDED")

@@ -23,7 +23,9 @@ const st = <A extends object>(state: string, attributes = {} as A): HAState<A> =
 describe("containerStatus", () => {
   it("reads the switch, with Docker's status for the rest", () => {
     expect(containerStatus(st("on", { status: "RUNNING" }))).toEqual({ label: "Running", palette: "green", running: true });
-    expect(containerStatus(st("off", { status: "EXITED" }))).toEqual({ label: "Stopped", palette: "gray", running: false });
+    // Red (0.175.1, the user: "A stopped docker and VM should be red, not
+    // white" — gray's dot is white on the dark theme).
+    expect(containerStatus(st("off", { status: "EXITED" }))).toEqual({ label: "Stopped", palette: "red", running: false });
     expect(containerStatus(st("on", { status: "PAUSED" }))).toMatchObject({ label: "Paused", palette: "orange", running: true });
     expect(containerStatus(st("on", { status: "restarting" }))).toMatchObject({ label: "Restarting", running: true });
     // A switch that's on without a status is running; off is stopped, whatever it says.
@@ -42,7 +44,7 @@ describe("guestStatus for a VM", () => {
     expect(guestStatus("vm", st("on", { state: "RUNNING" }))).toMatchObject({ label: "Running", running: true });
     expect(guestStatus("vm", st("on", { state: "PAUSED" }))).toMatchObject({ label: "Paused", palette: "orange" });
     expect(guestStatus("vm", st("on", { state: "PMSUSPENDED" }))).toMatchObject({ label: "Suspended", running: true });
-    expect(guestStatus("vm", st("off", { state: "SHUTOFF" }))).toMatchObject({ label: "Stopped", running: false });
+    expect(guestStatus("vm", st("off", { state: "SHUTOFF" }))).toMatchObject({ label: "Stopped", palette: "red", running: false });
     // A container's field means nothing on a VM.
     expect(guestStatus("vm", st("on", { status: "PAUSED" }))).toMatchObject({ label: "Running" });
   });

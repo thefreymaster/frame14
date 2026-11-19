@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.178.0
+
+- Added: a notification can show what a camera saw. When a Home Assistant automation's `frame14_notify` names a `camera` (a camera entity), Frame14 takes a still from that camera as the notification goes out, and tapping the notification opens a page with it — when it was, the notification's words, and Watch live for the Cameras page. Phones can't show a picture inside a web notification (an iPhone shows none at all, GIFs included), so the picture is one tap away instead. The add-on keeps the last 20 of these for a week.
+- Added: a clip on that page. After the notification, the automation can record the walk-up, turn it into a GIF (or keep the MP4) and fire `frame14_clip` with the notification's `tag` and the file's path under Home Assistant's media (`media: /media/local/snapshots/…`). The page swaps it in on its own a few seconds later, with Clip / Photo to go back to the camera's full-size still. The add-on keeps its own copy, so the automation can write the same file every time; a file written before the notification — a recording that didn't run because the camera was unavailable — is left out rather than showing the last visitor.
+
 ## 0.177.1
 
 - Changed: the power flow's waves stand still. Each wire's pair of waves stays in place, drawn faintly in its colour, and a bright trace runs along them the way the power goes — from the panels to the house, and out to or in from the grid — drawing the line in full colour where it is and fading behind it, as an oscilloscope draws. The trace runs as fast as the waves used to travel: a crawl on a few hundred watts and faster the more power is on the wire. With reduced motion turned on in the device's settings there is no trace, and the waves are drawn whole in their colour.

@@ -97,6 +97,10 @@ const REGISTRY_EVENT_IDS = new Map([
 // an administrator's token may subscribe to an event type of its own.
 export const NOTIFY_EVENT = "frame14_notify";
 const NOTIFY_EVENT_ID = 6;
+// A clip for the moment a notification showed (0.178.0, seen.js): an
+// automation fires it with `tag` and `media` once its recording is done.
+export const CLIP_EVENT = "frame14_clip";
+const CLIP_EVENT_ID = 7;
 
 const stateCache = new Map();
 const pendingResults = new Map(); // id -> { resolve, reject }
@@ -107,7 +111,7 @@ const pendingResults = new Map(); // id -> { resolve, reject }
 const pendingSubscriptions = new Map(); // id -> { onEvent, onError, onClose }
 
 let haWs = null;
-let nextMsgId = 7;
+let nextMsgId = 8;
 
 const ALLOWED_DOMAINS = new Set(["light", "switch", "climate", "fan", "media_player"]);
 const ALLOWED_SERVICES = new Set([
@@ -596,7 +600,8 @@ export async function setLastRoute(route) {
  * `hooks` (0.122): `onPrimed()` once the cache is primed after a connect, and
  * `onRegistryChanged(eventType)` on an area / device / entity registry event
  * — index.js wires both to ha-areas.js, the lights by room; `onNotify(data)`
- * (0.160.0) on a `frame14_notify` event, wired to push.js.
+ * (0.160.0) on a `frame14_notify` event, wired to push.js, and `onClip(data)`
+ * (0.178.0) on a `frame14_clip`, wired to seen.js.
  */
 export function startHaSocket(io, hooks = {}) {
   if (hooks.lights) pageLights = hooks.lights;
@@ -800,6 +805,13 @@ export function startHaSocket(io, hooks = {}) {
             event_type: NOTIFY_EVENT,
           }),
         );
+        ws.send(
+          JSON.stringify({
+            id: CLIP_EVENT_ID,
+            type: "subscribe_events",
+            event_type: CLIP_EVENT,
+          }),
+        );
         return;
       }
 
@@ -815,6 +827,13 @@ export function startHaSocket(io, hooks = {}) {
 
       if (msg.type === "event" && msg.id === NOTIFY_EVENT_ID) {
         hooks.onNotify?.(msg.event?.data ?? {});
+        return;
+      }
+
+      if (msg.type === "result" && msg.id === CLIP_EVENT_ID) return;
+
+      if (msg.type === "event" && msg.id === CLIP_EVENT_ID) {
+        hooks.onClip?.(msg.event?.data ?? {});
         return;
       }
 

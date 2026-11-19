@@ -22,6 +22,7 @@ import { Vacuum } from "./routes/Vacuum";
 import { Unraid } from "./routes/Unraid";
 import { Halloween } from "./routes/Halloween";
 import { SpeedTest } from "./routes/SpeedTest";
+import { Seen } from "./routes/Seen";
 
 /** A page that needs `feature` set up; without it a visit goes Home (0.159.0). */
 const needs = (feature: Feature, page: React.ReactNode) => (
@@ -66,6 +67,9 @@ export const router = createBrowserRouter([
       { path: "/halloween", element: <Halloween /> },
       // This device's connection to the server (0.167.0): needs nothing set up.
       { path: "/speedtest", element: <SpeedTest /> },
+      // What a camera saw when a notification went out (0.178.0): a tap on
+      // one that named a camera opens it. Needs nothing set up, no nav entry.
+      { path: "/seen/:id", element: <Seen /> },
     ],
   },
 ]);

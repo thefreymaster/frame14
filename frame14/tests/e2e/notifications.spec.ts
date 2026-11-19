@@ -134,6 +134,71 @@ test.describe("notifications", () => {
     expect(await received(request, keys)).toHaveLength(2);
   });
 
+  // 0.178.0, the user: "I'd love a screenshot attached to it too", then "Can
+  // the notification include a gif?" — an iPhone's web push shows no
+  // picture, so a notification that names a camera opens a page of what it
+  // saw: the still at once, the automation's clip once it sends it.
+  test("a notification that names a camera opens its still, and the clip arrives on the page", async ({ page, request }, info) => {
+    const keys = phoneKeys(`seen-${info.project.name}-${Date.now()}`);
+    await fakePushManager(page, keys);
+    await page.goto("/control/device");
+    const subscribed = page.waitForResponse((r) => r.url().endsWith("/api/push/subscribe") && r.ok());
+    await page.getByText("Allow notifications", { exact: true }).click();
+    await subscribed;
+
+    const tag = `front-porch-person-${info.project.name}`;
+    await stub(request, "/_stub/event", {
+      event_type: "frame14_notify",
+      data: { title: "Front Porch", message: "Someone's at the front door.", tag, url: "/cameras", camera: "camera.front_porch_high" },
+    });
+    await expect.poll(async () => (await received(request, keys)).length).toBe(1);
+    const [sent] = await received(request, keys);
+    expect(sent).toEqual({ title: "Front Porch", body: "Someone's at the front door.", tag, url: expect.stringMatching(/^\/seen\/[A-Za-z0-9_-]{16}$/) });
+
+    // The page a tap opens: the still, and word that the clip is coming.
+    await page.goto(sent.url);
+    await expect(page.getByRole("heading", { name: "Front Porch" })).toBeVisible();
+    await expect(page.getByText("Someone's at the front door.")).toBeVisible();
+    // The still is the camera's, as Home Assistant gave it (the stub's JPEG
+    // is only bytes, not a picture a browser decodes).
+    const still = page.locator("[data-seen-still]");
+    const [kept, camera] = await Promise.all([
+      request.get((await still.getAttribute("src"))!),
+      request.get(`${STUB_URL}/api/camera_proxy/camera.front_porch_high`, { headers: { Authorization: "Bearer x" } }),
+    ]);
+    expect(kept.headers()["content-type"]).toBe("image/jpeg");
+    expect(await kept.body()).toEqual(await camera.body());
+    await expect(page.locator("[data-seen-waiting]")).toHaveText("The clip is on its way…");
+    await expect(page.locator("[data-seen-clip]")).toHaveCount(0);
+    await expect(page.getByRole("radiogroup", { name: "Show" })).toHaveCount(0);
+
+    // The automation's clip, a GIF under HA's /media/: it shows without a reload.
+    await stub(request, "/_stub/event", {
+      event_type: "frame14_clip",
+      data: { tag, media: "/media/local/snapshots/frame14_front_porch.gif" },
+    });
+    const clip = page.locator("img[data-seen-clip]");
+    await expect(clip).toBeVisible({ timeout: 10_000 });
+    await expect.poll(() => clip.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
+    await expect(page.locator("[data-seen-waiting]")).toHaveCount(0);
+
+    // Photo puts the still back alone; Clip the clip.
+    await page.getByText("Photo", { exact: true }).click();
+    await expect(clip).toHaveCount(0);
+    await expect(still).toBeVisible();
+    await page.getByText("Clip", { exact: true }).click();
+    await expect(clip).toBeVisible();
+
+    await page.getByRole("button", { name: "Watch live" }).click();
+    await expect(page).toHaveURL(/\/cameras$/);
+  });
+
+  test("a moment that is gone says so", async ({ page }) => {
+    test.skip(test.info().project.name !== "desktop", "one run is enough");
+    await page.goto("/seen/AAAAAAAAAAAAAAAA");
+    await expect(page.getByText("This moment is gone")).toBeVisible();
+  });
+
   test("the service worker shows what arrives, with its tag", async ({ page }) => {
     await page.context().grantPermissions(["notifications"], { origin: APP_URL });
     await page.goto("/home");

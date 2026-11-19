@@ -54,6 +54,7 @@ let io;
 let rooms;
 const onRegistryChanged = vi.fn();
 const onNotify = vi.fn();
+const onClip = vi.fn();
 
 beforeAll(async () => {
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -76,6 +77,7 @@ beforeAll(async () => {
       onPrimed: primed,
       onRegistryChanged,
       onNotify,
+      onClip,
       lights: () => ["light.living_room", "switch.ihome_smartplug_05b4df_outlet", "light.lady_lamp"],
     });
   });
@@ -301,6 +303,16 @@ describe("notifications (0.160.0)", () => {
     expect(onNotify.mock.calls).toEqual([
       [{ title: "Washer finished", message: "Time to move the clothes to the dryer.", tag: "appliance-washer" }],
     ]);
+    expect(onClip).not.toHaveBeenCalled();
+  });
+
+  it("hands the automation's frame14_clip to its own hook (0.178.0)", async () => {
+    const clip = { tag: "front-porch-person", media: "/media/local/snapshots/frame14_front_porch.gif" };
+    onNotify.mockClear();
+    stub.pushEvent("frame14_clip", clip);
+    await until(() => onClip.mock.calls.length > 0);
+    expect(onClip.mock.calls).toEqual([[clip]]);
+    expect(onNotify).not.toHaveBeenCalled();
   });
 });
 

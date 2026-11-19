@@ -16,7 +16,9 @@
 //                        — slow, refuse, or swallow service calls
 //   POST /_stub/registry {"entity_id", "area_id"} — move an entity to an area
 //   POST /_stub/event    {"event_type", "data"} — fire an event, as an
-//                        automation's `event:` action does (frame14_notify)
+//                        automation's `event:` action does (frame14_notify,
+//                        frame14_clip — whose `media` the /media/local/ view
+//                        answers with a GIF)
 //   POST /_stub/push/:id — a stand-in push service (0.160.0): what the add-on
 //                        sends a subscription with this endpoint is kept
 //   GET  /_stub/pushes   — what it kept: { id, headers, body (base64) }
@@ -125,6 +127,9 @@ function browseImmich(mediaContentId) {
     })),
   );
 }
+
+// A 1x1 GIF, for a clip under HA's /media/ view (seen.js, 0.178.0).
+const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64");
 
 // A 1x1 JPEG, for the camera stills and the printer camera's frames.
 const JPEG = Buffer.from(
@@ -840,6 +845,13 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
       if (!req.headers.authorization) return json(res, 401, { message: "stub: no auth" });
       res.writeHead(200, { "content-type": "image/jpeg" });
       return res.end(JPEG);
+    }
+    // HA's local media view (LocalMediaView): a clip an automation recorded, with the token.
+    if ((m = p.match(/^\/media\/local\/(.+)$/))) {
+      if (!req.headers.authorization) return json(res, 401, { message: "stub: no auth" });
+      if (!m[1].endsWith(".gif")) return json(res, 404, { message: "stub: no such file" });
+      res.writeHead(200, { "content-type": "image/gif" });
+      return res.end(GIF);
     }
     // HA's Immich view (ImmichMediaView): /immich/<account>/<asset>/<size>/<mime>.
     if ((m = p.match(/^\/immich\/([^/]+)\/([^/]+)\/(thumbnail|preview|fullsize)\/image\/[^/]+$/))) {

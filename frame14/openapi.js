@@ -81,7 +81,12 @@ export const openApiDocument = {
     {
       name: "Notifications",
       description:
-        "Web Push to the devices that turned notifications on in Settings. What is sent comes from Home Assistant: an automation fires the `frame14_notify` event with `title`, `message`, and optionally `tag` (a later notification with the same tag replaces it) and `url` (the page a tap opens, a path).",
+        "Web Push to the devices that turned notifications on in Settings. What is sent comes from Home Assistant: an automation fires the `frame14_notify` event with `title`, `message`, and optionally `tag` (a later notification with the same tag replaces it), `url` (the page a tap opens, a path) and `camera` (a camera entity: the tap opens that camera's still from the moment instead, see Seen).",
+    },
+    {
+      name: "Seen",
+      description:
+        "What a camera saw when a notification went out (0.178.0). A `frame14_notify` that names a `camera` makes a moment — the camera's still, taken through Home Assistant as the notification goes — and a tap opens /seen/<id>. An automation adds a clip after with the `frame14_clip` event: `tag` (the notification's) and `media` (a path under Home Assistant's /media/ view, such as `/media/local/snapshots/porch.gif`). The newest 20 moments of the last week are kept.",
     },
   ],
   paths: {
@@ -1126,6 +1131,64 @@ export const openApiDocument = {
           200: { description: "Sent to the push service.", content: { "application/json": { schema: { type: "object", properties: { ok: { type: "boolean", example: true } } } } } },
           404: { description: "That device isn't subscribed.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
           502: { description: "The push service refused it.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/seen/{id}": {
+      get: {
+        tags: ["Seen"],
+        operationId: "getSeen",
+        summary: "A moment a notification showed",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", pattern: "^[A-Za-z0-9_-]{16}$" } }],
+        responses: {
+          200: {
+            description: "The moment; `still` and `clip` are null until they are kept.",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    at: { type: "string", format: "date-time" },
+                    camera: { type: "string", example: "camera.front_porch_high" },
+                    title: { type: "string", example: "Front Porch" },
+                    message: { type: "string", example: "Someone's at the front door." },
+                    still: { type: "string", nullable: true, example: "/api/seen/AbCdEfGhIjKlMnOp/still" },
+                    clip: {
+                      type: "object",
+                      nullable: true,
+                      properties: { url: { type: "string" }, type: { type: "string", example: "image/gif" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          404: { description: "No such moment, or it is gone.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/seen/{id}/still": {
+      get: {
+        tags: ["Seen"],
+        operationId: "getSeenStill",
+        summary: "The camera's still from that moment",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          200: { description: "The still.", content: { "image/jpeg": {}, "image/png": {}, "image/webp": {} } },
+          404: { description: "No still for that moment.", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+        },
+      },
+    },
+    "/api/seen/{id}/clip": {
+      get: {
+        tags: ["Seen"],
+        operationId: "getSeenClip",
+        summary: "The clip the automation sent for that moment",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: {
+          200: { description: "The clip.", content: { "image/gif": {}, "video/mp4": {}, "video/webm": {} } },
+          404: { description: "No clip for that moment (yet).", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
         },
       },
     },

@@ -216,6 +216,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/weather` | Now (conditions + advisories from the forecast, and the moon's phase, worked out from the date), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |
 | `/calendar` | The next two weeks across every Home Assistant calendar, a card per day |
 | `/speedtest` | A speed test between this device and the add-on: ping and jitter, then download and upload for five seconds each, with the last result kept on the device. It measures the path to the add-on (Wi-Fi, LAN, a tunnel), not your internet connection. Each device's own page: a frame's tap on it moves no other frame; off by default in a remote's nav |
+| `/seen/<id>` | What a camera saw when a notification went out: the still taken as it was sent, the automation's clip once it arrives (Clip / Photo to switch), the notification's words and Watch live. Opened by tapping a notification that named a `camera`; no nav entry |
 | `/timer` | Timer; frame-only nav item |
 | `/marquee` | Plex now-playing poster art; auto-routed while a movie plays — a frame opened mid-movie goes there too |
 | `/football` | Score bug + game detail for a tracked team; in the nav and auto-routed on game day — a frame opened mid-game goes there too |
@@ -261,6 +262,33 @@ actions:
 
 The add-on hears the event over its own connection to Home Assistant, so nothing goes in `configuration.yaml`. Subscribing to an event of its own takes an administrator's `ha_token`, which the Software card already needs. The add-on makes its own push keys on first start and keeps them, with the devices' subscriptions, in its data folder.
 
+### A camera's picture
+
+A web notification can't carry a picture on a phone — an iPhone shows none, GIFs included — so Frame14 puts it one tap away (0.178.0). Name a `camera` and the add-on takes a still from it through Home Assistant as the notification goes out; tapping the notification opens a page with that still. To add a clip, record one after the notification, then fire `frame14_clip` with the same `tag` and the file's path under Home Assistant's media; the page swaps it in on its own:
+
+```yaml
+actions:
+  - event: frame14_notify
+    event_data:
+      title: "Front Porch"
+      message: "Someone's at the front door."
+      tag: "front-porch-person"
+      camera: camera.front_porch            # the still, and the page a tap opens
+  - action: camera.record
+    target:
+      entity_id: camera.front_porch
+    data:
+      filename: /media/snapshots/front_porch.mp4
+      duration: 5
+      lookback: 5                          # the camera's stream must be preloaded for lookback
+  - event: frame14_clip
+    event_data:
+      tag: "front-porch-person"
+      media: /media/local/snapshots/front_porch.mp4   # a GIF, MP4 or WebM under /media/
+```
+
+The add-on fetches the clip with its token and keeps a copy, so the same filename can be written every time; a file Home Assistant says was written before the notification (a recording that didn't run) is left out. It keeps the newest 20 of these for a week.
+
 ## Security
 
 Frame14 has no login of its own: anything that reaches its port can use it. Keep the port to the devices that use it, and reach it from outside through something that asks who you are, such as Cloudflare Access. What it does guard:
@@ -269,6 +297,7 @@ Frame14 has no login of its own: anything that reaches its port can use it. Keep
 - **Another website can't use it through your browser.** A browser's request from another site, or another app on the same domain, is refused, socket and routes alike (0.151.0). Home Assistant's `rest_command` calls still work.
 - **It can say who is who, behind Cloudflare Access.** Access signs people in before a request ever reaches the add-on, and adds a signed token saying who they are. With `cloudflare_access_team` set, the add-on checks that token against your team's keys and Settings' **Account** card shows who is signed in and on what kind of device (0.168.0). A device can be given an alias there — "Office MacBook" for a row that could only say Mac — with the edit button at the row's end; the add-on keeps it, so every signed-in device shows the same one (0.173.0). Anyone Access signed in can set an alias on any row; nobody else can. This names people; it doesn't lock anything: a device on your own network isn't asked who it is, sees no Account card and no names, and works as before.
 - **Notifications go only to browsers' push services.** A device's subscription is taken only when its address is Google's, Apple's, Mozilla's or Microsoft's push service, so the add-on never posts to an address a page chose (0.160.0). What is sent comes from Home Assistant's `frame14_notify` event, not from a request to the add-on.
+- **A camera's picture comes only from Home Assistant.** A notification's `camera` must be a camera entity and a clip's `media` a path under Home Assistant's `/media/` view; the add-on fetches them with its token, keeps only pictures and videos, and serves them under ids of its own (0.178.0).
 - **It only shows the albums you listed.** A photo is served only when it is in one of `immich_album_ids`, and the add-on fetches it from Home Assistant with its token (0.162.0).
 - **It only controls what it shows.** Lights: the ones in `light_entities`, the lights of the rooms in `light_areas`, and the printer's chamber light (0.156.0). Switches: the ones in `light_entities` and the chamber light (0.151.0). Fans and thermostats: the ones in `fan_entities` and `climate_entities` (0.156.0). Scenes, scripts and automations: the ones in `scene_entities`, and only run — never switched off or changed (0.165.0). The vacuum and printer controls are held to the configured devices, and a spoken reply plays only on `assist_speaker`. A call for anything else in Home Assistant is refused.
 

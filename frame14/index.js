@@ -34,6 +34,7 @@ import {
 import { startScreen } from "./screen.js";
 import { startTheme } from "./theme.js";
 import { startPush } from "./push.js";
+import { startSeen } from "./seen.js";
 import { startPhotos } from "./photos.js";
 import { startAccess } from "./access.js";
 import { calledBy, startPeople } from "./people.js";
@@ -60,6 +61,7 @@ import printerRouter from "./routes/printer.js";
 import assistRouter, { attachAssistSocket } from "./routes/assist.js";
 import ingressRouter from "./routes/ingress.js";
 import pushRouter from "./routes/push.js";
+import seenRouter from "./routes/seen.js";
 import accountRouter from "./routes/account.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -86,6 +88,9 @@ app.locals.screen = screen;
 // The phones' notifications (push.js): their subscriptions and the VAPID keys.
 const push = startPush();
 app.locals.push = push;
+// What a camera saw when a notification went out (seen.js, 0.178.0).
+const seen = startSeen();
+app.locals.seen = seen;
 // The frames' photos (photos.js): Immich albums through Home Assistant, and
 // the one the frames play.
 app.locals.photos = startPhotos();
@@ -336,6 +341,7 @@ app.use("/api/camera", cameraRouter);
 app.use("/api/printer", printerRouter);
 app.use("/api/assist", assistRouter);
 app.use("/api/push", pushRouter);
+app.use("/api/seen", seenRouter);
 app.use("/api/account", accountRouter);
 app.use("/api/home", homeRouter);
 
@@ -363,11 +369,26 @@ httpServer.listen(PORT, () => {
     // The lights a page may call: the ones the pages show, rooms and all.
     lights: () => lightsConfig().lights,
     // An automation's `frame14_notify`: to every phone that turned them on.
+    // One that names a `camera` opens the camera's still from that moment
+    // (seen.js), taken before it goes.
     onNotify: (data) => {
-      void push.notify(data).then((result) => {
-        if (!result) console.warn("[push] frame14_notify with no title or message");
-        else console.log(`[push] notification sent to ${result.sent} of ${result.sent + result.failed}`);
-      });
+      void seen
+        .notification(data)
+        .then((sent) => push.notify(sent))
+        .then((result) => {
+          if (!result) console.warn("[push] frame14_notify with no title or message");
+          else console.log(`[push] notification sent to ${result.sent} of ${result.sent + result.failed}`);
+        })
+        .catch((err) => console.error("[push] frame14_notify failed:", err.message));
+    },
+    // The automation's clip for that moment, once it has recorded it.
+    onClip: (data) => {
+      void seen
+        .attachClip(data)
+        .then((moment) => {
+          if (moment) console.log(`[seen] clip kept for ${moment.id}`);
+        })
+        .catch((err) => console.error("[seen] frame14_clip failed:", err.message));
     },
   });
 });

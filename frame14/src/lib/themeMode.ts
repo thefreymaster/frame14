@@ -1,6 +1,7 @@
 import { socket } from "./socket";
 import { getDeviceMode, subscribeDeviceMode } from "./deviceMode";
 import { isThemePalette, paletteOf, type ThemePalette } from "./themePalettes";
+import { crossFade } from "./themeTransition";
 
 export type ThemeModePreference = "auto" | "device" | "bright" | "dark";
 export type EffectiveThemeMode = "bright" | "dark";
@@ -221,9 +222,19 @@ function update(next: { frames?: ThemeChoice; local?: ThemeChoice } = {}) {
   ) {
     return;
   }
+  const turned = derived.effectiveMode !== theme.effectiveMode;
+  // The state at once, so the next change builds on this one; what shows of
+  // it — <html>'s marks and whatever reads the mode — at once too, unless
+  // the mode turns: then the page crossfades into it (lib/themeTransition,
+  // 0.177.0), whatever turned it — a tap, Settings, another frame, Auto's
+  // hour, the system's own switch. A palette alone changes at once.
   theme = derived;
-  applyThemeVars(theme.effectiveMode, theme.palette);
-  listeners.forEach((fn) => fn());
+  const show = () => {
+    applyThemeVars(theme.effectiveMode, theme.palette);
+    listeners.forEach((fn) => fn());
+  };
+  if (turned) crossFade(show);
+  else show();
 }
 
 /** The frames' theme mode; sent to the server, which sends it to every panel. */

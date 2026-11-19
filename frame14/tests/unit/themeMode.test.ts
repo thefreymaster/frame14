@@ -249,3 +249,71 @@ describe("a remote's own theme (0.148.0)", () => {
     expect(html.dataset.themeMode).toBe("dark");
   });
 });
+
+// 0.177.0, the user: "Add a small transition for when the app changes from
+// dark mode to light mode and vice versa". lib/themeTransition's crossfade:
+// a view transition, stubbed here (jsdom has none) to keep its callback.
+describe("turning from one mode to the other", () => {
+  const pending: (() => void)[] = [];
+  const start = vi.fn((callback: () => void) => {
+    pending.push(callback);
+    return {} as ViewTransition;
+  });
+
+  afterEach(() => {
+    delete (document as { startViewTransition?: unknown }).startViewTransition;
+    pending.length = 0;
+    start.mockClear();
+  });
+
+  it("crossfades into the other mode, and shows nothing of it until the old page's picture is taken", async () => {
+    stubSystem(false);
+    const { getTheme, setThemePreference, setThemePalette, subscribeTheme } = await load("frame");
+    Object.defineProperty(document, "startViewTransition", { value: start, configurable: true });
+    const listener = vi.fn();
+    subscribeTheme(listener);
+    expect(html.dataset.themeMode).toBe("dark");
+
+    setThemePreference("bright");
+    expect(start).toHaveBeenCalledTimes(1);
+    // Kept and sent at once, so what comes next builds on it…
+    expect(getTheme().effectiveMode).toBe("bright");
+    expect(localStorage.getItem("theme-mode-preference")).toBe("bright");
+    expect(sock.emit).toHaveBeenCalledWith("theme_mode", "bright");
+    // …but the page is as it was until the browser has its picture of it.
+    expect(html.dataset.themeMode).toBe("dark");
+    expect(html.classList.contains("dark")).toBe(true);
+    expect(listener).not.toHaveBeenCalled();
+    pending.splice(0).forEach((run) => run());
+    expect(html.dataset.themeMode).toBe("bright");
+    expect(html.classList.contains("dark")).toBe(false);
+    expect(html.style.colorScheme).toBe("only light");
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    // A palette alone: no crossfade, the change at once.
+    setThemePalette("slate");
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(html.dataset.palette).toBe("slate");
+  });
+
+  it("crossfades whatever turns it: the system's own switch, another frame's word", async () => {
+    stubSystem(false);
+    localStorage.setItem("theme-mode-preference", "device");
+    const { getTheme } = await load("frame");
+    Object.defineProperty(document, "startViewTransition", { value: start, configurable: true });
+    expect(getTheme().effectiveMode).toBe("bright");
+
+    // The system turns dark.
+    system.dark = true;
+    system.onChange?.();
+    expect(start).toHaveBeenCalledTimes(1);
+    pending.splice(0).forEach((run) => run());
+    expect(html.dataset.themeMode).toBe("dark");
+
+    // Another frame picks Bright.
+    sock.handlers.get("theme_mode")?.("bright");
+    expect(start).toHaveBeenCalledTimes(2);
+    pending.splice(0).forEach((run) => run());
+    expect(html.dataset.themeMode).toBe("bright");
+  });
+});

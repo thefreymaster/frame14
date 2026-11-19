@@ -58,6 +58,30 @@ export function pageErrors(page: Page): string[] {
  */
 export const splashGone = (page: Page) => page.locator("#splash").waitFor({ state: "detached" });
 
+/**
+ * The colour on screen just inside the first card's top edge (its padding, so
+ * nothing but the card's face), as [r, g, b]: what was painted — a browser's
+ * own darkening, a view transition's pictures and all — not what the styles say.
+ */
+export async function cardPaint(page: Page): Promise<number[]> {
+  const box = await page.locator(".chakra-card__root").first().boundingBox();
+  if (!box) return [];
+  const png = await page.screenshot({
+    clip: { x: box.x + box.width / 2, y: box.y + 4, width: 1, height: 1 },
+    scale: "css",
+  });
+  return page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const g = canvas.getContext("2d")!;
+    g.drawImage(img, 0, 0);
+    return Array.from(g.getImageData(0, 0, 1, 1).data.slice(0, 3));
+  }, png.toString("base64"));
+}
+
 /** The names of the Lights group's buttons in a camera's full screen (0.144), in order. */
 export const lightButtons = (dialog: Locator) =>
   dialog

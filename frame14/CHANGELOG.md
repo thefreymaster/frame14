@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.177.0
+
+- Added: a short crossfade when the theme turns from bright to dark or back — the page as it was fades into the page as it is over a quarter of a second, instead of changing in one frame. It runs however the theme turns: the header's switch, Settings, another frame, Auto at 7:00 and 19:00, or Device following the phone's or computer's own setting. With reduced motion turned on in the device's settings, and in browsers too old for it, the theme changes at once as before. Changing only the colours (Gray, Slate, Outlines, Embossed) is still instant.
+
 ## 0.176.1
 
 - Changed: on a phone the header's buttons are back at its right end, after the name, as they were before 0.176.0. When a busy day leaves no room for the name, it still gives way to the buttons, which stay at the right.

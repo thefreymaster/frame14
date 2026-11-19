@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { quietHouse, resetStub, splashGone, stub } from "./helpers";
+import { cardPaint, quietHouse, resetStub, splashGone, stub } from "./helpers";
 import { APP_URL } from "./ports";
 
 // The header's buttons — the mic, a remote's button to refresh the frames
@@ -296,6 +296,83 @@ test.describe("the header's bright and dark switch", () => {
     } finally {
       await frames.close();
     }
+  });
+
+  // 0.177.0, the user: "Add a small transition for when the app changes
+  // from dark mode to light mode and vice versa". The browser's own view
+  // transition (lib/themeTransition): a picture of the page as it was fading
+  // into the page as it is. Read off the running transition, and off the
+  // screen with it held at its middle.
+  test("crossfades the page from one mode to the other, a quarter of a second; at once under reduced motion", async ({ page }) => {
+    type Fade = { before?: string; under?: string; fades: string[]; durations: number[] };
+    type Watched = { fades: Fade[]; holdAtHalf: boolean; held?: () => void };
+    await page.addInitScript(() => {
+      localStorage.setItem("device-mode", "controller");
+      localStorage.setItem("local-theme-mode", "dark");
+      const watched: Watched = { fades: [], holdAtHalf: false };
+      (window as unknown as { watched: Watched }).watched = watched;
+      const real = document.startViewTransition?.bind(document);
+      if (!real) return;
+      document.startViewTransition = ((update: ViewTransitionUpdateCallback) => {
+        const before = document.documentElement.dataset.themeMode;
+        const transition = real(update);
+        void transition.ready.then(() => {
+          const running = document.getAnimations().filter((a) => (a.effect as KeyframeEffect).pseudoElement?.startsWith("::view-transition"));
+          const effect = (a: Animation) => a.effect as KeyframeEffect;
+          watched.fades.push({
+            before,
+            // What is under the pictures while they fade: the mode it turned to.
+            under: document.documentElement.dataset.themeMode,
+            fades: running.filter((a) => effect(a).getKeyframes().some((k) => "opacity" in k)).map((a) => effect(a).pseudoElement!).sort(),
+            durations: [...new Set(running.map((a) => Number(effect(a).getComputedTiming().duration)))],
+          });
+          if (!watched.holdAtHalf) return;
+          for (const a of running) {
+            a.pause();
+            a.currentTime = Number(effect(a).getComputedTiming().duration) / 2;
+          }
+          watched.held = () => running.forEach((a) => a.play());
+        });
+        return transition;
+      }) as typeof document.startViewTransition;
+    });
+    const watched = () => page.evaluate(() => (window as unknown as { watched: Watched }).watched.fades);
+    await page.goto("/home");
+    await splashGone(page);
+    await expect(page.locator("html")).toHaveAttribute("data-theme-mode", "dark");
+    await expect(page.locator(".chakra-card__root").first()).toBeVisible();
+    const dark = await cardPaint(page);
+
+    // To bright, held at the middle of the fade.
+    await page.evaluate(() => ((window as unknown as { watched: Watched }).watched.holdAtHalf = true));
+    await toggle(page).click();
+    await expect.poll(watched).toHaveLength(1);
+    const [fade] = await watched();
+    expect(fade).toEqual({
+      before: "dark",
+      under: "bright",
+      // The page as it was fading out and as it is fading in…
+      fades: ["::view-transition-new(root)", "::view-transition-old(root)"],
+      // …over a quarter of a second: a small transition.
+      durations: [250],
+    });
+    // Half way: on the screen a card is neither the dark one nor the bright one.
+    const half = await cardPaint(page);
+    await page.evaluate(() => (window as unknown as { watched: Watched }).watched.held?.());
+    await expect.poll(async () => Math.min(...(await cardPaint(page)))).toBeGreaterThan(200);
+    const bright = await cardPaint(page);
+    for (const channel of [0, 1, 2]) {
+      expect(half[channel]).toBeGreaterThan(dark[channel] + 20);
+      expect(half[channel]).toBeLessThan(bright[channel] - 20);
+    }
+
+    // Under reduced motion: no transition, the other mode at once.
+    await page.evaluate(() => ((window as unknown as { watched: Watched }).watched.holdAtHalf = false));
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await toggle(page).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme-mode", "dark");
+    await page.waitForTimeout(300);
+    expect(await watched()).toHaveLength(1);
   });
 
   test("puts every frame in the other mode from a frame's tap", async ({ page, browser }) => {

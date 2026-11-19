@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { splashGone } from "./helpers";
+import { cardPaint, splashGone } from "./helpers";
 
 // 0.163.2, the user: "Bright mode isn't working on frame14 devices". The
 // frames' browser — Android's WebView in Fully Kiosk — darkens a page itself
@@ -15,30 +15,6 @@ test.use({
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("device-mode", "frame"));
 });
-
-/**
- * The colour on screen just inside the first card's top edge (its padding, so
- * nothing but the card's face), as [r, g, b]: what was painted, darkening and
- * all, not what the styles say.
- */
-async function cardPaint(page: Page): Promise<number[]> {
-  const box = await page.locator(".chakra-card__root").first().boundingBox();
-  if (!box) return [];
-  const png = await page.screenshot({
-    clip: { x: box.x + box.width / 2, y: box.y + 4, width: 1, height: 1 },
-    scale: "css",
-  });
-  return page.evaluate(async (b64) => {
-    const img = new Image();
-    img.src = `data:image/png;base64,${b64}`;
-    await img.decode();
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = 1;
-    const g = canvas.getContext("2d")!;
-    g.drawImage(img, 0, 0);
-    return Array.from(g.getImageData(0, 0, 1, 1).data.slice(0, 3));
-  }, png.toString("base64"));
-}
 
 const darkest = async (page: Page) => Math.min(...(await cardPaint(page)));
 const lightest = async (page: Page) => Math.max(...(await cardPaint(page)));

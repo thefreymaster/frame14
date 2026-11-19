@@ -83,10 +83,11 @@ export function grid(energy: HomeEnergy) {
 }
 
 /**
- * Seconds the waves on one of PowerFlow's wires take to travel their own
- * length at the base pace, which is the pace at 1 kW (and was every wire's
- * pace until 0.87). As fast across the wire as the dots they replaced in
- * 0.173.0: a wave is 2.5rem long, and the dots ran 1.25rem a second.
+ * Seconds a trace on one of PowerFlow's wires takes to run a wave's length
+ * at the base pace, which is the pace at 1 kW (and was every wire's pace
+ * until 0.87). As fast across the wire as the waves themselves travelled
+ * until they stood still, and the dots before them in 0.173.0: a wave is
+ * 2.5rem long, and the dots ran 1.25rem a second.
  */
 export const FLOW_BASE_SECONDS = 2;
 
@@ -126,7 +127,9 @@ export function wirePace(watts: number): number {
  * still under a few hundred watts and blur over a few thousand; the root
  * keeps both ends readable. Held between FLOW_PACE_MIN and FLOW_PACE_MAX,
  * and rounded so a reading a watt off doesn't reset the animation's rate.
- * PowerFlow's wires went by it too until 0.173.1 (wirePace).
+ * PowerFlow's wires went by it too until 0.173.1 (wirePace); its nodes'
+ * effects still do — the light on the panels and the grid's sparks, where
+ * the wires' pace, eight times the base at 8 kW, would be a flicker.
  */
 export function flowPace(watts: number): number {
   const kw = kilowatts(watts);

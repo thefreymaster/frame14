@@ -1,5 +1,7 @@
 import { keyframes } from "@emotion/react";
 import { Box } from "@chakra-ui/react";
+import { usePlaybackRate } from "../hooks/usePlaybackRate";
+import { flowPace } from "../lib/energy";
 
 /** The way the light falls: from the upper right, this far off the vertical. */
 const SLANT = 28;
@@ -18,7 +20,7 @@ const fall = keyframes`
   to { opacity: 0; transform: translate(-0.03em, 0.07em) rotate(${SLANT}deg); }
 `;
 
-/** How long one ray takes to fall, in seconds. */
+/** How long one ray takes to fall at 1 kW, in seconds. */
 const FALL_SECONDS = 2.4;
 
 /** Where each ray comes down, across the roof (of the icon's width). */
@@ -37,10 +39,19 @@ const RAYS = [0.3, 0.52, 0.74];
  * size — and takes no room; the rays reach up out of that box into the
  * node's circle, which has the room above the roof. Under reduced motion
  * they stand where they are brightest, still.
+ *
+ * **The light falls as fast as the panels make power** (the user: "Make the
+ * solar and sparks animations also scale up and down with
+ * production/consuption"): FALL_SECONDS a ray at 1 kW, at `flowPace` of what
+ * the panels make — the root of the kilowatts, a crawl at dawn and three
+ * times as fast at 9 kW, gentler than the wire's own pace, which would
+ * have the rays flicker at noon.
  */
-export function SolarRays({ color }: { color: string }) {
+export function SolarRays({ color, watts }: { color: string; watts: number }) {
+  const paced = usePlaybackRate(flowPace(watts));
   return (
     <Box
+      ref={paced}
       position="absolute"
       inset="0"
       fontSize="var(--flow-icon)"

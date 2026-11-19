@@ -1,5 +1,7 @@
 import { keyframes } from "@emotion/react";
 import { Box, Icon } from "@chakra-ui/react";
+import { usePlaybackRate } from "../hooks/usePlaybackRate";
+import { flowPace } from "../lib/energy";
 
 // The icon's own glow, crackling: it flares twice in quick succession and
 // settles, then again, never evenly — a steady pulse reads as a lamp, not a
@@ -30,7 +32,7 @@ const spark = keyframes`
 /** How far the icon's glow is feathered past its outline. */
 const GLOW_BLUR = "0.16rem";
 
-/** How long the glow takes to go through its flares, in seconds. */
+/** How long the glow takes to go through its flares at 1 kW, in seconds. */
 const CRACKLE_SECONDS = 2.6;
 
 /**
@@ -71,11 +73,20 @@ const SPARKS = [
  * Over the icon's box (PowerFlow's `--flow-icon`), taking no room; the
  * sparks land in the node's circle round the icon. Under reduced motion the
  * glow is steady and there are no sparks.
+ *
+ * **It crackles as hard as the power through the meter** (the user: "Make
+ * the solar and sparks animations also scale up and down with
+ * production/consuption"): the glow and every spark at `flowPace` of the
+ * grid's flow, in or out — their turns as written at 1 kW, the root of the
+ * kilowatts either side, a spark now and then on a trickle and three times
+ * as often at 9 kW. Gentler than the wire's pace: at eight times, the six
+ * would be a strobe.
  */
 export function GridSparks({
   icon,
   color,
   spark: sparkColor = color,
+  watts,
 }: {
   /** The node's icon, drawn again for its glow. */
   icon: React.ReactNode;
@@ -83,9 +94,13 @@ export function GridSparks({
   color: string;
   /** The sparks' colour, where it isn't the icon's: a step that stands out from the node's disc. */
   spark?: string | { base: string; _dark: string };
+  /** The power through the meter, either way, which sets the pace. */
+  watts: number;
 }) {
+  const paced = usePlaybackRate(flowPace(watts));
   return (
     <Box
+      ref={paced}
       position="absolute"
       inset="0"
       fontSize="var(--flow-icon)"

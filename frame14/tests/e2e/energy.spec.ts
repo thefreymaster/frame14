@@ -470,8 +470,10 @@ test("the flow's home node has a ring as thick as the other nodes' borders at an
 // usage be AC waves. Maintain flow direction and speed of consumption" —
 // and, of one wave a wire, "Doesn't AC have two waves?": a house's two legs,
 // each the other turned over. Each wire carried dots until then, one every
-// 12px, moved a pitch in 0.6s at 1 kW.
-test("the flow's wires carry two sine waves, one the other's mirror, travelling the way the power goes as fast as the dots did, and a new reading changes the pace without starting them again", async ({ page, request }) => {
+// 12px, moved a pitch in 0.6s at 1 kW. 0.177.1, the user, of the waves
+// sliding along their wire: "lets try instead the wave is static in place
+// representing the 60hz but the lines are redrawn tracing the wave itself".
+test("the flow's wires carry two sine waves, one the other's mirror, standing still, with a trace running along them the way the power goes as fast as the dots did, and a new reading changes the pace without starting it again", async ({ page, request }) => {
   await page.goto("/home");
   const flow = page.locator('[data-card="energy"]');
   const wires = flow.locator("[data-flow-wire]");
@@ -480,14 +482,15 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   await expect(wires.nth(0)).toHaveAttribute("data-flow-wire", "right");
   await expect(wires.nth(1)).toHaveAttribute("data-flow-wire", "left");
 
-  /** A wire's wave as it is drawn and as it moves. */
+  /** A wire's wave as it is drawn, and its trace as it moves. */
   const read = (wire: ReturnType<typeof wires.nth>) =>
     wire.locator("[data-flow-wave]").evaluate((el) => {
       const cs = getComputedStyle(el);
-      const [animation] = el.getAnimations();
+      const trace = el.querySelector<HTMLElement>(":scope > [data-flow-trace]")!;
+      const [animation] = trace.getAnimations();
       const frames = (animation.effect as KeyframeEffect).getKeyframes();
       const duration = Number(animation.effect!.getComputedTiming().duration);
-      const left = () => el.getBoundingClientRect().left;
+      const left = () => trace.getBoundingClientRect().left;
       const was = { time: animation.currentTime, state: animation.playState };
       animation.pause();
       animation.currentTime = duration * 0.1;
@@ -501,23 +504,27 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
       const picture = decodeURIComponent(cs.maskImage || cs.webkitMaskImage);
       return {
         root: parseFloat(getComputedStyle(document.documentElement).fontSize),
+        // The wave itself: nothing of its own moves, and it is its wire's width.
+        standing: el.getAnimations().length === 0,
+        wide: el.getBoundingClientRect().width - wireBox.width,
         moved: [...new Set(frames.flatMap((f) => Object.keys(f)))].filter((k) => !["offset", "easing", "composite", "computedOffset"].includes(k)),
         seconds: duration / 1000,
         rate: animation.playbackRate,
-        // How far it travels in half its loop, and which way.
+        // How far the trace travels in half its loop, and which way.
         halfLoop: late - early,
+        // One trace's stretch of the strip: its picture's tile.
+        stretch: parseFloat(getComputedStyle(trace).backgroundSize),
+        longer: trace.getBoundingClientRect().width - wireBox.width,
         length: parseFloat(cs.maskSize),
         repeat: cs.maskRepeat,
         picture,
-        colour: cs.backgroundColor,
-        longer: el.getBoundingClientRect().width - wireBox.width,
         height: wireBox.height,
         node: el.closest("[data-card]")!.querySelector("[data-flow-node]")!.getBoundingClientRect().height,
         clipped: getComputedStyle(wire).overflow,
-        still: cs.animationName === "none",
       };
     });
   const edge = (i: number) => flow.locator("[data-flow-node]").nth(i).evaluate((el) => getComputedStyle(el).borderTopColor);
+  const colour = (wire: ReturnType<typeof wires.nth>) => wire.locator("[data-flow-wave]").evaluate((el) => getComputedStyle(el).backgroundColor);
 
   const solar = await read(wires.nth(0));
   const grid = await read(wires.nth(1));
@@ -558,16 +565,21 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
     expect(wave.height).toBeCloseTo(wave.root * 1.5, 1);
     expect(wave.height).toBeGreaterThan(wave.node / 2);
     expect(wave.height).toBeLessThan(wave.node);
-    // The strip is a wave longer than its wire, which clips it: the loop has no join.
-    expect(wave.longer).toBeCloseTo(wave.length, 0);
+    // The wave stands in place: no animation of its own, and as wide as its wire.
+    expect(wave.standing).toBe(true);
+    expect(wave.wide).toBeCloseTo(0, 0);
+    // The trace is a strip a stretch of three waves longer than its wire,
+    // which clips it, moved a stretch a loop: the loop has no join.
+    expect(wave.stretch).toBeCloseTo(wave.length * 3, 0);
+    expect(wave.longer).toBeCloseTo(wave.stretch, 0);
     expect(wave.clipped).toBe("hidden");
-    // Moved by the compositor alone, its own length a loop.
+    // Moved by the compositor alone.
     expect(wave.moved).toEqual(["transform"]);
-    expect(Math.abs(wave.halfLoop)).toBeCloseTo(wave.length / 2, 0);
+    expect(Math.abs(wave.halfLoop)).toBeCloseTo(wave.stretch / 2, 0);
     // As fast across the wire at 1 kW as the dots were: 12px in 0.6s at
-    // the base type, a wave's 40px in 2s.
-    expect(wave.seconds).toBe(2);
-    expect(wave.length / wave.root / wave.seconds).toBeCloseTo(12 / 16 / 0.6, 2);
+    // the base type, a wave's 40px in 2s — its stretch of three in 6s.
+    expect(wave.seconds).toBe(6);
+    expect(wave.stretch / wave.root / wave.seconds).toBeCloseTo(12 / 16 / 0.6, 2);
   }
   // The way the power goes: out of the panels towards the house, and in from the grid towards it.
   expect(solar.halfLoop).toBeGreaterThan(0);
@@ -578,21 +590,82 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   // In the flow's colour: the panels' wire their node's yellow, and the
   // grid's wire what is taken from it — not the grid's own blue (0.176.0),
   // which is the same whichever way the power goes.
-  expect(solar.colour).toBe(await edge(0));
   const blue = await edge(2);
-  expect(grid.colour).not.toBe(blue);
-  expect(solar.colour).not.toBe(grid.colour);
+  expect(await colour(wires.nth(1))).not.toBe(blue);
+  expect(await colour(wires.nth(0))).not.toBe(await colour(wires.nth(1)));
+
+  // What is painted: the wave drawn faint where no trace is, and in its
+  // full colour just behind a trace's head. The trace stopped with a head
+  // at the wire's middle, then a picture of the wire read column by column.
+  await splashGone(page);
+  await flow.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(500);
+  const rgb = (c: string) => c.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+  const solarYellow = rgb(await edge(0));
+  const ground = rgb(await flow.locator("[data-flow]").evaluate((el) => getComputedStyle(el.closest(".chakra-card__root")!).backgroundColor));
+  /** How strongly the wire is drawn in a band of columns, 0 the card and 1 the full colour: the strongest pixel's share. */
+  async function drawn(clip: { x: number; y: number; width: number; height: number }) {
+    const png = (await page.screenshot({ clip })).toString("base64");
+    return page.evaluate(
+      async ({ png, wave, ground }) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${png}`;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        [canvas.width, canvas.height] = [image.width, image.height];
+        const g = canvas.getContext("2d")!;
+        g.drawImage(image, 0, 0);
+        const { data } = g.getImageData(0, 0, image.width, image.height);
+        const way = wave.map((c, i) => c - ground[i]);
+        const whole = way.reduce((sum, c) => sum + c * c, 0);
+        let most = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const from = [0, 1, 2].map((c) => data[i + c] - ground[c]);
+          const along = from.reduce((sum, c, k) => sum + c * way[k], 0) / whole;
+          if (Math.hypot(...from.map((c, k) => c - along * way[k])) < 30) most = Math.max(most, along);
+        }
+        return most;
+      },
+      { png, wave: solarYellow, ground },
+    );
+  }
+  const head = await wires.nth(0).evaluate((wire) => {
+    const trace = wire.querySelector<HTMLElement>("[data-flow-trace]")!;
+    const [animation] = trace.getAnimations();
+    const duration = Number(animation.effect!.getComputedTiming().duration);
+    const stretch = parseFloat(getComputedStyle(trace).backgroundSize);
+    const box = wire.getBoundingClientRect();
+    const middle = box.left + box.width / 2;
+    animation.pause();
+    animation.currentTime = 0;
+    // Moving right, each stretch's head is its right end: at the strip's left and whole stretches on.
+    const start = trace.getBoundingClientRect().left;
+    const share = (((middle - start) % stretch) + stretch) % stretch / stretch;
+    animation.currentTime = share * duration;
+    const now = trace.getBoundingClientRect().left;
+    return { at: now + Math.round((middle - now) / stretch) * stretch, middle, top: box.top, height: box.height };
+  });
+  expect(head.at).toBeCloseTo(head.middle, 0);
+  const band = (from: number) => ({ x: from, width: 0.3 * solar.root, y: head.top, height: head.height });
+  // Just behind it, towards the panels: the wave in full.
+  expect(await drawn(band(head.at - 0.6 * solar.root))).toBeGreaterThan(0.75);
+  // Just ahead of it, towards the house: the wave is there, standing, but faint.
+  const ahead = await drawn(band(head.at + 0.3 * solar.root));
+  expect(ahead).toBeGreaterThan(0.15);
+  expect(ahead).toBeLessThan(0.5);
+  await wires.nth(0).evaluate((wire) => wire.querySelector("[data-flow-trace]")!.getAnimations()[0].play());
 
   // The sun comes out: 4 kW. From a kilowatt up the pace is in proportion
   // to the power (0.173.1, "Make the speeds faster fir the lines for higher
   // wattage"; the root of it until then, twice the base pace here): the
-  // solar waves run four times the base pace — the same animation, carrying
-  // on from where it was, not a new one — and the grid's turn round, out to
-  // the grid, in the export's green.
+  // solar trace runs four times the base pace — the same animation, carrying
+  // on from where it was, not a new one — and the grid's turns round, out
+  // to the grid, in the export's green.
   const mark = (wire: ReturnType<typeof wires.nth>) =>
-    wire.locator("[data-flow-wave]").evaluate((el) => Object.assign(el.getAnimations()[0], { marked: true }) && null);
+    wire.locator("[data-flow-trace]").evaluate((el) => Object.assign(el.getAnimations()[0], { marked: true }) && null);
   const marked = (wire: ReturnType<typeof wires.nth>) =>
-    wire.locator("[data-flow-wave]").evaluate((el) => (el.getAnimations()[0] as Animation & { marked?: boolean }).marked === true);
+    wire.locator("[data-flow-trace]").evaluate((el) => (el.getAnimations()[0] as Animation & { marked?: boolean }).marked === true);
+  const taken = await colour(wires.nth(1));
   await mark(wires.nth(0));
   await stub(request, "/_stub/state", { entity_id: "sensor.envoy_482518016321_current_power_production", state: "4.0" });
   await expect(wires.nth(1)).toHaveAttribute("data-flow-wire", "right");
@@ -603,14 +676,18 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   // 4 − 1.184 = 2.816 kW out: the slower of the two, by as much as it is less.
   expect(out.rate).toBe(2.82);
   expect(await edge(2)).toBe(blue);
-  expect(out.colour).not.toBe(blue);
-  expect(out.colour).not.toBe(grid.colour);
+  expect(await colour(wires.nth(1))).not.toBe(blue);
+  expect(await colour(wires.nth(1))).not.toBe(taken);
 
-  // Under reduced motion the wave stands: drawn, and still.
+  // Under reduced motion there is no trace: the wave stands drawn whole, in the flow's full colour.
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(wires.nth(0).locator("[data-flow-wave]")).toHaveCSS("animation-name", "none");
+  await expect(wires.nth(0).locator("[data-flow-trace]")).toBeHidden();
   await expect(wires.nth(0).locator("[data-flow-wave]")).toBeVisible();
+  await expect(wires.nth(0).locator("[data-flow-wave]")).toHaveCSS("background-color", await edge(0));
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  // And back: the trace is a new animation, run at the power's pace again — not the 1 kW one.
+  await expect.poll(async () => (await read(wires.nth(0))).rate).toBe(4);
+  expect((await read(wires.nth(1))).rate).toBe(2.82);
 
   // Night: nothing from the panels. Their wire is a hairline with no wave on it.
   await stub(request, "/_stub/state", { entity_id: "sensor.envoy_482518016321_current_power_production", state: "0" });
@@ -618,6 +695,64 @@ test("the flow's wires carry two sine waves, one the other's mirror, travelling 
   await expect(wires.nth(0).locator("[data-flow-wave]")).toHaveCount(0);
   expect((await wires.nth(0).boundingBox())!.height).toBeLessThan(2);
   await expect(wires.nth(1)).toHaveAttribute("data-flow-wire", "left");
+});
+
+// The user: "The speed should still change based on the amount of energy
+// going through / Make the solar and sparks animations also scale up and
+// down with production/consuption" — the rays at the pace of what the panels
+// make, the grid's glow and sparks at the pace of what goes through the
+// meter: lib/energy's flowPace, the root of the kilowatts. And all of it,
+// the wires too, still at that pace once the card has been folded and opened
+// again, when the browser makes its animations anew.
+test("the light on the panels and the grid's sparks keep the pace of the power, and a folded card opened again keeps every pace", async ({ page, request }) => {
+  const E = "sensor.envoy_482518016321";
+  await page.goto("/home");
+  const card = page.locator('[data-card="energy"]');
+  const flow = card.locator("[data-flow]");
+  /** Each part's animations' rates, and whether they are the ones marked earlier. */
+  const paces = () =>
+    flow.evaluate((el) => {
+      const of = (selector: string) =>
+        [...el.querySelectorAll(selector)].flatMap((part) => part.getAnimations()).map((a) => ({ rate: a.playbackRate, marked: (a as Animation & { marked?: boolean }).marked === true }));
+      const rates = (selector: string) => [...new Set(of(selector).map((a) => a.rate))];
+      return {
+        rays: rates("[data-flow-ray]"),
+        sparks: rates("[data-flow-glow], [data-flow-spark]"),
+        wires: [...el.querySelectorAll("[data-flow-trace]")].map((t) => t.getAnimations()[0]?.playbackRate ?? null),
+        counts: [of("[data-flow-ray]").length, of("[data-flow-glow], [data-flow-spark]").length],
+        marked: of("[data-flow-ray], [data-flow-glow], [data-flow-spark]").every((a) => a.marked),
+      };
+    });
+  const mark = () =>
+    flow.evaluate((el) => {
+      for (const part of el.querySelectorAll("[data-flow-ray], [data-flow-glow], [data-flow-spark]")) for (const a of part.getAnimations()) Object.assign(a, { marked: true });
+    });
+
+  // The stub's house: 0.903 kW from the panels, 0.281 kW in from the grid — both under a kilowatt, the root of it.
+  await expect.poll(async () => (await paces()).rays).toEqual([0.95]);
+  expect(await paces()).toMatchObject({ rays: [0.95], sparks: [0.53], wires: [0.95, 0.53], counts: [3, 7] });
+
+  // The sun comes out: 4 kW, and 2.816 kW of it out to the grid. Faster
+  // light, harder sparks — the same animations, carrying on, not new ones.
+  await mark();
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "4.0" });
+  await expect.poll(async () => (await paces()).rays).toEqual([2]);
+  expect(await paces()).toMatchObject({ rays: [2], sparks: [1.68], wires: [4, 2.82], marked: true });
+
+  // A cloud: 0.2 kW, and 0.984 kW back in from the grid. The light slows, the sparks pick up.
+  await stub(request, "/_stub/state", { entity_id: `${E}_current_power_production`, state: "0.2" });
+  await expect.poll(async () => (await paces()).rays).toEqual([0.45]);
+  expect(await paces()).toMatchObject({ rays: [0.45], sparks: [0.99], wires: [0.45, 0.99] });
+
+  // Folded and opened again: every animation in the card is a new one, and each runs at its power's pace.
+  // The header's title, named with what the header says ("Energy Solar covered 69% …").
+  const title = card.getByRole("button", { name: /^Energy/ });
+  await title.click();
+  await expect(flow).toBeHidden();
+  await title.click();
+  await expect(flow).toBeVisible();
+  await expect.poll(async () => (await paces()).wires).toEqual([0.45, 0.99]);
+  expect(await paces()).toMatchObject({ rays: [0.45], sparks: [0.99], counts: [3, 7], marked: false });
 });
 
 // 0.173.2, the user, with a screenshot of the waves cut off square a gap
@@ -642,7 +777,7 @@ test("a wire's waves come out from behind one circle and go in behind the next, 
     await page.waitForTimeout(250);
   }
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(flow.locator("[data-flow-wave]").first()).toHaveCSS("animation-name", "none");
+  await expect(flow.locator("[data-flow-trace]").first()).toBeHidden();
 
   const drawn = await flow.evaluate((grid) => {
     const box = (el: Element) => {

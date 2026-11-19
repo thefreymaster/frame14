@@ -66,41 +66,45 @@ describe("the energy flow's home node", () => {
 
 // 0.173.0, the user: "Make the dotted lines between production house and
 // usage be AC waves. Maintain flow direction and speed of consumption".
-// What jsdom can see is which wires carry a wave and which way; how one is
-// drawn and how fast it travels is energy.spec's, on a real page.
+// What jsdom can see is which wires carry a wave and which way, and that the
+// wave carries a trace (the user, of the waves sliding along: "lets try
+// instead the wave is static in place representing the 60hz but the lines
+// are redrawn tracing the wave itself"); how they are drawn and how fast the
+// trace runs is energy.spec's, on a real page.
 describe("the energy flow's wires", () => {
   const wires = (now: { currentProduction: number; currentConsumption: number }) => {
     const { container } = renderWithProviders(<PowerFlow energy={{ ...energy, ...now }} size="sm" />);
     return [...container.querySelectorAll("[data-flow-wire]")].map((wire) => ({
       way: wire.getAttribute("data-flow-wire"),
       waves: wire.querySelectorAll("[data-flow-wave]").length,
+      traces: wire.querySelectorAll("[data-flow-wave] > [data-flow-trace]").length,
       hidden: wire.getAttribute("aria-hidden"),
     }));
   };
 
-  it("carry a wave the way the power goes: from the panels to the house, and to or from the grid", () => {
+  it("carry a wave with a trace on it the way the power goes: from the panels to the house, and to or from the grid", () => {
     // The panels fall short: the rest comes in from the grid, towards the house.
     expect(wires({ currentProduction: 900, currentConsumption: 1200 })).toEqual([
-      { way: "right", waves: 1, hidden: "true" },
-      { way: "left", waves: 1, hidden: "true" },
+      { way: "right", waves: 1, traces: 1, hidden: "true" },
+      { way: "left", waves: 1, traces: 1, hidden: "true" },
     ]);
     // They make more than the house uses: the rest goes out to the grid.
     expect(wires({ currentProduction: 4000, currentConsumption: 1200 })).toEqual([
-      { way: "right", waves: 1, hidden: "true" },
-      { way: "right", waves: 1, hidden: "true" },
+      { way: "right", waves: 1, traces: 1, hidden: "true" },
+      { way: "right", waves: 1, traces: 1, hidden: "true" },
     ]);
   });
 
   it("are a hairline with no wave where no power is moving", () => {
     // Night: nothing from the panels, the house on the grid.
     expect(wires({ currentProduction: 0, currentConsumption: 800 })).toEqual([
-      { way: "idle", waves: 0, hidden: "true" },
-      { way: "left", waves: 1, hidden: "true" },
+      { way: "idle", waves: 0, traces: 0, hidden: "true" },
+      { way: "left", waves: 1, traces: 1, hidden: "true" },
     ]);
     // The panels cover the house to the watt: the grid's wire is still.
     expect(wires({ currentProduction: 1200, currentConsumption: 1200 })).toEqual([
-      { way: "right", waves: 1, hidden: "true" },
-      { way: "idle", waves: 0, hidden: "true" },
+      { way: "right", waves: 1, traces: 1, hidden: "true" },
+      { way: "idle", waves: 0, traces: 0, hidden: "true" },
     ]);
   });
 });

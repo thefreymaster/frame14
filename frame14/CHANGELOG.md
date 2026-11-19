@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.177.1
+
+- Changed: the power flow's waves stand still. Each wire's pair of waves stays in place, drawn faintly in its colour, and a bright trace runs along them the way the power goes — from the panels to the house, and out to or in from the grid — drawing the line in full colour where it is and fading behind it, as an oscilloscope draws. The trace runs as fast as the waves used to travel: a crawl on a few hundred watts and faster the more power is on the wire. With reduced motion turned on in the device's settings there is no trace, and the waves are drawn whole in their colour.
+- Changed: the light falling on the solar icon and the sparks round the grid's tower keep pace with the power, as the waves do. The rays fall faster the more the panels make — slowly at dawn, three times as fast at 9 kW — and the sparks crackle harder the more power goes through the meter, in or out. They speed up more gently than the waves, so neither flickers on a sunny afternoon.
+- Fixed: after Home's Energy card was folded and opened again, or reduced motion was turned off, the power flow's waves moved at the 1 kW pace whatever the power, until the next reading came in. They keep the power's pace now.
+
 ## 0.177.0
 
 - Added: a short crossfade when the theme turns from bright to dark or back — the page as it was fades into the page as it is over a quarter of a second, instead of changing in one frame. It runs however the theme turns: the header's switch, Settings, another frame, Auto at 7:00 and 19:00, or Device following the phone's or computer's own setting. With reduced motion turned on in the device's settings, and in browsers too old for it, the theme changes at once as before. Changing only the colours (Gray, Slate, Outlines, Embossed) is still instant.

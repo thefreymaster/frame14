@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { keyframes } from "@emotion/react";
 import { Box, Center, Grid, Icon, Text, chakra } from "@chakra-ui/react";
 import { PiSolarRoof } from "react-icons/pi";
@@ -17,6 +16,7 @@ import {
 } from "../lib/energy";
 import { TransmissionTowerIcon } from "../lib/energyIcons";
 import { HomeIcon } from "../lib/navItems";
+import { usePlaybackRate } from "../hooks/usePlaybackRate";
 import { GridSparks } from "./GridSparks";
 import { SolarRays } from "./SolarRays";
 
@@ -69,16 +69,47 @@ const WAVE_PICTURE = (() => {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 })();
 
-// The wave travels by its own length and starts again where it began, so
-// the loop shows no join. A transform alone: the compositor moves a strip
-// drawn once, where the dots it replaced were repainted every frame.
-const waveRight = keyframes`
-  from { transform: translateX(-${WAVE_LENGTH}); }
+/**
+ * **The wave stands; a trace runs along it** (the user, of a wave that slid
+ * along its wire: "lets try instead the wave is static in place
+ * representing the 60hz but the lines are redrawn tracing the wave itself").
+ * The sines are drawn in place at TRACK of the flow's colour, and over them
+ * a beam sweeps the way the power goes, as an oscilloscope's draws its
+ * picture: the line at full colour where the beam is, fading back to the
+ * track over TRACE_TAIL behind it. One trace every TRACE_EVERY waves, each
+ * a wave's length further in FLOW_BASE_SECONDS at 1 kW — the waves' and
+ * the dots' speed before them.
+ */
+const TRACK = 0.35;
+const TRACE_EVERY = 3;
+const TRACE_TAIL = 2;
+const TRACE_PERIOD = `${WAVE.length * TRACE_EVERY}rem`;
+const TRACE_SECONDS = FLOW_BASE_SECONDS * TRACE_EVERY;
+
+/**
+ * One trace's stretch of the strip, repeated along it: clear up to its
+ * tail, then the flow's colour coming up to full at its head — the end the
+ * power is going to, where the next stretch starts clear. Brightest close
+ * behind the head, as a beam's afterglow is.
+ */
+const traceImage = (colour: string, direction: "left" | "right") => {
+  const tail = WAVE.length * TRACE_TAIL;
+  const at = (share: number) => `calc(100% - ${tail * share}rem)`;
+  const mix = (pct: number) => `color-mix(in srgb, ${colour} ${pct}%, transparent)`;
+  return `linear-gradient(to ${direction}, transparent ${at(1)}, ${mix(25)} ${at(0.5)}, ${mix(70)} ${at(0.15)}, ${colour})`;
+};
+
+// The traces travel by one stretch of the strip and start again where they
+// began, so the loop shows no join. A transform alone: the compositor moves
+// a strip drawn once under the standing wave's mask, where the dots before
+// them were repainted every frame.
+const traceRight = keyframes`
+  from { transform: translateX(-${TRACE_PERIOD}); }
   to { transform: translateX(0); }
 `;
-const waveLeft = keyframes`
+const traceLeft = keyframes`
   from { transform: translateX(0); }
-  to { transform: translateX(-${WAVE_LENGTH}); }
+  to { transform: translateX(-${TRACE_PERIOD}); }
 `;
 
 type FlowSize = "sm" | "md";
@@ -115,10 +146,13 @@ const SIZES = {
  * waves — alternating current, drawn as the sines it is, the house's two
  * legs (0.173.0, the user: "Make the dotted lines between production house
  * and usage be AC waves. Maintain flow direction and speed of consumption",
- * then "Doesn't AC have two waves?"; dots until then) — travelling the way
- * the power flows, in the flow's colour, at a pace set by the power
- * on it (`wirePace`: the solar wire by what the panels make, the grid wire by
- * the net flow); an idle line is a hairline.
+ * then "Doesn't AC have two waves?"; dots until then) — standing in the
+ * flow's colour, with a trace running along them the way the power flows
+ * (they slid along themselves until the user asked for "the wave is static
+ * in place representing the 60hz but the lines are redrawn tracing the wave
+ * itself"), at a pace set by the power on it (`wirePace`: the solar wire by
+ * what the panels make, the grid wire by the net flow); an idle line is a
+ * hairline.
  * The house's edge is a ring of today's coverage (`coverage`, the card's big
  * figure): how much of the day's use the solar has made, in solar yellow from
  * the top clockwise over the edge's grey. Past 100% it goes round again in
@@ -174,7 +208,11 @@ export function PowerFlow({
         icon={<PiSolarRoof />}
         color={producing ? "solar" : null}
         size={size}
-        effect={producing && <SolarRays color={ENERGY_COLORS.solar} />}
+        effect={
+          producing && (
+            <SolarRays color={ENERGY_COLORS.solar} watts={energy.currentProduction} />
+          )
+        }
         name="solar"
       />
       <Wire
@@ -211,6 +249,7 @@ export function PowerFlow({
               icon={<TransmissionTowerIcon />}
               color={ENERGY_COLORS.grid}
               spark={GRID_SPARK_COLOR}
+              watts={abs}
             />
           )
         }
@@ -405,15 +444,16 @@ function Ring({ pct, track }: { pct: number; track: Flow }) {
 }
 
 /**
- * A line between two nodes: a hairline with no power on it, else a wave
- * travelling in `direction` at the pace of `watts` (wirePace). The wave is
- * a strip a wave's length longer than the wire, in the flow's colour and
- * masked to the sines (WAVE_PICTURE), slid along by that length inside a
- * box that clips it. The pace is the running CSS animation's playback rate,
- * set through getAnimations: a change of animation-duration keeps the start
- * time and so jumps the wave to another phase at every reading, where a rate
- * change carries on from where it is. Under reduced motion there is no
- * animation to pace: the wave stands.
+ * A line between two nodes: a hairline with no power on it, else the waves
+ * standing in the flow's colour (WAVE_PICTURE, the wire's width) with traces
+ * running along them in `direction` at the pace of `watts` (wirePace). The
+ * traces are a strip a stretch longer than the wire (TRACE_PERIOD), slid
+ * along by that stretch under the waves' mask, which clips it to the lines.
+ * The pace is the running CSS animation's playback rate (usePlaybackRate:
+ * a change of animation-duration keeps the start time and so jumps the
+ * traces to another place at every reading, where a rate change carries on
+ * from where they are), set again whenever the animation starts anew. Under reduced motion there are no traces:
+ * the waves stand drawn whole, in the flow's full colour.
  *
  * **The wave comes out from behind one circle and goes in behind the next**
  * (0.173.2, the user, of a wave cut off square at each end of its column, a
@@ -440,16 +480,7 @@ function Wire({
   direction: "left" | "right";
   watts: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const pace = wirePace(watts);
-  // A new direction is another keyframe name, and a colour after none the
-  // wave in place of the hairline: both start a fresh animation at the base
-  // rate, so each is a dependency.
-  useEffect(() => {
-    ref.current?.getAnimations().forEach((animation) => {
-      animation.playbackRate = pace;
-    });
-  }, [pace, direction, color]);
+  const paced = usePlaybackRate(wirePace(watts));
 
   if (!color) {
     return (
@@ -480,17 +511,30 @@ function Wire({
     >
       <Box width="100%" height="100%" maskImage={behindNode("100%")}>
         <Box
-          ref={ref}
-          width={`calc(100% + ${WAVE_LENGTH})`}
+          position="relative"
+          width="100%"
           height="100%"
-          bg={ENERGY_COLORS[color]}
+          bg={`color-mix(in srgb, ${ENERGY_VARS[color]} ${TRACK * 100}%, transparent)`}
           maskImage={WAVE_PICTURE}
           maskSize={`${WAVE_LENGTH} 100%`}
           maskRepeat="repeat-x"
-          animation={`${direction === "right" ? waveRight : waveLeft} ${FLOW_BASE_SECONDS}s linear infinite`}
-          _motionReduce={{ animation: "none" }}
+          _motionReduce={{ bg: ENERGY_COLORS[color] }}
           data-flow-wave=""
-        />
+        >
+          <Box
+            ref={paced}
+            position="absolute"
+            insetY="0"
+            left="0"
+            width={`calc(100% + ${TRACE_PERIOD})`}
+            bgImage={traceImage(ENERGY_VARS[color], direction)}
+            bgSize={`${TRACE_PERIOD} 100%`}
+            bgRepeat="repeat-x"
+            animation={`${direction === "right" ? traceRight : traceLeft} ${TRACE_SECONDS}s linear infinite`}
+            _motionReduce={{ display: "none" }}
+            data-flow-trace=""
+          />
+        </Box>
       </Box>
     </Box>
   );

@@ -9,12 +9,13 @@
  * - `tight`: and the theme's toggle gone too, the one button with another
  *   way to what it does (Settings) — five appliances on a small phone.
  *
- * The row is a grid of three columns — the name, the buttons, the clock —
- * whose outer two share what the buttons leave, so the buttons sit in the
- * header's middle (0.176.0, the user: "Move all the actions buttons in the
- * header to be in the center of the header"). An outer column is never
- * narrower than what is in it, so beside a name too wide to centre them
- * they sit as near the middle as it lets them; and when the three columns
+ * The row is a grid of three columns — the name, the buttons, the status
+ * icons and a desktop's clock — whose outer two share what the buttons
+ * leave, so the buttons sit in the header's middle (0.176.0, the user:
+ * "Move all the actions buttons in the header to be in the center of the
+ * header"; on a phone the two after the name hug what they hold and all of
+ * it sits at the right end, 0.176.1). An outer column is never narrower
+ * than what is in it, so when the three columns
  * are wider than the row, something has to go. Which is found by trying:
  * each level in turn, until the columns the browser lays out fit the row —
  * read from the layout itself, so it holds for any font, any number of
@@ -50,14 +51,15 @@ export function fitHeader(row: HTMLElement): HeaderFit {
 
 /**
  * Keep the row fitted: now, when its width changes (a window, a phone
- * turned) and when a button comes or goes in `buttons`, the row's group of
- * them (an appliance starting, the device made a remote). The fit only
- * writes an attribute on the row, which neither watch sees, so it never
- * calls itself. Returns the way to stop.
+ * turned) and when an icon comes or goes in one of `groups`, the row's
+ * groups of them — its buttons (the device made a remote) and its status
+ * icons (an appliance starting). The fit only writes an attribute on the
+ * row, which neither watch sees, so it never calls itself. Returns the way
+ * to stop.
  */
 export function watchHeaderFit(
   row: HTMLElement,
-  buttons: HTMLElement = row,
+  groups: HTMLElement | readonly HTMLElement[] = row,
 ): () => void {
   const fit = () => void fitHeader(row);
   fit();
@@ -65,7 +67,9 @@ export function watchHeaderFit(
     typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
   resized?.observe(row);
   const changed = new MutationObserver(fit);
-  changed.observe(buttons, { childList: true, subtree: true });
+  for (const group of Array.isArray(groups) ? groups : [groups]) {
+    changed.observe(group, { childList: true, subtree: true });
+  }
   return () => {
     resized?.disconnect();
     changed.disconnect();

@@ -92,4 +92,29 @@ describe("watching the header's fit", () => {
     await new Promise((done) => setTimeout(done, 20));
     expect(el.dataset.headerFit).toBe("icon");
   });
+
+  // 0.176.1: the status icons (the appliances, the connection) are a group
+  // of their own, apart from the buttons, and an appliance starting is a
+  // change in it.
+  it("watches every group it is handed: the buttons and the status icons", async () => {
+    let icons = 2;
+    const el = row(() => (icons > 2 && el.dataset.headerFit === "all" ? "116px 176px 200px" : "32px 176px 166px"));
+    const buttons = document.createElement("div");
+    const status = document.createElement("div");
+    el.append(buttons, status);
+    const stop = watchHeaderFit(el, [buttons, status]);
+    expect(el.dataset.headerFit).toBe("all");
+
+    // A dishwasher starts: its icon joins the status icons.
+    icons = 3;
+    status.append(document.createElement("button"));
+    await vi.waitFor(() => expect(el.dataset.headerFit).toBe("icon"));
+
+    // And it ends: the other group changes too, and is heard as well.
+    icons = 2;
+    status.replaceChildren();
+    buttons.append(document.createElement("button"));
+    await vi.waitFor(() => expect(el.dataset.headerFit).toBe("all"));
+    stop();
+  });
 });

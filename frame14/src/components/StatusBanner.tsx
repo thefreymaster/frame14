@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
-import { Box, Center, Grid, HStack, Image, Text } from "@chakra-ui/react";
+import { Center, Grid, HStack, Image, Text } from "@chakra-ui/react";
 import { FROST, NAV_SURFACE_TINT } from "../lib/floatingSurface";
 import { watchHeaderFit } from "../lib/headerFit";
+import { PHONE_MEDIA } from "../lib/homeLayout";
 import {
   HEADER_CLEARANCE,
   HEADER_ICON_SIZE,
@@ -29,27 +30,48 @@ const FIT_CSS = {
 } as const;
 
 /**
+ * On a phone everything is at the right end (0.176.1, the user: "Top nav on
+ * mobile should be right justified still"), the status icons first as
+ * ever: the buttons are put last in the row (`order`), the status icons
+ * take the middle column, `xs` short of them, and the two after the name
+ * hug what they hold, so the name's column has the rest and the buttons
+ * lie against the right gutter. A phone has no clock (useDesktop).
+ */
+const PHONE_CSS = {
+  [PHONE_MEDIA]: {
+    gridTemplateColumns: "1fr auto auto",
+    "& > [data-header-buttons]": { order: 1 },
+    "& > [data-header-end]": { ms: "0", me: "xs" },
+  },
+} as const;
+
+/**
  * The header across the top of every view: the app's icon and name at the
- * left; in the middle the buttons — running appliances, the connection, the
- * mic, a remote's button to refresh the frames, the theme's toggle and the
- * frames' power button; and (on a desktop) the date and time at the right.
- * (The version is on the Settings page.) The appliance and connection icons
- * each open a small menu on a tap (HeaderMenu). The buttons sit `xs` apart,
- * one group.
+ * left; in the middle the buttons — the mic, a remote's button to refresh
+ * the frames, the theme's toggle and the frames' power button; and at the
+ * right the status icons — running appliances and the connection — and
+ * (on a desktop) the date and time. (The version is on the Settings page.)
+ * The appliance and connection icons each open a small menu on a tap
+ * (HeaderMenu). The buttons sit `xs` apart, one group, and the status
+ * icons the same, another.
  *
- * **The buttons are in the middle of the header** (0.176.0, the user: "Move
- * all the actions buttons in the header to be in the center of the header";
- * at its right end until then). The row is three columns, the outer two
- * sharing what the buttons leave — so the group's middle is the header's —
- * and neither narrower than what it holds: on a phone, where the name is
- * wider than half of what is left, the buttons sit as near the middle as
- * the name lets them rather than over it. When even that is too wide — a
- * phone on a busy day: a washer, a dryer, a dishwasher, a print and a
- * vacuum, each an icon — the name goes (0.175.0, when a remote's refresh
- * button made that four appliances on a 390px iPhone, the power button off
- * the screen): the icon alone at the left, every button on the screen; and
- * with no room even then, the theme's toggle goes as well. lib/headerFit
- * finds which, from the layout itself.
+ * **The buttons are in the middle of the header** on the frame, a tablet
+ * and a desktop (0.176.0, the user: "Move all the actions buttons in the
+ * header to be in the center of the header"; at its right end until then)
+ * — **the buttons alone**: the status icons, which say rather than do, are
+ * at the right end (0.176.1, "only the icon buttons should be centered not
+ * notifications like the WiFi dishwasher. Those should be right"). **On a
+ * phone all of it is at the right end** (0.176.1, "Top nav on mobile
+ * should be right justified still": PHONE_CSS), the status icons before the
+ * buttons. The row is three columns, the outer two sharing what the buttons
+ * leave — so the group's middle is the header's — and neither narrower than
+ * what it holds. When the name, the status icons and the buttons are too
+ * wide for the row — a phone on a busy day: a washer, a dryer, a dishwasher,
+ * a print and a vacuum, each an icon — the name goes (0.175.0, when a
+ * remote's refresh button made that four appliances on a 390px iPhone, the
+ * power button off the screen): the icon alone at the left, every button
+ * on the screen; and with no room even then, the theme's toggle goes as
+ * well. lib/headerFit finds which, from the layout itself.
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -97,10 +119,12 @@ export function StatusBanner({
   const desktop = useDesktop();
   const row = useRef<HTMLDivElement>(null);
   const buttons = useRef<HTMLDivElement>(null);
-  // Before the first paint, and from then on as the row or its buttons change.
+  const status = useRef<HTMLDivElement>(null);
+  // Before the first paint, and from then on as the row, its buttons or its
+  // status icons change.
   useLayoutEffect(() => {
-    if (!row.current || !buttons.current) return;
-    return watchHeaderFit(row.current, buttons.current);
+    if (!row.current || !buttons.current || !status.current) return;
+    return watchHeaderFit(row.current, [buttons.current, status.current]);
   }, []);
 
   return (
@@ -114,12 +138,13 @@ export function StatusBanner({
       pt={HEADER_TOP}
       pl={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
       pr={`calc(env(safe-area-inset-right, 0px) + ${PAGE_GUTTER})`}
-      // The buttons between two columns that share the rest: in the middle.
+      // The buttons between two columns that share the rest: in the middle
+      // (on a phone at the right end, PHONE_CSS).
       templateColumns="1fr auto 1fr"
       alignItems="center"
       bg={`bg/${NAV_SURFACE_TINT}`}
       backdropFilter={FROST.backdropFilter}
-      css={{ ...FROST.css, ...FIT_CSS }}
+      css={{ ...FROST.css, ...FIT_CSS, ...PHONE_CSS }}
       zIndex="sticky"
       inert={veiled || undefined}
       transform={hidden ? "translateY(-100%)" : "translateY(0)"}
@@ -165,17 +190,22 @@ export function StatusBanner({
         </Text>
       </HStack>
       <HStack ref={buttons} gap="xs" data-header-buttons>
-        <ApplianceIndicators />
-        <ConnectionMenu />
         {voice}
         {refresh}
         {theme}
         {screen}
       </HStack>
-      {/* The third column is there with or without a clock in it. */}
-      <Box justifySelf="end" ms={desktop ? "3" : undefined} minW="0">
+      {/* The status icons at the right end, then a desktop's clock; the
+          header's gap clear of the buttons. On a phone, before them. No
+          `minW="0"`: as wide as its icons, or the row would count it as
+          nothing and the name would stay, under them. */}
+      <HStack gap="3" ms="3" justifySelf="end" data-header-end>
+        <HStack ref={status} gap="xs" data-header-status>
+          <ApplianceIndicators />
+          <ConnectionMenu />
+        </HStack>
         {desktop && <HeaderClock />}
-      </Box>
+      </HStack>
       <ArrangingVeil shown={veiled} />
     </Grid>
   );

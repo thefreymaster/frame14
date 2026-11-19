@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.176.1
+
+- Changed: on a phone the header's buttons are back at its right end, after the name, as they were before 0.176.0. When a busy day leaves no room for the name, it still gives way to the buttons, which stay at the right.
+- Changed: on the frame and desktops only the header's buttons — the mic, the theme switch and the power button (and a remote's refresh) — are in the middle of the header. The status icons — the running appliances, such as the dishwasher, and the connection's Wi-Fi icon — are at its right end, before the clock on a desktop.
+
 ## 0.176.0
 
 - Added: a button in the header that switches between bright and dark — the sun while the theme is dark, the moon while it is bright, each showing what a tap brings. On a remote it changes that device's own theme; on a frame it changes the frames' theme, on every frame at once. It sets Theme (in Settings) to Bright or Dark outright, so a theme that was following the clock (Auto) or the system (Device) stays where the tap put it until that is picked again in Settings. On a phone with no room for every button — five appliances running at once — this is the one that steps aside; the theme is still in Settings.

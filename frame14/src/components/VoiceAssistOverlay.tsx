@@ -3,6 +3,7 @@ import { Portal, Text, VStack } from "@chakra-ui/react";
 import * as Modal from "./Modal";
 import { VoiceOrb } from "./VoiceOrb";
 import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
+import { WITH_RAIL } from "../lib/navPlace";
 import type { VoiceSnapshot } from "../lib/voiceAssist";
 
 const STATUS: Record<string, string> = {
@@ -113,7 +114,8 @@ export function VoiceAssistOverlay({
           >
             <Modal.Body
               pt="12"
-              pb={{ base: "12", _portrait: `calc(${NAV_BAR_CLEARANCE} + 2rem)` }}
+              pb={`calc(${NAV_BAR_CLEARANCE} + 2rem)`}
+              css={{ [WITH_RAIL]: { paddingBottom: "12" } }}
             >
               <VStack
                 gap="4"

@@ -25,6 +25,7 @@ import {
 } from "../lib/slideshow";
 import { useDesktop } from "../hooks/useDesktop";
 import { NAV_BAR_CLEARANCE, PAGE_GUTTER } from "../lib/navMetrics";
+import { WITH_RAIL } from "../lib/navPlace";
 import { EmptyState } from "../components/ui/empty-state";
 import {
   FRAMED_PHOTOS_HERO_SIZE,
@@ -354,16 +355,21 @@ export function Photos() {
             toggleNavVisible();
           }}
           position="fixed"
-          // In portrait it rides above the floating nav bar while that is up.
-          // Framed, it moves in by the gutter so it sits inside the card's
-          // corner rather than on it.
-          bottom={{
-            _landscape: framed
-              ? `calc(${PAGE_GUTTER} + 16px)`
-              : "calc(16px + env(safe-area-inset-bottom, 0px))",
-            _portrait: navVisible
+          // It rides above the floating nav bar while that is up; beside
+          // the rail it keeps the corner (lib/navPlace). Framed, it moves in
+          // by the gutter so it sits inside the card's corner rather than on
+          // it.
+          bottom={
+            navVisible
               ? `calc(${NAV_BAR_CLEARANCE} + 1rem)`
-              : "calc(16px + env(safe-area-inset-bottom, 0px))",
+              : "calc(16px + env(safe-area-inset-bottom, 0px))"
+          }
+          css={{
+            [WITH_RAIL]: {
+              bottom: framed
+                ? `calc(${PAGE_GUTTER} + 16px)`
+                : "calc(16px + env(safe-area-inset-bottom, 0px))",
+            },
           }}
           right={
             framed

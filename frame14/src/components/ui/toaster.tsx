@@ -9,11 +9,12 @@ import {
   createToaster,
 } from "@chakra-ui/react";
 import { NAV_BAR_CLEARANCE } from "../../lib/navMetrics";
+import { WITH_RAIL } from "../../lib/navPlace";
 import { useNavVisible } from "../../lib/navVisibility";
 
 // Toasts in the bottom-right corner (0.157.0, the user's ask; top-end
-// before), 1rem in from the edge — clear of the portrait bottom bar while
-// it shows, as the arranging toolbar is. The group's bottom is
+// before), 1rem in from the edge — clear of the bottom bar while it shows
+// (lib/navPlace: not beside the rail), as the arranging toolbar is. The group's bottom is
 // `--toast-bottom`, which the Toaster sets for the screen it's on.
 const EDGE = "1rem";
 
@@ -42,12 +43,10 @@ export const Toaster = () => {
         toaster={toaster}
         insetInline={{ mdDown: "4" }}
         css={{
-          "--toast-bottom": EDGE,
-          _portrait: {
-            "--toast-bottom": navVisible
-              ? `calc(${NAV_BAR_CLEARANCE} + ${EDGE})`
-              : EDGE,
-          },
+          "--toast-bottom": navVisible
+            ? `calc(${NAV_BAR_CLEARANCE} + ${EDGE})`
+            : EDGE,
+          [WITH_RAIL]: { "--toast-bottom": EDGE },
         }}
       >
         {(toast) => (

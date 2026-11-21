@@ -30,6 +30,7 @@ import {
 } from "../lib/navItems";
 import { useNavItems } from "../lib/navLayout";
 import { pageOf } from "../lib/pagePath";
+import { WITH_RAIL } from "../lib/navPlace";
 import { ArrangingVeil } from "./ArrangingVeil";
 import { NavMoreMenu } from "./NavMoreMenu";
 
@@ -147,7 +148,8 @@ export function LandscapeNav({
 
   return (
     <>
-      {/* Portrait: a bar like Apple Music's tab bar, frosted — the page
+      {/* The bar — an upright window, and any window on an upright screen
+          (lib/navPlace): a bar like Apple Music's tab bar, frosted — the page
           scrolling on underneath it shows through a heavy blur (NAV_SURFACE;
           the classic material, not Liquid Glass). On an iPhone it is flush with
           the screen's sides and bottom, over the home indicator, with only a
@@ -167,7 +169,7 @@ export function LandscapeNav({
         borderRightWidth={NAV_BAR_SIDE_BORDER}
         borderBottomWidth={NAV_BAR_SIDE_BORDER}
         rounded={NAV_BAR_RADIUS}
-        display={{ base: "block", _landscape: "none" }}
+        css={{ [WITH_RAIL]: { display: "none" } }}
         top={`calc(var(--app-height, 100dvh) - ${NAV_BAR_CLEARANCE})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${NAV_BAR_INSET})`}
         right={`calc(env(safe-area-inset-right, 0px) + ${NAV_BAR_INSET})`}
@@ -206,13 +208,15 @@ export function LandscapeNav({
         <ArrangingVeil shown={veiled} />
       </Box>
 
-      {/* Landscape: the same frosted surface down the left, on the cards'
-          PAGE_GUTTER: its top lines up with the first card's. */}
+      {/* The rail — a landscape window on a screen that is on its side: the
+          same frosted surface down the left, on the cards' PAGE_GUTTER: its
+          top lines up with the first card's. */}
       <Box
         data-nav="rail"
         inert={veiled || undefined}
         {...NAV_SURFACE}
-        display={{ base: "none", _landscape: "block" }}
+        display="none"
+        css={{ [WITH_RAIL]: { display: "block" } }}
         top={`calc(${HEADER_CLEARANCE} + ${PAGE_GUTTER})`}
         left={`calc(env(safe-area-inset-left, 0px) + ${PAGE_GUTTER})`}
         width={NAV_RAIL_WIDTH}

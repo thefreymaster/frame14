@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.178.1
+
+- Fixed: the navigation stays along the bottom on a frame whose screen is shared. With another app pinned over Frame14 on the tablet (Android's split screen), Frame14's window is a little wider than it is tall, and the navigation moved to the left side as it does on a desktop. It goes by the screen now as well as the window: an upright tablet keeps the bar at the bottom however much of the screen Frame14 has, and the rail down the side is for a screen that is on its side — a desktop, or a phone or tablet turned over. Everything that makes room for the navigation (the page, Home's fitted board, toasts, the eye on Photos) follows it.
+- Changed: the Football page fits whatever room it has. The scoreboard is sized by its own box instead of the whole screen, and has a third arrangement for a box that is about square — the frame with a game pinned over the app: each team keeps a row of its own with the clock between them, and the score stands beside the team's name instead of under it. That window used to get the broadcast row meant for a desktop, with the names cut to a letter and both scores over the clock. Drag the divider and it goes from one arrangement to the next. The upright frame's sizes are the ones it had; a team's name now sits a little inside its row instead of against the top edge. Two games on one day each fit their half of the page.
+- Fixed: on a desktop a score of two figures no longer runs into the clock on the Football page. The row is drawn about a tenth smaller there, so a team's record, the down and a two-figure score fit side by side. Where a line still can't fit, the timeouts' strip shortens and then the record is cut with an ellipsis, rather than anything being drawn over the score.
+- Changed: on a phone the Football page's small print — the league and stadium, the win probability's labels, the last play — is never smaller than 11px.
+
 ## 0.178.0
 
 - Added: a notification can show what a camera saw. When a Home Assistant automation's `frame14_notify` names a `camera` (a camera entity), Frame14 takes a still from that camera as the notification goes out, and tapping the notification opens a page with it — when it was, the notification's words, and Watch live for the Cameras page. Phones can't show a picture inside a web notification (an iPhone shows none at all, GIFs included), so the picture is one tap away instead. The add-on keeps the last 20 of these for a week.

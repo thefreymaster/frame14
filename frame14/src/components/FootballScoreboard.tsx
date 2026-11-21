@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import NumberFlow from "@number-flow/react";
 import { IoAmericanFootball } from "react-icons/io5";
 import {
@@ -9,6 +9,15 @@ import {
   type Game,
   type Side,
 } from "../lib/teamTracker";
+import {
+  BROADCAST,
+  LAYOUT_VAR,
+  SCOREBOARD,
+  UNIT_VAR,
+  WIDE,
+  u,
+  unitCss,
+} from "../lib/scoreboardLayout";
 import { FootballDetail } from "./FootballDetail";
 
 /**
@@ -17,19 +26,25 @@ import { FootballDetail } from "./FootballDetail";
  * **Portrait is the real target.** The frame is a 1600x2400 panel, so the
  * broadcast arrangement — cap | team | clock | team | cap across one row —
  * does not fit: the two caps and the centre block alone claim about two thirds
- * of the width and crush the names and scores into what is left. In portrait
- * the same parts stack instead, one team per full-width row with the clock as
- * a band between them, which is also how a stadium scoreboard reads. Landscape
+ * of the width and crush the names and scores into what is left. There the
+ * same parts stack instead, one team per full-width row with the clock as a
+ * band between them, which is also how a stadium scoreboard reads. A wide box
  * keeps the broadcast row, where there is width to spend.
  *
- * Both layouts are the same DOM, re-flowed with orientation media queries —
- * the pattern LandscapeNav and PageShell already use — so there is one tree to
- * keep correct rather than two.
+ * **It goes by its own box, not the window** (0.178.1, lib/scoreboardLayout):
+ * the root is a size container, every length is a multiple of a unit of that
+ * box (`u`), and the arrangement — `tall`, `wide` or `broadcast` — is a
+ * container query's. The styles without a query are `tall`'s; WIDE and
+ * BROADCAST carry what differs. All three are the same DOM, so there is one
+ * tree to keep correct rather than three.
  *
  * The home card's chip is deliberately a separate component: its sizes are
  * tuned for a tile inside the bento and are far too small here. The game model
  * both draw is shared, in lib/teamTracker.ts.
  */
+
+/** The small print's floor: a phone's unit takes it under 10px. */
+const SMALL_PRINT = "0.6875rem";
 
 /** Colour block carrying the helmet logo, with a stripe of the second colour. */
 function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
@@ -37,6 +52,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
 
   return (
     <Box
+      data-team-cap=""
       position="relative"
       flexShrink={0}
       alignSelf="stretch"
@@ -48,10 +64,10 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
       opacity={side.lost ? 0.45 : 1}
       transition="opacity 400ms ease"
       css={{
-        // Portrait: the cap leads every row, so it can be narrower.
-        width: "17vmin",
-        padding: "0 1.6vmin",
-        "@media (orientation: landscape)": { width: "20vmin" },
+        // Stacked, the cap leads every row, so it can be narrower.
+        width: u(17),
+        padding: `0 ${u(1.6)}`,
+        [BROADCAST]: { width: u(20) },
       }}
     >
       {side.logo && !broken ? (
@@ -75,10 +91,7 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
           overflow="hidden"
           textOverflow="ellipsis"
           whiteSpace="nowrap"
-          css={{
-            fontSize: "5vmin",
-            "@media (orientation: landscape)": { fontSize: "5vmin" },
-          }}
+          fontSize={u(5)}
         >
           {side.abbr}
         </Text>
@@ -87,17 +100,16 @@ function LogoCap({ side, edge }: { side: Side; edge: "left" | "right" }) {
         position="absolute"
         top="0"
         bottom="0"
-        width="1.2vmin"
+        width={u(1.2)}
         bg={side.trim}
         css={{
-          // Portrait: every cap is on the left, so the stripe faces inward.
+          // Stacked, every cap is on the left, so the stripe faces inward.
           right: 0,
           left: "auto",
-          "@media (orientation: landscape)": {
-            ...(edge === "left"
+          [BROADCAST]:
+            edge === "left"
               ? { right: 0, left: "auto" }
-              : { left: 0, right: "auto" }),
-          },
+              : { left: 0, right: "auto" },
         }}
       />
     </Box>
@@ -109,12 +121,12 @@ function Rank({ side }: { side: Side }) {
   return (
     <Text
       as="span"
-      fontSize="2.6vmin"
+      fontSize={u(2.6)}
       fontWeight="700"
       color={side.trim}
       letterSpacing="0.02em"
-      mr="1vmin"
-      verticalAlign="0.6vmin"
+      mr={u(1)}
+      verticalAlign={u(0.6)}
     >
       #{side.rank}
     </Text>
@@ -129,14 +141,15 @@ function StatusBar({ side }: { side: Side }) {
   if (side.down) {
     return (
       <Box
-        alignSelf="flex-start"
+        data-team-down=""
+        alignSelf="center"
         bg={side.color}
-        borderRadius="0.4vmin"
-        px="1.6vmin"
-        py="0.3vmin"
+        borderRadius={u(0.4)}
+        px={u(1.6)}
+        py={u(0.3)}
       >
         <Text
-          fontSize="2.2vmin"
+          fontSize={u(2.2)}
           fontWeight="600"
           color="#FFFFFF"
           letterSpacing="0.08em"
@@ -148,39 +161,33 @@ function StatusBar({ side }: { side: Side }) {
     );
   }
 
+  // The stacked rows have the width for a longer strip — and it is the
+  // part of the line that gives when a row hasn't (TeamRow).
+  const strip = { width: u(22), minWidth: 0, [BROADCAST]: { width: u(11) } };
+
   if (side.timeouts != null) {
     return (
-      <HStack
-        gap="0.8vmin"
-        height="1.2vmin"
-        css={{
-          width: "22vmin",
-          "@media (orientation: landscape)": { width: "11vmin" },
-        }}
-      >
+      <Box display="flex" gap={u(0.8)} height={u(1.2)} css={strip}>
         {[0, 1, 2].map((i) => (
           <Box
             key={i}
             flex="1"
             height="100%"
-            borderRadius="0.4vmin"
+            borderRadius={u(0.4)}
             bg={side.color}
             opacity={i < side.timeouts! ? 1 : 0.25}
           />
         ))}
-      </HStack>
+      </Box>
     );
   }
 
   return (
     <Box
-      height="1.2vmin"
-      borderRadius="0.4vmin"
+      height={u(1.2)}
+      borderRadius={u(0.4)}
       bg={side.color}
-      css={{
-        width: "22vmin",
-        "@media (orientation: landscape)": { width: "11vmin" },
-      }}
+      css={strip}
     />
   );
 }
@@ -189,23 +196,32 @@ function Score({ side }: { side: Side }) {
   const n = Number(side.score);
 
   return (
-    <Text
+    <Box
+      data-team-score=""
+      gridArea="score"
+      // A flex box, so the rolling digits' own box is the score's height —
+      // in a line of text it sat on the baseline and the line grew half as
+      // tall again, which is what pushed the name against the row's top.
+      display="flex"
+      alignItems="center"
       fontWeight="500"
       lineHeight="1"
       color="fg"
       opacity={side.lost ? 0.5 : 1}
       transition="opacity 400ms ease"
-      flexShrink={0}
       css={{
-        // Portrait has a full row per team, so the score can be much bigger.
-        fontSize: "22vmin",
-        lineHeight: "0.85",
-        "@media (orientation: landscape)": { fontSize: "13vmin" },
+        // A stacked row is a team's own, so the score can be much bigger.
+        fontSize: u(22),
+        // The rolling digits' box is half as tall again as the type, the
+        // room they fade through above and below a figure: the score counts
+        // for its type's height, and that room lies over its neighbours'.
+        marginBlock: "-0.25em",
+        [BROADCAST]: { fontSize: u(13) },
       }}
     >
       {/* Digits roll the way a stadium scoreboard flips them. */}
       {Number.isFinite(n) ? <NumberFlow value={n} /> : side.score}
-    </Text>
+    </Box>
   );
 }
 
@@ -213,8 +229,14 @@ function Score({ side }: { side: Side }) {
  * One team: colour cap, name and status, then the score.
  *
  * `edge` is which end of the broadcast row this team sits at, and only matters
- * in landscape — there the home side mirrors so both teams face the clock. In
- * portrait both rows read left to right, like a scoreboard.
+ * there — the home side mirrors so both teams face the clock. Stacked, both
+ * rows read left to right, like a scoreboard.
+ *
+ * The name, the status line and the score are a grid's three areas. `tall`
+ * has the name on a line of its own over the other two: sharing a line with
+ * the score is what cut long names short on the upright frame, where the
+ * score always won. `wide` — rows with width to spare and no height — stands
+ * the score beside both.
  */
 function TeamRow({
   side,
@@ -232,124 +254,132 @@ function TeamRow({
   const mirrored = edge === "right";
 
   return (
-    <HStack
-      flexShrink={0}
+    <Box
+      data-team={venue.toLowerCase()}
+      display="flex"
       minW="0"
-      gap="0"
-      align="stretch"
       bg="bg.muted"
       css={{
-        // Both orientations fill. The content scales with the row rather than
-        // sitting small inside it — a stretched row holding a couple of lines
-        // would be the huge static colour slab the OLED constraints rule out,
-        // but a filled one is a scoreboard.
+        // Every arrangement fills. The content scales with the row rather
+        // than sitting small inside it — a stretched row holding a couple of
+        // lines would be the huge static colour slab the OLED constraints
+        // rule out, but a filled one is a scoreboard.
         flex: "1 1 0%",
         minHeight: 0,
         flexDirection: "row",
-        "@media (orientation: landscape)": {
-          flexDirection: mirrored ? "row-reverse" : "row",
-        },
+        [BROADCAST]: { flexDirection: mirrored ? "row-reverse" : "row" },
       }}
     >
       <LogoCap side={side} edge={edge} />
 
-      <HStack
+      <Box
+        data-team-body=""
         flex="1"
         minW="0"
-        align="center"
-        gap="2.4vmin"
-        px="2.6vmin"
-        py="4vmin"
+        display="grid"
+        alignContent="center"
+        alignItems="center"
         css={{
-          flexDirection: "row",
-          "@media (orientation: landscape)": {
-            flexDirection: mirrored ? "row-reverse" : "row",
+          gridTemplateColumns: "minmax(0, 1fr) auto",
+          gridTemplateAreas: `"name name" "status score"`,
+          columnGap: u(2.4),
+          rowGap: u(1.6),
+          padding: `${u(2)} ${u(2.6)}`,
+          [WIDE]: {
+            gridTemplateAreas: `"name score" "status score"`,
+            rowGap: u(1.2),
+            // The score is as tall as both lines and more: keep the two
+            // together at its middle rather than a line at each end of it.
+            "& > [data-team-name]": { alignSelf: "end" },
+            "& > [data-team-status]": { alignSelf: "start" },
           },
+          // Across one row the width is what runs out: closer in.
+          [BROADCAST]: { padding: `${u(3)} ${u(2.2)}`, columnGap: u(1.6) },
         }}
       >
-        <VStack
-          flex="1"
+        <Text
+          data-team-name=""
+          gridArea="name"
+          fontWeight="600"
+          color="fg"
+          letterSpacing="0.03em"
+          lineHeight="1.2"
           minW="0"
-          gap="1.6vmin"
+          opacity={side.lost ? 0.5 : 1}
+          transition="opacity 400ms ease"
+          overflow="hidden"
+          whiteSpace="nowrap"
+          textOverflow="ellipsis"
           css={{
-            alignItems: "stretch",
-            "@media (orientation: landscape)": {
-              alignItems: mirrored ? "flex-end" : "flex-start",
+            fontSize: u(6),
+            textAlign: "left",
+            [BROADCAST]: {
+              fontSize: u(3.2),
+              textAlign: mirrored ? "right" : "left",
             },
           }}
         >
-          <Text
-            fontWeight="600"
-            color="fg"
-            letterSpacing="0.03em"
-            width="100%"
-            opacity={side.lost ? 0.5 : 1}
-            transition="opacity 400ms ease"
-            overflow="hidden"
-            whiteSpace="nowrap"
-            textOverflow="ellipsis"
-            css={{
-              fontSize: "6vmin",
-              textAlign: "left",
-              "@media (orientation: landscape)": {
-                fontSize: "3.2vmin",
-                textAlign: mirrored ? "right" : "left",
-              },
-            }}
-          >
-            {live && side.down && (
-              <Box
-                as="span"
-                display="inline-flex"
-                verticalAlign="-0.4vmin"
-                mr="1.4vmin"
-                color={side.trim}
-                fontSize="3.4vmin"
-                aria-label="has possession"
-              >
-                <IoAmericanFootball />
-              </Box>
-            )}
-            {side.rank && <Rank side={side} />}
-            {side.name}
-          </Text>
-          <HStack
-            gap="1.6vmin"
-            align="center"
-            width="100%"
-            minW="0"
-            css={{
-              justifyContent: "flex-start",
-              "@media (orientation: landscape)": {
-                justifyContent: mirrored ? "flex-end" : "flex-start",
-              },
-            }}
-          >
-            <Text
-              fontWeight="500"
-              color="fg.muted"
-              letterSpacing="0.12em"
-              whiteSpace="nowrap"
-              flexShrink={0}
-              css={{
-                fontSize: "3.2vmin",
-                "@media (orientation: landscape)": { fontSize: "1.9vmin" },
-              }}
+          {live && side.down && (
+            <Box
+              as="span"
+              display="inline-flex"
+              verticalAlign={u(-0.4)}
+              mr={u(1.4)}
+              color={side.trim}
+              fontSize={u(3.4)}
+              aria-label="has possession"
             >
-              {venue}
-              {side.record ? `  ·  ${side.record}` : ""}
-            </Text>
-            {live && (
-              <Box flexShrink={0}>
-                <StatusBar side={side} />
-              </Box>
-            )}
-            <Box flex="1" minW="0" />
-            {side.score != null && <Score side={side} />}
-          </HStack>
-        </VStack>
-      </HStack>
-    </HStack>
+              <IoAmericanFootball />
+            </Box>
+          )}
+          {side.rank && <Rank side={side} />}
+          {side.name}
+        </Text>
+
+        <Box
+          data-team-status=""
+          gridArea="status"
+          display="flex"
+          alignItems="center"
+          minW="0"
+          gap={u(1.6)}
+        >
+          {/* What gives when the line is longer than its row: the strip of
+              timeouts first, as short as it must be; then the record, cut
+              with an ellipsis rather than drawn over the score. Never the
+              down chip, whose fill would stop short of its own text. */}
+          <Text
+            fontWeight="500"
+            color="fg.muted"
+            letterSpacing="0.12em"
+            lineHeight="1.5"
+            whiteSpace="nowrap"
+            minW="0"
+            overflow="hidden"
+            textOverflow="ellipsis"
+            flexShrink={1}
+            css={{
+              fontSize: u(3.2),
+              [BROADCAST]: { fontSize: u(1.9) },
+            }}
+          >
+            {venue}
+            {side.record ? `  ·  ${side.record}` : ""}
+          </Text>
+          {live && (
+            <Box
+              display="flex"
+              minW="0"
+              css={{ flexShrink: side.down ? 0 : 1000 }}
+            >
+              <StatusBar side={side} />
+            </Box>
+          )}
+        </Box>
+
+        {side.score != null && <Score side={side} />}
+      </Box>
+    </Box>
   );
 }
 
@@ -357,18 +387,21 @@ function TeamRow({
 function CenterBlock({ game }: { game: Game }) {
   return (
     <Box
+      data-scoreboard-clock=""
       flexShrink={0}
       display="flex"
       alignItems="center"
       justifyContent="center"
       bg="bg"
       css={{
-        // Portrait: a full-width band between the two teams.
+        // Stacked: a full-width band between the two teams.
         width: "100%",
-        padding: "2vmin 3vmin",
-        "@media (orientation: landscape)": {
+        padding: `${u(2)} ${u(3)}`,
+        [WIDE]: { padding: `${u(1.5)} ${u(3)}` },
+        [BROADCAST]: {
           width: "auto",
-          minWidth: "20vmin",
+          minWidth: u(20),
+          padding: `${u(2)} ${u(2)}`,
           alignSelf: "stretch",
         },
       }}
@@ -380,8 +413,10 @@ function CenterBlock({ game }: { game: Game }) {
         whiteSpace="nowrap"
         textAlign="center"
         css={{
-          fontSize: "8vmin",
-          "@media (orientation: landscape)": { fontSize: "5vmin" },
+          fontSize: u(8),
+          lineHeight: 1.5,
+          [WIDE]: { lineHeight: 1.2 },
+          [BROADCAST]: { fontSize: u(5) },
         }}
       >
         {stateLabel(game)}
@@ -405,42 +440,49 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
   const awayPct = Math.round((awayProb / total) * 100);
 
   return (
-    <VStack
-      align="stretch"
-      gap="1vmin"
+    <Box
+      data-scoreboard-odds=""
+      display="flex"
+      flexDirection="column"
+      alignItems="stretch"
+      gap={u(1)}
       width="100%"
       flexShrink={0}
       bg="bg.subtle"
-      px="2.6vmin"
-      py="2vmin"
+      px={u(2.6)}
+      py={u(2)}
     >
-      <HStack justify="space-between" align="baseline">
+      <Box display="flex" justifyContent="space-between" alignItems="baseline">
         <Text
-          fontSize="2.6vmin"
+          fontSize={u(2.6, SMALL_PRINT)}
           fontWeight="600"
           color={away.color === "#3A3A42" ? "fg" : away.trim}
         >
           {awayPct}%
         </Text>
-        <Text fontSize="2vmin" color="fg.muted" letterSpacing="0.14em">
+        <Text
+          fontSize={u(2, SMALL_PRINT)}
+          color="fg.muted"
+          letterSpacing="0.14em"
+        >
           WIN PROBABILITY
         </Text>
         <Text
-          fontSize="2.6vmin"
+          fontSize={u(2.6, SMALL_PRINT)}
           fontWeight="600"
           color={home.color === "#3A3A42" ? "fg" : home.trim}
         >
           {100 - awayPct}%
         </Text>
-      </HStack>
+      </Box>
       <Box
         position="relative"
-        height="1.4vmin"
+        height={u(1.4)}
         width="100%"
-        borderRadius="0.7vmin"
+        borderRadius={u(0.7)}
         overflow="hidden"
       >
-        <HStack gap="0" height="100%" width="100%">
+        <Box display="flex" height="100%" width="100%">
           <Box
             width={`${awayPct}%`}
             height="100%"
@@ -448,20 +490,20 @@ function WinBar({ away, home }: { away: Side; home: Side }) {
             transition="width 900ms ease"
           />
           <Box flex="1" height="100%" bg={home.color} />
-        </HStack>
+        </Box>
         {/* Two schools can wear nearly the same red, so mark the split itself. */}
         <Box
           position="absolute"
           top="0"
           bottom="0"
           left={`${awayPct}%`}
-          width="0.8vmin"
-          ml="-0.4vmin"
+          width={u(0.8)}
+          ml={u(-0.4)}
           bg="bg"
           transition="left 900ms ease"
         />
       </Box>
-    </VStack>
+    </Box>
   );
 }
 
@@ -475,17 +517,19 @@ function MetaStrip({ game }: { game: Game }) {
   if (!left && !right) return null;
 
   return (
-    <HStack
-      justify="space-between"
-      align="center"
-      gap="2vmin"
+    <Box
+      data-scoreboard-strip=""
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      gap={u(2)}
       flexShrink={0}
       bg="bg.subtle"
-      px="2.6vmin"
-      py="1.8vmin"
+      px={u(2.6)}
+      py={u(1.8)}
     >
       <Text
-        fontSize="2.2vmin"
+        fontSize={u(2.2, SMALL_PRINT)}
         fontWeight="500"
         color="fg"
         letterSpacing="0.16em"
@@ -495,16 +539,17 @@ function MetaStrip({ game }: { game: Game }) {
         {left}
       </Text>
       <Text
-        fontSize="2.2vmin"
+        fontSize={u(2.2, SMALL_PRINT)}
         color="fg.muted"
         letterSpacing="0.1em"
+        minW="0"
         overflow="hidden"
         whiteSpace="nowrap"
         textOverflow="ellipsis"
       >
         {right}
       </Text>
-    </HStack>
+    </Box>
   );
 }
 
@@ -513,40 +558,66 @@ export function FootballScoreboard({ game }: { game: Game }) {
   const live = game.state === "IN";
 
   return (
-    <VStack
-      align="stretch"
-      gap="0"
+    // The box the scoreboard measures: a size container, so a length in it
+    // can be a share of this box and the arrangement a query of its shape.
+    <Box
+      data-scoreboard=""
       minW="0"
       width="100%"
       borderRadius="l3"
-      css={{ flex: "1 1 0%", minHeight: 0 }}
       overflow="hidden"
       bg="bg.subtle"
+      css={{
+        flex: "1 1 0%",
+        minHeight: 0,
+        containerType: "size",
+        containerName: SCOREBOARD,
+      }}
     >
-      <MetaStrip game={game} />
-
-      {/* Portrait stacks the two teams with the clock between them; landscape
-          lays them out across one broadcast row. */}
+      {/* A query styles what is inside its container, never the container:
+          the unit is set here, one box in. */}
       <Box
+        data-scoreboard-board=""
         display="flex"
+        flexDirection="column"
+        height="100%"
         minW="0"
         css={{
-          // Fills in both orientations, so the two rows have a height to share
-          // rather than leaving the bottom of the card empty.
-          flex: "1 1 0%",
-          minHeight: 0,
-          flexDirection: "column",
-          "@media (orientation: landscape)": { flexDirection: "row" },
+          [UNIT_VAR]: unitCss("tall"),
+          [LAYOUT_VAR]: "tall",
+          [WIDE]: { [UNIT_VAR]: unitCss("wide"), [LAYOUT_VAR]: "wide" },
+          [BROADCAST]: {
+            [UNIT_VAR]: unitCss("broadcast"),
+            [LAYOUT_VAR]: "broadcast",
+          },
         }}
       >
-        <TeamRow side={away} edge="left" venue="AWAY" live={live} />
-        <CenterBlock game={game} />
-        <TeamRow side={home} edge="right" venue="HOME" live={live} />
+        <MetaStrip game={game} />
+
+        {/* Stacked, the two teams have the clock between them; the broadcast
+            row lays all three out across. */}
+        <Box
+          data-scoreboard-teams=""
+          display="flex"
+          minW="0"
+          css={{
+            // Fills in every arrangement, so the two rows have a height to
+            // share rather than leaving the bottom of the card empty.
+            flex: "1 1 0%",
+            minHeight: 0,
+            flexDirection: "column",
+            [BROADCAST]: { flexDirection: "row" },
+          }}
+        >
+          <TeamRow side={away} edge="left" venue="AWAY" live={live} />
+          <CenterBlock game={game} />
+          <TeamRow side={home} edge="right" venue="HOME" live={live} />
+        </Box>
+
+        {game.state === "IN" && <WinBar away={away} home={home} />}
+
+        <FootballDetail game={game} />
       </Box>
-
-      {game.state === "IN" && <WinBar away={away} home={home} />}
-
-      <FootballDetail game={game} />
-    </VStack>
+    </Box>
   );
 }

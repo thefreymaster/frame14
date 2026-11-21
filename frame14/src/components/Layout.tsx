@@ -23,6 +23,7 @@ import { useHomeArranging } from "../lib/homeArranging";
 import { useReleaseSplash } from "../hooks/useReleaseSplash";
 import { useScrolledFromTop } from "../hooks/useScrolledFromTop";
 import { pageOf } from "../lib/pagePath";
+import { WITH_RAIL } from "../lib/navPlace";
 import {
   HEADER_CLEARANCE,
   NAV_BAR_CLEARANCE,
@@ -141,6 +142,7 @@ export function Layout() {
         <LandscapeNav hidden={!showNav} veiled={arranging} />
         <Box
           ref={scrollRef}
+          data-page-room=""
           // The scroller, the app's height tall — or, where the document
           // scrolls, as tall as the page and at least the screen.
           height={documentScrolls ? "auto" : "var(--app-height, 100dvh)"}
@@ -150,25 +152,22 @@ export function Layout() {
           }
           pt={showNav ? HEADER_CLEARANCE : 0}
           transition="padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-          // Room for the header and the floating nav: the rail on the left in
-          // landscape, the bar at the bottom in portrait. The page scrolls
-          // on under the bar, but its end stops above it.
-          minW={{ _landscape: "100vw", _portrait: "100%" }}
-          pl={{
-            _landscape: showNav ? NAV_RAIL_CLEARANCE : "0px",
-          }}
-          pb={{
-            _portrait: showNav ? NAV_BAR_CLEARANCE : "0px",
-            _landscape: "0px",
-          }}
-          // What is left for the page between the header and the bar: the
-          // height of a page that fills the screen rather than scrolling
-          // (/home's board, 0.171.0), which a percentage can't give it — the
-          // page's wrapper grows with its content.
+          // Room for the header and the floating nav, wherever it is
+          // (lib/navPlace): the bar at the bottom, or the rail on the left.
+          // The page scrolls on under the bar, but its end stops above it.
+          // `--page-height` is what is left for the page between the header
+          // and the bar: the height of a page that fills the screen rather
+          // than scrolling (/home's board, 0.171.0), which a percentage can't
+          // give it — the page's wrapper grows with its content.
           css={{
-            "--page-height": {
-              _portrait: `calc(var(--app-height, 100dvh) - ${showNav ? HEADER_CLEARANCE : "0px"} - ${showNav ? NAV_BAR_CLEARANCE : "0px"})`,
-              _landscape: `calc(var(--app-height, 100dvh) - ${showNav ? HEADER_CLEARANCE : "0px"})`,
+            minWidth: "100%",
+            paddingBottom: showNav ? NAV_BAR_CLEARANCE : "0px",
+            "--page-height": `calc(var(--app-height, 100dvh) - ${showNav ? HEADER_CLEARANCE : "0px"} - ${showNav ? NAV_BAR_CLEARANCE : "0px"})`,
+            [WITH_RAIL]: {
+              minWidth: "100vw",
+              paddingLeft: showNav ? NAV_RAIL_CLEARANCE : "0px",
+              paddingBottom: "0px",
+              "--page-height": `calc(var(--app-height, 100dvh) - ${showNav ? HEADER_CLEARANCE : "0px"})`,
             },
           }}
         >

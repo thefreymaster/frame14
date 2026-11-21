@@ -14,6 +14,7 @@ import {
 import { useDeviceMode } from "../lib/deviceMode";
 import { EmptyState } from "../components/ui/empty-state";
 import { NAV_BAR_CLEARANCE } from "../lib/navMetrics";
+import { WITH_RAIL } from "../lib/navPlace";
 
 export function Marquee() {
   const { data: entities } = useEntitiesConfig();
@@ -74,12 +75,15 @@ export function Marquee() {
             toggleNavVisible();
           }}
           position="fixed"
-          // In portrait it rides above the floating nav bar while that is up.
-          bottom={{
-            _landscape: "calc(16px + env(safe-area-inset-bottom, 0px))",
-            _portrait: navVisible
+          // It rides above the floating nav bar while that is up; beside the
+          // rail it keeps the corner (lib/navPlace).
+          bottom={
+            navVisible
               ? `calc(${NAV_BAR_CLEARANCE} + 1rem)`
-              : "calc(16px + env(safe-area-inset-bottom, 0px))",
+              : "calc(16px + env(safe-area-inset-bottom, 0px))"
+          }
+          css={{
+            [WITH_RAIL]: { bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" },
           }}
           right="calc(16px + env(safe-area-inset-right, 0px))"
           zIndex={200}

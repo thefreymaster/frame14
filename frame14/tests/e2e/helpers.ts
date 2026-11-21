@@ -59,6 +59,28 @@ export function pageErrors(page: Page): string[] {
 export const splashGone = (page: Page) => page.locator("#splash").waitFor({ state: "detached" });
 
 /**
+ * Until the launch splash has gone and every animation on the page that ends
+ * has ended — the splash's hand-over (the cards rising into place, a scale of
+ * 0.98 on each), a route's scale-in (PageTransition), a modal's — leaving
+ * those that run for ever (a wave, a spinning fan). A box measured during one
+ * is a little short and off; a test that passed without waiting only did
+ * because the machine was quick enough, and two workers at once made it
+ * slower. The splash first: its hand-over hasn't begun while it is up, and a
+ * wait for what is running then misses it.
+ */
+export const settled = async (page: Page) => {
+  await splashGone(page);
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
+};
+
+/**
  * The colour on screen just inside the first card's top edge (its padding, so
  * nothing but the card's face), as [r, g, b]: what was painted — a browser's
  * own darkening, a view transition's pictures and all — not what the styles say.

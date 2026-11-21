@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetStub, splashGone, stub } from "./helpers";
+import { resetStub, settled, splashGone, stub } from "./helpers";
 
 test.beforeEach(async ({ request }) => {
   await resetStub(request);
@@ -409,6 +409,10 @@ test("the flow's home node has a ring as thick as the other nodes' borders at an
   await page.goto("/home");
   const flow = page.locator('[data-card="energy"]');
   await expect(flow.locator("[data-flow-node]")).toHaveCount(3);
+  // The ring is read through its screen matrix, which the splash's hand-over
+  // (the cards rising, scaled 0.98) is part of until it ends: a 2px stroke
+  // read 1.96 whenever the splash took longer than the test to get here.
+  await settled(page);
 
   const measure = () =>
     flow.evaluate((card) => {

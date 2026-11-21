@@ -13,6 +13,14 @@ test.beforeEach(async ({ request }) => {
   await request.get("/api/screen/on");
 });
 
+// The server keeps the frames' screen for every later page: a remote's power
+// button says "on" while the screen is off (header.spec read it so, after
+// the rest_command test below had left it off, once a second worker changed
+// which specs ran after this one).
+test.afterEach(async ({ request }) => {
+  await request.get("/api/screen/on");
+});
+
 test("another site's page can't open the socket or turn the frames' screen off", async ({ page, request }) => {
   await page.goto(`${STUB_URL}/api/`);
   const result = await page.evaluate(async (app) => {

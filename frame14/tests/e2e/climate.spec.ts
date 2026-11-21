@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { dialReading, resetStub, stub } from "./helpers";
+import { STUB_URL } from "./ports";
 
 test.describe("the Climate page", () => {
   test.beforeEach(async ({ request }) => {
@@ -287,7 +288,7 @@ test.describe("the Climate page", () => {
     const tile = page.getByRole("button", { name: /^1st Floor:/ });
     await expect(tile).toHaveAccessibleName(/Heating to 70°/);
     await expect(tile.locator("[data-fan-icon]")).toHaveCount(0);
-    await request.post("http://127.0.0.1:8310/_stub/state", {
+    await request.post(`${STUB_URL}/_stub/state`, {
       data: { entity_id: "climate.samsung_airconditioner_1", state: "fan_only", attributes: { hvac_action: "fan", fan_mode: "low" } },
     });
     await expect(tile).toHaveAccessibleName(/^1st Floor: 64°, Fan/);
@@ -399,7 +400,7 @@ test.describe("the Climate page", () => {
   test("a live change from Home Assistant updates the tile", async ({ page, request }) => {
     await page.goto("/climate");
     await expect(page.getByRole("button", { name: /^1st Floor: 64°, Heating to 70°/ })).toBeVisible();
-    await request.post("http://127.0.0.1:8310/_stub/state", {
+    await request.post(`${STUB_URL}/_stub/state`, {
       data: { entity_id: "climate.samsung_airconditioner_1", state: "heat", attributes: { current_temperature: 70, hvac_action: "idle" } },
     });
     await expect(page.getByRole("button", { name: /^1st Floor: 70°, Heat, set to 70°/ })).toBeVisible();

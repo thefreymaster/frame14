@@ -162,7 +162,7 @@ test.describe("the Embossed theme's buttons", () => {
     expect(await heating.evaluate((el) => getComputedStyle(el).transitionProperty)).toContain("box-shadow");
   });
 
-  test("the buttons stand up too — the voice and screen buttons, All off, a remote's Views — and one with no face doesn't", async ({ page, isMobile }) => {
+  test("the buttons stand up too — the voice and screen buttons, All off, a remote's Views — and one with no face doesn't", async ({ page, isMobile, request }) => {
     // A button's own shadow, as the tiles': what it casts, and its bevel.
     const button = (el: Locator) =>
       el.evaluate((node) => {
@@ -239,6 +239,11 @@ test.describe("the Embossed theme's buttons", () => {
 
     // A remote's Views: the view the frames are on, and the others.
     if (isMobile) {
+      // The frames on Clock, as the server starts them, so Overview is one
+      // they aren't on: where an earlier spec left them is that spec's
+      // (a game's kickoff sends them to it, and its end home).
+      const res = await request.get("/api/change/clock");
+      expect(res.ok()).toBeTruthy();
       await page.goto("/control/views");
       const views = page.getByRole("button", { name: "Overview" });
       await expect(views).toBeVisible();

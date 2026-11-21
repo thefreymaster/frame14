@@ -179,6 +179,16 @@ test.describe("the scoreboard in the box it is given", () => {
     await kickOff(request);
   });
 
+  // A kickoff sends the frames to the game (ha-socket.js's football
+  // watcher), and the server keeps the view for every later page: the game
+  // back to before kickoff and the frames Home, as automation.spec leaves
+  // them — the watcher's own trip home after the final's hold then finds
+  // them there and stays put.
+  test.afterEach(async ({ request }) => {
+    await resetStub(request);
+    await request.get("/api/change/home");
+  });
+
   test.describe("on the frame", () => {
     test.beforeEach(({ isMobile }) => {
       test.skip(isMobile, "the frame's own windows, opened once");

@@ -26,11 +26,32 @@
 //                        keys (0.168.0; FRAME14_ACCESS_CERTS_URL names it)
 //   POST /_stub/access/token {"email", "expires_in"} — a token as Access
 //                        issues one for that person, signed with that key
+//
+// A stand-in Finnhub (0.179.0; FRAME14_FINNHUB_URL / FRAME14_FINNHUB_WS_URL
+// name it, FINNHUB_API_KEY is STUB.stocks.key), answering with what the real
+// one sent (finnhub-samples.json):
+//   GET  /_stub/finnhub/api/v1/quote?symbol= and …/stock/market-status
+//   WS   /_stub/finnhub/ws?token= — subscribe / unsubscribe, and the trades
+//   POST /_stub/finnhub/trade {"symbol", "price", "conditions", "volume"} — a
+//                        trade to the sockets subscribed to it, stamped in the
+//                        regular session after the quotes' moment whatever
+//                        the hour; answers { delivered }, how many got it
+//   POST /_stub/finnhub/quote {"symbol", "c", "d", "dp", …} — a ticker's
+//                        quote changed, newer than every trade so far
+//   POST /_stub/finnhub/session {"session", "isOpen", "holiday"} — the market
+//   POST /_stub/finnhub/refuse {"rest", "socket"} — refuse the key (401) on
+//                        REST, on the socket's handshake, or both; a refused
+//                        socket's clients are dropped
 //   POST /_stub/reset    — every state, registry and behaviour as at start
+//                        (the Finnhub socket's clients dropped too)
 import crypto from "node:crypto";
+import fs from "node:fs";
 import http from "node:http";
 import { pathToFileURL } from "node:url";
 import { WebSocketServer } from "ws";
+
+/** What the real Finnhub answered (0.179.0), token-free. */
+const FINNHUB = JSON.parse(fs.readFileSync(new URL("./finnhub-samples.json", import.meta.url), "utf-8"));
 
 /** The names Home Assistant gives the entities in the stub's house. */
 export const STUB = {
@@ -56,6 +77,15 @@ export const STUB = {
     garden: "aaaaaaaa-0000-4000-8000-000000000002",
     // Not in frame14.test.json's albums: its photo is never served.
     private: "aaaaaaaa-0000-4000-8000-000000000003",
+  },
+  /**
+   * The stand-in Finnhub (0.179.0): the key it takes (FINNHUB_API_KEY in
+   * playwright.config) and frame14.test.json's tickers' quotes.
+   */
+  stocks: {
+    key: "e2e-finnhub",
+    quotes: FINNHUB.quotes,
+    market: FINNHUB.market,
   },
 };
 
@@ -599,6 +629,34 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
   const sockets = new Set();
   // The stand-in push service's deliveries (POST /_stub/push/:id).
   let pushes = [];
+  // The stand-in Finnhub (0.179.0): its quotes, the market, what it refuses,
+  // and its socket's clients with what each subscribed to. Trades are stamped
+  // from the quotes' moment on — noon in New York on a weekday — so a trade is
+  // in the regular session and newer than its quote whenever the tests run.
+  const finnhubSockets = new Set();
+  let finnhubQuotes;
+  let finnhubMarket;
+  let finnhubRefuse;
+  let finnhubClock;
+  function finnhubFresh() {
+    finnhubQuotes = structuredClone(FINNHUB.quotes);
+    finnhubMarket = structuredClone(FINNHUB.market);
+    finnhubRefuse = { rest: false, socket: false };
+    finnhubClock = FINNHUB.market.t * 1000;
+    for (const c of finnhubSockets) c.ws.terminate();
+  }
+  finnhubFresh();
+  function finnhubTrade({ symbol, price, conditions = ["1"], volume = 100 }) {
+    finnhubClock += 1000;
+    const msg = JSON.stringify({ type: "trade", data: [{ s: symbol, p: price, t: finnhubClock, v: volume, c: conditions }] });
+    let delivered = 0;
+    for (const c of finnhubSockets) {
+      if (!c.subs.has(symbol)) continue;
+      c.ws.send(msg);
+      delivered += 1;
+    }
+    return delivered;
+  }
   // The stand-in Cloudflare Access team (0.168.0): one signing key, made at
   // start, and the tokens it signs (POST /_stub/access/token).
   const accessKey = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -729,6 +787,7 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     serviceDelayMs = 0;
     failing = new Map();
     silent = new Set();
+    finnhubFresh();
   }
 
   function readBody(req) {
@@ -788,6 +847,37 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
       const { email, expires_in } = await readBody(req);
       if (typeof email !== "string") return json(res, 400, { error: "email" });
       return json(res, 200, { token: accessToken(email, expires_in ?? 3600) });
+    }
+    if (req.method === "POST" && p === "/_stub/finnhub/trade") {
+      const body = await readBody(req);
+      if (typeof body.symbol !== "string" || typeof body.price !== "number") return json(res, 400, { error: "symbol, price" });
+      return json(res, 200, { delivered: finnhubTrade(body) });
+    }
+    if (req.method === "POST" && p === "/_stub/finnhub/quote") {
+      const { symbol, ...quote } = await readBody(req);
+      if (typeof symbol !== "string") return json(res, 400, { error: "symbol" });
+      finnhubClock += 1000;
+      finnhubQuotes[symbol] = { ...(finnhubQuotes[symbol] ?? FINNHUB.unknown), ...quote, t: Math.ceil(finnhubClock / 1000) };
+      finnhubClock = finnhubQuotes[symbol].t * 1000;
+      return json(res, 200, finnhubQuotes[symbol]);
+    }
+    if (req.method === "POST" && p === "/_stub/finnhub/session") {
+      const body = await readBody(req);
+      finnhubMarket = { ...finnhubMarket, ...body };
+      return json(res, 200, finnhubMarket);
+    }
+    if (req.method === "POST" && p === "/_stub/finnhub/refuse") {
+      const body = await readBody(req);
+      finnhubRefuse = { rest: body.rest === true, socket: body.socket === true };
+      if (finnhubRefuse.socket) for (const c of finnhubSockets) c.ws.terminate();
+      return json(res, 200, finnhubRefuse);
+    }
+    if (p.startsWith("/_stub/finnhub/api/v1/")) {
+      if (finnhubRefuse.rest || req.headers["x-finnhub-token"] !== STUB.stocks.key) return json(res, 401, FINNHUB.refusal);
+      if (p === "/_stub/finnhub/api/v1/quote") {
+        return json(res, 200, finnhubQuotes[url.searchParams.get("symbol") ?? ""] ?? FINNHUB.unknown);
+      }
+      if (p === "/_stub/finnhub/api/v1/stock/market-status") return json(res, 200, finnhubMarket);
     }
     if (req.method === "POST" && p === "/_stub/reset") {
       reset();
@@ -869,7 +959,40 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
     json(res, 404, { message: `stub: no handler for ${req.method} ${p}` });
   });
 
-  const wss = new WebSocketServer({ server, path: "/api/websocket" });
+  // Two WebSocket servers on the one port, each by its path: ws gives a
+  // `{ server, path }` server every upgrade and it refuses another path's with
+  // a 400, so both are `noServer` and this hands each upgrade to its own.
+  const wss = new WebSocketServer({ noServer: true });
+  const finnhubWss = new WebSocketServer({ noServer: true });
+  server.on("upgrade", (req, socket, head) => {
+    // Once upgraded the socket is ours, and nothing else hears it fail: a
+    // client that drops a handshake being refused (the add-on giving up on
+    // a refused key) would end the stub with an unheard ECONNRESET.
+    socket.on("error", () => {});
+    const url = new URL(req.url, `http://${host}`);
+    if (url.pathname === "/api/websocket") {
+      return wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
+    }
+    if (url.pathname === "/_stub/finnhub/ws") {
+      if (finnhubRefuse.socket || url.searchParams.get("token") !== STUB.stocks.key) {
+        socket.end("HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return;
+      }
+      return finnhubWss.handleUpgrade(req, socket, head, (ws) => finnhubWss.emit("connection", ws, req));
+    }
+    socket.destroy();
+  });
+  finnhubWss.on("connection", (ws) => {
+    const client = { ws, subs: new Set() };
+    finnhubSockets.add(client);
+    ws.on("close", () => finnhubSockets.delete(client));
+    ws.on("message", (raw) => {
+      let msg;
+      try { msg = JSON.parse(raw); } catch { return; }
+      if (msg.type === "subscribe" && typeof msg.symbol === "string") client.subs.add(msg.symbol);
+      if (msg.type === "unsubscribe") client.subs.delete(msg.symbol);
+    });
+  });
   wss.on("connection", (ws) => {
     // subId: the state_changed subscription; subs: every event type's, by type.
     const entry = { ws, subId: null, subs: {} };
@@ -974,6 +1097,8 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
         pushEvent,
         applyService,
         reset,
+        /** A trade to Finnhub's subscribed sockets; how many got it. */
+        finnhubTrade,
         /** Steer service calls: `{ delay_ms, fail: { id: why }, silent: [ids] }`. */
         setServiceBehaviour({ delay_ms = 0, fail = {}, silent: quiet = [] } = {}) {
           serviceDelayMs = delay_ms;
@@ -983,7 +1108,9 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
         close: () =>
           new Promise((done) => {
             for (const s of sockets) s.ws.terminate();
+            for (const c of finnhubSockets) c.ws.terminate();
             wss.close();
+            finnhubWss.close();
             server.closeAllConnections?.();
             server.close(() => done());
           }),

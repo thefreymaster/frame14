@@ -88,6 +88,11 @@ export interface EntitiesConfig {
    * from before it: none.
    */
   unraid?: UnraidServer[];
+  /**
+   * The Stocks page's tickers (`stock_tickers`, 0.179.0), sent only while a
+   * `finnhub_api_key` is set too: empty or absent, no Stocks page.
+   */
+  stocks?: string[];
 }
 
 async function fetchEntitiesConfig(): Promise<EntitiesConfig> {

@@ -22,6 +22,7 @@ import { Vacuum } from "./routes/Vacuum";
 import { Unraid } from "./routes/Unraid";
 import { Halloween } from "./routes/Halloween";
 import { SpeedTest } from "./routes/SpeedTest";
+import { Stocks } from "./routes/Stocks";
 import { Seen } from "./routes/Seen";
 
 /** A page that needs `feature` set up; without it a visit goes Home (0.159.0). */
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
       { path: "/vacuum", element: needs("vacuum", <Vacuum />) },
       { path: "/cameras", element: needs("cameras", <Cameras />) },
       { path: "/unraid", element: needs("unraid", <Unraid />) },
+      { path: "/stocks", element: needs("stocks", <Stocks />) },
       { path: "/marquee", element: <Marquee /> },
       { path: "/football", element: needs("football", <Football />) },
       // Offered on Oct 30 and 31 (lib/halloween); routed all year, for an

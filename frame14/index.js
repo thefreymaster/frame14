@@ -38,6 +38,8 @@ import { startSeen } from "./seen.js";
 import { startPhotos } from "./photos.js";
 import { startAccess } from "./access.js";
 import { calledBy, startPeople } from "./people.js";
+import { ENTITIES } from "./entities.js";
+import { STOCKS_ENABLED, STOCKS_ROOM, startStocks } from "./stocks.js";
 import healthRouter from "./routes/health.js";
 import docsRouter from "./routes/docs.js";
 import weatherRouter from "./routes/weather.js";
@@ -63,6 +65,7 @@ import ingressRouter from "./routes/ingress.js";
 import pushRouter from "./routes/push.js";
 import seenRouter from "./routes/seen.js";
 import accountRouter from "./routes/account.js";
+import stocksRouter from "./routes/stocks.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -106,6 +109,10 @@ const people = startPeople({
   onChange: () => io.to(SIGNED_IN).emit("people", people.list()),
 });
 app.locals.people = people;
+// The Stocks page's prices (stocks.js, 0.179.0): Finnhub's, while a page is
+// on /stocks; none without a key and a ticker.
+const stocks = STOCKS_ENABLED ? startStocks({ io, tickers: ENTITIES.stocks }) : null;
+app.locals.stocks = stocks;
 io.currentView = "clock";
 // The panels' theme and palette, kept across restarts (theme.js).
 const theme = startTheme();
@@ -165,7 +172,21 @@ io.on("connection", (socket) => {
     io.emit("photos_shown", photosShown());
   });
 
+  // A page on /stocks: the prices as they are, then each change (at most one
+  // a second) until it leaves. It names nothing — the tickers are the add-on's.
+  socket.on("stocks:watch", () => {
+    if (!stocks) return;
+    socket.join(STOCKS_ROOM);
+    stocks.watch(socket.id);
+    socket.emit("stocks", stocks.snapshot());
+  });
+  socket.on("stocks:unwatch", () => {
+    socket.leave(STOCKS_ROOM);
+    stocks?.unwatch(socket.id);
+  });
+
   socket.on("disconnect", () => {
+    stocks?.unwatch(socket.id);
     people.leave(socket.id);
     if (io.photosShown.delete(socket.id)) {
       io.emit("photos_shown", photosShown());
@@ -343,6 +364,7 @@ app.use("/api/assist", assistRouter);
 app.use("/api/push", pushRouter);
 app.use("/api/seen", seenRouter);
 app.use("/api/account", accountRouter);
+app.use("/api/stocks", stocksRouter);
 app.use("/api/home", homeRouter);
 
 // SPA fallback

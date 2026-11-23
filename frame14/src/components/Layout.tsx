@@ -42,6 +42,8 @@ const SCROLLING_PATHS = new Set([
   "/unraid",
   // Its card is as tall as its figures, stacked in a narrow window (0.167.0).
   "/speedtest",
+  // A card a ticker, up to fifty of them (0.179.0).
+  "/stocks",
   // A camera's picture and its words under it, taller than a short window (0.178.0).
   "/seen",
 ]);

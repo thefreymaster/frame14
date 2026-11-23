@@ -52,6 +52,26 @@ const serversFor = (slot: number): WebServer[] => [
       // too — its keys page, and tokens signed with that key.
       CLOUDFLARE_ACCESS_TEAM: "e2e",
       FRAME14_ACCESS_CERTS_URL: `${stubUrl(slot)}/_stub/access/certs`,
+      // The Stocks page (0.179.0): the stub is Finnhub too — its quotes, its
+      // market status and its trades socket — and the server asks it quickly:
+      // a fresh server's cards are up well inside an expect's ten seconds, a
+      // dropped socket is back in half a second, and a socket nobody sends a
+      // trade on is never taken for a dead one.
+      FINNHUB_API_KEY: "e2e-finnhub",
+      FRAME14_FINNHUB_URL: `${stubUrl(slot)}/_stub/finnhub/api/v1`,
+      FRAME14_FINNHUB_WS_URL: `${stubUrl(slot).replace(/^http/, "ws")}/_stub/finnhub/ws`,
+      FRAME14_STOCKS_TIMINGS: JSON.stringify({
+        pace: 50,
+        rateLimit: 1000,
+        delayedPoll: 1000,
+        market: 1000,
+        idle: 2000,
+        silent: 3_600_000,
+        handshake: 3000,
+        backoff: 500,
+        backoffMax: 2000,
+        fresh: 1000,
+      }),
       PLEX_URL: "",
       PLEX_TOKEN: "",
       WEB_UI_URL: "",

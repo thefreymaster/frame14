@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.179.0
+
+- Added: a Stocks page. Each ticker you list gets a card with its price, the day's change against the previous close (green up, red down), where the price sits in the day's range, and the open and previous close. During the market's regular hours each trade moves the price as it happens, and the price lights up green or red as it moves; outside them the card shows Finnhub's latest quote. The page's header says whether the market is open, in pre-market, after hours or closed, and says "Delayed" if Finnhub's live stream can't be reached and prices are being checked every few seconds instead. On the frame, a handful of tickers fill the screen a row each, in large type. Stocks is in the frames' navigation once it's set up, and off by default in a remote's.
+- Added: two config options for it, `stock_tickers` (SPY, QQQ and DIA unless you change them) and `finnhub_api_key`, a free API key from finnhub.io. Without a key there is no Stocks page. No Home Assistant integration is needed: the add-on asks Finnhub itself, and only while a page is showing Stocks.
+
 ## 0.178.1
 
 - Fixed: the navigation stays along the bottom on a frame whose screen is shared. With another app pinned over Frame14 on the tablet (Android's split screen), Frame14's window is a little wider than it is tall, and the navigation moved to the left side as it does on a desktop. It goes by the screen now as well as the window: an upright tablet keeps the bar at the bottom however much of the screen Frame14 has, and the rail down the side is for a screen that is on its side — a desktop, or a phone or tablet turned over. Everything that makes room for the navigation (the page, Home's fitted board, toasts, the eye on Photos) follows it.

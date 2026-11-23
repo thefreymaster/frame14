@@ -1,5 +1,5 @@
 name: Frame14
-version: "0.178.1"
+version: "0.179.0"
 slug: frame14
 description: A wall-frame dashboard for Home Assistant — rooms, climate, energy, cameras, calendar and a photo slideshow
 url: https://github.com/thefreymaster/frame14
@@ -30,6 +30,7 @@ options:
   assist_pipeline_id: ""
   assist_speaker: ""
   cloudflare_access_team: ""
+  finnhub_api_key: ""
   weather_entity: "weather.systems_weatherkit"
   weather_forecast_entity: "weather.systems_weatherkit"
   weather_temperature_entity: "sensor.weatherkit_temperature"
@@ -129,6 +130,10 @@ options:
     - "automation.new_automation_3"
   calendar_exclude:
     - "calendar.radarr"
+  stock_tickers:
+    - "SPY"
+    - "QQQ"
+    - "DIA"
 schema:
   ha_url: str
   ha_token: password
@@ -141,6 +146,7 @@ schema:
   assist_pipeline_id: str?
   assist_speaker: str?
   cloudflare_access_team: str?
+  finnhub_api_key: password?
   weather_entity: str?
   weather_forecast_entity: str?
   weather_temperature_entity: str?
@@ -184,4 +190,6 @@ schema:
   scene_entities:
     - str
   calendar_exclude:
+    - str
+  stock_tickers:
     - str

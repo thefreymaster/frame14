@@ -80,6 +80,13 @@ export const ACCESS_TEAM = String(
   get("cloudflare_access_team", "CLOUDFLARE_ACCESS_TEAM", "") ?? "",
 ).trim();
 
+// Finnhub (0.179.0): the API key the Stocks page's prices are read with
+// (stocks.js) — its trades WebSocket and its quotes. Empty, the page is left
+// out and nothing is asked of Finnhub. Never sent to a browser.
+export const FINNHUB_API_KEY = String(
+  get("finnhub_api_key", "FINNHUB_API_KEY", "") ?? "",
+).trim();
+
 // The port Home Assistant's ingress proxies to (config.yaml's ingress_port).
 // Only the add-on listens on it; 0 in local dev.
 export const INGRESS_PORT = options

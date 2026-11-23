@@ -25,6 +25,7 @@ export const PAGES = [
   "/cameras",
   "/unraid",
   "/calendar",
+  "/stocks",
   "/speedtest",
   "/control/views",
   "/control/display",

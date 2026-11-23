@@ -29,6 +29,35 @@ function climateNamesFrom(raw) {
   return {};
 }
 
+/** At most this many tickers: Finnhub streams 50 symbols to a free key. */
+export const MAX_TICKERS = 50;
+/** A US ticker as Finnhub writes it: AAPL, BRK.B, BF-B. */
+const TICKER = /^[A-Z][A-Z0-9.-]{0,9}$/;
+
+/**
+ * The Stocks page's tickers (0.179.0): the add-on's `stock_tickers`, each
+ * trimmed and uppercased, held to a ticker's shape (they go into Finnhub's
+ * URLs and subscriptions), each once, MAX_TICKERS at most. What is dropped is
+ * said in the log, since the page just goes without it.
+ */
+export function stockTickersFrom(raw) {
+  if (!Array.isArray(raw)) return [];
+  const tickers = [];
+  for (const entry of raw) {
+    const ticker = typeof entry === "string" ? entry.trim().toUpperCase() : "";
+    if (!TICKER.test(ticker)) {
+      console.warn(`[entities] stock_tickers: ${JSON.stringify(entry)} is not a ticker — left out`);
+    } else if (tickers.includes(ticker)) {
+      continue;
+    } else if (tickers.length >= MAX_TICKERS) {
+      console.warn(`[entities] stock_tickers: ${ticker} is past the ${MAX_TICKERS} Finnhub streams — left out`);
+    } else {
+      tickers.push(ticker);
+    }
+  }
+  return tickers;
+}
+
 function loadEntities() {
   // HA addon: read entity config from options.json, which the Supervisor
   // always writes. Any option may be left empty, the weather's too (0.159.0;
@@ -77,6 +106,7 @@ function loadEntities() {
       lightAllOffExclude: options.light_all_off_exclude ?? [],
       scenes: options.scene_entities ?? [],
       calendarExclude: options.calendar_exclude ?? [],
+      stocks: stockTickersFrom(options.stock_tickers),
     };
   }
 
@@ -110,6 +140,7 @@ function loadEntities() {
       lightAllOffExclude: frame14.lightAllOffExclude ?? [],
       scenes: frame14.scenes ?? [],
       calendarExclude: frame14.calendarExclude ?? [],
+      stocks: stockTickersFrom(frame14.stocks),
     };
   }
 
@@ -137,6 +168,7 @@ function loadEntities() {
     lightAllOffExclude: [],
     scenes: [],
     calendarExclude: [],
+    stocks: [],
   };
 }
 

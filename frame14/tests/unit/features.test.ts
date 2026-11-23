@@ -32,9 +32,16 @@ describe("featuresOf", () => {
     expect(on({})).toEqual([]);
   });
 
-  it("counts everything but Unraid and the account as set up until the config has loaded", () => {
+  it("counts everything but Unraid, the account and Stocks as set up until the config has loaded", () => {
     expect(featuresOf(undefined)).toBe(FEATURES_UNTIL_LOADED);
-    expect(Object.entries(FEATURES_UNTIL_LOADED).filter(([, v]) => !v).map(([k]) => k)).toEqual(["unraid", "account"]);
+    expect(Object.entries(FEATURES_UNTIL_LOADED).filter(([, v]) => !v).map(([k]) => k)).toEqual(["unraid", "account", "stocks"]);
+  });
+
+  it("has Stocks with a ticker (0.179.0) — which the server sends only with a Finnhub key", () => {
+    expect(on({ stocks: ["SPY"] })).toEqual(["stocks"]);
+    expect(on({ stocks: [] })).toEqual([]);
+    // Absent from a config restored from before it: none.
+    expect(on({ stocks: undefined })).toEqual([]);
   });
 
   it("needs both power-now sensors for solar, and either solar or a circuit for Energy", () => {

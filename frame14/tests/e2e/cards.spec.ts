@@ -19,6 +19,7 @@ const PAGES = [
   "/cameras",
   "/unraid",
   "/calendar",
+  "/stocks",
   "/speedtest",
   "/control",
 ];

@@ -54,6 +54,7 @@ const OPTIONS = {
   light_all_off_exclude: ["light.night"],
   scene_entities: ["automation.movie_mode", "scene.reading"],
   calendar_exclude: ["calendar.radarr"],
+  stock_tickers: ["SPY", "qqq", "DIA"],
 };
 
 beforeEach(() => {
@@ -101,12 +102,34 @@ describe("the add-on's options", () => {
     // The Lights page's scenes (0.165.0).
     expect(e.scenes).toEqual(["automation.movie_mode", "scene.reading"]);
     expect(e.calendarExclude).toEqual(["calendar.radarr"]);
+    // The Stocks page's tickers (0.179.0), uppercased.
+    expect(e.stocks).toEqual(["SPY", "QQQ", "DIA"]);
   });
 
   it("turns the helpers off and leaves nothing out when they aren't set", async () => {
     files.set("/data/options.json", JSON.stringify({ weather_entity: "weather.home" }));
     const e = await load();
-    expect(e).toMatchObject({ internet: "", motion: "", route: "", albums: [], lightAllOffExclude: [], scenes: [], calendarExclude: [] });
+    expect(e).toMatchObject({ internet: "", motion: "", route: "", albums: [], lightAllOffExclude: [], scenes: [], calendarExclude: [], stocks: [] });
+  });
+
+  it("holds stock_tickers to tickers (0.179.0): trimmed, uppercased, each once, the rest left out and said", async () => {
+    files.set(
+      "/data/options.json",
+      JSON.stringify({ stock_tickers: [" spy ", "BRK.B", "bf-b", "SPY", "not a ticker", "", 5, null, "^GSPC", "TOOLONGTICKER"] }),
+    );
+    const e = await load();
+    expect(e.stocks).toEqual(["SPY", "BRK.B", "BF-B"]);
+    for (const dropped of ['"not a ticker"', '""', "5", "null", '"^GSPC"', '"TOOLONGTICKER"']) {
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(`${dropped} is not a ticker`));
+    }
+  });
+
+  it("keeps fifty tickers at most, the number Finnhub streams", async () => {
+    const many = Array.from({ length: 52 }, (_, i) => `T${i}`);
+    files.set("/data/options.json", JSON.stringify({ stock_tickers: many }));
+    const e = await load();
+    expect(e.stocks).toEqual(many.slice(0, 50));
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("T50 is past the 50"));
   });
 
   it("turns climate_names into a map, trimmed, dropping the malformed", async () => {
@@ -156,6 +179,14 @@ describe("frame14.json", () => {
     expect(e.weather).toEqual({ current: "weather.w" });
     expect(e.lightAreas).toEqual([]);
     expect(e.vacuums).toEqual([]);
+    expect(e.stocks).toEqual([]);
+  });
+
+  it("reads the tickers from it too, held to the same rules", async () => {
+    process.env.FRAME14_CONFIG = "x.json";
+    files.set(`${process.cwd()}/x.json`, JSON.stringify({ stocks: ["spy", "QQQ", "?"] }));
+    const e = await load();
+    expect(e.stocks).toEqual(["SPY", "QQQ"]);
   });
 
   it("takes the climate names as a list too", async () => {
@@ -173,7 +204,7 @@ describe("with nothing to read", () => {
       lights: [], lightAreas: [], weather: {}, internet: "", climate: [], climateNames: {}, energy: {},
       circuits: { main: "", balance: "", items: [] }, vacuums: [], fans: [], mediaPlayer: "",
       printer: "", teamTracker: [], person: "", camera: "", cameras: [],
-      motion: "", route: "", albums: [], lightAllOffExclude: [], scenes: [], calendarExclude: [],
+      motion: "", route: "", albums: [], lightAllOffExclude: [], scenes: [], calendarExclude: [], stocks: [],
     });
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("no entity config"));
   });

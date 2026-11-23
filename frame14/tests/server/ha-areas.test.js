@@ -94,6 +94,23 @@ describe("before the registries are read", () => {
     }
   });
 
+  it("sends the Stocks page's tickers only with a Finnhub key (0.179.0), for the pages to leave Stocks out", async () => {
+    mocks.entities.stocks = ["SPY", "QQQ"];
+    // Set, if empty: a developer's .env can't fill it in.
+    process.env.FINNHUB_API_KEY = "";
+    try {
+      expect((await fresh()).entitiesPayload().stocks).toEqual([]);
+      process.env.FINNHUB_API_KEY = "a-key";
+      expect((await fresh()).entitiesPayload().stocks).toEqual(["SPY", "QQQ"]);
+      // A key and no tickers: none.
+      mocks.entities.stocks = [];
+      expect((await fresh()).entitiesPayload().stocks).toEqual([]);
+    } finally {
+      delete process.env.FINNHUB_API_KEY;
+      delete mocks.entities.stocks;
+    }
+  });
+
   it("does nothing without the socket", async () => {
     mocks.connected = false;
     const { refreshLightAreas, lightsConfig } = await fresh();

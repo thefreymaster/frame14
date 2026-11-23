@@ -20,6 +20,8 @@ import type { EntitiesConfig } from "../hooks/useEntitiesConfig";
  * - `account`: `cloudflare_access_team` names a Cloudflare Access team
  *   (0.168.0), so the server knows who each visitor is — Settings' Account
  *   card.
+ * - `stocks`: a ticker in `stock_tickers` and a `finnhub_api_key` (0.179.0) —
+ *   the server sends the tickers only with the key, so a ticker is enough.
  */
 export type Feature =
   | "lights"
@@ -35,15 +37,16 @@ export type Feature =
   | "football"
   | "photos"
   | "unraid"
-  | "account";
+  | "account"
+  | "stocks";
 
 export type Features = Record<Feature, boolean>;
 
 /**
  * Before the config has loaded (a first launch: it's persisted after), every
- * feature counts as set up but Unraid and the account — a page that has one
- * can't flicker it out and back — and those two arrive instead, as most
- * installs have neither.
+ * feature counts as set up but Unraid, the account and Stocks — a page that
+ * has one can't flicker it out and back — and those arrive instead, as most
+ * installs have none of them (Stocks needs a key of its own).
  */
 export const FEATURES_UNTIL_LOADED: Features = {
   lights: true,
@@ -60,6 +63,7 @@ export const FEATURES_UNTIL_LOADED: Features = {
   photos: true,
   unraid: false,
   account: false,
+  stocks: false,
 };
 
 const some = (list: readonly unknown[] | undefined) => (list?.length ?? 0) > 0;
@@ -89,5 +93,6 @@ export function featuresOf(config: EntitiesConfig | undefined): Features {
     photos: config.photos !== false,
     unraid: some(config.unraid),
     account: config.account === true,
+    stocks: some(config.stocks),
   };
 }

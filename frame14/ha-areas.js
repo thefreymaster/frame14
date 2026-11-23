@@ -27,6 +27,7 @@
 import { ENTITIES } from "./entities.js";
 import { PHOTOS_ENABLED } from "./photos.js";
 import { ACCESS_ENABLED } from "./access.js";
+import { STOCKS_ENABLED } from "./stocks.js";
 import { isHaConnected, sendCommand } from "./ha-socket.js";
 import { resolveUnraid } from "./unraid.js";
 
@@ -44,7 +45,9 @@ export function lightsConfig() {
  * for the pages to leave Photos out,
  * `account` (0.168.0) whether Cloudflare Access names people
  * (`cloudflare_access_team`), for Settings to show its Account card,
- * and `unraid` (0.151.0) the Unraid servers and their containers.
+ * `unraid` (0.151.0) the Unraid servers and their containers, and `stocks`
+ * (0.179.0) the Stocks page's tickers — none without a `finnhub_api_key`, so
+ * the pages leave Stocks out.
  */
 export function entitiesPayload() {
   return {
@@ -54,6 +57,7 @@ export function entitiesPayload() {
     photos: PHOTOS_ENABLED,
     account: ACCESS_ENABLED,
     unraid,
+    stocks: STOCKS_ENABLED ? ENTITIES.stocks : [],
   };
 }
 

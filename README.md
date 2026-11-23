@@ -31,6 +31,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 - **Weather** — conditions and advisories, the moon's phase, hourly and daily forecasts, the radar.
 - **Printer, Vacuum, Cameras, Calendar** — a Bambu Lab printer with its camera and job, Roborock vacuums with their maps, every camera live — and full screen, with its room's lights at hand — and a two-week agenda.
 - **Unraid** — with Home Assistant's Unraid integration, the server's CPU, memory and temperature, and the status of every Docker container and VM. Read only. Found in Home Assistant; nothing to configure.
+- **Stocks** — the prices of the tickers you list, from [Finnhub](https://finnhub.io) with a free API key: trade by trade while the market is open, with the day's change and range. No Home Assistant integration needed.
 - **Speed test** — how fast the device in your hand, or on the wall, reaches the add-on: ping, download and upload over the Wi-Fi and LAN (or the tunnel from outside), measured on demand. Nothing to configure.
 - **And more** — a Plex movie takes over the frames as its poster; a tracked team's game day gets a scoreboard; a doorbell card pops up when someone is at the door; the mic runs an Assist pipeline.
 - **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. A remote's header has a button that refreshes the frames and a switch for their screen; every header has a switch between bright and dark. Installable as a PWA.
@@ -133,12 +134,21 @@ Without both power-now sensors (`energy_current_production` and `energy_current_
 
 A printer, vacuums or TeamTracker sensors left empty take out their page and Home card; the Cameras page is there with a camera, the printer or a vacuum's map.
 
+### Stocks
+
+| Option | Description | Example |
+|---|---|---|
+| `stock_tickers` | The Stocks page's tickers, in the order you want them: US stocks and ETFs as Finnhub writes them, up to 50. Anything that isn't a ticker is left out (and said so in the add-on's log) | `- SPY` |
+| `finnhub_api_key` | A [Finnhub](https://finnhub.io/register) API key; the free one is enough. Empty: no Stocks page | |
+
+The add-on asks Finnhub itself, only while a page is showing Stocks: its live trades stream sets the prices during the regular session (9:30–16:00 New York), and its quotes give the previous close, the day's range and the price outside those hours. If the stream can't be reached, the quotes are asked for every few seconds and the page says Delayed. A free key has one live stream at a time, so give the add-on a key of its own (a second free key for local development). Indexes such as `^GSPC` aren't on Finnhub's free tier: SPY, QQQ and DIA follow the S&P 500, the Nasdaq-100 and the Dow.
+
 ### The frames' motion wake-up
 
 | Option | Description | Example |
 |---|---|---|
 | `motion_entity` | Optional: a motion sensor that, turning on, puts the frames back on the view they were last sent to | `binary_sensor.kitchen_motion_sensor_motion` |
-| `route_entity` | Optional: an `input_select` the add-on writes that view to, whose options are the view names (`home`, `clock`, `photos`, …) | `input_select.frame14_route` |
+| `route_entity` | Optional: an `input_select` the add-on writes that view to, whose options are the view names (`home`, `clock`, `photos`, …). A view that isn't one of its options isn't kept — add `stocks`, `energy` and so on for the ones motion should bring back | `input_select.frame14_route` |
 
 ### Examples
 
@@ -215,6 +225,7 @@ Light names and icons are derived from entity IDs — `light.kitchen_main_lights
 | `/album` | A remote's Photos: the album as a grid, tap a photo to show it on the frames; while `immich_album_ids` has an album |
 | `/weather` | Now (conditions + advisories from the forecast, and the moon's phase, worked out from the date), with Hourly, Daily and Radar as tabs; `/radar` redirects to the Radar tab |
 | `/calendar` | The next two weeks across every Home Assistant calendar, a card per day |
+| `/stocks` | The tickers in `stock_tickers`, a card each: the price — trade by trade during the market's regular hours, flashing green or red as it moves — the day's change, the day's range, the open and previous close, and whether the market is open; while `finnhub_api_key` is set. Off by default in a remote's nav |
 | `/speedtest` | A speed test between this device and the add-on: ping and jitter, then download and upload for five seconds each, with the last result kept on the device. It measures the path to the add-on (Wi-Fi, LAN, a tunnel), not your internet connection. Each device's own page: a frame's tap on it moves no other frame; off by default in a remote's nav |
 | `/seen/<id>` | What a camera saw when a notification went out: the still taken as it was sent, the automation's clip once it arrives (Clip / Photo to switch), the notification's words and Watch live. Opened by tapping a notification that named a `camera`; no nav entry |
 | `/timer` | Timer; frame-only nav item |
@@ -296,6 +307,7 @@ Frame14 has no login of its own: anything that reaches its port can use it. Keep
 - **Your token stays on the add-on.** `ha_token` is used by the server and never sent to a browser.
 - **Another website can't use it through your browser.** A browser's request from another site, or another app on the same domain, is refused, socket and routes alike (0.151.0). Home Assistant's `rest_command` calls still work.
 - **It can say who is who, behind Cloudflare Access.** Access signs people in before a request ever reaches the add-on, and adds a signed token saying who they are. With `cloudflare_access_team` set, the add-on checks that token against your team's keys and Settings' **Account** card shows who is signed in and on what kind of device (0.168.0). A device can be given an alias there — "Office MacBook" for a row that could only say Mac — with the edit button at the row's end; the add-on keeps it, so every signed-in device shows the same one (0.173.0). Anyone Access signed in can set an alias on any row; nobody else can. This names people; it doesn't lock anything: a device on your own network isn't asked who it is, sees no Account card and no names, and works as before.
+- **The Finnhub key stays on the add-on.** `finnhub_api_key` is used by the server alone, and the add-on asks Finnhub — the one outside service it calls for this — only for the tickers in `stock_tickers`, only while a page is showing Stocks; a page never names a ticker or an address (0.179.0).
 - **Notifications go only to browsers' push services.** A device's subscription is taken only when its address is Google's, Apple's, Mozilla's or Microsoft's push service, so the add-on never posts to an address a page chose (0.160.0). What is sent comes from Home Assistant's `frame14_notify` event, not from a request to the add-on.
 - **A camera's picture comes only from Home Assistant.** A notification's `camera` must be a camera entity and a clip's `media` a path under Home Assistant's `/media/` view; the add-on fetches them with its token, keeps only pictures and videos, and serves them under ids of its own (0.178.0).
 - **It only shows the albums you listed.** A photo is served only when it is in one of `immich_album_ids`, and the add-on fetches it from Home Assistant with its token (0.162.0).
@@ -312,7 +324,7 @@ cd frame14
 npm install
 ```
 
-Copy `.env.example` to `.env` and fill in your values. `frame14.json` in `frame14/` holds the entity config outside the add-on (the options above, camel-cased; the motion and album helpers are `motion`, `route` and `album`):
+Copy `.env.example` to `.env` and fill in your values (for the Stocks page, `FINNHUB_API_KEY`: a second free key, not the add-on's, or the two take turns on Finnhub's live stream). `frame14.json` in `frame14/` holds the entity config outside the add-on (the options above, camel-cased; the motion and album helpers are `motion`, `route` and `album`, and `stock_tickers` is `stocks`):
 
 ```json
 {

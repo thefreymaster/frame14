@@ -79,6 +79,11 @@ export const openApiDocument = {
         "Who is signed in (0.168.0): the people Cloudflare Access named, by the device each is on. The server only reads what Access says; it signs nobody in and refuses nobody.",
     },
     {
+      name: "Stocks",
+      description:
+        "The Stocks page's prices (0.179.0), from Finnhub with the add-on's `finnhub_api_key`, for the tickers in `stock_tickers` — US stocks and ETFs. A page on /stocks hears each change over Socket.IO (`stocks:watch`, then `stocks`, at most one a second): the server holds Finnhub's trades socket open while a page watches, and asks for its quotes every minute — every few seconds while the socket is down (\"delayed\"). A trade sets the price only in the regular session; outside it the price and change are Finnhub's quote's. The key never leaves the server.",
+    },
+    {
       name: "Notifications",
       description:
         "Web Push to the devices that turned notifications on in Settings. What is sent comes from Home Assistant: an automation fires the `frame14_notify` event with `title`, `message`, and optionally `tag` (a later notification with the same tag replaces it), `url` (the page a tap opens, a path) and `camera` (a camera entity: the tap opens that camera's still from the moment instead, see Seen).",
@@ -143,6 +148,28 @@ export const openApiDocument = {
                 schema: { $ref: "#/components/schemas/Account" },
               },
             },
+          },
+        },
+      },
+    },
+    "/api/stocks": {
+      get: {
+        tags: ["Stocks"],
+        operationId: "getStocks",
+        summary: "The configured tickers' prices",
+        description:
+          "Every ticker in `stock_tickers`, in that order, with its price, the day's change against the previous close, and the day's open, high and low; and the US market's session. Quotes more than a minute old are asked of Finnhub first, waiting five seconds at most. `status` is `live` while Finnhub's trades socket is open, `delayed` while the prices come from polling its quotes, `connecting` before either has said anything, and `error` when Finnhub refused the key (`error` says what it said). A ticker Finnhub doesn't know has null figures. Never cached.",
+        responses: {
+          200: {
+            description: "The prices.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Stocks" },
+              },
+            },
+          },
+          404: {
+            description: "Stocks aren't set up: no `finnhub_api_key`, or no ticker in `stock_tickers`.",
           },
         },
       },
@@ -268,7 +295,7 @@ export const openApiDocument = {
         operationId: "getEntities",
         summary: "The entity configuration, with the lights by room",
         description:
-          "The entity ids the add-on is configured with (options.json, or frame14.json outside the add-on). `lights` is the explicit light_entities list grown by every light in the configured light_areas, and `rooms` groups the lights and switches by Home Assistant area — the configured areas first, then any other area a light is in — each with the configured `cameras` in it (0.144: a camera's full screen carries its room's lights). `unraid` (0.151.0) is every server Home Assistant's Unraid integration has, found in the registries by unique id: its CPU and memory sensors, its containers (each one's switch, read for its state and Docker's status — the page is read only and the server won't switch it — and its CPU and memory sensors while those are enabled) and its VMs (each one's switch, read the same way), for the Unraid page. Until the registries have been read, `lights` is the explicit list and `rooms` and `unraid` are empty. Pushed again over Socket.IO (\"entities\") when any of them change.",
+          "The entity ids the add-on is configured with (options.json, or frame14.json outside the add-on). `lights` is the explicit light_entities list grown by every light in the configured light_areas, and `rooms` groups the lights and switches by Home Assistant area — the configured areas first, then any other area a light is in — each with the configured `cameras` in it (0.144: a camera's full screen carries its room's lights). `unraid` (0.151.0) is every server Home Assistant's Unraid integration has, found in the registries by unique id: its CPU and memory sensors, its containers (each one's switch, read for its state and Docker's status — the page is read only and the server won't switch it — and its CPU and memory sensors while those are enabled) and its VMs (each one's switch, read the same way), for the Unraid page. Until the registries have been read, `lights` is the explicit list and `rooms` and `unraid` are empty. `stocks` (0.179.0) is the Stocks page's tickers — empty without a `finnhub_api_key`. Pushed again over Socket.IO (\"entities\") when any of them change.",
         responses: {
           200: {
             description: "The entity configuration.",
@@ -293,6 +320,11 @@ export const openApiDocument = {
                     climate: { type: "array", items: { type: "string" } },
                     vacuums: { type: "array", items: { type: "string" } },
                     fans: { type: "array", items: { type: "string" } },
+                    stocks: {
+                      type: "array",
+                      description: "The Stocks page's tickers (`stock_tickers`), uppercased; empty without a `finnhub_api_key`.",
+                      items: { type: "string", example: "SPY" },
+                    },
                     unraid: {
                       type: "array",
                       items: {
@@ -1596,6 +1628,46 @@ export const openApiDocument = {
                 alias: { type: "string", description: "What the row was called through `PUT /api/account/alias`; absent on a row with no alias.", example: "Office MacBook" },
                 online: { type: "boolean", description: "A page of theirs is open on that device now." },
                 lastSeen: { type: "string", format: "date-time", description: "When it arrived, or — once gone — when it left." },
+              },
+            },
+          },
+        },
+      },
+      Stocks: {
+        type: "object",
+        required: ["status", "error", "market", "quotes"],
+        properties: {
+          status: {
+            type: "string",
+            enum: ["connecting", "live", "delayed", "error"],
+            description: "`live`: Finnhub's trades socket is open. `delayed`: it isn't, and the quotes are asked for every few seconds. `connecting`: neither has answered yet. `error`: Finnhub refused the key.",
+          },
+          error: { type: "string", nullable: true, description: "What Finnhub said when it refused the key; null otherwise." },
+          market: {
+            type: "object",
+            description: "The US market, as Finnhub's market status says; null until it has answered.",
+            properties: {
+              session: { type: "string", nullable: true, description: "Finnhub's word for the session.", example: "regular" },
+              isOpen: { type: "boolean", nullable: true },
+              holiday: { type: "string", nullable: true, description: "The holiday's name on a day the market is shut for one." },
+            },
+          },
+          quotes: {
+            type: "array",
+            description: "One a ticker, in `stock_tickers`' order.",
+            items: {
+              type: "object",
+              required: ["symbol", "price", "previousClose", "open", "high", "low", "change", "changePercent", "at"],
+              properties: {
+                symbol: { type: "string", example: "SPY" },
+                price: { type: "number", nullable: true, description: "The last trade's price in the regular session, else the quote's. Null for a ticker Finnhub doesn't know.", example: 672.15 },
+                previousClose: { type: "number", nullable: true, example: 668.03 },
+                open: { type: "number", nullable: true },
+                high: { type: "number", nullable: true },
+                low: { type: "number", nullable: true },
+                change: { type: "number", nullable: true, description: "Against the previous close.", example: 4.12 },
+                changePercent: { type: "number", nullable: true, example: 0.62 },
+                at: { type: "number", nullable: true, description: "When the price was, in ms since the epoch." },
               },
             },
           },

@@ -27,7 +27,7 @@ const noCircuits = (c: Config) => {
   c.circuits = { main: "", balance: "", items: [] };
 };
 
-/** Weather, energy, fans, the printer, vacuums, cameras and football left empty. */
+/** Weather, energy, fans, the printer, vacuums, cameras, football and stocks left empty. */
 function bare(c: Config) {
   noSolar(c);
   noCircuits(c);
@@ -38,9 +38,10 @@ function bare(c: Config) {
   c.cameras = [];
   c.camera = "";
   c.teamTracker = [];
+  c.stocks = [];
 }
 
-const GONE = ["Energy", "Weather", "Printer", "Vacuum", "Cameras"];
+const GONE = ["Energy", "Weather", "Printer", "Vacuum", "Cameras", "Stocks"];
 
 test.describe("a feature without its entities", () => {
   test.beforeEach(async ({ request }) => {
@@ -52,7 +53,7 @@ test.describe("a feature without its entities", () => {
     const asked: string[] = [];
     page.on("request", (r) => {
       const path = new URL(r.url()).pathname;
-      if (/^\/api\/(energy|circuits|home\/(weather|fan|vacuum))/.test(path)) asked.push(path);
+      if (/^\/api\/(energy|circuits|stocks|home\/(weather|fan|vacuum))/.test(path)) asked.push(path);
     });
     await page.goto("/home");
     await splashGone(page);
@@ -84,7 +85,7 @@ test.describe("a feature without its entities", () => {
       await expect(page.getByRole("tab", { name: "Climate" })).toBeVisible();
       for (const name of GONE) await expect(page.getByRole("tab", { name }), name).toHaveCount(0);
     }
-    for (const path of ["/energy", "/energy/circuits", "/weather/radar", "/radar", "/printer", "/vacuum", "/cameras", "/football"]) {
+    for (const path of ["/energy", "/energy/circuits", "/weather/radar", "/radar", "/printer", "/vacuum", "/cameras", "/football", "/stocks"]) {
       await page.goto(path);
       await expect(page, path).toHaveURL(/\/home$/);
     }

@@ -20,6 +20,8 @@ import {
   IoVideocam,
   IoSpeedometerOutline,
   IoSpeedometer,
+  IoTrendingUpOutline,
+  IoTrendingUp,
 } from "react-icons/io5";
 import {
   RiHome5Line,
@@ -78,8 +80,8 @@ export const HomeIcon: IconType = RiHome5Fill;
 /**
  * Every nav entry, in the default order (since 0.109: Home, Clock, Lights,
  * Climate, Photos, Energy, Weather, Printer, Vacuum, Cameras, Unraid (0.151.0),
- * Calendar, Football, Halloween (0.128: Oct 30 and 31), Speed test (0.167.0),
- * Settings — Lights and Climate before Photos, Weather with Energy before the
+ * Calendar, Stocks (0.179.0), Football, Halloween (0.128: Oct 30 and 31),
+ * Speed test (0.167.0), Settings — Lights and Climate before Photos, Weather with Energy before the
  * devices; a remote starts with everything from Energy to Speed test off,
  * `remoteOff`). Each device shows the ones for its mode, in the order
  * and with the ones hidden that /control sets for it (lib/navLayout).
@@ -186,6 +188,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: IoCalendarOutline,
     activeIcon: IoCalendar,
     remoteOff: true,
+  },
+  // The configured tickers' prices (0.179.0): only with a Finnhub key.
+  {
+    path: "/stocks",
+    label: "Stocks",
+    icon: IoTrendingUpOutline,
+    activeIcon: IoTrendingUp,
+    remoteOff: true,
+    feature: "stocks",
   },
   {
     path: "/football",

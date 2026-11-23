@@ -10,8 +10,10 @@ import { APP_URL } from "./ports";
 //
 // And a ticker's drawer (0.180.0): the stub's AAPL has every part of a
 // detail, its SPY what an ETF has — no company, no analysts — and its QQQ
-// and DIA nothing. The server keeps a detail once asked, and the stub's
-// never change, so nothing here depends on which test asked first.
+// and DIA nothing. The server keeps a detail once asked (the news fifteen
+// minutes) and a worker's server outlives a project, so nothing here may
+// depend on which test asked first, or when: the stub's answers never
+// change, and a headline's age is checked by its unit, never its count.
 
 // The list's own cards: an open drawer draws its ticker's card again.
 const card = (page: Page, symbol: string) => page.locator(`[data-stocks] [data-stock="${symbol}"]`);
@@ -305,9 +307,14 @@ test("a tap on a card opens the ticker's drawer — from the right on a desktop,
   const headlines = drawer.locator("[data-stock-news] li");
   await expect(headlines).toHaveCount(3);
   await expect(headlines.nth(0)).toContainText("Apple's services revenue sets another record");
-  await expect(headlines.nth(0)).toContainText("Example Wire · 25m ago");
-  await expect(headlines.nth(1)).toContainText("3h ago");
-  await expect(headlines.nth(2)).toContainText("1d ago");
+  // How long ago, by the page's clock, from when the server asked: it keeps
+  // the news a quarter of an hour, and a worker's server outlives the project
+  // that asked first — the phone's run read "31m ago" for the stub's 25 on
+  // GitHub, six minutes after the desktop's. So minutes, hours and a day, not
+  // a count of them (lib/stocks' timeAgo has the counts, in a unit test).
+  await expect(headlines.nth(0)).toContainText(/Example Wire · \d+[mh] ago/);
+  await expect(headlines.nth(1)).toContainText(/Example Post · \d+h ago/);
+  await expect(headlines.nth(2)).toContainText(/Example Wire · 1d ago/);
   const links = drawer.locator("[data-stock-news] a");
   await expect(links).toHaveCount(2);
   await expect(links.first()).toHaveAttribute("href", "https://example.com/news/apple-services");

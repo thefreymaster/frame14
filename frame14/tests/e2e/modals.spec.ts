@@ -56,26 +56,45 @@ async function expectSidePanel(page: Page, modal: Locator) {
   await expect(page.locator('[data-scope="dialog"][data-part="backdrop"]')).toHaveCSS("backdrop-filter", "blur(2px)");
 }
 
-/** Where the panel's left edge is at the very start (0) or end of its slide. */
-async function slideEdge(modal: Locator, at: "start" | "end") {
-  return modal.evaluate(async (el, at) => {
-    const animations = el.getAnimations();
-    for (const a of animations) {
-      a.pause();
-      const end = Number(a.effect!.getComputedTiming().endTime);
-      a.currentTime = at === "start" ? 0 : end - 1;
-    }
-    const left = el.getBoundingClientRect().left;
-    // Held paused a few frames before it's finished: zag's presence starts
-    // listening for the exit animation's end a frame after the close (its
-    // raf), and an end before that goes unheard — the closed drawer stays in
-    // the DOM for good. A slide that runs its course never ends that soon;
-    // only finishing it here could, and did, now and then in a full run.
-    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
-    for (let i = 0; i < 3; i++) await frame();
-    for (const a of animations) a.finish();
-    return left;
-  }, at);
+/**
+ * Where the panel's left edge is at the very start (0) or end of its slide —
+ * read by a watcher in the page, armed before the tap or key that starts the
+ * slide: it holds the dialog's animations on the first frame they run. Asked
+ * for after the tap instead, a 0.3 s slide can be over before the question
+ * arrives on a busy machine (GitHub's runners, four workers): nothing is left
+ * to rewind, and the edge read is the panel at rest (1107px for 1919).
+ */
+function watchSlide(page: Page, at: "start" | "end") {
+  return page.evaluate(
+    (at) =>
+      new Promise<number>((resolve) => {
+        const frame = () => new Promise((done) => requestAnimationFrame(done));
+        const look = async () => {
+          const el = document.querySelector(at === "start" ? '[role="dialog"]' : '[role="dialog"][data-state="closed"]');
+          const animations = el?.getAnimations() ?? [];
+          if (!el || animations.length === 0) {
+            requestAnimationFrame(() => void look());
+            return;
+          }
+          for (const a of animations) {
+            a.pause();
+            const end = Number(a.effect!.getComputedTiming().endTime);
+            a.currentTime = at === "start" ? 0 : end - 1;
+          }
+          const left = el.getBoundingClientRect().left;
+          // Held paused a few frames before it's finished: zag's presence starts
+          // listening for the exit animation's end a frame after the close (its
+          // raf), and an end before that goes unheard — the closed drawer stays in
+          // the DOM for good. A slide that runs its course never ends that soon;
+          // only finishing it here could, and did, now and then in a full run.
+          for (let i = 0; i < 3; i++) await frame();
+          for (const a of animations) a.finish();
+          resolve(left);
+        };
+        void look();
+      }),
+    at,
+  );
 }
 
 /** A finger dragged down `distance` from the point, in steps. */
@@ -96,6 +115,8 @@ test.describe("modals", () => {
 
   test("a phone's detail panel is a drawer from the bottom, a desktop's a drawer from the right edge", async ({ page, isMobile }) => {
     await page.goto("/home");
+    // Watching for the slide in from before the tap (a desktop's alone slides).
+    const slideIn = isMobile ? null : watchSlide(page, "start");
     // At the flow, the card's first half: where a desktop's board fits the
     // screen (0.171.0) the second may be cut off, under the card's More.
     await page.getByRole("button", { name: "Show energy detail" }).click({ position: { x: 60, y: 30 } });
@@ -113,13 +134,13 @@ test.describe("modals", () => {
     // It comes in from past the screen's edge — the gutter it floats in
     // included, so no sliver of it shows as the slide starts…
     await expect(modal).toBeAttached();
-    expect(await slideEdge(modal, "start")).toBeGreaterThanOrEqual(viewport.width - 1);
+    expect(await slideIn).toBeGreaterThanOrEqual(viewport.width - 1);
     await expect(modal.getByText("Solar covered today")).toBeVisible();
     await expectSidePanel(page, modal);
     // …and leaves the same way.
+    const slideOut = watchSlide(page, "end");
     await page.keyboard.press("Escape");
-    await expect(modal).toHaveAttribute("data-state", "closed");
-    expect(await slideEdge(modal, "end")).toBeGreaterThanOrEqual(viewport.width - 2);
+    expect(await slideOut).toBeGreaterThanOrEqual(viewport.width - 2);
     await expect(modal).toBeHidden();
   });
 

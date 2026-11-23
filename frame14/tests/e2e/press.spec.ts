@@ -1,5 +1,5 @@
 import { devices, expect, test, type Browser, type Locator, type Page } from "@playwright/test";
-import { lightTile, PAGES, resetStub, splashGone } from "./helpers";
+import { lightTile, PAGES, resetStub, splashGone, sweepTimeout } from "./helpers";
 import { APP_URL } from "./ports";
 
 // A press that feels like a real button's (0.170.0, lib/press): whatever is
@@ -98,6 +98,7 @@ test.describe("a press", () => {
   });
 
   test("the shade of everything that has one lies over that thing itself, on every page", async ({ page }) => {
+    test.setTimeout(sweepTimeout(PAGES));
     // The shade is an ::after laid over its nearest positioned ancestor: on a
     // static button it would darken someone else's box while that button is
     // held (the sheets' close buttons were static until 0.170.0).

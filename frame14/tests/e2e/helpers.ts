@@ -33,6 +33,14 @@ export const PAGES = [
 ];
 
 /**
+ * How long a sweep may take: a test that goes over every page spends a load
+ * and a wait on each, so its limit grows with its list. Under the suite's 30 s
+ * the cards' sweep took 28 s here with fifteen pages, and ran past it on
+ * GitHub's runners once Stocks was the fifteenth (0.179.0).
+ */
+export const sweepTimeout = (pages: readonly string[]) => 15_000 + pages.length * 5_000;
+
+/**
  * The stub's house on an ordinary day: the game over, the print done, the
  * vacuum home — three cards off /home. Its usual state is the busiest one,
  * and where /home fits the screen instead of scrolling (0.171.0) a busy

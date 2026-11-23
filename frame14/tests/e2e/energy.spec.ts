@@ -485,6 +485,9 @@ test("the flow's wires carry two sine waves, one the other's mirror, standing st
   // The stub's house: 0.903 kW from the panels, 1.184 kW in use — the rest from the grid.
   await expect(wires.nth(0)).toHaveAttribute("data-flow-wire", "right");
   await expect(wires.nth(1)).toHaveAttribute("data-flow-wire", "left");
+  // The card rises in scaled 0.98 as the splash goes: a wave measured during
+  // it is short by as much (27.9px for 28.35 on GitHub's runners).
+  await settled(page);
 
   /** A wire's wave as it is drawn, and its trace as it moves. */
   const read = (wire: ReturnType<typeof wires.nth>) =>

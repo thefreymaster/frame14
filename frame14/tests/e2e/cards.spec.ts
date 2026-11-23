@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { resetStub, splashGone } from "./helpers";
+import { resetStub, splashGone, sweepTimeout } from "./helpers";
 
 // Every card with a title has an icon beside it (0.127): the title's row —
 // SectionTitle's HStack — holds an svg. A heading inside a card's body (Today
@@ -25,6 +25,7 @@ const PAGES = [
 ];
 
 test("every titled card has an icon", async ({ page, request }) => {
+  test.setTimeout(sweepTimeout(PAGES));
   await resetStub(request);
   for (const path of PAGES) {
     await page.goto(path);

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { cornersRounderThanConcentric, PAGES, resetStub, squareInsideRings } from "./helpers";
+import { cornersRounderThanConcentric, PAGES, resetStub, squareInsideRings, sweepTimeout } from "./helpers";
 
 // No rounded box sits in a rounded box with a rounder corner than concentric
 // (0.145.4, the user: "In the same idea of a 3d print where the outer border
@@ -14,6 +14,7 @@ test.describe("nested corners", () => {
   });
 
   test("every page's are concentric with their containers'", async ({ page }) => {
+    test.setTimeout(sweepTimeout(PAGES));
     for (const path of PAGES) {
       await page.goto(path);
       await page.locator("#splash").waitFor({ state: "detached" });

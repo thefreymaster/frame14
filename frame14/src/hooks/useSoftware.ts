@@ -74,7 +74,9 @@ export async function installSoftware(): Promise<string | null> {
 }
 
 /**
- * The Software card's facts: /api/software (every five minutes and on each
+ * The Software card's facts — and the header's, which turns a pair of arrows
+ * while an install is under way (0.181.0, SoftwareInstallIndicator), so
+ * every page asks: /api/software (every five minutes and on each
  * return to the page), with the update entity it names followed live over
  * the socket, so a newer version shows the moment Home Assistant sees it, and
  * an install under way as the Supervisor reports it (0.136). The release

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { cardPaint, quietHouse, resetStub, splashGone, stub } from "./helpers";
 import { APP_URL } from "./ports";
 
@@ -29,6 +29,20 @@ async function buttonGaps(page: Page, selector: string) {
 
 const STATUS = "[data-header-status] button";
 const BUTTONS = "[data-header-buttons] button";
+
+/** What the header's arrows say while 9.9.9 is being installed (0.181.0). */
+const ARROWS = "A new version v9.9.9 is being installed";
+
+/**
+ * The add-on's update entity as the Supervisor has it with 9.9.9 in the
+ * store and — unless `more` says otherwise — its install under way.
+ */
+const installing = (request: APIRequestContext, more: Record<string, unknown> = {}) =>
+  stub(request, "/_stub/state", {
+    entity_id: "update.frame14_update",
+    state: "on",
+    attributes: { title: "Frame14", installed_version: "0.0.0", latest_version: "9.9.9", release_url: "https://example.test", in_progress: true, ...more },
+  });
 
 /** Whether each of the header's icons that `selector` finds has a fill. */
 const filled = (page: Page, selector: string) =>
@@ -237,11 +251,100 @@ test("on a phone's width the buttons are at the header's right end; on a busy da
   await expect(page.getByRole("button", { name: /^Switch to (bright|dark) mode$/ })).toBeHidden();
   await expect(page.getByRole("button", { name: "Turn the frame's screen off" })).toBeVisible();
 
+  // And an update being installed on top of all that (0.181.0): its arrows
+  // would be a tenth icon and run the power button off the screen, so they
+  // are the one status icon that gives way — the header as it was.
+  await installing(request);
+  await expect.poll(() => header(page)).toMatchObject({ fit: "bare", buttons: 9, toggle: false, name: false, icon: true, iconTop: quiet.iconTop, toRight: 0, statusFirst: true, inside: true, scrolls: false });
+  await expect(page.getByRole("button", { name: ARROWS })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Turn the frame's screen off" })).toBeVisible();
+  // With the washer and the dryer done there is room for them again.
+  for (const entity_id of ["binary_sensor.cloths_washer_clothes_washer_running", "binary_sensor.drier_dryer_running"]) {
+    await stub(request, "/_stub/state", { entity_id, state: "off" });
+  }
+  await expect(page.getByRole("button", { name: ARROWS })).toBeVisible();
+  await expect.poll(() => header(page)).toMatchObject({ fit: "icon", buttons: 9, toggle: true, name: false, toRight: 0, inside: true, scrolls: false });
+
   // The house quiet again: all of it back, where it was.
   await resetStub(request);
   await quietHouse(request);
   await expect(page.getByRole("button", { name: "3D printer running" })).toHaveCount(0);
   await expect.poll(() => header(page)).toEqual(quiet);
+});
+
+// 0.181.0, the user: "When an update is being installed, show a spinning
+// arrows icon animated in the header with a tool tip of a new version
+// v0.180.0 is being installed". Among the status icons — it says, it doesn't
+// do — and, as each of them does, it opens a small menu at a tap: a touch
+// screen has no tooltip to show (the tooltip is with the header's others,
+// below).
+test("while an update is being installed a pair of arrows turns among the header's status icons, saying which version at a tap; gone once it is over", async ({ page, request }) => {
+  const { version } = await (await request.get("/api")).json();
+  await page.goto("/home");
+  await splashGone(page);
+  await expect(page.getByRole("button", { name: "Connected" })).toBeVisible();
+  const quiet = (await buttonGaps(page, STATUS)).count;
+  const arrows = page.locator("[data-header-status]").getByRole("button", { name: ARROWS });
+  await expect(arrows).toHaveCount(0);
+
+  // Home Assistant says the add-on's update is under way — started from a
+  // Software card or from its own add-on page, the entity says so alike.
+  await installing(request, { installed_version: version });
+  await expect(arrows).toBeVisible();
+  // One more status icon, the last before the connection's: the group's
+  // size, its gaps and no fill.
+  await expect.poll(() => buttonGaps(page, STATUS)).toEqual({ count: quiet + 1, gaps: Array(quiet).fill(0.25), sizes: ["2x2"] });
+  expect(await filled(page, STATUS)).toEqual(Array(quiet + 1).fill(false));
+  const labels = await page.locator(STATUS).evaluateAll((buttons) => buttons.map((b) => b.getAttribute("aria-label")));
+  expect(labels.slice(-2)).toEqual([ARROWS, "Connected"]);
+
+  // It turns, read off the running animation: a whole turn the way the
+  // arrows point, two seconds, on and on — a transform alone, about the
+  // glyph's own middle.
+  const glyph = arrows.locator("svg");
+  await expect(glyph).toHaveAttribute("data-header-turning", "");
+  const turn = () =>
+    glyph.evaluate((svg) => {
+      const animations = svg.getAnimations();
+      const effect = animations[0]?.effect as KeyframeEffect | undefined;
+      const frames = effect?.getKeyframes() ?? [];
+      // The glyph's box as styled — its rect is the turned glyph's.
+      const style = getComputedStyle(svg);
+      const [x, y] = style.transformOrigin.split(" ").map(parseFloat);
+      return {
+        animations: animations.length,
+        changes: [...new Set(frames.flatMap((f) => Object.keys(f)))].filter((k) => !["offset", "computedOffset", "easing", "composite"].includes(k)),
+        turns: frames.map((f) => f.transform),
+        ms: effect?.getComputedTiming().duration,
+        forever: effect?.getComputedTiming().iterations === Infinity,
+        running: animations[0]?.playState === "running",
+        origin: Math.abs(x - parseFloat(style.width) / 2) < 0.01 && Math.abs(y - parseFloat(style.height) / 2) < 0.01,
+      };
+    });
+  await expect.poll(turn).toEqual({ animations: 1, changes: ["transform"], turns: ["rotate(0deg)", "rotate(360deg)"], ms: 2000, forever: true, running: true, origin: true });
+  // Standing still under reduced motion, and turning again without it.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect.poll(async () => (await turn()).animations).toBe(0);
+  await expect(arrows).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect.poll(async () => (await turn()).running).toBe(true);
+
+  // A tap: the status icons' small menu, saying the same.
+  await arrows.click();
+  const menu = page.getByRole("dialog").filter({ hasText: "Software update" });
+  await expect(menu).toBeVisible();
+  await expect(menu).toContainText("Installing");
+  await expect(menu).toContainText("v9.9.9");
+  await expect(menu).toContainText(`v${version}`);
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+
+  // Over, with the version still waiting in the store: a newer version is
+  // no install, and the arrows go — and the header is as it was.
+  await installing(request, { installed_version: version, in_progress: false });
+  await expect(arrows).toHaveCount(0);
+  await expect(page.locator("[data-header-turning]")).toHaveCount(0);
+  await expect.poll(async () => (await buttonGaps(page, STATUS)).count).toBe(quiet);
 });
 
 // 0.176.0, the user: "Add a bright mode/dark mode toggle icon button to the
@@ -438,6 +541,32 @@ test.describe("the header's tooltips", () => {
     await page.locator("[data-header-buttons] [data-header-theme]").hover();
     // The suite's frames are Dark.
     await expect(page.getByRole("tooltip")).toHaveText("Switch to bright mode");
+  });
+
+  // 0.181.0: "…with a tool tip of a new version v0.180.0 is being installed".
+  test("the arrows of an update being installed say which version, and not over their own open menu", async ({ page, request }) => {
+    await page.goto("/home");
+    await splashGone(page);
+    await installing(request);
+    const arrows = page.getByRole("button", { name: ARROWS });
+    await arrows.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(ARROWS);
+    // A tap opens the menu, and the tooltip is put away: the menu hangs
+    // where it was.
+    await arrows.click();
+    await expect(page.getByRole("dialog").filter({ hasText: "Software update" })).toBeVisible();
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
+    // The pointer away and back while the menu is open: still none over it,
+    // well past a tooltip's wait.
+    await page.mouse.move(200, 600);
+    await arrows.hover();
+    await page.waitForTimeout(1000);
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
+    // The menu closed, it says it again.
+    await page.keyboard.press("Escape");
+    await page.mouse.move(200, 600);
+    await arrows.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(ARROWS);
   });
 
   test("a remote's power button says it switches the frame's screen, and its refresh that it refreshes the frames", async ({ page }) => {

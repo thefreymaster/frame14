@@ -8,6 +8,11 @@
  *   to the buttons).
  * - `tight`: and the theme's toggle gone too, the one button with another
  *   way to what it does (Settings) — five appliances on a small phone.
+ * - `bare`: and the arrows of an update being installed (0.181.0,
+ *   SoftwareInstallIndicator) — the one status icon that gives way, since
+ *   Settings' Software card says it too: an install on that busiest of
+ *   days, where a tenth icon ran the power button off a 390px screen. So
+ *   the arrows never cost a button that was on the screen without them.
  *
  * The row is a grid of three columns — the name, the buttons, the status
  * icons and a desktop's clock — whose outer two share what the buttons
@@ -23,9 +28,9 @@
  * either holds its content or gives it up, and the name is to stay while
  * there is room and go only when there is not.
  */
-export type HeaderFit = "all" | "icon" | "tight";
+export type HeaderFit = "all" | "icon" | "tight" | "bare";
 
-const LEVELS: readonly HeaderFit[] = ["all", "icon", "tight"];
+const LEVELS: readonly HeaderFit[] = ["all", "icon", "tight", "bare"];
 
 /** Whether the row's columns, as laid out now, fit in it. */
 function fits(row: HTMLElement): boolean {
@@ -46,7 +51,7 @@ export function fitHeader(row: HTMLElement): HeaderFit {
     row.dataset.headerFit = level;
     if (fits(row)) return level;
   }
-  return "tight";
+  return "bare";
 }
 
 /**

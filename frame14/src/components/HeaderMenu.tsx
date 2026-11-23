@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import {
   HStack,
   Icon,
@@ -8,6 +9,10 @@ import {
 } from "@chakra-ui/react";
 import { DARK_RAISED } from "../lib/floatingSurface";
 import { HEADER_ICON_SIZE, PAGE_GUTTER } from "../lib/navMetrics";
+import { Tooltip } from "./ui/tooltip";
+
+/** A turn of a glyph that turns (`turning`): unhurried, something at work. */
+const TURN_SECONDS = 2;
 
 /**
  * A header icon that opens a small menu of facts about what it shows (the
@@ -22,12 +27,22 @@ import { HEADER_ICON_SIZE, PAGE_GUTTER } from "../lib/navMetrics";
  * opens below it, its right edge on the icon's, so from the header's
  * right end it stays on screen. It mounts only while open, so a menu's own
  * polling (the connection's round trip) runs only then.
+ *
+ * Two things an icon may have besides (0.181.0, the install under way —
+ * SoftwareInstallIndicator): a `tooltip`, what a pointer resting on it is
+ * told (a touch only taps, and gets the menu), put away while the menu is
+ * open so the two never lie over each other; and `turning`, the header's
+ * glyph going round on Chakra's `spin` — a transform alone — and standing
+ * still under reduced motion (`data-header-turning`). The menu's own copy
+ * of the glyph stands still.
  */
 export function HeaderMenu({
   icon,
   label,
   color,
   title = label,
+  tooltip,
+  turning = false,
   children,
   onOpenChange,
 }: {
@@ -38,27 +53,64 @@ export function HeaderMenu({
   /** The icon's colour: the status colour it has in the header. */
   color?: string;
   title?: React.ReactNode;
+  /** What a pointer resting on the icon is told. */
+  tooltip?: string;
+  /** The header's glyph goes round: something is under way. */
+  turning?: boolean;
   children: React.ReactNode;
   onOpenChange?: (open: boolean) => void;
 }) {
+  // The tooltip and the menu hang off one button, which each must know by
+  // the same id (Chakra's way for a trigger of two things).
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [hinted, setHinted] = useState(false);
+  const trigger = (
+    <Popover.Trigger asChild>
+      <IconButton
+        aria-label={label}
+        variant="plain"
+        size="xs"
+        flexShrink={0}
+        color={color}
+      >
+        <Icon
+          boxSize={HEADER_ICON_SIZE}
+          animation={
+            turning ? `spin ${TURN_SECONDS}s linear infinite` : undefined
+          }
+          _motionReduce={{ animation: "none" }}
+          data-header-turning={turning ? "" : undefined}
+        >
+          {icon}
+        </Icon>
+      </IconButton>
+    </Popover.Trigger>
+  );
   return (
     <Popover.Root
       lazyMount
       unmountOnExit
+      ids={tooltip ? { trigger: id } : undefined}
       positioning={{ placement: "bottom-end", gutter: 8 }}
-      onOpenChange={(e) => onOpenChange?.(e.open)}
+      onOpenChange={(e) => {
+        setOpen(e.open);
+        onOpenChange?.(e.open);
+      }}
     >
-      <Popover.Trigger asChild>
-        <IconButton
-          aria-label={label}
-          variant="plain"
-          size="xs"
-          flexShrink={0}
-          color={color}
+      {tooltip ? (
+        <Tooltip
+          ids={{ trigger: id }}
+          content={tooltip}
+          showArrow
+          open={hinted && !open}
+          onOpenChange={(e) => setHinted(e.open)}
         >
-          <Icon boxSize={HEADER_ICON_SIZE}>{icon}</Icon>
-        </IconButton>
-      </Popover.Trigger>
+          {trigger}
+        </Tooltip>
+      ) : (
+        trigger
+      )}
       <Portal>
         <Popover.Positioner>
           <Popover.Content

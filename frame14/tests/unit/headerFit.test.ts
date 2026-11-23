@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fitHeader, watchHeaderFit } from "../../src/lib/headerFit";
 
 // 0.176.0: the header's buttons sit in its middle, and when the row has no
-// room for everything it gives up the name, then the theme's toggle
-// (StatusBanner). Which is found from the layout: jsdom has none, so the
+// room for everything it gives up the name, then the theme's toggle, then
+// (0.181.0) the arrows of an update being installed (StatusBanner). Which is found from the layout: jsdom has none, so the
 // columns each level would come to are made up here — what a real page
 // lays out is header.spec's.
 
@@ -49,9 +49,23 @@ describe("the header's fit", () => {
     expect(el.dataset.headerFit).toBe("tight");
   });
 
+  // 0.181.0: an update being installed is one more status icon, and on the
+  // busiest day the one that gives way — after the theme's toggle.
+  it("gives up the arrows of an install when the toggle's going still leaves no room", () => {
+    const widths: Record<string, string> = {
+      all: "116px 180px 220px",
+      icon: "32px 180px 220px",
+      tight: "32px 144px 220px",
+      bare: "32px 144px 184px",
+    };
+    const el = row((level) => widths[level ?? "all"]);
+    expect(fitHeader(el)).toBe("bare");
+    expect(el.dataset.headerFit).toBe("bare");
+  });
+
   it("stops at the least it can be when nothing fits", () => {
     const el = row(() => "32px 500px 0px");
-    expect(fitHeader(el)).toBe("tight");
+    expect(fitHeader(el)).toBe("bare");
   });
 
   it("counts a column that fills the row to the half pixel as fitting", () => {

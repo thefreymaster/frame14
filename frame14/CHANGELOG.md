@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.181.0
+
+- Added: while an update of Frame14 is being installed, the header shows a pair of arrows turning among its status icons, on every device — whether the install was started from Settings' Software card, from another device or from Home Assistant's add-on page. Resting a pointer on it says which version ("A new version v0.181.0 is being installed"); a tap opens a small menu saying the same, since a touch screen has no tooltips. It goes when the install is over.
+
 ## 0.180.0
 
 - Added: a tap on a Stocks card opens that ticker's drawer — from the right on a desktop, from the bottom on a phone and the frame — with today's figures, still live, and what Finnhub knows of it: the company (its logo, industry, exchange and market value), key numbers (where the price lies in the 52-week range, P/E, earnings per share, dividend yield, beta, average volume), the analysts' ratings as one bar from strong buy to strong sell, and the week's latest headlines. A section Finnhub has nothing for is left out — an ETF such as SPY has no company profile and no analysts. The first opening of a ticker takes a few seconds while Finnhub is asked; after that the answers are kept for a while. On a phone or desktop a headline opens its article in a new tab; on the frame headlines are text only, so a tap can't take the wall away from the dashboard.

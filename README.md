@@ -34,7 +34,7 @@ Frame14 turns a wall-mounted tablet into the house's display and a phone into it
 - **Stocks** — the prices of the tickers you list, from [Finnhub](https://finnhub.io) with a free API key: trade by trade while the market is open, with the day's change and range; a tap on a ticker opens its company, key numbers, analysts' ratings and news. No Home Assistant integration needed.
 - **Speed test** — how fast the device in your hand, or on the wall, reaches the add-on: ping, download and upload over the Wi-Fi and LAN (or the tunnel from outside), measured on demand. Nothing to configure.
 - **And more** — a Plex movie takes over the frames as its poster; a tracked team's game day gets a scoreboard; a doorbell card pops up when someone is at the door; the mic runs an Assist pipeline.
-- **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. A remote's header has a button that refreshes the frames and a switch for their screen; every header has a switch between bright and dark. Installable as a PWA.
+- **Frame or remote** — each device is a frame (the tablet) or a remote (a phone), with its own navigation; Home Assistant automations can switch the frames' view on motion. A remote's header has a button that refreshes the frames and a switch for their screen; every header has a switch between bright and dark, and a pair of turning arrows while an update of the add-on is being installed. Installable as a PWA.
 
 ## Installation
 

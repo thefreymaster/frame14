@@ -13,6 +13,7 @@ import { ApplianceIndicators } from "./ApplianceIndicators";
 import { ArrangingVeil } from "./ArrangingVeil";
 import { ConnectionMenu } from "./ConnectionMenu";
 import { HeaderClock } from "./HeaderClock";
+import { SoftwareInstallIndicator } from "./SoftwareInstallIndicator";
 import { useDesktop } from "../hooks/useDesktop";
 
 // The height of the line the icon and the name share: the name's own line
@@ -21,12 +22,15 @@ const NAME_ROW = "1.75rem";
 
 /**
  * What the row gives up as it runs out of room (lib/headerFit writes the
- * level on it): the name, then the theme's toggle.
+ * level on it): the name, then the theme's toggle, then the arrows of an
+ * update being installed.
  */
 const FIT_CSS = {
-  '&:is([data-header-fit="icon"], [data-header-fit="tight"]) [data-header-word]':
+  '&:is([data-header-fit="icon"], [data-header-fit="tight"], [data-header-fit="bare"]) [data-header-word]':
     { display: "none" },
-  '&[data-header-fit="tight"] [data-header-theme]': { display: "none" },
+  '&:is([data-header-fit="tight"], [data-header-fit="bare"]) [data-header-theme]':
+    { display: "none" },
+  '&[data-header-fit="bare"] [data-header-install]': { display: "none" },
 } as const;
 
 /**
@@ -49,10 +53,11 @@ const PHONE_CSS = {
  * The header across the top of every view: the app's icon and name at the
  * left; in the middle the buttons — the mic, a remote's button to refresh
  * the frames, the theme's toggle and the frames' power button; and at the
- * right the status icons — running appliances and the connection — and
- * (on a desktop) the date and time. (The version is on the Settings page.)
- * The appliance and connection icons each open a small menu on a tap
- * (HeaderMenu). The buttons sit `xs` apart, one group, and the status
+ * right the status icons — running appliances, an update while it is being
+ * installed (0.181.0, SoftwareInstallIndicator: a pair of arrows going
+ * round) and the connection — and (on a desktop) the date and time. (The
+ * version is on the Settings page.) The status icons each open a small
+ * menu on a tap (HeaderMenu). The buttons sit `xs` apart, one group, and the status
  * icons the same, another.
  *
  * **The buttons are in the middle of the header** on the frame, a tablet
@@ -71,7 +76,9 @@ const PHONE_CSS = {
  * remote's refresh button made that four appliances on a 390px iPhone, the
  * power button off the screen): the icon alone at the left, every button
  * on the screen; and with no room even then, the theme's toggle goes as
- * well. lib/headerFit finds which, from the layout itself.
+ * well — and after it the arrows of an update being installed (0.181.0),
+ * so they never cost a button. lib/headerFit finds which, from the layout
+ * itself.
  *
  * Layout renders it, and it comes and goes with the nav (so /blank, photos and
  * posters stay full-bleed). Fixed like the nav: the page scrolls under it, and
@@ -202,6 +209,7 @@ export function StatusBanner({
       <HStack gap="3" ms="3" justifySelf="end" data-header-end>
         <HStack ref={status} gap="xs" data-header-status>
           <ApplianceIndicators />
+          <SoftwareInstallIndicator />
           <ConnectionMenu />
         </HStack>
         {desktop && <HeaderClock />}

@@ -31,6 +31,12 @@
 // name it, FINNHUB_API_KEY is STUB.stocks.key), answering with what the real
 // one sent (finnhub-samples.json):
 //   GET  /_stub/finnhub/api/v1/quote?symbol= and …/stock/market-status
+//   GET  …/stock/profile2, …/stock/metric, …/stock/recommendation and
+//        …/company-news ?symbol= — a ticker's detail (0.180.0), the same
+//                        answers all run long (the server keeps them, and a
+//                        reset doesn't reach its memory): AAPL every part,
+//                        SPY as an ETF — no profile, no analysts —, any
+//                        other ticker nothing; a headline `agoMinutes` old
 //   WS   /_stub/finnhub/ws?token= — subscribe / unsubscribe, and the trades
 //   POST /_stub/finnhub/trade {"symbol", "price", "conditions", "volume"} — a
 //                        trade to the sockets subscribed to it, stamped in the
@@ -86,6 +92,7 @@ export const STUB = {
     key: "e2e-finnhub",
     quotes: FINNHUB.quotes,
     market: FINNHUB.market,
+    details: FINNHUB.details,
   },
 };
 
@@ -878,6 +885,18 @@ export function createStub({ port = 8310, host = "127.0.0.1", log = () => {} } =
         return json(res, 200, finnhubQuotes[url.searchParams.get("symbol") ?? ""] ?? FINNHUB.unknown);
       }
       if (p === "/_stub/finnhub/api/v1/stock/market-status") return json(res, 200, finnhubMarket);
+      const detail = FINNHUB.details[url.searchParams.get("symbol") ?? ""] ?? FINNHUB.noDetail;
+      if (p === "/_stub/finnhub/api/v1/stock/profile2") return json(res, 200, detail.profile);
+      if (p === "/_stub/finnhub/api/v1/stock/metric") return json(res, 200, detail.metric);
+      if (p === "/_stub/finnhub/api/v1/stock/recommendation") return json(res, 200, detail.recommendation);
+      if (p === "/_stub/finnhub/api/v1/company-news") {
+        const now = Math.floor(Date.now() / 1000);
+        return json(
+          res,
+          200,
+          detail.news.map(({ agoMinutes, ...item }) => ({ ...item, datetime: now - agoMinutes * 60 })),
+        );
+      }
     }
     if (req.method === "POST" && p === "/_stub/reset") {
       reset();

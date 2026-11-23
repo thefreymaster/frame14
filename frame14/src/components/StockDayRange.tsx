@@ -9,20 +9,28 @@ import { dayRangeShare, fmtPrice } from "../lib/stocks";
  * none. The marker moves by a transform alone (the frame's WebView lays out
  * nothing for it): a box as wide as the track, slid by the price's share of
  * its own width, with the dot at its start.
+ *
+ * The same bar is a year's range in a ticker's drawer (0.180.0,
+ * StockKeyNumbers): `caption` and `name` say which it is.
  */
 export function StockDayRange({
   low,
   high,
   price,
+  caption = "Day\u2019s range",
+  name = "day",
 }: {
   low: number | null;
   high: number | null;
   price: number | null;
+  caption?: string;
+  /** `data-stock-range`: which range this is, "day" or "year". */
+  name?: string;
 }) {
   const share = dayRangeShare(low, high, price);
   const ring = useBoardSurface();
   return (
-    <Stack gap="1.5" data-stock-range="">
+    <Stack gap="1.5" data-stock-range={name}>
       <Box position="relative" height="1.5" rounded="full" bg="bg.emphasized" data-stock-range-track="">
         {share != null && (
           <Box
@@ -58,7 +66,7 @@ export function StockDayRange({
         data-stock-range-labels=""
       >
         <Text data-stock-low="">{fmtPrice(low)}</Text>
-        <Text>Day&rsquo;s range</Text>
+        <Text>{caption}</Text>
         <Text data-stock-high="">{fmtPrice(high)}</Text>
       </Flex>
     </Stack>

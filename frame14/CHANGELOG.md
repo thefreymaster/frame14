@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.180.0
+
+- Added: a tap on a Stocks card opens that ticker's drawer — from the right on a desktop, from the bottom on a phone and the frame — with today's figures, still live, and what Finnhub knows of it: the company (its logo, industry, exchange and market value), key numbers (where the price lies in the 52-week range, P/E, earnings per share, dividend yield, beta, average volume), the analysts' ratings as one bar from strong buy to strong sell, and the week's latest headlines. A section Finnhub has nothing for is left out — an ETF such as SPY has no company profile and no analysts. The first opening of a ticker takes a few seconds while Finnhub is asked; after that the answers are kept for a while. On a phone or desktop a headline opens its article in a new tab; on the frame headlines are text only, so a tap can't take the wall away from the dashboard.
+- Fixed: a ticker that Finnhub's free plan doesn't cover no longer turns the whole Stocks page into "Finnhub refused the key". That card says it has no quote, and the others keep their prices.
+
 ## 0.179.0
 
 - Added: a Stocks page. Each ticker you list gets a card with its price, the day's change against the previous close (green up, red down), where the price sits in the day's range, and the open and previous close. During the market's regular hours each trade moves the price as it happens, and the price lights up green or red as it moves; outside them the card shows Finnhub's latest quote. The page's header says whether the market is open, in pre-market, after hours or closed, and says "Delayed" if Finnhub's live stream can't be reached and prices are being checked every few seconds instead. On the frame, a handful of tickers fill the screen a row each, in large type. Stocks is in the frames' navigation once it's set up, and off by default in a remote's.

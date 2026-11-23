@@ -25,6 +25,12 @@
  * outside it the card shows the quote's own price and change, as Finnhub
  * works them out.
  *
+ * A ticker's detail (0.180.0) — its company, key numbers, the analysts'
+ * ratings and the week's news, for the drawer a card opens — is four more
+ * REST calls, made only when a drawer asks while a page watches, kept in
+ * memory (TIMINGS.company … news) and cleaned here: text held to a line, a
+ * link only if it is https, the logo only from Finnhub's own static hosts.
+ *
  * Written against Finnhub's documentation — its API spec, its trades page and
  * the conditions list that page links — not against captured answers. The key goes to Finnhub alone: in a header for REST
  * (the socket can only take it in its address), never into a snapshot or a
@@ -73,7 +79,29 @@ export const TIMINGS = {
   fresh: 60_000,
   /** …and waits this long for them at most. */
   wait: 5_000,
+  /** How long a drawer's answers are kept: the company and the analysts' ratings… */
+  company: 24 * 3_600_000,
+  ratings: 24 * 3_600_000,
+  /** …the key numbers… */
+  metrics: 6 * 3_600_000,
+  /** …and the news. */
+  news: 15 * 60_000,
+  /** A part Finnhub couldn't be asked for isn't asked for again this long. */
+  failed: 60_000,
 };
+
+/** The parts of a ticker's detail, in the order they are asked for. */
+export const DETAIL_PARTS = ["company", "metrics", "ratings", "news"];
+
+/** Where Finnhub serves its logos from: the only hosts a logo's address may name. */
+export const LOGO_HOSTS = ["static.finnhub.io", "static2.finnhub.io"];
+
+/** A drawer's news: this many headlines, from this many days. */
+export const NEWS_MAX = 6;
+export const NEWS_DAYS = 7;
+
+/** After this many of a drawer's calls in a row, a routine one goes first. */
+export const URGENT_RUN = 4;
 
 /** Finnhub's words about a refusal, at most this long. */
 export const ERROR_MAX = 200;
@@ -200,6 +228,176 @@ export function quoteFrom(symbol, q) {
     at: num(q.t) ? q.t * 1000 : null,
   };
 }
+
+/** Outside text as one line: no control or direction-turning characters, `max` at most. */
+export function line(words, max) {
+  if (typeof words !== "string") return "";
+  return words
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+}
+
+/**
+ * An address from outside, kept only if it is https with no name or password
+ * in it — and, given `hosts`, on one of them. Null otherwise.
+ */
+export function httpsUrl(address, hosts) {
+  if (typeof address !== "string" || address.length > 2000) return null;
+  let url;
+  try {
+    url = new URL(address);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" || url.username || url.password) return null;
+  if (hosts && !hosts.includes(url.hostname)) return null;
+  return url.href;
+}
+
+/** Finnhub's exchange in the word people use: "NASDAQ NMS - GLOBAL MARKET" is Nasdaq. */
+export function exchangeName(raw) {
+  const text = line(raw, 60);
+  if (!text) return null;
+  const upper = text.toUpperCase();
+  if (upper.includes("NASDAQ")) return "Nasdaq";
+  if (upper.includes("ARCA")) return "NYSE Arca";
+  if (upper.includes("NYSE AMERICAN") || upper.includes("NYSE MKT")) return "NYSE American";
+  if (upper.includes("NEW YORK STOCK EXCHANGE") || upper.startsWith("NYSE")) return "NYSE";
+  if (upper.includes("CBOE") || upper.includes("BATS")) return "Cboe";
+  return text;
+}
+
+/**
+ * `/stock/profile2` as the drawer's company: null without a name (an ETF's
+ * answer is `{}`). The market value comes in millions.
+ */
+export function companyFrom(body) {
+  const name = line(body?.name, 80);
+  if (!name) return null;
+  const millions = num(body.marketCapitalization);
+  return {
+    name,
+    industry: line(body.finnhubIndustry, 60) || null,
+    exchange: exchangeName(body.exchange),
+    marketValue: millions != null && millions > 0 ? millions * 1e6 : null,
+    logo: httpsUrl(body.logo, LOGO_HOSTS),
+  };
+}
+
+/**
+ * The names Finnhub's `/stock/metric` may give each key number under, the
+ * first found taken. Its documented sample has the 52-week range, the beta
+ * and the 10-day volume; the P/E's, the earnings' and the yield's names are
+ * not in it — these are the likely ones, and `unreadMetricNames` says what
+ * came instead.
+ */
+const METRIC_NAMES = {
+  week52High: ["52WeekHigh"],
+  week52Low: ["52WeekLow"],
+  pe: ["peTTM", "peBasicExclExtraTTM", "peExclExtraTTM", "peInclExtraTTM", "peNormalizedAnnual", "peAnnual"],
+  eps: ["epsTTM", "epsBasicExclExtraItemsTTM", "epsExclExtraItemsTTM", "epsInclExtraItemsTTM", "epsNormalizedAnnual", "epsAnnual"],
+  dividendYield: ["dividendYieldIndicatedAnnual", "currentDividendYieldTTM"],
+  beta: ["beta"],
+  averageVolume: ["10DayAverageTradingVolume", "3MonthAverageTradingVolume"],
+};
+/** The key numbers whose names are guesses, and what a name of each looks like. */
+const GUESSED = { pe: /^pe/i, eps: /^eps/i, dividendYield: /dividend.*yield|yield/i };
+
+/**
+ * `/stock/metric` as the drawer's key numbers: each null where Finnhub gives
+ * none, the whole null with none at all. The yield is a percentage as it
+ * comes; the volume comes in millions of shares. A P/E or a yield of zero or
+ * less is none — a company with no earnings, or no dividend.
+ */
+export function metricsFrom(body) {
+  const metric = body?.metric;
+  if (!metric || typeof metric !== "object") return null;
+  const out = {};
+  for (const [key, names] of Object.entries(METRIC_NAMES)) {
+    out[key] = names.map((name) => num(metric[name])).find((v) => v != null) ?? null;
+  }
+  if (out.pe != null && out.pe <= 0) out.pe = null;
+  if (out.dividendYield != null && out.dividendYield <= 0) out.dividendYield = null;
+  if (out.averageVolume != null) out.averageVolume = out.averageVolume > 0 ? out.averageVolume * 1e6 : null;
+  // A range needs both its ends, the right way round.
+  if (!(out.week52Low > 0 && out.week52High >= out.week52Low)) out.week52High = out.week52Low = null;
+  return Object.values(out).some((v) => v != null) ? out : null;
+}
+
+/**
+ * For a guessed key number that came back empty: the names in Finnhub's
+ * answer that look like it, so METRIC_NAMES can be put right. `{ pe: [...] }`,
+ * only for those with something to say.
+ */
+export function unreadMetricNames(body, metrics) {
+  const metric = body?.metric;
+  if (!metric || typeof metric !== "object") return {};
+  const out = {};
+  for (const [key, like] of Object.entries(GUESSED)) {
+    if (metrics?.[key] != null) continue;
+    const names = Object.keys(metric).filter((name) => like.test(name) && num(metric[name]) != null);
+    if (names.length) out[key] = names.slice(0, 12).map((name) => line(name, 40));
+  }
+  return out;
+}
+
+/** `/stock/recommendation` as the newest month's counts; null with no analyst. */
+export function ratingsFrom(body) {
+  if (!Array.isArray(body)) return null;
+  const newest = body
+    .filter((r) => r && typeof r.period === "string" && /^\d{4}-\d{2}-\d{2}$/.test(r.period))
+    .sort((a, b) => (a.period < b.period ? 1 : -1))[0];
+  if (!newest) return null;
+  const count = (v) => {
+    const n = num(v);
+    return n != null && n > 0 ? Math.round(n) : 0;
+  };
+  const out = {
+    period: newest.period,
+    strongBuy: count(newest.strongBuy),
+    buy: count(newest.buy),
+    hold: count(newest.hold),
+    sell: count(newest.sell),
+    strongSell: count(newest.strongSell),
+  };
+  return out.strongBuy + out.buy + out.hold + out.sell + out.strongSell > 0 ? out : null;
+}
+
+/**
+ * `/company-news` as the drawer's headlines: the newest NEWS_MAX, each once,
+ * with its source and when (seconds, as a quote's); the link only if it is
+ * https. Null with none.
+ */
+export function newsFrom(body) {
+  if (!Array.isArray(body)) return null;
+  const seen = new Set();
+  const items = [];
+  for (const n of body.slice(0, 500)) {
+    const headline = line(n?.headline, 200);
+    const seconds = num(n?.datetime);
+    if (!headline || seconds == null || seconds <= 0 || seen.has(headline)) continue;
+    seen.add(headline);
+    items.push({ headline, source: line(n.source, 40) || null, at: seconds * 1000, url: httpsUrl(n.url) });
+  }
+  items.sort((a, b) => b.at - a.at);
+  return items.length ? items.slice(0, NEWS_MAX) : null;
+}
+
+const day = (ms) => new Date(ms).toISOString().slice(0, 10);
+
+/** Each part of a ticker's detail: Finnhub's path, its parameters, and its reader. */
+const DETAIL = {
+  company: { path: "/stock/profile2", params: (symbol) => ({ symbol }), from: companyFrom },
+  metrics: { path: "/stock/metric", params: (symbol) => ({ symbol, metric: "all" }), from: metricsFrom },
+  ratings: { path: "/stock/recommendation", params: (symbol) => ({ symbol }), from: ratingsFrom },
+  news: {
+    path: "/company-news",
+    params: (symbol) => ({ symbol, from: day(Date.now() - NEWS_DAYS * 86_400_000), to: day(Date.now()) }),
+    from: newsFrom,
+  },
+};
 
 /** Finnhub over the network: REST with the key in a header, and its socket. */
 export function finnhubTransport({ apiUrl, wsUrl, apiKey, handshakeTimeout = TIMINGS.handshake }) {
@@ -344,25 +542,30 @@ export function startStocks({
 
   // ── REST: one queue, a call at a time, `pace` apart ────────────────────────
 
+  // Two lists: the routine calls (the quotes, the market), and a drawer's,
+  // which someone is waiting on and go first — but for one routine call after
+  // every URGENT_RUN of them, so a run of drawers never keeps the quotes back.
   const jobs = [];
+  const urgent = [];
+  let urgentRun = 0;
   const pending = new Map();
   let pumping = false;
   let pauseUntil = 0;
 
-  function enqueue(key, run) {
+  function enqueue(key, run, { first = false } = {}) {
     const have = pending.get(key);
     if (have) return have.done;
     let resolve;
     const done = new Promise((r) => (resolve = r));
     const job = { key, run, done, resolve };
     pending.set(key, job);
-    jobs.push(job);
+    (first ? urgent : jobs).push(job);
     void pump();
     return done;
   }
 
   function dropJobs() {
-    for (const job of jobs.splice(0)) job.resolve();
+    for (const job of [...urgent.splice(0), ...jobs.splice(0)]) job.resolve();
     pending.clear();
   }
 
@@ -372,21 +575,25 @@ export function startStocks({
     if (pumping) return;
     pumping = true;
     try {
-      while (jobs.length && !stopped) {
+      while ((jobs.length || urgent.length) && !stopped) {
         const wait = pauseUntil - Date.now();
         if (wait > 0) await sleep(wait);
-        if (stopped || !jobs.length) break;
-        const job = jobs[0];
+        if (stopped || !(jobs.length || urgent.length)) break;
+        // Chosen after the wait: a drawer opened during it goes first.
+        const list = urgent.length && (urgentRun < URGENT_RUN || !jobs.length) ? urgent : jobs;
+        const job = list[0];
         let again = false;
         try {
           again = (await job.run()) === "again";
         } catch (err) {
           log.warn(`[stocks] ${job.key}: ${err.message}`);
         }
-        // A 429 asks for the same call again once the wait is over.
-        if (again && jobs[0] === job) continue;
-        if (jobs[0] === job) jobs.shift();
-        pending.delete(job.key);
+        // A 429 asks for the same call again once the wait is over: it keeps
+        // its place at the head of its list, whatever is taken meanwhile.
+        if (again && list[0] === job) continue;
+        if (list[0] === job) list.shift();
+        urgentRun = list === urgent ? urgentRun + 1 : 0;
+        if (pending.get(job.key) === job) pending.delete(job.key);
         job.resolve();
         pauseUntil = Math.max(pauseUntil, Date.now() + t.pace);
       }
@@ -395,30 +602,53 @@ export function startStocks({
     }
   }
 
-  /** One REST call: the body, or null — and "again" for a rate limit. */
-  async function call(path, params) {
-    if (refused) return null;
+  /** What Finnhub's plan has none of, said once each. */
+  const unavailable = new Set();
+
+  /**
+   * One REST call: `{ ok, body }`; `{ again }` for a rate limit; `{ none }`
+   * where the key's plan has no such thing (a 403 — one ticker's quote, an
+   * ETF's profile: that call's, not the key's refusal, which is a 401); `{}`
+   * for anything else that went wrong.
+   */
+  async function ask(path, params) {
+    if (refused) return {};
     let res;
     try {
       res = await net.get(path, params);
     } catch (err) {
       log.warn(`[stocks] ${path}: ${err.message}`);
-      return null;
+      return {};
     }
     if (res.status === 429) {
       pauseUntil = Date.now() + t.rateLimit;
       log.warn(`[stocks] Finnhub's rate limit: waiting ${t.rateLimit / 1000}s`);
-      return "again";
+      return { again: true };
     }
-    if (res.status === 401 || res.status === 403) {
-      refuse(res.body?.error ?? res.body?.message ?? `Finnhub refused the key (HTTP ${res.status})`);
-      return null;
+    if (res.status === 401) {
+      refuse(res.body?.error ?? res.body?.message ?? "Finnhub refused the key (HTTP 401)");
+      return {};
+    }
+    if (res.status === 403) {
+      const what = `${path} ${params?.symbol ?? ""}`.trim();
+      if (!unavailable.has(what)) {
+        unavailable.add(what);
+        log.warn(`[stocks] ${what}: not on this key's Finnhub plan (HTTP 403)`);
+      }
+      return { none: true };
     }
     if (res.status !== 200 || !res.body || typeof res.body !== "object") {
       log.warn(`[stocks] ${path}: HTTP ${res.status}`);
-      return null;
+      return {};
     }
-    return res.body;
+    return { ok: true, body: res.body };
+  }
+
+  /** A quote's or the market's call: the body, or null — and "again" for a rate limit. */
+  async function call(path, params) {
+    const res = await ask(path, params);
+    if (res.again) return "again";
+    return res.ok ? res.body : null;
   }
 
   function refuse(words) {
@@ -493,6 +723,80 @@ export function startStocks({
     return Promise.all(tickers.map(fetchQuote)).then(() => {
       quotesAt = Date.now();
     });
+  }
+
+  // ── A ticker's detail ──────────────────────────────────────────────────────
+
+  /** symbol → part → { at: the last asking, keep: how long that stands, value, answered }. */
+  const details = new Map();
+  let metricNamesSaid = false;
+
+  const partKey = (symbol, part) => `${part}:${symbol}`;
+
+  function partOf(symbol, part) {
+    let parts = details.get(symbol);
+    if (!parts) details.set(symbol, (parts = {}));
+    return (parts[part] ??= { at: 0, keep: 0, value: null, answered: false });
+  }
+
+  function fetchPart(symbol, part) {
+    return enqueue(
+      partKey(symbol, part),
+      async () => {
+        const held = partOf(symbol, part);
+        // Stamped before the call: whatever comes of it — no answer, a throw
+        // in the reading — an open drawer's asking can't have Finnhub asked
+        // again at once.
+        held.at = Date.now();
+        held.keep = t.failed;
+        const res = await ask(DETAIL[part].path, DETAIL[part].params(symbol));
+        if (res.again) return "again";
+        if (!res.ok && !res.none) return undefined;
+        const value = res.ok ? DETAIL[part].from(res.body) : null;
+        if (part === "metrics" && res.ok && !metricNamesSaid) {
+          const unread = unreadMetricNames(res.body, value);
+          if (Object.keys(unread).length) {
+            metricNamesSaid = true;
+            log.warn(`[stocks] ${symbol}'s key numbers: no match for ${JSON.stringify(unread)}`);
+          }
+        }
+        held.value = value;
+        held.answered = true;
+        held.keep = t[part];
+        return undefined;
+      },
+      { first: true },
+    );
+  }
+
+  /**
+   * The parts not held, or held past their time, asked for — only while a
+   * page watches, so nothing outside one has Finnhub asked. Returns the calls
+   * a first answer waits on: a part held but old is sent as it is meanwhile.
+   */
+  function askDetail(symbol) {
+    if (stopped || refused || watchers.size === 0) return [];
+    const firsts = [];
+    for (const part of DETAIL_PARTS) {
+      const held = details.get(symbol)?.[part];
+      if (held && Date.now() - held.at < held.keep) continue;
+      const done = fetchPart(symbol, part);
+      if (!held?.answered) firsts.push(done);
+    }
+    return firsts;
+  }
+
+  /** What's held of a ticker's detail: `pending` the parts on their way, `failed` those Finnhub didn't answer for. */
+  function detailOf(symbol) {
+    const out = { symbol, pending: [], failed: [] };
+    for (const part of DETAIL_PARTS) {
+      const held = details.get(symbol)?.[part];
+      out[part] = held?.answered ? held.value : null;
+      if (held?.answered) continue;
+      if (pending.has(partKey(symbol, part))) out.pending.push(part);
+      else if (held?.at) out.failed.push(part);
+    }
+    return out;
   }
 
   // ── The socket ─────────────────────────────────────────────────────────────
@@ -704,6 +1008,30 @@ export function startStocks({
       // The refusal closed the socket; pages still on /stocks want it back.
       if (wasRefused && !refused && watchers.size > 0 && !upstream && !reconnectTimer) connect();
       return snapshot();
+    },
+
+    /**
+     * A ticker's detail for GET /api/stocks/<symbol>: its company, key
+     * numbers, ratings and news, the parts not yet held asked for first
+     * (waiting `wait` at most). Null for a symbol that isn't one of the
+     * tickers — Finnhub is asked for the config's own, never a caller's.
+     */
+    async detail(asked) {
+      const wanted = String(asked ?? "").trim().toUpperCase();
+      const symbol = tickers.find((s) => s === wanted);
+      if (!symbol) return null;
+      const firsts = askDetail(symbol);
+      if (firsts.length) {
+        let timer;
+        await Promise.race([
+          Promise.all(firsts),
+          new Promise((r) => {
+            timer = setTimeout(r, t.wait);
+          }),
+        ]);
+        clearTimeout(timer);
+      }
+      return detailOf(symbol);
     },
 
     stop() {

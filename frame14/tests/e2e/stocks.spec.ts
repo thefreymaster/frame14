@@ -1,5 +1,5 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { pageErrors, resetStub, splashGone, stub } from "./helpers";
+import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
+import { pageErrors, resetStub, settled, splashGone, stub } from "./helpers";
 import { APP_URL } from "./ports";
 
 // The Stocks page (0.179.0): the stub's stand-in Finnhub — its quotes, its
@@ -7,8 +7,14 @@ import { APP_URL } from "./ports";
 // the server's timings shortened in playwright.config (FRAME14_STOCKS_TIMINGS).
 // The stub stamps each trade in the regular session whatever the hour, so a
 // trade moves a card at any time of day.
+//
+// And a ticker's drawer (0.180.0): the stub's AAPL has every part of a
+// detail, its SPY what an ETF has — no company, no analysts — and its QQQ
+// and DIA nothing. The server keeps a detail once asked, and the stub's
+// never change, so nothing here depends on which test asked first.
 
-const card = (page: Page, symbol: string) => page.locator(`[data-stock="${symbol}"]`);
+// The list's own cards: an open drawer draws its ticker's card again.
+const card = (page: Page, symbol: string) => page.locator(`[data-stocks] [data-stock="${symbol}"]`);
 const price = (page: Page, symbol: string) => card(page, symbol).locator("[data-stock-price]");
 const change = (page: Page, symbol: string) => card(page, symbol).locator("[data-stock-change]");
 const flashes = async (page: Page, symbol: string) => Number(await price(page, symbol).getAttribute("data-flash-count"));
@@ -43,11 +49,12 @@ test("a card a ticker, in the configured order, with Finnhub's price, change and
   const errors = pageErrors(page);
   await live(page);
   await expect(page.getByRole("heading", { name: "Stocks" })).toBeVisible();
-  await expect(page.locator("[data-stock]")).toHaveCount(3);
+  await expect(page.locator("[data-stock]")).toHaveCount(4);
   expect(await page.locator("[data-stock]").evaluateAll((els) => els.map((el) => el.getAttribute("data-stock")))).toEqual([
     "SPY",
     "QQQ",
     "DIA",
+    "AAPL",
   ]);
   await expect(price(page, "SPY")).toHaveText("717.42");
   await expect(change(page, "SPY")).toHaveText("+4.18 (+0.59%)");
@@ -146,7 +153,7 @@ test("a refused key is the page's error, in Finnhub's words — and the prices c
   await expect(page.locator('[data-stocks-status="live"]')).toBeVisible();
 });
 
-test("the cards lie three across a desktop, and a card a row down an upright frame, sharing its height", async ({
+test("the cards lie side by side across a desktop, and a card a row down an upright frame, sharing its height", async ({
   page,
   isMobile,
 }) => {
@@ -175,10 +182,10 @@ test("the cards lie three across a desktop, and a card a row down an upright fra
       .toBe(true);
     return look();
   };
-  // 1920x1080: one row of three.
+  // 1920x1080: one row of the four.
   await expect.poll(async () => new Set((await look()).cards.map((b) => b.top)).size).toBe(1);
 
-  // An upright frame's shape: a card a row, each the list's width, the three
+  // An upright frame's shape: a card a row, each the list's width, the four
   // the same height and reaching the page's foot.
   await page.setViewportSize({ width: 900, height: 1400 });
   await expect.poll(async () => new Set((await look()).cards.map((b) => b.left)).size).toBe(1);
@@ -186,8 +193,9 @@ test("the cards lie three across a desktop, and a card a row down an upright fra
   for (const card of cards) expect(Math.abs(card.width - list.width)).toBeLessThanOrEqual(1);
   const heights = cards.map((c) => c.height);
   expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(2);
-  // Filling the page: the cards are far taller than their contents need.
-  expect(heights[0]).toBeGreaterThan(250);
+  // Filling the page: the cards are far taller than the 12rem they'd be at
+  // least (192px here), a quarter of the page's room each.
+  expect(heights[0]).toBeGreaterThan(230);
 });
 
 test("Stocks is in a frame's rail, and on a remote it's offered but off until turned on", async ({ page, isMobile }) => {
@@ -206,5 +214,205 @@ test("Stocks is in a frame's rail, and on a remote it's offered but off until tu
   } finally {
     // A frame's tap sends every frame there: the frames' view back as the suite has it.
     await page.request.get(`${APP_URL}/api/change/home`);
+  }
+});
+
+// ── A ticker's drawer (0.180.0) ──────────────────────────────────────────────
+
+/** The drawer a card opens, once its parts have come. */
+async function openDrawer(page: Page, symbol: string): Promise<Locator> {
+  await splashGone(page);
+  await card(page, symbol).click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByRole("heading", { name: symbol })).toBeVisible();
+  // Asked of the stub's Finnhub, a call at a time: no part still on its way.
+  await expect(drawer.locator('[data-part-state="pending"]')).toHaveCount(0);
+  return drawer;
+}
+
+const parts = (drawer: Locator) =>
+  drawer.locator("[data-stock-part]").evaluateAll((els) => els.map((el) => `${el.getAttribute("data-stock-part")}:${el.getAttribute("data-part-state")}`));
+
+test("a tap on a card opens the ticker's drawer — from the right on a desktop, from the bottom on a phone — with what Finnhub knows of it", async ({
+  page,
+  isMobile,
+}) => {
+  const errors = pageErrors(page);
+  await live(page);
+  // The card is one button, named for what it opens.
+  await expect(page.getByRole("button", { name: "Show AAPL detail" })).toHaveCount(1);
+  const drawer = await openDrawer(page, "AAPL");
+  await settled(page);
+
+  // Where it is: a panel at the right edge, a gutter in, on a desktop; a
+  // sheet the screen's width on its bottom edge on a phone.
+  const viewport = page.viewportSize()!;
+  const box = (await drawer.boundingBox())!;
+  if (isMobile) {
+    expect([box.x, Math.round(box.width), Math.round(box.y + box.height)]).toEqual([0, viewport.width, viewport.height]);
+    expect(box.y).toBeGreaterThan(0);
+  } else {
+    expect(box.x).toBeGreaterThan(viewport.width / 2);
+    expect(viewport.width - (box.x + box.width)).toBeCloseTo(box.y, 0);
+    expect(box.height).toBeLessThanOrEqual(viewport.height);
+  }
+
+  // Today: the card's own figures.
+  await expect(drawer.getByText("Today")).toBeVisible();
+  await expect(drawer.locator("[data-stock-price]")).toHaveText("268.40");
+  await expect(drawer.locator("[data-stock-change]")).toHaveText("+1.92 (+0.72%)");
+  expect(await parts(drawer)).toEqual(["company:ready", "metrics:ready", "ratings:ready", "news:ready"]);
+
+  // The company.
+  await expect(drawer.locator("[data-stock-company-name]")).toHaveText("Apple Inc");
+  await expect(drawer.locator("[data-stock-company-facts]")).toHaveText("Technology · Nasdaq");
+  await expect(drawer.locator('[data-stock-stat="market-value"]')).toHaveText("$3.98T");
+  await expect(drawer.locator("[data-stock-logo]")).toHaveAttribute("src", /^https:\/\/static2\.finnhub\.io\//);
+
+  // The key numbers: the year's range with today's price on it, then the rest.
+  const year = drawer.locator('[data-stock-range="year"]');
+  await expect(year.locator("[data-stock-low]")).toHaveText("169.21");
+  await expect(year.locator("[data-stock-high]")).toHaveText("277.32");
+  expect(Number(await year.locator("[data-stock-range-share]").getAttribute("data-stock-range-share"))).toBeCloseTo(
+    (268.4 - 169.21) / (277.32 - 169.21),
+    3,
+  );
+  await expect(drawer.locator('[data-stock-stat="pe"]')).toHaveText("35.98");
+  await expect(drawer.locator('[data-stock-stat="eps"]')).toHaveText("$7.46");
+  await expect(drawer.locator('[data-stock-stat="dividend-yield"]')).toHaveText("0.39%");
+  await expect(drawer.locator('[data-stock-stat="beta"]')).toHaveText("1.29");
+  await expect(drawer.locator('[data-stock-stat="average-volume"]')).toHaveText("48.3M");
+
+  // The analysts: one bar, a part a rating in order, each as wide as its
+  // share of the fifty-five; the legend names them with their counts.
+  const bar = drawer.locator("[data-rating-bar]");
+  const widths = await bar.locator("[data-rating]").evaluateAll((els) =>
+    els.map((el) => [el.getAttribute("data-rating"), el.getBoundingClientRect().width] as const),
+  );
+  expect(widths.map(([key]) => key)).toEqual(["strongBuy", "buy", "hold", "sell", "strongSell"]);
+  const [strongBuy, buy, hold, sell] = widths.map(([, width]) => width);
+  expect(buy / strongBuy).toBeCloseTo(23 / 15, 1);
+  expect(hold / strongBuy).toBeCloseTo(14 / 15, 1);
+  expect(sell).toBeLessThan(hold / 4);
+  expect(await drawer.locator("[data-rating-count]").allTextContents()).toEqual(["15", "23", "14", "2", "1"]);
+  await expect(drawer.locator("[data-rating-month]")).toHaveText("November 2026 · 55 analysts");
+  // Two blues to buy, two reds to sell, gray between: the ends unlike each other.
+  const paint = await bar.locator("[data-rating]").evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor));
+  expect(new Set(paint).size).toBe(5);
+
+  // The news, the newest first; an article only where its address is https.
+  const headlines = drawer.locator("[data-stock-news] li");
+  await expect(headlines).toHaveCount(3);
+  await expect(headlines.nth(0)).toContainText("Apple's services revenue sets another record");
+  await expect(headlines.nth(0)).toContainText("Example Wire · 25m ago");
+  await expect(headlines.nth(1)).toContainText("3h ago");
+  await expect(headlines.nth(2)).toContainText("1d ago");
+  const links = drawer.locator("[data-stock-news] a");
+  await expect(links).toHaveCount(2);
+  await expect(links.first()).toHaveAttribute("href", "https://example.com/news/apple-services");
+  await expect(links.first()).toHaveAttribute("target", "_blank");
+  await expect(links.first()).toHaveAttribute("rel", /noopener/);
+  // The stub's third is http: text alone.
+  await expect(headlines.nth(2).locator("a")).toHaveCount(0);
+
+  // Escape closes it; the page is as it was.
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(price(page, "AAPL")).toHaveText("268.40");
+  expect(errors).toEqual([]);
+});
+
+test("the drawer's price is the card's: a trade moves it while the drawer is open", async ({ page, request }) => {
+  await live(page);
+  const drawer = await openDrawer(page, "AAPL");
+  await expect(drawer.locator("[data-stock-price]")).toHaveText("268.40");
+  await expect(async () => {
+    const { delivered } = (await stub(request, "/_stub/finnhub/trade", { symbol: "AAPL", price: 270.15 })) as { delivered: number };
+    expect(delivered).toBeGreaterThanOrEqual(1);
+    await expect(drawer.locator("[data-stock-price]")).toHaveText("270.15", { timeout: 1500 });
+  }).toPass({ timeout: 10_000 });
+  // Against the previous close, 266.48 — and on the year's range too.
+  await expect(drawer.locator("[data-stock-change]")).toHaveText("+3.67 (+1.38%)");
+  expect(
+    Number(await drawer.locator('[data-stock-range="year"] [data-stock-range-share]').getAttribute("data-stock-range-share")),
+  ).toBeCloseTo((270.15 - 169.21) / (277.32 - 169.21), 3);
+  await expect(price(page, "AAPL")).toHaveText("270.15");
+});
+
+test("a section Finnhub has nothing for is left out: an ETF's drawer has no company and no analysts", async ({ page }) => {
+  await live(page);
+  const spy = await openDrawer(page, "SPY");
+  expect(await parts(spy)).toEqual(["metrics:ready", "news:ready"]);
+  await expect(spy.getByText("Company")).toHaveCount(0);
+  await expect(spy.getByText("Analyst ratings")).toHaveCount(0);
+  // What there is of its key numbers: the year's range, the beta, the volume.
+  await expect(spy.locator('[data-stock-range="year"] [data-stock-high]')).toHaveText("721.60");
+  expect(await spy.locator("[data-stock-key-numbers] [data-stock-stat]").evaluateAll((els) => els.map((el) => el.getAttribute("data-stock-stat")))).toEqual([
+    "beta",
+    "average-volume",
+  ]);
+  await expect(spy.locator("[data-stock-news] li")).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(spy).toBeHidden();
+
+  // And one Finnhub has nothing at all of: today's figures alone.
+  const dia = await openDrawer(page, "DIA");
+  expect(await parts(dia)).toEqual([]);
+  await expect(dia.locator("[data-stock-price]")).toHaveText("489.77");
+  await expect(dia.getByText("Today")).toBeVisible();
+});
+
+test("a focused card opens its drawer from the keyboard, and the drawer's own close button shuts it", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a phone has no keyboard to focus a card with");
+  await live(page);
+  await splashGone(page);
+  await page.getByRole("button", { name: "Show QQQ detail" }).focus();
+  await page.keyboard.press("Enter");
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByRole("heading", { name: "QQQ" })).toBeVisible();
+  await expect(drawer.locator("[data-stock-price]")).toHaveText("655.10");
+  await drawer.getByRole("button", { name: "Close" }).click();
+  await expect(drawer).toBeHidden();
+});
+
+test("on the wall's frame the drawer is a sheet from the bottom and its headlines are text: no link to take the kiosk away", async ({
+  browser,
+  isMobile,
+}) => {
+  test.skip(isMobile, "a frame's shape of its own, once");
+  // The frame's tablet upright, in Fully Kiosk Browser: its JavaScript
+  // interface is on the page.
+  const context = await browser.newContext({
+    baseURL: APP_URL,
+    viewport: { width: 800, height: 1200 },
+    screen: { width: 800, height: 1200 },
+    userAgent:
+      "Mozilla/5.0 (Linux; Android 14; SM-X910 Build/UP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/131.0.0.0 Safari/537.36",
+    isMobile: true,
+    hasTouch: true,
+    deviceScaleFactor: 1,
+  });
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      localStorage.setItem("device-mode", "frame");
+      Object.assign(window, { fully: { turnScreenOn() {}, turnScreenOff() {}, setScreenBrightness() {}, getSensorValue: () => NaN } });
+    });
+    await page.goto("/stocks");
+    await expect(page.locator('[data-stocks-status="live"]')).toBeVisible({ timeout: 20_000 });
+    await splashGone(page);
+    await card(page, "AAPL").tap();
+    const drawer = page.getByRole("dialog");
+    await expect(drawer.locator('[data-part-state="pending"]')).toHaveCount(0);
+    await settled(page);
+    const box = (await drawer.boundingBox())!;
+    expect([box.x, Math.round(box.width), Math.round(box.y + box.height)]).toEqual([0, 800, 1200]);
+    expect(box.y).toBeGreaterThan(0);
+    await expect(drawer.locator("[data-stock-news] li")).toHaveCount(3);
+    await expect(drawer.locator("[data-stock-news] a")).toHaveCount(0);
+    await expect(drawer.locator("[data-stock-news]")).toContainText("Apple's services revenue sets another record");
+  } finally {
+    await context.close();
   }
 });

@@ -16,7 +16,7 @@ describe("the OpenAPI document", () => {
       "/api/push/key", "/api/push/subscribe", "/api/push/unsubscribe", "/api/push/test",
       "/api/seen/{id}", "/api/seen/{id}/still", "/api/seen/{id}/clip",
       "/api/speedtest/ping", "/api/speedtest/download", "/api/speedtest/upload",
-      "/api/account", "/api/account/alias", "/api/stocks",
+      "/api/account", "/api/account/alias", "/api/stocks", "/api/stocks/{symbol}",
     ]) {
       expect(openApiDocument.paths, path).toHaveProperty(path);
     }

@@ -25,6 +25,19 @@ test.describe("nested corners", () => {
     }
   });
 
+  test("and a ticker's drawer on the Stocks page", async ({ page }) => {
+    await page.goto("/stocks");
+    await page.locator("#splash").waitFor({ state: "detached" });
+    await page.locator('[data-stocks] [data-stock="AAPL"]').click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    // Every part in: the company's logo plate, the range bars, the ratings' bar.
+    await expect(dialog.locator('[data-part-state="ready"]')).toHaveCount(4);
+    await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+    expect(await cornersRounderThanConcentric(page)).toEqual([]);
+    expect(await squareInsideRings(page)).toEqual([]);
+  });
+
   test("and the thermostat's drawer or dialog", async ({ page }) => {
     await page.goto("/climate");
     await page.getByRole("button", { name: /^1st Floor:/ }).click();

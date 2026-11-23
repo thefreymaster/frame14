@@ -34,17 +34,35 @@ const ICON = { up: IoTrendingUp, down: IoTrendingDown, flat: IoRemove } as const
  * the price at the left, the range at the right — in a wide one. `fill`: one
  * of a handful of rows sharing an upright screen's height (StocksList), its
  * figures as large as the card's height allows.
+ *
+ * `onOpen` makes the card one button (0.180.0): a tap opens the ticker's
+ * drawer (StockDialog). And in that drawer the same card is its first
+ * section, under `heading` ("Today") — a Board in a panel is a titled well,
+ * and no button.
  */
-export function StockCard({ quote, fill = false }: { quote: StockQuote; fill?: boolean }) {
+export function StockCard({
+  quote,
+  fill = false,
+  onOpen,
+  heading,
+}: {
+  quote: StockQuote;
+  fill?: boolean;
+  onOpen?: () => void;
+  /** The card's title in place of the ticker. */
+  heading?: string;
+}) {
   const way = direction(quote.change);
   const color = DIRECTION_COLOR[way];
   const Icon = ICON[way];
   return (
     <Board
       fill={fill}
+      onClick={onOpen}
+      label={`Show ${quote.symbol} detail`}
       title={
         <SectionTitle icon={<Icon />} iconColor={color}>
-          {quote.symbol}
+          {heading ?? quote.symbol}
         </SectionTitle>
       }
     >

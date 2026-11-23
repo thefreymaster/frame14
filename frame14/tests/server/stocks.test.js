@@ -3,17 +3,28 @@ import request from "supertest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ERROR_MAX,
+  LOGO_HOSTS,
+  NEWS_MAX,
   REGULAR,
   STOCKS_ROOM,
   TIMINGS,
+  URGENT_RUN,
   capWords,
   changeOf,
+  companyFrom,
+  exchangeName,
   finnhubTransport,
+  httpsUrl,
   inRegularHours,
   isSale,
+  line,
+  metricsFrom,
+  newsFrom,
   quoteFrom,
+  ratingsFrom,
   startStocks,
   timingsFromEnv,
+  unreadMetricNames,
 } from "../../stocks.js";
 import stocksRouter from "../../routes/stocks.js";
 import { STUB, createStub } from "../stub/stub-ha.mjs";
@@ -34,6 +45,43 @@ const QUOTES = {
 };
 const UNKNOWN = { c: 0, d: null, dp: null, h: 0, l: 0, o: 0, pc: 0, t: 0 };
 
+// A ticker's detail as Finnhub's documentation shapes it (its sample is Apple's).
+const PROFILE = {
+  country: "US",
+  currency: "USD",
+  exchange: "NASDAQ NMS - GLOBAL MARKET",
+  finnhubIndustry: "Technology",
+  ipo: "1980-12-12",
+  logo: "https://static2.finnhub.io/file/publicdatany/finnhubimage/stock_logo/AAPL.png",
+  marketCapitalization: 4_051_230.5,
+  name: "Apple Inc",
+  shareOutstanding: 14_840.39,
+  ticker: "AAPL",
+  weburl: "https://www.apple.com/",
+};
+const METRIC = {
+  metric: {
+    "10DayAverageTradingVolume": 48.25,
+    "52WeekHigh": 277.32,
+    "52WeekLow": 169.21,
+    beta: 1.29,
+    peTTM: 36.4,
+    epsTTM: 7.46,
+    dividendYieldIndicatedAnnual: 0.38,
+  },
+  metricType: "all",
+  symbol: "AAPL",
+};
+const RATINGS = [
+  { buy: 24, hold: 13, period: "2026-10-01", sell: 2, strongBuy: 14, strongSell: 0, symbol: "AAPL" },
+  { buy: 23, hold: 14, period: "2026-11-01", sell: 2, strongBuy: 15, strongSell: 1, symbol: "AAPL" },
+];
+const NEWS = [
+  { category: "company", datetime: AT - 7200, headline: "Apple's services grow again", id: 1, image: "https://x.example/a.jpg", related: "AAPL", source: "Reuters", summary: "…", url: "https://www.reuters.com/a" },
+  { category: "company", datetime: AT - 600, headline: "A new Mac, sooner than thought", id: 2, image: "", related: "AAPL", source: "Bloomberg", summary: "…", url: "https://www.bloomberg.com/b" },
+];
+const DETAIL_PATHS = ["/stock/profile2", "/stock/metric", "/stock/recommendation", "/company-news"];
+
 /** A Finnhub in memory: its calls, its sockets, and answers a test can change. */
 function fakeFinnhub() {
   const fake = {
@@ -43,15 +91,21 @@ function fakeFinnhub() {
     sockets: [],
     /** Statuses the next calls answer with, in turn (401, 429, …). */
     statuses: [],
+    /** A ticker's detail, by Finnhub's path; and a status a path always answers with. */
+    detail: { "/stock/profile2": PROFILE, "/stock/metric": METRIC, "/stock/recommendation": RATINGS, "/company-news": NEWS },
+    always: {},
     /** Set: every call waits for this promise. */
     hold: null,
     transport: {
       async get(path, params) {
         fake.calls.push({ path, ...params, at: Date.now() });
         if (fake.hold) await fake.hold;
-        const status = fake.statuses.shift();
+        const status = fake.statuses.shift() || fake.always[path] || fake.always[`${path} ${params.symbol}`];
         if (status === 401) return { status, body: { error: "Invalid API key." } };
+        if (status === 403) return { status, body: { error: "You don't have access to this resource." } };
+        if (status === "throw") throw new Error("socket hang up");
         if (status) return { status, body: { error: "no" } };
+        if (path in fake.detail) return { status: 200, body: structuredClone(fake.detail[path]) };
         if (path === "/quote") return { status: 200, body: fake.quotes[params.symbol] ?? UNKNOWN };
         if (path === "/stock/market-status") return { status: 200, body: fake.market };
         return { status: 404, body: null };
@@ -80,6 +134,7 @@ function fakeFinnhub() {
       fake.sockets.at(-1).handlers.onMessage({ type: "trade", data: [{ s: symbol, p, t, v, c }] });
     },
     quoteCalls: () => fake.calls.filter((c) => c.path === "/quote"),
+    detailCalls: () => fake.calls.filter((c) => DETAIL_PATHS.includes(c.path)),
   };
   return fake;
 }
@@ -567,6 +622,350 @@ describe("the key", () => {
   });
 });
 
+describe("a ticker's detail", () => {
+  // The routine polls an hour off: the calls counted here are a drawer's and
+  // the first watch's.
+  const QUIET = { delayedPoll: 3_600_000, livePoll: 3_600_000, market: 3_600_000 };
+  /** A page watching, its quotes in: the queue empty. */
+  async function watching(fake, options = {}) {
+    const started = start(fake, { ...options, timings: { ...QUIET, ...options.timings } });
+    started.stocks.watch("a");
+    await vi.advanceTimersByTimeAsync(5 * TIMINGS.pace);
+    fake.calls.length = 0;
+    return started;
+  }
+  /** The detail asked for, and the clock run until it's answered. */
+  async function detailOf(stocks, symbol, ms = 6 * TIMINGS.pace) {
+    const asked = stocks.detail(symbol);
+    await vi.advanceTimersByTimeAsync(ms);
+    return asked;
+  }
+
+  it("asks Finnhub for the four parts, a pace apart, and answers them cleaned", async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = await watching(fake);
+    // The config's ticker, however the caller writes it.
+    const detail = await detailOf(stocks, " spy ");
+    expect(fake.calls.map((c) => c.path)).toEqual(DETAIL_PATHS);
+    expect(fake.calls.every((c) => c.symbol === "SPY")).toBe(true);
+    expect(fake.calls[1]).toMatchObject({ metric: "all" });
+    // The week's news, to today: noon in New York on 2026-11-23.
+    expect(fake.calls[3]).toMatchObject({ from: "2026-11-16", to: "2026-11-23" });
+    const gaps = fake.calls.slice(1).map((c, i) => c.at - fake.calls[i].at);
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(TIMINGS.pace);
+    expect(detail).toEqual({
+      symbol: "SPY",
+      pending: [],
+      failed: [],
+      company: {
+        name: "Apple Inc",
+        industry: "Technology",
+        exchange: "Nasdaq",
+        marketValue: 4_051_230_500_000,
+        logo: PROFILE.logo,
+      },
+      metrics: { week52High: 277.32, week52Low: 169.21, pe: 36.4, eps: 7.46, dividendYield: 0.38, beta: 1.29, averageVolume: 48_250_000 },
+      ratings: { period: "2026-11-01", strongBuy: 15, buy: 23, hold: 14, sell: 2, strongSell: 1 },
+      news: [
+        { headline: "A new Mac, sooner than thought", source: "Bloomberg", at: (AT - 600) * 1000, url: "https://www.bloomberg.com/b" },
+        { headline: "Apple's services grow again", source: "Reuters", at: (AT - 7200) * 1000, url: "https://www.reuters.com/a" },
+      ],
+    });
+  });
+
+  it("is nothing for a ticker that isn't the add-on's, and Finnhub isn't asked", async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = await watching(fake);
+    expect(await detailOf(stocks, "TSLA")).toBeNull();
+    expect(await detailOf(stocks, "")).toBeNull();
+    expect(await detailOf(stocks, undefined)).toBeNull();
+    expect(fake.calls).toEqual([]);
+  });
+
+  it("asks nothing with no page watching: what's held is the answer", async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = start(fake, { timings: QUIET });
+    expect(await detailOf(stocks, "SPY")).toEqual({ symbol: "SPY", pending: [], failed: [], company: null, metrics: null, ratings: null, news: null });
+    expect(fake.calls).toEqual([]);
+    // Held from a page's time, it is still the answer once the page has gone.
+    stocks.watch("a");
+    await vi.advanceTimersByTimeAsync(5 * TIMINGS.pace);
+    await detailOf(stocks, "SPY");
+    stocks.unwatch("a");
+    fake.calls.length = 0;
+    await vi.advanceTimersByTimeAsync(TIMINGS.news + 1);
+    expect((await detailOf(stocks, "SPY")).company.name).toBe("Apple Inc");
+    expect(fake.calls).toEqual([]);
+  });
+
+  it("goes ahead of the quotes waiting their turn, each call made once", async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = start(fake, { timings: QUIET });
+    stocks.watch("a");
+    // The market is asked at once; the three quotes wait a pace each. A
+    // drawer opened during that wait is next.
+    await vi.advanceTimersByTimeAsync(TIMINGS.pace / 2);
+    expect(fake.calls.map((c) => c.path)).toEqual(["/stock/market-status"]);
+    void stocks.detail("QQQ");
+    await vi.advanceTimersByTimeAsync(10 * TIMINGS.pace);
+    expect(fake.calls.map((c) => (c.path === "/quote" ? c.symbol : c.path))).toEqual([
+      "/stock/market-status",
+      ...DETAIL_PATHS,
+      "SPY",
+      "QQQ",
+      "DIA",
+    ]);
+  });
+
+  it("waits for the call in flight, which is made once and not again", async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = start(fake, { timings: QUIET });
+    let release;
+    fake.hold = new Promise((r) => (release = r));
+    stocks.watch("a");
+    await vi.advanceTimersByTimeAsync(10);
+    // The market's call is out and unanswered: the drawer's are behind it.
+    void stocks.detail("SPY");
+    await vi.advanceTimersByTimeAsync(3 * TIMINGS.pace);
+    expect(fake.calls.map((c) => c.path)).toEqual(["/stock/market-status"]);
+    fake.hold = null;
+    release();
+    await vi.advanceTimersByTimeAsync(10 * TIMINGS.pace);
+    expect(fake.calls.map((c) => (c.path === "/quote" ? c.symbol : c.path))).toEqual([
+      "/stock/market-status",
+      ...DETAIL_PATHS,
+      "SPY",
+      "QQQ",
+      "DIA",
+    ]);
+    expect(stocks.snapshot().market.session).toBe(REGULAR);
+  });
+
+  it("goes first after a rate limit's wait, and the quote it interrupted is still asked again", async () => {
+    const fake = fakeFinnhub();
+    fake.statuses.push(0, 429); // the market answers; SPY's quote is told to wait
+    const { stocks } = start(fake, { timings: QUIET });
+    stocks.watch("a");
+    await vi.advanceTimersByTimeAsync(2 * TIMINGS.pace);
+    expect(fake.quoteCalls().map((c) => c.symbol)).toEqual(["SPY"]);
+    void stocks.detail("DIA");
+    await vi.advanceTimersByTimeAsync(TIMINGS.rateLimit + 10 * TIMINGS.pace);
+    expect(fake.calls.map((c) => (c.path === "/quote" ? c.symbol : c.path))).toEqual([
+      "/stock/market-status",
+      "SPY",
+      ...DETAIL_PATHS,
+      "SPY",
+      "QQQ",
+      "DIA",
+    ]);
+    expect(quoteOf(stocks, "SPY").price).toBe(700);
+  });
+
+  it(`lets a routine call through after ${URGENT_RUN} of the drawers', so the quotes never wait for ever`, async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = start(fake, { timings: QUIET });
+    stocks.watch("a");
+    await vi.advanceTimersByTimeAsync(TIMINGS.pace / 2);
+    void stocks.detail("SPY");
+    void stocks.detail("QQQ");
+    await vi.advanceTimersByTimeAsync(14 * TIMINGS.pace);
+    const kinds = fake.calls.slice(1).map((c) => (c.path === "/quote" ? "quote" : "detail"));
+    expect(kinds.slice(0, 2 * URGENT_RUN + 2)).toEqual([
+      ...Array(URGENT_RUN).fill("detail"),
+      "quote",
+      ...Array(URGENT_RUN).fill("detail"),
+      "quote",
+    ]);
+    expect(fake.detailCalls()).toHaveLength(8);
+  });
+
+  it("keeps each part its own time, and sends the old one while the new is on its way", async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = await watching(fake);
+    await detailOf(stocks, "SPY");
+    fake.calls.length = 0;
+    // Inside every part's time: nothing asked.
+    await vi.advanceTimersByTimeAsync(TIMINGS.news - 10 * TIMINGS.pace);
+    fake.calls.length = 0;
+    expect((await detailOf(stocks, "SPY")).news).toHaveLength(2);
+    expect(fake.detailCalls()).toEqual([]);
+    // The news' quarter of an hour over: asked again alone — and the answer
+    // doesn't wait for it.
+    await vi.advanceTimersByTimeAsync(11 * TIMINGS.pace);
+    fake.detail["/company-news"] = [{ ...NEWS[0], headline: "Something newer", datetime: AT }];
+    fake.calls.length = 0;
+    const old = await stocks.detail("SPY");
+    expect(old.news).toHaveLength(2);
+    expect(old.pending).toEqual([]);
+    await vi.advanceTimersByTimeAsync(2 * TIMINGS.pace);
+    expect(fake.detailCalls().map((c) => c.path)).toEqual(["/company-news"]);
+    expect((await detailOf(stocks, "SPY")).news.map((n) => n.headline)).toEqual(["Something newer"]);
+    // Six hours on, the key numbers too; the company and the ratings after a day.
+    await vi.advanceTimersByTimeAsync(TIMINGS.metrics);
+    fake.calls.length = 0;
+    await detailOf(stocks, "SPY");
+    expect(fake.detailCalls().map((c) => c.path).sort()).toEqual(["/company-news", "/stock/metric"]);
+    await vi.advanceTimersByTimeAsync(TIMINGS.company);
+    fake.calls.length = 0;
+    await detailOf(stocks, "SPY");
+    expect(fake.detailCalls().map((c) => c.path)).toEqual(DETAIL_PATHS);
+  });
+
+  it("keeps a part Finnhub has nothing for as nothing, without asking again", async () => {
+    const fake = fakeFinnhub();
+    // As an ETF's: no profile, no analysts, no news, and nothing among the numbers.
+    fake.detail = { "/stock/profile2": {}, "/stock/metric": { metric: {}, symbol: "SPY" }, "/stock/recommendation": [], "/company-news": [] };
+    const { stocks } = await watching(fake);
+    expect(await detailOf(stocks, "SPY")).toEqual({ symbol: "SPY", pending: [], failed: [], company: null, metrics: null, ratings: null, news: null });
+    fake.calls.length = 0;
+    await detailOf(stocks, "SPY");
+    expect(fake.detailCalls()).toEqual([]);
+  });
+
+  it("takes a 403 as that one thing not on the key's plan — not as the key refused", async () => {
+    const fake = fakeFinnhub();
+    fake.always = { "/stock/profile2": 403, "/quote QQQ": 403 };
+    const { stocks } = await watching(fake);
+    // One ticker has no quote; the page is no error, and the others are priced.
+    expect(stocks.snapshot().status).not.toBe("error");
+    expect(stocks.snapshot().error).toBeNull();
+    expect(quoteOf(stocks, "QQQ").price).toBeNull();
+    expect(quoteOf(stocks, "SPY").price).toBe(700);
+    // And a drawer has no company, with the rest in it.
+    const detail = await detailOf(stocks, "SPY");
+    expect(detail).toMatchObject({ pending: [], failed: [], company: null });
+    expect(detail.metrics.pe).toBe(36.4);
+    expect(stocks.snapshot().status).not.toBe("error");
+    // Kept as nothing, and said once.
+    fake.calls.length = 0;
+    await detailOf(stocks, "SPY");
+    expect(fake.detailCalls()).toEqual([]);
+    const said = log.warn.mock.calls.flat().filter((l) => /not on this key's Finnhub plan/.test(l));
+    expect(said.filter((l) => l.includes("/stock/profile2 SPY"))).toHaveLength(1);
+    expect(said.filter((l) => l.includes("/quote QQQ"))).toHaveLength(1);
+  });
+
+  it("says which part Finnhub didn't answer for, and an open drawer's asking makes one call of it a minute", async () => {
+    const fake = fakeFinnhub();
+    fake.always = { "/company-news": 500, "/stock/recommendation": "throw" };
+    const { stocks } = await watching(fake);
+    const detail = await detailOf(stocks, "SPY");
+    expect(detail).toMatchObject({ pending: [], failed: ["ratings", "news"], ratings: null, news: null });
+    expect(detail.company.name).toBe("Apple Inc");
+    // A drawer open for most of a minute, asking every second.
+    for (let i = 0; i < 50; i++) {
+      await stocks.detail("SPY");
+      await vi.advanceTimersByTimeAsync(1000);
+    }
+    expect(fake.detailCalls().filter((c) => c.path === "/company-news")).toHaveLength(1);
+    expect(fake.detailCalls().filter((c) => c.path === "/stock/recommendation")).toHaveLength(1);
+    // After the minute it is tried again, and answered.
+    fake.always = {};
+    await vi.advanceTimersByTimeAsync(TIMINGS.failed);
+    expect(await detailOf(stocks, "SPY")).toMatchObject({ failed: [], ratings: { buy: 23 } });
+  });
+
+  it("isn't asked again at once when the answer can't be read", async () => {
+    const fake = fakeFinnhub();
+    // A getter that throws: what a reader meets in an answer it wasn't written for.
+    const { stocks } = await watching(fake);
+    const broken = { get metric() { throw new Error("unreadable"); } };
+    const get = fake.transport.get;
+    fake.transport.get = async (path, params) => (path === "/stock/metric" ? (fake.calls.push({ path, ...params, at: Date.now() }), { status: 200, body: broken }) : get(path, params));
+    const detail = await detailOf(stocks, "SPY");
+    expect(detail.failed).toEqual(["metrics"]);
+    for (let i = 0; i < 20; i++) {
+      await stocks.detail("SPY");
+      await vi.advanceTimersByTimeAsync(1000);
+    }
+    expect(fake.calls.filter((c) => c.path === "/stock/metric")).toHaveLength(1);
+  });
+
+  it("answers after five seconds with the parts still on their way named, and they end with the key refused or the feed stopped", async () => {
+    const fake = fakeFinnhub();
+    const { stocks } = await watching(fake);
+    let release;
+    fake.hold = new Promise((r) => (release = r));
+    const asked = stocks.detail("SPY");
+    await vi.advanceTimersByTimeAsync(TIMINGS.wait + 1);
+    expect(await asked).toMatchObject({ pending: ["company", "metrics", "ratings", "news"], failed: [], company: null });
+    // The key refused on the call in flight: nothing is on its way any more.
+    fake.statuses.push(401);
+    fake.hold = null;
+    release();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(stocks.snapshot().status).toBe("error");
+    fake.calls.length = 0;
+    expect(await detailOf(stocks, "SPY")).toMatchObject({ pending: [], company: null });
+    expect(fake.calls).toEqual([]);
+
+    // And a feed stopped mid-way leaves none pending either.
+    const other = fakeFinnhub();
+    const second = await watching(other);
+    other.hold = new Promise(() => {});
+    const waiting = second.stocks.detail("QQQ");
+    await vi.advanceTimersByTimeAsync(100);
+    second.stocks.stop();
+    await vi.advanceTimersByTimeAsync(TIMINGS.wait + 1);
+    expect((await waiting).pending).toEqual([]);
+    expect((await second.stocks.detail("QQQ")).pending).toEqual([]);
+  });
+
+  it("cleans what Finnhub sends: text to a line, a link only if https, the logo only from Finnhub's own hosts", async () => {
+    const fake = fakeFinnhub();
+    fake.detail["/stock/profile2"] = {
+      ...PROFILE,
+      name: `  Apple\u0000 \u202eInc\n${"x".repeat(200)}`,
+      finnhubIndustry: 12,
+      exchange: "LONDON STOCK EXCHANGE",
+      marketCapitalization: "lots",
+      logo: "https://evil.example/logo.png",
+    };
+    fake.detail["/company-news"] = [
+      { ...NEWS[0], headline: "h".repeat(500), url: "http://plain.example/a", source: "s".repeat(90) },
+      { ...NEWS[1], headline: "With a name in it", url: "https://user:pw@news.example/b" },
+      { ...NEWS[1], headline: "A script", url: "javascript:alert(1)", datetime: AT - 900 },
+      { ...NEWS[1], headline: "", datetime: AT },
+      { ...NEWS[1], headline: "No time", datetime: "soon" },
+      null,
+    ];
+    const { stocks } = await watching(fake);
+    const detail = await detailOf(stocks, "SPY");
+    expect(detail.company.name).toHaveLength(80);
+    expect(detail.company.name.startsWith("Apple Inc x")).toBe(true);
+    expect(detail.company).toMatchObject({ industry: null, exchange: "LONDON STOCK EXCHANGE", marketValue: null, logo: null });
+    expect(detail.news.map((n) => [n.headline.length, n.url])).toEqual([
+      ["With a name in it".length, null],
+      ["A script".length, null],
+      [200, null],
+    ]);
+    expect(detail.news[2].source).toHaveLength(40);
+  });
+
+  it("says once which names Finnhub gave a key number it couldn't find", async () => {
+    const fake = fakeFinnhub();
+    fake.detail["/stock/metric"] = { metric: { "52WeekHigh": 10, "52WeekLow": 5, peForward: 30, epsGrowth5Y: 12, beta: 1 } };
+    const { stocks } = await watching(fake);
+    const detail = await detailOf(stocks, "SPY");
+    expect(detail.metrics).toMatchObject({ pe: null, eps: null, dividendYield: null, beta: 1 });
+    const said = () => log.warn.mock.calls.flat().filter((l) => /key numbers: no match/.test(l));
+    expect(said()).toHaveLength(1);
+    expect(said()[0]).toContain("peForward");
+    expect(said()[0]).toContain("epsGrowth5Y");
+    await detailOf(stocks, "QQQ");
+    expect(said()).toHaveLength(1);
+  });
+
+  it("has the key in none of it", async () => {
+    const fake = fakeFinnhub();
+    fake.always = { "/company-news": 500 };
+    const { stocks } = await watching(fake);
+    const detail = await detailOf(stocks, "SPY");
+    expect(JSON.stringify(detail)).not.toContain(KEY);
+    expect(JSON.stringify([log.log.mock.calls, log.warn.mock.calls])).not.toContain(KEY);
+  });
+});
+
 describe("against the stub's Finnhub, over the network", () => {
   it("brings the quotes, opens the socket and takes a trade, in that order", async () => {
     vi.useRealTimers();
@@ -649,6 +1048,90 @@ describe("the pieces", () => {
     expect(at("2026-11-21T12:00:00-05:00")).toBe(false); // a Saturday
   });
 
+  it("holds outside text to one line of a length, with nothing that turns its direction", () => {
+    expect(line("  a\u0000b\n\tc  ", 10)).toBe("a b c");
+    expect(line("abc\u202edef\u2066", 10)).toBe("abc def");
+    expect(line("x".repeat(50), 10)).toHaveLength(10);
+    expect(line(12, 10)).toBe("");
+    expect(line(null, 10)).toBe("");
+  });
+
+  it("keeps an address only if it is https, with no name in it — and on a named host where one is asked", () => {
+    expect(httpsUrl("https://www.reuters.com/a?b=1")).toBe("https://www.reuters.com/a?b=1");
+    expect(httpsUrl("http://www.reuters.com/a")).toBeNull();
+    expect(httpsUrl("javascript:alert(1)")).toBeNull();
+    expect(httpsUrl("data:text/html,x")).toBeNull();
+    expect(httpsUrl("https://me:pw@host.example/")).toBeNull();
+    expect(httpsUrl("//host.example/a")).toBeNull();
+    expect(httpsUrl("not an address")).toBeNull();
+    expect(httpsUrl(undefined)).toBeNull();
+    expect(httpsUrl(`https://a.example/${"x".repeat(3000)}`)).toBeNull();
+    expect(LOGO_HOSTS).toEqual(["static.finnhub.io", "static2.finnhub.io"]);
+    expect(httpsUrl("https://static2.finnhub.io/l.png", LOGO_HOSTS)).toBe("https://static2.finnhub.io/l.png");
+    expect(httpsUrl("https://static.finnhub.io/l.png", LOGO_HOSTS)).toBe("https://static.finnhub.io/l.png");
+    expect(httpsUrl("https://static2.finnhub.io.evil.example/l.png", LOGO_HOSTS)).toBeNull();
+    expect(httpsUrl("https://evil.example/static2.finnhub.io/l.png", LOGO_HOSTS)).toBeNull();
+  });
+
+  it("reads a company, an exchange in the word people use, and no company from an ETF's empty answer", () => {
+    expect(companyFrom(PROFILE)).toEqual({ name: "Apple Inc", industry: "Technology", exchange: "Nasdaq", marketValue: 4_051_230_500_000, logo: PROFILE.logo });
+    expect(companyFrom({})).toBeNull();
+    expect(companyFrom(null)).toBeNull();
+    expect(companyFrom({ name: "A", marketCapitalization: 0 })).toEqual({ name: "A", industry: null, exchange: null, marketValue: null, logo: null });
+    expect(exchangeName("NEW YORK STOCK EXCHANGE, INC.")).toBe("NYSE");
+    expect(exchangeName("NYSE ARCA")).toBe("NYSE Arca");
+    expect(exchangeName("NYSE MKT LLC")).toBe("NYSE American");
+    expect(exchangeName("BATS")).toBe("Cboe");
+    expect(exchangeName("TORONTO STOCK EXCHANGE")).toBe("TORONTO STOCK EXCHANGE");
+    expect(exchangeName("")).toBeNull();
+  });
+
+  it("reads the key numbers under any of their likely names, each none where Finnhub has none", () => {
+    expect(metricsFrom(METRIC)).toEqual({ week52High: 277.32, week52Low: 169.21, pe: 36.4, eps: 7.46, dividendYield: 0.38, beta: 1.29, averageVolume: 48_250_000 });
+    // Other names for the same numbers, and a three-month volume where there is no ten-day one.
+    expect(
+      metricsFrom({ metric: { peBasicExclExtraTTM: 20, epsInclExtraItemsTTM: -1.5, currentDividendYieldTTM: 2.1, "3MonthAverageTradingVolume": 2 } }),
+    ).toEqual({ week52High: null, week52Low: null, pe: 20, eps: -1.5, dividendYield: 2.1, beta: null, averageVolume: 2_000_000 });
+    // No earnings and no dividend are none, not zero; half a range is no range.
+    expect(metricsFrom({ metric: { peTTM: -4, dividendYieldIndicatedAnnual: 0, "52WeekHigh": 10, beta: 0.5 } })).toEqual({
+      week52High: null,
+      week52Low: null,
+      pe: null,
+      eps: null,
+      dividendYield: null,
+      beta: 0.5,
+      averageVolume: null,
+    });
+    expect(metricsFrom({ metric: { "52WeekHigh": 5, "52WeekLow": 10 } })).toBeNull();
+    expect(metricsFrom({ metric: {} })).toBeNull();
+    expect(metricsFrom({})).toBeNull();
+    expect(metricsFrom(null)).toBeNull();
+    expect(unreadMetricNames(METRIC, metricsFrom(METRIC))).toEqual({});
+    expect(unreadMetricNames({ metric: { peForward: 3, peBad: "x", yieldOnCost: 1 } }, { pe: null, eps: null, dividendYield: null })).toEqual({
+      pe: ["peForward"],
+      dividendYield: ["yieldOnCost"],
+    });
+  });
+
+  it("reads the newest month's ratings, and none without an analyst", () => {
+    expect(ratingsFrom(RATINGS)).toEqual({ period: "2026-11-01", strongBuy: 15, buy: 23, hold: 14, sell: 2, strongSell: 1 });
+    expect(ratingsFrom([{ period: "2026-11-01", buy: 0, hold: 0, sell: 0, strongBuy: 0, strongSell: 0 }])).toBeNull();
+    expect(ratingsFrom([{ period: "soon", buy: 3 }, null, { buy: 2 }])).toBeNull();
+    expect(ratingsFrom([{ period: "2026-11-01", buy: 2.4, hold: -1, sell: "x" }])).toEqual({ period: "2026-11-01", strongBuy: 0, buy: 2, hold: 0, sell: 0, strongSell: 0 });
+    expect(ratingsFrom([])).toBeNull();
+    expect(ratingsFrom({})).toBeNull();
+  });
+
+  it(`reads the newest ${NEWS_MAX} headlines, each once`, () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({ ...NEWS[0], headline: `Headline ${i}`, datetime: AT + i }));
+    const read = newsFrom([...many, { ...many[9] }]);
+    expect(read).toHaveLength(NEWS_MAX);
+    expect(read.map((n) => n.headline)).toEqual(["Headline 9", "Headline 8", "Headline 7", "Headline 6", "Headline 5", "Headline 4"]);
+    expect(read[0]).toEqual({ headline: "Headline 9", source: "Reuters", at: (AT + 9) * 1000, url: "https://www.reuters.com/a" });
+    expect(newsFrom([])).toBeNull();
+    expect(newsFrom({})).toBeNull();
+  });
+
   it("holds outside words to a line", () => {
     expect(capWords("a\u0000b\n\tc  ")).toBe("a b c");
     expect(capWords("x".repeat(500))).toHaveLength(ERROR_MAX);
@@ -692,5 +1175,36 @@ describe("GET /api/stocks", () => {
     const res = await request(app(null)).get("/api/stocks");
     expect(res.status).toBe(404);
     expect(res.body.error).toMatch(/finnhub_api_key/);
+    const detail = await request(app(null)).get("/api/stocks/SPY");
+    expect(detail.status).toBe(404);
+    expect(detail.body.error).toMatch(/finnhub_api_key/);
+  });
+
+  it("answers one ticker's detail, kept by nothing in between — and only a ticker of the add-on's", async () => {
+    vi.useRealTimers();
+    const fake = fakeFinnhub();
+    const { io } = fakeIo();
+    const stocks = startStocks({ io, tickers: ["SPY"], apiKey: KEY, transport: fake.transport, timings: { ...TIMINGS, pace: 1 }, log });
+    running.push(stocks);
+    stocks.watch("a");
+    const res = await request(app(stocks)).get("/api/stocks/spy");
+    expect(res.status).toBe(200);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(res.body).toMatchObject({
+      symbol: "SPY",
+      pending: [],
+      failed: [],
+      company: { name: "Apple Inc", exchange: "Nasdaq" },
+      metrics: { pe: 36.4 },
+      ratings: { buy: 23 },
+      news: [{ headline: "A new Mac, sooner than thought" }, { headline: "Apple's services grow again" }],
+    });
+    expect(JSON.stringify(res.body)).not.toContain(KEY);
+    for (const other of ["QQQ", "SPY%2F..", "%20", "a".repeat(40)]) {
+      const no = await request(app(stocks)).get(`/api/stocks/${other}`);
+      expect(no.status, other).toBe(404);
+      expect(no.headers["cache-control"]).toBe("no-store");
+    }
+    expect(fake.calls.every((c) => c.symbol === undefined || c.symbol === "SPY")).toBe(true);
   });
 });

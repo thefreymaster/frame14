@@ -174,6 +174,37 @@ export const openApiDocument = {
         },
       },
     },
+    "/api/stocks/{symbol}": {
+      get: {
+        tags: ["Stocks"],
+        operationId: "getStockDetail",
+        summary: "One ticker's detail",
+        description:
+          "For the drawer a Stocks card opens: Finnhub's company profile, key numbers, analysts' ratings and the week's news for one of the `stock_tickers`. Each part is null where Finnhub has none — an ETF has no company and no analysts. The parts not yet held are asked of Finnhub first, waiting five seconds at most: `pending` names those still on their way (ask again in a second), `failed` those Finnhub didn't answer for (tried again after a minute). Held in the add-on's memory — the company and the ratings a day, the key numbers six hours, the news fifteen minutes — and asked of Finnhub only while a page is on Stocks: with none, the answer is what is held. Everything in it is Finnhub's, cleaned: text one line, a headline's `url` only if it is https, the `logo` only from Finnhub's own static hosts. Never cached.",
+        parameters: [
+          {
+            name: "symbol",
+            in: "path",
+            required: true,
+            description: "One of the `stock_tickers`, in any case.",
+            schema: { type: "string", example: "SPY" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "The detail.",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/StockDetail" },
+              },
+            },
+          },
+          404: {
+            description: "Not one of `stock_tickers`, or Stocks isn't set up.",
+          },
+        },
+      },
+    },
     "/api/account/alias": {
       put: {
         tags: ["Account"],
@@ -1628,6 +1659,76 @@ export const openApiDocument = {
                 alias: { type: "string", description: "What the row was called through `PUT /api/account/alias`; absent on a row with no alias.", example: "Office MacBook" },
                 online: { type: "boolean", description: "A page of theirs is open on that device now." },
                 lastSeen: { type: "string", format: "date-time", description: "When it arrived, or — once gone — when it left." },
+              },
+            },
+          },
+        },
+      },
+      StockDetail: {
+        type: "object",
+        required: ["symbol", "pending", "failed", "company", "metrics", "ratings", "news"],
+        properties: {
+          symbol: { type: "string", example: "AAPL" },
+          pending: {
+            type: "array",
+            description: "The parts Finnhub is still being asked for.",
+            items: { type: "string", enum: ["company", "metrics", "ratings", "news"] },
+          },
+          failed: {
+            type: "array",
+            description: "The parts Finnhub didn't answer for; asked again after a minute.",
+            items: { type: "string", enum: ["company", "metrics", "ratings", "news"] },
+          },
+          company: {
+            type: "object",
+            nullable: true,
+            description: "Null for a ticker Finnhub has no profile of, an ETF among them.",
+            properties: {
+              name: { type: "string", example: "Apple Inc" },
+              industry: { type: "string", nullable: true, example: "Technology" },
+              exchange: { type: "string", nullable: true, example: "Nasdaq" },
+              marketValue: { type: "number", nullable: true, description: "In dollars.", example: 3982650400000 },
+              logo: { type: "string", nullable: true, description: "On Finnhub's static host, https." },
+            },
+          },
+          metrics: {
+            type: "object",
+            nullable: true,
+            description: "Each null where Finnhub gives none.",
+            properties: {
+              week52High: { type: "number", nullable: true },
+              week52Low: { type: "number", nullable: true },
+              pe: { type: "number", nullable: true, description: "Price to earnings; null without earnings." },
+              eps: { type: "number", nullable: true, description: "Earnings per share." },
+              dividendYield: { type: "number", nullable: true, description: "A percentage; null without a dividend." },
+              beta: { type: "number", nullable: true },
+              averageVolume: { type: "number", nullable: true, description: "Shares a day." },
+            },
+          },
+          ratings: {
+            type: "object",
+            nullable: true,
+            description: "The analysts' ratings in the newest month Finnhub has.",
+            properties: {
+              period: { type: "string", example: "2026-11-01" },
+              strongBuy: { type: "integer" },
+              buy: { type: "integer" },
+              hold: { type: "integer" },
+              sell: { type: "integer" },
+              strongSell: { type: "integer" },
+            },
+          },
+          news: {
+            type: "array",
+            nullable: true,
+            description: "The past week's headlines, newest first, six at most.",
+            items: {
+              type: "object",
+              properties: {
+                headline: { type: "string" },
+                source: { type: "string", nullable: true },
+                at: { type: "number", description: "When, in ms." },
+                url: { type: "string", nullable: true, description: "The article, only if its address is https." },
               },
             },
           },

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Flex } from "@chakra-ui/react";
 import { IoTrendingUpOutline } from "react-icons/io5";
 import { Board } from "../components/Board";
 import { MarketSessionBadge } from "../components/MarketSessionBadge";
 import { PageHeader } from "../components/PageHeader";
 import { PageShell } from "../components/PageShell";
+import { StockDialog } from "../components/StockDialog";
 import { StocksList } from "../components/StocksList";
 import { StocksSkeleton } from "../components/skeletons/StocksSkeleton";
 import { EmptyState } from "../components/ui/empty-state";
@@ -18,10 +20,19 @@ const NO_TICKERS: readonly string[] = [];
  * from its trades socket in the regular session, its quotes otherwise — a
  * card a ticker under the market's session. Only with a `finnhub_api_key`
  * (lib/features' `stocks`).
+ *
+ * A tap on a card opens that ticker's drawer (0.180.0, StockDialog). Which
+ * ticker is the page's own state, not the address — as the Weather and
+ * Energy drawers are — and it is kept while the drawer closes, so the
+ * closing drawer still has its ticker to draw.
  */
 export function Stocks() {
   const { data: stocks, isError } = useStocks();
   const tickers = useEntitiesConfig().data?.stocks ?? NO_TICKERS;
+  const [symbol, setSymbol] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const failed = stocks?.status === "error";
+  const quote = stocks?.quotes.find((q) => q.symbol === symbol) ?? null;
 
   return (
     <PageShell>
@@ -48,7 +59,13 @@ export function Stocks() {
             />
           </Board>
         ) : stocks ? (
-          <StocksList quotes={stocks.quotes} />
+          <StocksList
+            quotes={stocks.quotes}
+            onOpen={(ticker) => {
+              setSymbol(ticker);
+              setOpen(true);
+            }}
+          />
         ) : isError ? (
           <Board>
             <EmptyState
@@ -61,6 +78,8 @@ export function Stocks() {
           <StocksSkeleton count={tickers.length} />
         )}
       </Flex>
+      {/* Shut with the page's error: the cards it came from are gone. */}
+      <StockDialog quote={quote} open={open && !failed} onClose={() => setOpen(false)} />
     </PageShell>
   );
 }

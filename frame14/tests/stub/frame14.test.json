@@ -68,5 +68,5 @@
   "lightAllOffExclude": ["light.aidens_hatch_light"],
   "scenes": ["automation.living_room_movie_mode", "scene.reading"],
   "calendarExclude": ["calendar.radarr"],
-  "stocks": ["SPY", "QQQ", "DIA"]
+  "stocks": ["SPY", "QQQ", "DIA", "AAPL"]
 }

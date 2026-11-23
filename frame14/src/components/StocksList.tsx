@@ -9,7 +9,14 @@ import { StockCard } from "./StockCard";
  * page's height, so the frame's 2400px is filled by the cards rather than a
  * short row of them at the top (each card's figures grow with it: StockCard).
  */
-export function StocksList({ quotes }: { quotes: readonly StockQuote[] }) {
+export function StocksList({
+  quotes,
+  onOpen,
+}: {
+  quotes: readonly StockQuote[];
+  /** A card tapped: its ticker's drawer. */
+  onOpen?: (symbol: string) => void;
+}) {
   const rows = quotes.length <= ROWS_MAX;
   return (
     <Grid
@@ -29,7 +36,12 @@ export function StocksList({ quotes }: { quotes: readonly StockQuote[] }) {
       }}
     >
       {quotes.map((quote) => (
-        <StockCard key={quote.symbol} quote={quote} fill={rows} />
+        <StockCard
+          key={quote.symbol}
+          quote={quote}
+          fill={rows}
+          onOpen={onOpen && (() => onOpen(quote.symbol))}
+        />
       ))}
     </Grid>
   );
